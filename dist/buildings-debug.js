@@ -1,14 +1,14 @@
 
-// this.Int32Array = global.Int32Array || Array;
-
 var Buildings = (function(global) {
-    //"use strict";
+    "use strict";
+
+	global.Int32Array = global.Int32Array || Array;
 
 var
-    exp = Math.exp,
+    exp  = Math.exp,
     atan = Math.atan,
-    min = Math.min,
-    PI = Math.PI,
+    min  = Math.min,
+    PI   = Math.PI,
     HALF_PI = PI/2,
     RAD = 180/PI,
     LAT = "latitude",
@@ -242,8 +242,8 @@ function render() {
 
     for (i = 0, il = data.length; i < il; i++) {
         isVisible = false;
-        h = data[i][0]*fadeFactor;
-        f = data[i][1];
+        h = min(data[i][0]*fadeFactor, MAX_HEIGHT);
+		f = data[i][1];
 
         footprint = new Int32Array(f.length);
         for (j = 0, jl = f.length-1; j < jl; j+=2) {
@@ -318,7 +318,6 @@ function drawShape(points, stroke) {
 }
 
 function project(x, y, z) {
-    z = min(z, MAX_HEIGHT);
 	var
 		px = x+","+z, py = y+","+z,
 		zs = CAM_Z/(CAM_Z-z)
