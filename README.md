@@ -7,14 +7,14 @@ A JavaScript library for visualizing 3D OSM building data on interactive maps
 The whole library consists of client JavaScript files, a server side PHP script and a MySQL database.
 Everything should be handled as alpha state. All components are likely to change extensively.
 
-Bottleneck is data availability. I'cant process and host a whole OSM planet file.
+Bottleneck is data availability. I can't process and host a whole OSM planet file.
 Actually I'm looking for a partner to provide a data service to you.
 
 
 ## Prerequisites
 
 1. You will need MySQL as data storage. Version 5.0.16 or better has the required <a href="http://dev.mysql.com/doc/refman/5.0/en/spatial-extensions.html">Spatial Extensions</a> enabled.
-Erverything can be done in different Geo enabled databases too. For now we just go MySQL.
+Everything can be done in different Geo enabled databases too. For now we just go MySQL.
  
 2. You will need to import OSM building data from /server/buildings.sql.zip. Either upload this directly in PhpMyAdmin or unpack and import as you like.
 
@@ -38,7 +38,7 @@ after Leaflet initialization add:
 	var map = new L.Map('map');
 	  :
 	  :
-	// you may stay with any maptiles you are alread using. these are just my favourites.
+	// you may stay with any maptiles you are already using. these are just my favourites.
 	// remember to obtain an API key from <a href="http://mapbox.com">MapBox</a>.
 	// please keep the attribution part for proper copyright notice.
 	var mapboxTiles = new L.TileLayer(

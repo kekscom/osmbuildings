@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>OSM Buildings Example</title>
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body {
+    margin: 0;
+    padding: 0;
+}
+img, canvas {
+	image-rendering: optimizeSpeed;
+}
+</style>
+
+<link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.3.1/leaflet.css" />
+<!--[if lte IE 8]><link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.3.1/leaflet.ie.css" /><![endif]-->
+<script src="dist/buildings.js"></script>
+</head>
+
+<body>
+<div id="map" style="height:500px;"></div>
+<script src="http://cdn.leafletjs.com/leaflet-0.3.1/leaflet.js"></script>
+<script>
+var map = new L.Map('map');
+
+var mapboxTiles = new L.TileLayer(
+	"http://{s}.tiles.mapbox.com/v3/mapbox.mapbox-streets/{z}/{x}/{y}.png",
+	{
+		attribution: 'Buildings engine &copy; <a href="http://flyjs.com">FlyJS</a> &bull; Map data &copy; 2012 <a href="http://openstreetmap.org">OpenStreetMap</a> contributors <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA  2.0</a> &bull; Map tiles &copy; <a href="http://mapbox.com">MapBox</a>',
+		maxZoom: 17
+	}
+);
+
+map.setView(new L.LatLng(50.11294, 8.66771), 17).addLayer(mapboxTiles);
+
+Buildings.setMap("leaflet", map);
+
+Buildings.load("server/index.pg.php?w={w}&n={n}&e={e}&s={s}&z={z}", {
+	strokeRoofs: false,
+	wallColor: "rgb(190,170,150)",
+	roofColor: "rgb(230,220,210)",
+	strokeColor: "rgb(145,140,135)"
+});
+</script>
+</body>
+</html>
