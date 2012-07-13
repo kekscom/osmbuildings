@@ -1,8 +1,7 @@
 
-var Buildings = (function(global) {
-    "use strict";
+var Buildings = (function(global) { "use strict";
 
-	global.Int32Array = global.Int32Array || Array;
+global.Int32Array = global.Int32Array || Array;
 
 var
     exp  = Math.exp,
@@ -19,6 +18,8 @@ var
     centerX = centerY = 0,
     zoom,
     size,
+
+    req,
 
     canvas, context,
 
@@ -98,6 +99,8 @@ function xhr(url, callback) {
     };
     req.open("GET", url);
     req.send(null);
+
+    return req;
 }
 
 function setSize(e) {
@@ -134,8 +137,6 @@ function onResize(e) {
 
 function onMove(e) {
     setCenter(e);
-    centerX = e.x;
-    centerY = e.y;
     render();
 }
 
@@ -152,7 +153,7 @@ function onMoveEnd() {
 
 function onZoomStart() {
 	isZooming = true;
-    render();
+    render(); // effectively clears
 }
 
 function onZoomEnd(e) {
@@ -172,7 +173,9 @@ function loadData() {
         se = pixelToGeo(centerX+width, centerY+height)
     ;
 
-    xhr(template(url, {
+    req && req.abort();
+
+    req = xhr(template(url, {
         w: nw[LON],
         n: nw[LAT],
         e: se[LON],
@@ -182,21 +185,55 @@ function loadData() {
 }
 
 function onDataLoaded(res) {
-    if (!res) {
+    var
+        resData, resMeta,
+        keyList = [], k,
+        offX = 0, offY = 0
+    ;
+
+    req = null;
+
+    // no response or response not matching current zoom (too old response)
+    if (!res || res.meta.z != zoom) {
         return;
     }
-    // wrong response
-    if (res.meta.z != zoom) {
-        return;
+
+    resMeta = res.meta;
+    resData = res.data;
+
+// wenn keine altdaten, dann ist alles neu
+// zoom wechsel bbeachten, dann womöglich kein fade
+
+    // offset between old and new data set
+    if (meta && data && meta.z == resMeta.z) {
+        offX = meta.x-resMeta.x;
+        offY = meta.y-resMeta.y;
+
+        // identify already present buildings to fade in new ones
+        for (var i = 0, il = data.length; i < il; i++) {
+            // id key: x,y of first point - good enough
+            keyList[i] = (data[i][1][0]+offX)+","+(data[i][1][1]+offY);
+        }
     }
-    meta = res.meta;
-    data = res.data;
+
+    meta = resMeta;
+    data = [];
+    for (var i = 0, il = resData.length; i < il; i++) {
+        data[i] = resData[i];
+        data[i][0] = min(data[i][0], MAX_HEIGHT);
+        k = data[i][1][0]+","+data[i][1][1];
+        if (keyList && ~~keyList.indexOf(k) > -1) {
+            data[i][2] = 1; // mark item "already present""
+            g++;
+        }
+    }
+
+    resMeta = resData = keyList = null; // gc
+
     fadeIn();
 }
 
 function fadeIn() {
-    render();
-/*
     fadeFactor = 0;
     clearInterval(fadeTimer);
     fadeTimer = setInterval(function() {
@@ -204,30 +241,35 @@ function fadeIn() {
         if (fadeFactor > 1) {
             clearInterval(fadeTimer);
             fadeFactor = 1;
+            // unset "already present" marker
+            for (var i = 0, il = data.length; i < il; i++) {
+                delete data[i][2];
+            }
         }
         render();
     }, 33);
-*/
 }
 
 function render() {
     context.clearRect(0, 0, width, height);
 
     // show buildings in high zoom levels only
+    // avoid rendering during zoom
     if (zoom < MIN_ZOOM || isZooming) {
         return;
     }
 
     var
-        wallColorAlpha   = setAlpha(wallColor,   zoomAlpha*fadeFactor),
-        roofColorAlpha   = setAlpha(roofColor,   zoomAlpha*fadeFactor),
-        strokeColorAlpha = setAlpha(strokeColor, zoomAlpha*fadeFactor)
+        wallColorAlpha   = setAlpha(wallColor,   zoomAlpha),
+        roofColorAlpha   = setAlpha(roofColor,   zoomAlpha),
+        strokeColorAlpha = setAlpha(strokeColor, zoomAlpha)
     ;
 
     context.strokeStyle = strokeColorAlpha;
 
     var
         i, il, j, jl,
+        item,
         h, f,
         x, y,
         offX = centerX-halfWidth -meta.x,
@@ -241,10 +283,9 @@ function render() {
     cacheY = {};
 
     for (i = 0, il = data.length; i < il; i++) {
+        item = data[i];
         isVisible = false;
-        h = min(data[i][0]*fadeFactor, MAX_HEIGHT);
-		f = data[i][1];
-
+		f = item[1];
         footprint = new Int32Array(f.length);
         for (j = 0, jl = f.length-1; j < jl; j+=2) {
             footprint[j]   = x = (f[j]  -offX);
@@ -259,8 +300,10 @@ function render() {
         }
 
         // drawing walls
-
         context.fillStyle = wallColorAlpha;
+
+        // when fading in, use a dynamic height
+        h = item[2] ? item[0] : item[0]*fadeFactor;
 
         roof = new Int32Array(footprint.length-2);
         walls = [];
@@ -334,6 +377,10 @@ function setAlpha(rgb, a) {
 }
 
 return {
+    /**
+     * @param type {string} determin which map engine to use. defaults to "leaflet"
+     * @param map {object} the map engine instance
+     */
     setMap: function(type, map) {
         createCanvas(document.querySelector(".leaflet-control-container"));
         MAX_ZOOM = 17;
@@ -368,6 +415,25 @@ return {
         map.on("zoomend", function() {
             onZoomEnd({ zoom: map._zoom });
         });
+/*
+        function getDOMPos(el) {
+             var
+                left, top, m,
+                style = global.getComputedStyle(el)
+            ;
+            if (L.Browser.any3d) {
+                m = style[L.DomUtil.TRANSFORM].match(/(-?[\d\.]+), (-?[\d\.]+)\)/) || [];
+                left = parseFloat(m[1]) || 0;
+                top = parseFloat(m[2]) || 0;
+            } else {
+                left = parseFloat(style.left) || 0;
+                top = parseFloat(style.top) || 0;
+            }
+            return new L.Point(left, top);
+        }
+        onMove(map._getTopLeftPoint().subtract(getDOMPos(map._mapPane)).add(half));
+*/
+
     },
 
     render: render,
