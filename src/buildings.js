@@ -34,9 +34,6 @@ var
     fadeFactor = 1,
     fadeTimer,
 
-    cacheX = {},
-    cacheY = {},
-
     TILE_SIZE = 256,
     MIN_ZOOM = 14,
     MAX_ZOOM,
@@ -186,6 +183,7 @@ function loadData() {
 
 function onDataLoaded(res) {
     var
+        i, il,
         resData, resMeta,
         keyList = [], k,
         offX = 0, offY = 0
@@ -207,7 +205,7 @@ function onDataLoaded(res) {
         offY = meta.y-resMeta.y;
 
         // identify already present buildings to fade in new ones
-        for (var i = 0, il = data.length; i < il; i++) {
+        for (i = 0, il = data.length; i < il; i++) {
             // id key: x,y of first point - good enough
             keyList[i] = (data[i][1][0]+offX)+","+(data[i][1][1]+offY);
         }
@@ -215,7 +213,7 @@ function onDataLoaded(res) {
 
     meta = resMeta;
     data = [];
-    for (var i = 0, il = resData.length; i < il; i++) {
+    for (i = 0, il = resData.length; i < il; i++) {
         data[i] = resData[i];
         data[i][0] = min(data[i][0], MAX_HEIGHT);
         k = data[i][1][0]+","+data[i][1][1];
@@ -274,9 +272,6 @@ function render() {
         isVisible,
         ax, ay, bx, by, _a, _b
     ;
-
-    cacheX = {};
-    cacheY = {};
 
     for (i = 0, il = data.length; i < il; i++) {
         item = data[i];
@@ -357,13 +352,10 @@ function drawShape(points, stroke) {
 }
 
 function project(x, y, z) {
-	var
-		px = x+","+z, py = y+","+z,
-		zs = CAM_Z/(CAM_Z-z)
-	;
+	var zs = CAM_Z/(CAM_Z-z);
     return {
-        x:cacheX[px] || (cacheX[px] = ~~((x-CAM_X)*zs + CAM_X)),
-        y:cacheY[py] || (cacheY[py] = ~~((y-CAM_Y)*zs + CAM_Y))
+        x: ~~((x-CAM_X)*zs + CAM_X),
+        y: ~~((y-CAM_Y)*zs + CAM_Y)
     }
 }
 
