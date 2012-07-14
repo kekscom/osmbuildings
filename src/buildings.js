@@ -264,7 +264,7 @@ function render() {
     var
         i, il, j, jl,
         item,
-        h, f,
+        f, h, m,
         x, y,
         offX = centerX-halfWidth -meta.x,
         offY = centerY-halfHeight-meta.y,
@@ -295,6 +295,8 @@ function render() {
 
         // when fading in, use a dynamic height
         h = item[2] ? item[0] : item[0]*fadeFactor;
+        // precalculating projection height scale
+        m = CAM_Z/(CAM_Z-h);
 
         roof = new Int32Array(footprint.length-2);
         walls = [];
@@ -306,8 +308,8 @@ function render() {
             by = footprint[j+3];
 
             // project 3d to 2d on extruded footprint
-            _a = project(ax, ay, h);
-            _b = project(bx, by, h);
+            _a = project(ax, ay, m);
+            _b = project(bx, by, m);
 
             // backface culling check. could this be precalculated partially?
             if ((bx-ax)*(_a.y-ay) > (_a.x-ax)*(by-ay)) {
@@ -351,11 +353,10 @@ function drawShape(points, stroke) {
     context.fill();
 }
 
-function project(x, y, z) {
-	var zs = CAM_Z/(CAM_Z-z);
+function project(x, y, m) {
     return {
-        x: ~~((x-CAM_X)*zs + CAM_X),
-        y: ~~((y-CAM_Y)*zs + CAM_Y)
+        x: ~~((x-CAM_X)*m + CAM_X),
+        y: ~~((y-CAM_Y)*m + CAM_Y)
     }
 }
 
