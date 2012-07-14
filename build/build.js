@@ -23,5 +23,5 @@ var Builder = {
 	}
 };
 
-Builder.copy("../buildings.js", "../../dist/buildings-debug.js");
-Builder.minify("../buildings.js", "../../dist/buildings.js");
+Builder.copy("../src/buildings.js", "../dist/buildings-debug.js");
+Builder.minify("../src/buildings.js", "../dist/buildings.js");
