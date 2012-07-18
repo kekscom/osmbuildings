@@ -2,49 +2,13 @@
 
 // create a file config.php and set up your MySQL parameters
 
-require_once("config.php");
+require_once './config.php';
+require_once './constants.php';
+require_once './functions.php';
 
 $db = mysql_connect($dbHost, $dbUser, $dbPass);
 mysql_query("SET NAMES 'utf8'", $db);
 mysql_select_db($dbName, $db);
-
-//*****************************************************************************
-
-define("OFFSET_X", 0);
-define("OFFSET_Y", 0);
-define("SCALE_Z",  3);
-
-define("TILE_SIZE", 256);
-define("MAX_ZOOM",  18);
-
-//*****************************************************************************
-
-function geoToPixel($lat, $lon, $zoomLevel) {
-    $mapSize = TILE_SIZE << $zoomLevel;
-    $latitude  = min(1, max(0, .5-( log( tan( M_PI/4 + M_PI/2 * $lat/180)) / M_PI) / 2) );
-    $longitude = $lon/360 + .5;
-	return array("x"=>intval($longitude*$mapSize), "y"=>intval($latitude*$mapSize));
-}
-
-function polyToStr() {
-    $points = func_get_args();
-    if (count($points) % 2 != 0) {
-        array_pop($points);
-    }
-    $res = array();
-    for ($i = 0; $i < count($points)-1; $i+=2) {
-        $res[] = $points[$i]." ".$points[$i+1];
-    }
-    return "POLYGON((".implode(",", $res)."))";
-}
-
-function strToPoly($str) {
-    $res = explode(",", str_replace(" ", ",", preg_replace('/^[A-Z\(]+|\)+$/', "", $str)));
-    for ($i = 0; $i < count($res); $i++) {
-        $res[$i] *= 1;
-    }
-    return $res;
-}
 
 //*****************************************************************************
 
