@@ -21,6 +21,14 @@ Everything can be done in different Geo enabled databases too. For now we just g
 3. Make sure PHP is running and create a /server/config.php file for your MySQL credentials. Or just adapt and rename /server/config.sample.php for your needs.
 
 
+
+# For PostgreSQL with PostGIS extension
+
+1. You need a table with your geometries (default name geom)  and a column with (default name height). Data should be in EPSG:4326.
+
+2. If you need to customize the script (using ST_Transform or anything else), change the file server/index.pg.php
+
+
 ## Integration
 
 I assume, Leaflet is already integrated in your html page. If not, head over to its <a href="http://leaflet.cloudmade.com/reference.html">documentation</a>.

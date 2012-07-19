@@ -55,11 +55,11 @@ $XY = geoToPixel($n, $w, $Z);
 $query = "
     SELECT
         height,
-        ST_AsText(ST_ExteriorRing(the_geom)) AS footprint
+        ST_AsText(ST_ExteriorRing(geom)) AS footprint
     FROM
         buildings
  	WHERE
-		ST_Intersects(ST_GeomFromText('%s', 4326), the_geom))
+		ST_Intersects(ST_GeomFromText('%s', 4326), geom))
     ORDER BY
         height
 ";
