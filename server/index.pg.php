@@ -45,7 +45,7 @@ $query = "
         COALESCE(levels, \"building:levels\", \"building:levels:aboveground\") AS levels,
         ST_AsText(ST_ExteriorRing(the_geom)) AS footprint
     FROM
-        buildings_ffm
+        {$dbTable}
  	WHERE
 		NOT ST_IsEmpty(ST_Intersection(ST_GeomFromText('%s', 4326), the_geom))
     ORDER BY

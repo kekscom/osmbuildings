@@ -49,7 +49,7 @@ $query = "
 		height,
 		ASTEXT(footprint) AS footprint
 	FROM
-		buildings
+		{$dbTable}
 	WHERE
 		MBRINTERSECTS(GEOMFROMTEXT('%s'), footprint)
     ORDER BY
