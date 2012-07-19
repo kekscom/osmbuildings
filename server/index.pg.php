@@ -1,13 +1,7 @@
 <?php
-
-$dbHost = "localhost";
-$dbUser = "postgres";
-$dbPass = "test";
-$dbName = "postgis20";
-
-// require_once("config.php");
-require_once './constants.php';
-require_once './functions.php';
+require './config.php';
+require './constants.php';
+require './functions.php';
 
 $db = pg_connect("host=$dbHost port=5432 dbname=$dbName user=$dbUser password=$dbPass");
 
@@ -30,16 +24,6 @@ $w = $_GET["w"];
 $s = $_GET["s"];
 $e = $_GET["e"];
 
-/*
-$boxPolygon = polyToStr(
-    $n, $w,
-	$n, $e,
-	$s, $e,
-	$s, $w,
-    $n, $w
-);
-*/
-
 $boxPolygon = polyToStr(
     $w, $n,
 	$e, $n,
@@ -48,7 +32,7 @@ $boxPolygon = polyToStr(
     $w, $n
 );
 
-$Z = $_GET["z"]*1;
+$Z = (int)$_GET['z'];
 $z = MAX_ZOOM-$Z;
 
 $XY = geoToPixel($n, $w, $Z);
@@ -120,4 +104,3 @@ while ($row = pg_fetch_object($res)) {
 
 echo json_encode($json);
 
-?>

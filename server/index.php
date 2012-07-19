@@ -37,7 +37,7 @@ $boxPolygon = polyToStr(
     $n, $w
 );
 
-$Z = $_GET["z"]*1;
+$Z = (int)$_GET['z'];
 $z = MAX_ZOOM-$Z;
 
 $XY = geoToPixel($n, $w, $Z);
@@ -108,4 +108,3 @@ while ($row = mysql_fetch_object($res)) {
 
 echo json_encode($json);
 
-?>
