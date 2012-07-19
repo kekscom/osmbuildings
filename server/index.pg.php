@@ -1,11 +1,8 @@
 <?php
 
-$dbHost = "localhost";
-$dbUser = "postgres";
-$dbPass = "test";
-$dbName = "postgis20";
+// create the config.php file with database connection parameters
 
-// require_once("config.php");
+require_once("./config.php");
 require_once './constants.php';
 require_once './functions.php';
 
@@ -57,15 +54,14 @@ $XY = geoToPixel($n, $w, $Z);
 
 $query = "
     SELECT
-        COALESCE(height, \"building:height\") AS height,
-        COALESCE(levels, \"building:levels\", \"building:levels:aboveground\") AS levels,
+        height,
         ST_AsText(ST_ExteriorRing(the_geom)) AS footprint
     FROM
-        buildings_ffm
+        buildings
  	WHERE
-		NOT ST_IsEmpty(ST_Intersection(ST_GeomFromText('%s', 4326), the_geom))
+		ST_Intersects(ST_GeomFromText('%s', 4326), the_geom))
     ORDER BY
-        height DESC, levels DESC
+        height
 ";
 
 $args = array($boxPolygon);
@@ -102,7 +98,7 @@ $json = array(
 header("Content-Type: application/json; charset=utf-8");
 
 while ($row = pg_fetch_object($res)) {
-    $h = ($row->height ? $row->height : ($row->levels ? $row->levels*3.5 : 5))*SCALE_Z>>$z;
+    $h = ($row->height ? $row->height : 5))*SCALE_Z>>$z;
 
     if ($h <= 1) continue;
 
