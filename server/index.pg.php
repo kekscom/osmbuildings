@@ -1,9 +1,24 @@
 <?php
+
 require './config.php';
-require './constants.php';
 require './functions.php';
 
 $db = pg_connect("host=$dbHost port=5432 dbname=$dbName user=$dbUser password=$dbPass");
+
+//*****************************************************************************
+
+// deprecated after move to Source Postgres
+function polyToStr() {
+    $points = func_get_args();
+    if (count($points) % 2 != 0) {
+        array_pop($points);
+    }
+    $res = array();
+    for ($i = 0; $i < count($points)-1; $i+=2) {
+        $res[] = $points[$i]." ".$points[$i+1];
+    }
+    return "POLYGON((".implode(",", $res)."))";
+}
 
 //*****************************************************************************
 
@@ -33,7 +48,7 @@ $boxPolygon = polyToStr(
 );
 
 $Z = (int)$_GET['z'];
-$z = MAX_ZOOM-$Z;
+$z = $maxZoom-$Z;
 
 $XY = geoToPixel($n, $w, $Z);
 
@@ -70,10 +85,10 @@ if (!pg_num_rows($res)) {
 
 $json = array(
     "meta" => array(
-        "n" => round($_GET["n"]*100000)/100000,
-        "w" => round($_GET["w"]*100000)/100000,
-        "s" => round($_GET["s"]*100000)/100000,
-        "e" => round($_GET["e"]*100000)/100000,
+        "n" => crop($_GET["n"]),
+        "w" => crop($_GET["w"]),
+        "s" => crop($_GET["s"]),
+        "e" => crop($_GET["e"]),
         "x" => $XY["x"],
         "y" => $XY["y"],
         "z" => $Z
@@ -86,21 +101,27 @@ $json = array(
 header("Content-Type: application/json; charset=utf-8");
 
 while ($row = pg_fetch_object($res)) {
-    $h = ($row->height ? $row->height : ($row->levels ? $row->levels*3.5 : 5))*SCALE_Z>>$z;
+    $h = ($row->height ? $row->height : ($row->levels ? $row->levels*3.5 : 5))*$heightScale >> $z;
 
-    if ($h <= 1) continue;
+    if ($h <= 1) {
+        continue;
+    }
 
     $f = strToPoly($row->footprint);
 
     $fp = array();
     for ($i = 0; $i < count($f)-1; $i+=2) {
-        $px = geoToPixel($f[$i+1], $f[$i], $Z);
-        $fp[$i]   = $px["x"]-$XY["x"];
-        $fp[$i+1] = $px["y"]-$XY["y"];
+        // TODO: find a nicer way
+        if (preg_match('/^lat/i', $this->_options['coords'])) {
+            $px = geoToPixel($f[$i], $f[$i+1], $Z);
+        } else {
+            $px = geoToPixel($f[$i+1], $f[$i], $Z);
+        }
+        $fp[$i]   = $px["x"] - $XY["x"] + $offsetX;
+        $fp[$i+1] = $px["y"] - $XY["y"] + $offsetY;
     }
 
     $json["data"][] = array($h, $fp);
 }
 
 echo json_encode($json);
-

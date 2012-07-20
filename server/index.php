@@ -1,14 +1,7 @@
 <?php
 
-// create a file config.php and set up your MySQL parameters
-
 require_once './config.php';
-require_once './constants.php';
 require_once './functions.php';
-
-$db = mysql_connect($dbHost, $dbUser, $dbPass);
-mysql_query("SET NAMES 'utf8'", $db);
-mysql_select_db($dbName, $db);
 
 //*****************************************************************************
 
@@ -29,35 +22,23 @@ $w = $_GET["w"];
 $s = $_GET["s"];
 $e = $_GET["e"];
 
-$boxPolygon = polyToStr(
-    $n, $w,
-	$n, $e,
-	$s, $e,
-	$s, $w,
-    $n, $w
-);
-
 $Z = (int)$_GET['z'];
-$z = MAX_ZOOM-$Z;
+$z = $maxZoom-$Z;
 
 $XY = geoToPixel($n, $w, $Z);
 
 //*****************************************************************************
 
 require './source/Mysql.php';
-try{
-    $source = new Source_Mysql(array(
-        'host' => $dbHost, 'user' => $dbUser, 'password' => $dbPass, 'dbname' => $dbName,
-    ));
-    $source->setTable($dbTable)
-        ->setBbox($w, $s, $e, $n);
-    $source->query();
-}catch(Exception $e){
+try {
+    $source = new Source_Mysql($dbConfig);
+    $source->setBbox($n, $w, $s, $e)->query();
+} catch(Exception $e) {
     header("HTTP/1.0 404 Not Found");
     exit;
 }
 
-if(!$source->count()) {
+if (!$source->count()) {
     header("HTTP/1.0 204 No Content");
     exit;
 }
@@ -66,10 +47,10 @@ if(!$source->count()) {
 
 $json = array(
     "meta" => array(
-        "n" => round($_GET["n"]*100000)/100000,
-        "w" => round($_GET["w"]*100000)/100000,
-        "s" => round($_GET["s"]*100000)/100000,
-        "e" => round($_GET["e"]*100000)/100000,
+        "n" => crop($_GET["n"]),
+        "w" => crop($_GET["w"]),
+        "s" => crop($_GET["s"]),
+        "e" => crop($_GET["e"]),
         "x" => $XY["x"],
         "y" => $XY["y"],
         "z" => $Z
@@ -82,21 +63,27 @@ $json = array(
 header('Content-Type: application/json; charset=utf-8');
 
 while ($row = $source->fetch()) {
-    $h = ($row->height ? $row->height : 5)*SCALE_Z>>$z;
+    $h = ($row->height ? $row->height : 5)*$heightScale >> $z;
 
-    if ($h <= 1) continue;
+    if ($h <= 1) {
+        continue;
+    }
 
     $f = strToPoly($row->footprint);
 
     $fp = array();
     for ($i = 0; $i < count($f)-1; $i+=2) {
-        $px = geoToPixel($f[$i], $f[$i+1], $Z);
-        $fp[$i]   = $px["x"]-$XY["x"];
-        $fp[$i+1] = $px["y"]-$XY["y"];
+        // TODO: find a nicer way
+        if (preg_match('/^lat/i', $this->_options['coords'])) {
+            $px = geoToPixel($f[$i], $f[$i+1], $Z);
+        } else {
+            $px = geoToPixel($f[$i+1], $f[$i], $Z);
+        }
+        $fp[$i]   = $px["x"] - $XY["x"] + $offsetX;
+        $fp[$i+1] = $px["y"] - $XY["y"] + $offsetY;
     }
 
     $json["data"][] = array($h, $fp);
 }
 
 echo json_encode($json);
-

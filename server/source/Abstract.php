@@ -16,21 +16,19 @@ abstract class Source_Abstract
 
     abstract public function init();
 
-    public function setTable($table)
+    public function setBbox($n, $w, $s, $e)
     {
-        $this->_table = $table;
-        return $this;
-    }
+        if (preg_match('/^lat/i', $this->_options['coords'])) {
+            $args = array($n, $w, $s, $e);
+        } else {
+            $args = array($w, $n, $e, $s);
+        }
 
-    public function setBbox($l, $b, $r, $t)
-    {
-        $this->_bbox = polyToStr(
-            $t, $l,
-	    $t, $r,
-            $b, $r,
-            $b, $l,
-            $t, $l
+        $this->_bbox = vsprintf(
+            'POLYGON((%1$.5f %2$.5f, %1$.5f %4$.5f, %3$.5f %4$.5f, %3$.5f %2$.5f, %1$.5f %2$.5f))',
+            $args
         );
+
         return $this;
     }
 
