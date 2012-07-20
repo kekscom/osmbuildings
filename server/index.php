@@ -21,7 +21,7 @@ if (!isset($_GET["n"]) || !isset($_GET["w"]) || !isset($_GET["s"]) || !isset($_G
 if (!isset($_GET["z"])) {
     header("HTTP/1.0 400 Bad Request");
     echo "Zoom level missing.";
-	exit;
+    exit;
 }
 
 $n = $_GET["n"];
@@ -37,35 +37,27 @@ $boxPolygon = polyToStr(
     $n, $w
 );
 
-$Z = $_GET["z"]*1;
+$Z = (int)$_GET['z'];
 $z = MAX_ZOOM-$Z;
 
 $XY = geoToPixel($n, $w, $Z);
 
 //*****************************************************************************
 
-$query = "
-	SELECT
-		height,
-		ASTEXT(footprint) AS footprint
-	FROM
-		buildings
-	WHERE
-		MBRINTERSECTS(GEOMFROMTEXT('%s'), footprint)
-    ORDER BY
-        height
-";
-
-$args = array($boxPolygon);
-
-$res = mysql_query(vsprintf($query, array_map("mysql_escape_string", $args)), $db);
-
-if (mysql_error()) {
+require './source/Mysql.php';
+try{
+    $source = new Source_Mysql(array(
+        'host' => $dbHost, 'user' => $dbUser, 'password' => $dbPass, 'dbname' => $dbName,
+    ));
+    $source->setTable($dbTable)
+        ->setBbox($w, $s, $e, $n);
+    $source->query();
+}catch(Exception $e){
     header("HTTP/1.0 404 Not Found");
     exit;
 }
 
-if (!mysql_num_rows($res)) {
+if(!$source->count()) {
     header("HTTP/1.0 204 No Content");
     exit;
 }
@@ -82,14 +74,14 @@ $json = array(
         "y" => $XY["y"],
         "z" => $Z
     ),
-	"data" => array()
+    'data' => array(),
 );
 
 //*****************************************************************************
 
-header("Content-Type: application/json; charset=utf-8");
+header('Content-Type: application/json; charset=utf-8');
 
-while ($row = mysql_fetch_object($res)) {
+while ($row = $source->fetch()) {
     $h = ($row->height ? $row->height : 5)*SCALE_Z>>$z;
 
     if ($h <= 1) continue;
@@ -108,4 +100,3 @@ while ($row = mysql_fetch_object($res)) {
 
 echo json_encode($json);
 
-?>
