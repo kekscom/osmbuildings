@@ -295,6 +295,7 @@ function render() {
 
         // when fading in, use a dynamic height
         h = item[2] ? item[0] : item[0]*fadeFactor;
+        // precalculating projection height scale
         m = CAM_Z/(CAM_Z-h);
 
         roof = new Int32Array(footprint.length-2);
