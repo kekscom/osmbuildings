@@ -32,6 +32,7 @@ class Source_Mysql extends Source_Abstract
         if ($this->_link->errno) {
             throw new Exception($this->_link->error);
         }
+        return $this;
     }
 
     public function count()
