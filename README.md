@@ -16,7 +16,9 @@ Actually I'm looking for a partner to provide a data service to you.
 1. You will need MySQL as data storage. Version 5.0.16 or better has the required <a href="http://dev.mysql.com/doc/refman/5.0/en/spatial-extensions.html">Spatial Extensions</a> enabled.
 Everything can be done in different Geo enabled databases too. For now we just go MySQL.
 
-2. You will need to import OSM building data from /server/buildings.sql.zip. Either upload this directly in PhpMyAdmin or unpack and import as you like.
+For those who have trouble importing the data into MySQL or running a different server, <a href="https://twitter.com/D_Guidi">Diego Guidi</a> did a great job creating a Shapefile.
+
+2. You will need to import OSM building data from /server/data/buildings-berlin.mysql.zip. Either upload this directly in PhpMyAdmin or unpack and import as you like.
 
 3. Make sure PHP is running and create a /server/config.php file for your MySQL credentials. Or just adapt and rename /server/config.sample.php for your needs.
 
@@ -43,7 +45,7 @@ var map = new L.Map('map');
   :
   :
 // You may stay with any maptiles you are already using. these are just my favourites.
-// Remember to obtain an API key from <a href="http://mapbox.com">MapBox</a>.
+// Remember to obtain an API key from MapBox.
 // And keep the attribution part for proper copyright notice.
 var mapboxTiles = new L.TileLayer(
 	'http://{s}.tiles.mapbox.com/v3/mapbox.mapbox-streets/{z}/{x}/{y}.png',
