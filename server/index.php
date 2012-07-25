@@ -74,7 +74,7 @@ while ($row = $source->fetch()) {
     $fp = array();
     for ($i = 0; $i < count($f)-1; $i+=2) {
         // TODO: find a nicer way
-        if (preg_match('/^lat/i', $this->_options['coords'])) {
+        if (preg_match('/^lat/i', $dbConfig['coords'])) {
             $px = geoToPixel($f[$i], $f[$i+1], $Z);
         } else {
             $px = geoToPixel($f[$i+1], $f[$i], $Z);
