@@ -3,22 +3,23 @@ var fs   = require("fs");
 var exec = require("child_process").exec;
 var util = require("util");
 
-fs.copy = function(srcFile, dstFile) {
+fs.copy = function (srcFile, dstFile) {
     var srcStream = fs.createReadStream(srcFile);
     var dstStream = fs.createWriteStream(dstFile);
     util.pump(srcStream, dstStream);
 }
 
 var Builder = {
-
-	minify: function(inFile, outFile) {
+	minify: function (inFile, outFile) {
 		// ADVANCED_OPTIMIZATIONS, SIMPLE_OPTIMIZATIONS
-        exec("java -jar closurecompiler/compiler.jar --compilation_level SIMPLE_OPTIMIZATIONS --js "+ inFile +" --js_output_file "+ outFile, function(error) {
-            if (error !== null) console.log("exec error: "+ error);
+        exec("java -jar closurecompiler/compiler.jar --compilation_level SIMPLE_OPTIMIZATIONS --js "+ inFile +" --js_output_file "+ outFile, function (err) {
+            if (err !== null) {
+				console.log("exec error: "+ err);
+			}
         });
 	},
 
-	copy: function(src, dst) {
+	copy: function (src, dst) {
 		fs.copy(src, dst);
 	}
 };
