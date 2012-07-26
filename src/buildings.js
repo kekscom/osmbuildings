@@ -15,7 +15,9 @@
         PI = Math.PI,
         HALF_PI = PI / 2,
         RAD = 180 / PI,
+
         LAT = 'latitude', LON = 'longitude',
+        HEIGHT = 0, FOOTPRINT = 1, IS_NEW = 2,
 
         // map values
         width = 0, height = 0,
@@ -216,7 +218,7 @@
             // identify already present buildings to fade in new ones
             for (i = 0, il = data.length; i < il; i++) {
                 // id key: x,y of first point - good enough
-                keyList[i] = (data[i][1][0] + offX) + ',' + (data[i][1][1] + offY);
+                keyList[i] = (data[i][FOOTPRINT][0] + offX) + ',' + (data[i][FOOTPRINT][1] + offY);
             }
         }
 
@@ -225,11 +227,9 @@
 
         for (i = 0, il = resData.length; i < il; i++) {
             data[i] = resData[i];
-            data[i][0] = min(data[i][0], MAX_HEIGHT);
-            k = data[i][1][0] + ',' + data[i][1][1];
-            if (keyList && ~~keyList.indexOf(k) > -1) {
-                data[i][2] = 1; // mark item 'already present'
-            }
+            data[i][HEIGHT] = min(data[i][HEIGHT], MAX_HEIGHT);
+            k = data[i][FOOTPRINT][0] + ',' + data[i][FOOTPRINT][1];
+            data[i][IS_NEW] = !(keyList && ~keyList.indexOf(k));
         }
 
         resMeta = resData = keyList = null; // gc
@@ -249,7 +249,7 @@
                 fadeFactor = 1;
                 // unset 'already present' marker
                 for (var i = 0, il = data.length; i < il; i++) {
-                    delete data[i][2];
+                    data[i][IS_NEW] = 0;
                 }
             }
             render();
@@ -285,16 +285,10 @@
             ax, ay, bx, by, _a, _b
         ;
 
-//        data.sort(function(a, b) {
-//            var h = a[0]-b[0];
-//            if (h != 0) return h;
-//            return (abs(a[1][0] - meta.x - centerX) - abs(b[1][0] - meta.x - centerX));
-//        });
-
         for (i = 0, il = data.length; i < il; i++) {
             item = data[i];
             isVisible = false;
-            f = item[1];
+            f = item[FOOTPRINT];
             footprint = new Int32Array(f.length);
             for (j = 0, jl = f.length - 1; j < jl; j += 2) {
                 footprint[j]     = x = (f[j]     - offX);
@@ -314,7 +308,7 @@
             context.fillStyle = wallColorAlpha;
 
             // when fading in, use a dynamic height
-            h = item[2] ? item[0] : item[0] * fadeFactor;
+            h = item[IS_NEW] ? item[HEIGHT] * fadeFactor : item[HEIGHT];
 
             // precalculating projection height scale
             m = CAM_Z / (CAM_Z - h);

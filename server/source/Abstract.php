@@ -32,4 +32,3 @@ abstract class Source_Abstract
 
     abstract public function fetch();
 }
-

@@ -16,17 +16,17 @@ class Source_Mysql extends Source_Abstract
     public function query()
     {
         $query = "
-	SELECT
-		height,
-		ASTEXT(footprint) AS footprint
-	FROM
-		{$this->_options['table']}
-	WHERE
-		MBRINTERSECTS(GEOMFROMTEXT('%s'), footprint)
-    ORDER BY
-        height
-";
-	$bbox = vsprintf('POLYGON((%1$.5f %2$.5f, %1$.5f %4$.5f, %3$.5f %4$.5f, %3$.5f %2$.5f, %1$.5f %2$.5f))', $this->_bbox);
+            SELECT
+                height,
+                ASTEXT(footprint) AS footprint
+            FROM
+                {$this->_options['table']}
+            WHERE
+                MBRINTERSECTS(GEOMFROMTEXT('%s'), footprint)
+            ORDER BY
+                height
+        ";
+        $bbox = vsprintf('POLYGON((%1$.5f %2$.5f, %1$.5f %4$.5f, %3$.5f %4$.5f, %3$.5f %2$.5f, %1$.5f %2$.5f))', $this->_bbox);
         $query = vsprintf($query, array_map('mysql_escape_string', array($bbox)));
         $this->_collection = $this->_link->query($query);
         if ($this->_link->errno) {
