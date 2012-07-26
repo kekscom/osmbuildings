@@ -61,16 +61,16 @@
         parentNode.appendChild(canvas),
 
         context = canvas.getContext('2d')
-        context.lineWidth = 1;
         context.lineCap = 'round';
 		context.lineJoin = 'round';
+        context.lineWidth = 1;
 
-        try { context.mozImageSmoothingEnabled = false } catch(e) {}
+        try { context.mozImageSmoothingEnabled = false } catch(err) {}
     }
 
 	function setStyle(style) {
 		style = style || {};
-		strokeRoofs = style.strokeRoofs || strokeRoofs;
+		strokeRoofs = style.strokeRoofs !== undefined ? style.strokeRoofs : strokeRoofs;
 		wallColor   = style.wallColor   || wallColor;
 		roofColor   = style.roofColor   || roofColor;
 		strokeColor = style.strokeColor || strokeColor;
@@ -285,6 +285,12 @@
             ax, ay, bx, by, _a, _b
         ;
 
+//        data.sort(function(a, b) {
+//            var h = a[0]-b[0];
+//            if (h != 0) return h;
+//            return (abs(a[1][0] - meta.x - centerX) - abs(b[1][0] - meta.x - centerX));
+//        });
+
         for (i = 0, il = data.length; i < il; i++) {
             item = data[i];
             isVisible = false;
@@ -389,77 +395,95 @@
 	}
 
 	B.prototype.version = version;
-
 	B.prototype.render = render;
-
 	B.prototype.setStyle = setStyle;
 
 	//*** BEGIN leaflet patch
 
-	B.prototype.version += '-leaflet-patch';
+    (function (proto) {
 
-	B.prototype.addTo = function(map) {
+        var attribution = 'Buildings &copy; <a href="http://osmbuildings.org">OSM Buildings</a>';
 
-		function calcCenter() {
-			var half = map._size.divideBy(2);
-			return map._getTopLeftPoint().add(half);
-		}
+        proto.version += '-leaflet-patch';
 
-		createCanvas(document.querySelector('.leaflet-control-container'));
-		MAX_ZOOM = map._layersMaxZoom;
+        proto.addTo = function(map) {
+            proto.map = map;
 
-		setSize(map._size.x, map._size.y);
-		var c = calcCenter();
-		setCenter(c.x, c.y);
-		setZoom(map._zoom);
+            function calcCenter() {
+                var half = map._size.divideBy(2);
+                return map._getTopLeftPoint().add(half);
+            }
 
-		var resizeTimer;
-		window.addEventListener('resize', function () {
-			resizeTimer = setTimeout(function () {
-				clearTimeout(resizeTimer);
-				onResize({ width:map._size.x, height:map._size.y });
-			}, 100);
-		}, false);
+            createCanvas(document.querySelector('.leaflet-control-container'));
+            MAX_ZOOM = map._layersMaxZoom;
 
-		map.on({
-			move: function () {
-				onMove(calcCenter());
-			},
+            setSize(map._size.x, map._size.y);
+            var c = calcCenter();
+            setCenter(c.x, c.y);
+            setZoom(map._zoom);
 
-			moveend: function () {
-				onMoveEnd(calcCenter());
-			},
+            var resizeTimer;
+            window.addEventListener('resize', function () {
+                resizeTimer = setTimeout(function () {
+                    clearTimeout(resizeTimer);
+                    onResize({ width:map._size.x, height:map._size.y });
+                }, 100);
+            }, false);
 
-			zoomstart: onZoomStart,
+            map.on({
+                move: function () {
+                    onMove(calcCenter());
+                },
+                moveend: function () {
+                    onMoveEnd(calcCenter());
+                },
+                zoomstart: onZoomStart,
+                zoomend: function () {
+                    onZoomEnd({ zoom: map._zoom });
+                },
+                viewreset: function handleResize() {
+                   console.log("VIEWRESET");
+                }
+            });
 
-			zoomend: function () {
-				onZoomEnd({ zoom: map._zoom });
-			}
-		});
+            map.attributionControl.addAttribution(attribution);
 
-		map.attributionControl.addAttribution('&copy; <a href="http://osmbuildings.org">OSM Buildings</a>');
+//            function getDOMPos(el) {
+//                 var
+//                    left, top, m,
+//                    style = global.getComputedStyle(el)
+//                ;
+//                if (L.Browser.any3d) {
+//                    m = style[L.DomUtil.TRANSFORM].match(/(-?[\d\.]+), (-?[\d\.]+)\)/) || [];
+//                    left = parseFloat(m[1]) || 0;
+//                    top = parseFloat(m[2]) || 0;
+//                } else {
+//                    left = parseFloat(style.left) || 0;
+//                    top = parseFloat(style.top) || 0;
+//                }
+//                return new L.Point(left, top);
+//            }
+//            onMove(map._getTopLeftPoint().subtract(getDOMPos(map._mapPane)).add(half));
 
-		/*
-		function getDOMPos(el) {
-			 var
-				left, top, m,
-				style = global.getComputedStyle(el)
-			;
-			if (L.Browser.any3d) {
-				m = style[L.DomUtil.TRANSFORM].match(/(-?[\d\.]+), (-?[\d\.]+)\)/) || [];
-				left = parseFloat(m[1]) || 0;
-				top = parseFloat(m[2]) || 0;
-			} else {
-				left = parseFloat(style.left) || 0;
-				top = parseFloat(style.top) || 0;
-			}
-			return new L.Point(left, top);
-		}
-		onMove(map._getTopLeftPoint().subtract(getDOMPos(map._mapPane)).add(half));
-		*/
+            loadData();
+        }
 
-		loadData();
-	}
+        proto.removeFrom = function(map) {
+            map.attributionControl.removeAttribution(attribution);
+
+            map.off({
+    //			move: function () {},
+    //			moveend: function () {},
+    //			zoomstart: onZoomStart,
+    //			zoomend: function () {}
+            });
+
+            canvas.parentNode.removeChild(canvas);
+
+            proto.map = null;
+        }
+
+    }(B.prototype));
 
 	//*** END leaflet patch
 
