@@ -19,16 +19,10 @@ abstract class Source_Abstract
     public function setBbox($n, $w, $s, $e)
     {
         if (preg_match('/^lat/i', $this->_options['coords'])) {
-            $args = array($n, $w, $s, $e);
+            $this->_bbox = array($n, $w, $s, $e);
         } else {
-            $args = array($w, $n, $e, $s);
+            $this->_bbox = array($w, $n, $e, $s);
         }
-
-        $this->_bbox = vsprintf(
-            'POLYGON((%1$.5f %2$.5f, %1$.5f %4$.5f, %3$.5f %4$.5f, %3$.5f %2$.5f, %1$.5f %2$.5f))',
-            $args
-        );
-
         return $this;
     }
 
