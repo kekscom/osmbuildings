@@ -6,7 +6,7 @@ abstract class Source_Abstract
     protected $_collection;
     protected $_options = array();
     protected $_table;
-    protected $_bbox;
+    private static $validSources = array("Mysql", "Mapnik");
 
     public function __construct(array $options = array())
     {
@@ -14,19 +14,21 @@ abstract class Source_Abstract
         $this->init();
     }
 
-    abstract public function init();
-
-    public function setBbox($n, $w, $s, $e)
-    {
-        if (preg_match('/^lat/i', $this->_options['coords'])) {
-            $this->_bbox = array($n, $w, $s, $e);
-        } else {
-            $this->_bbox = array($w, $n, $e, $s);
+    public static function create($dbConfig) {
+        if (!in_array($dbConfig['source'], self::$validSources)) {
+            // TODO: throw proper exception
+            return FALSE;
         }
-        return $this;
+
+        require_once dirname(__FILE__) . '/'. $dbConfig['source'] . '.php';
+
+        $className = 'Source_' . $dbConfig['source'];
+        return new $className($dbConfig);
     }
 
-    abstract public function query();
+    abstract public function init();
+
+    abstract public function query($bbox);
 
     abstract public function count();
 

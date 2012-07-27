@@ -6,32 +6,36 @@ class Source_Mapnik extends Source_Abstract
 {
     public function init()
     {
-	extract($this->_options);
-        if(!isset($port)){ // default port
+        extract($this->_options);
+        if (!isset($port)) { // default port
             $port = 5432;
         }
         $this->_link = pg_connect("host={$host} port={$port} user={$user} password={$password} dbname={$dbname} connect_timeout=3");
-        if(!$this->_link){
+        if (!$this->_link) {
             throw new Exception(pg_last_error());
         }
     }
 
-    public function query()
+    public function query($bbox)
     {
-        $bbox = $this->_bbox[0] . ' ' . $this->_bbox[3] . ', ' . $this->_bbox[1] . ' ' . $this->_bbox[2];
-        $query = "SELECT
-            height,
-            NULL AS levels,
-            ST_AsText(ST_Transform(ST_ExteriorRing(way), 4326)) AS footprint
-        FROM
-            {$this->_options['table']}
-        WHERE
-            way && ST_Transform(SetSRID('BOX3D({$bbox})'::box3d, 4326), 900913)
-            AND building IS NOT NULL
-        ORDER BY
-            height DESC";
+        $query = "
+            SELECT
+                height,
+                ST_AsText(ST_Transform(ST_ExteriorRing(way), 4326)) AS footprint
+            FROM
+                {$this->_options['table']}
+            WHERE
+                way && ST_Transform(SetSRID('BOX3D(%s)'::box3d, 4326), 900913)
+                AND building IS NOT NULL
+            ORDER BY
+                height DESC
+        ";
+
+        $bboxStr = vsprintf('%1$.5f %2$.5f, %3$.5f %4$.5f', $bbox);
+        $query = vsprintf($query, array_map('pg_escape_literal', array($bboxStr)));
+
         $this->_collection = pg_query($this->_link, $query);
-        if(!$this->_collection){
+        if (!$this->_collection) {
             throw new Exception(pg_last_error());
         }
         return $this;
@@ -50,4 +54,3 @@ class Source_Mapnik extends Source_Abstract
         return pg_fetch_object($this->_collection);
     }
 }
-

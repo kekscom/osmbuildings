@@ -34,6 +34,7 @@ var mapboxTiles = new L.TileLayer(
 );
 
 map.setView(new L.LatLng(52.52111, 13.40988), 17).addLayer(mapboxTiles);
+// PG map.setView(new L.LatLng(50.11294, 8.66771), 17).addLayer(mapboxTiles);
 new OSMBuildings('server/?w={w}&n={n}&e={e}&s={s}&z={z}').addTo(map);
 </script>
 </body>
