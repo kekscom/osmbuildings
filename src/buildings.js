@@ -259,6 +259,11 @@
     function render() {
         context.clearRect(0, 0, width, height);
 
+        // data needed for rendering
+        if (!meta || data) {
+            return;
+        }
+
         // show buildings in high zoom levels only
         // avoid rendering during zoom
         if (zoom < MIN_ZOOM || isZooming) {
@@ -385,7 +390,6 @@
 	var B = global.OSMBuildings = function (u, style) {
 		url = u;
 		setStyle(style);
-//		loadData(); // requires map
 	}
 
 	B.prototype.version = version;
@@ -434,10 +438,8 @@
                 zoomstart: onZoomStart,
                 zoomend: function () {
                     onZoomEnd({ zoom: map._zoom });
-                },
-                viewreset: function handleResize() {
-                   console.log("VIEWRESET");
-                }
+                } //,
+//                viewreset: function handleResize() {}
             });
 
             map.attributionControl.addAttribution(attribution);
