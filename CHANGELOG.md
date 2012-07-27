@@ -1,7 +1,13 @@
 
 # Changelog
 
-v0.1a @ 2012-07-25
+## v0.1a @ 2012-07-27
+
+- made either MySQL or Postgres (Mapnik) fully configurable
+- lat/lon order of your coordinates is configurable too
+- fix for polygon winding - making all clockwise now
+
+## v0.1a @ 2012-07-25
 
 - Code adaptions for better Leaflet integration
 - Much simpler initialization process

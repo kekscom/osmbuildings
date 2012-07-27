@@ -4,10 +4,10 @@ A JavaScript library for visualizing 3D OSM building data on interactive maps
 
 ## Important
 
-The whole library consists of client JavaScript files, a server side PHP script and a MySQL database.
-Everything should be handled as alpha state. All components are likely to change extensively.
+The whole library consists of client JavaScript files, a server side PHP script and a MySQL or PostGis database.
+Everything should be seen as alpha state, all components are likely to change extensively.
 
-Bottleneck is data availability. I can't process and host a whole OSM planet file.
+Bottleneck at the moment is data availability. I can't process and host a whole OSM planet file.
 Actually I'm looking for a partner to provide a data service to you.
 
 
@@ -15,12 +15,12 @@ Actually I'm looking for a partner to provide a data service to you.
 
 1. You will need MySQL as data storage. Version 5.0.16 or better has the required <a href="http://dev.mysql.com/doc/refman/5.0/en/spatial-extensions.html">Spatial Extensions</a> enabled.
 Everything can be done in different Geo enabled databases too. For now we just go MySQL.
-
 For those who have trouble importing the data into MySQL or running a different server, <a href="https://twitter.com/D_Guidi">Diego Guidi</a> did a great job creating a Shapefile.
 
 2. You will need to import OSM building data from /server/data/buildings-berlin.mysql.zip. Either upload this directly in PhpMyAdmin or unpack and import as you like.
 
-3. Make sure PHP is running and create a /server/config.php file for your MySQL credentials. Or just adapt and rename /server/config.sample.php for your needs.
+3. Make sure PHP is running and create a /server/config.php file for your setting s and database credentials.
+Or just adapt and rename /server/config.sample.php for your needs.
 
 
 ## Integration
