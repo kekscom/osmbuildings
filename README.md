@@ -17,7 +17,8 @@ Actually I'm looking for a partner to provide a data service to you.
 Everything can be done in different Geo enabled databases too. For now we just go MySQL.
 For those who have trouble importing the data into MySQL or running a different server, <a href="https://twitter.com/D_Guidi">Diego Guidi</a> did a great job creating a Shapefile.
 
-2. You will need to import OSM building data from /server/data/buildings-berlin.mysql.zip. Either upload this directly in PhpMyAdmin or unpack and import as you like.
+2. You will need to create your database table using the dump file /server/data/mysql-CREATE_TABLE.sql .
+Then import building data, i.e. from /server/data/mysql-berlin.zip. Either upload this directly in PhpMyAdmin or unpack and import as you like.
 
 3. Make sure PHP is running and create a /server/config.php file for your setting s and database credentials.
 Or just adapt and rename /server/config.sample.php for your needs.

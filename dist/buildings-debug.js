@@ -260,7 +260,7 @@
         context.clearRect(0, 0, width, height);
 
         // data needed for rendering
-        if (!meta || data) {
+        if (!meta || !data) {
             return;
         }
 
