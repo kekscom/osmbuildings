@@ -1,6 +1,11 @@
 
 # Changelog
 
+## v0.1a @ 2012-07-29
+
+- adding converter PostGIS > MySQL
+- data for Frankfurt added
+
 ## v0.1a @ 2012-07-27
 
 - made either MySQL or Postgres (Mapnik) fully configurable

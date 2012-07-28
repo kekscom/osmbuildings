@@ -17,8 +17,10 @@ Actually I'm looking for a partner to provide a data service to you.
 Everything can be done in different Geo enabled databases too. For now we just go MySQL.
 For those who have trouble importing the data into MySQL or running a different server, <a href="https://twitter.com/D_Guidi">Diego Guidi</a> did a great job creating a Shapefile.
 
+* See Data conversion below *
+
 2. You will need to create your database table using the dump file /server/data/mysql-CREATE_TABLE.sql .
-Then import building data, i.e. from /server/data/mysql-berlin.zip. Either upload this directly in PhpMyAdmin or unpack and import as you like.
+Then import building data, i.e. from /server/data/mysql-berlin.zip . Either upload this directly in PhpMyAdmin or unpack and import as you like.
 
 3. Make sure PHP is running and create a /server/config.php file for your setting s and database credentials.
 Or just adapt and rename /server/config.sample.php for your needs.
@@ -79,5 +81,19 @@ new OSMBuildings('server/?w={w}&n={n}&e={e}&s={s}&z={z}').addTo(map);
 ```
 
 done.
+
+## Data Conversion
+
+As PostGIS seems to be much more popular for handling Geometry and MySQL being much mor popular for commercial Webhosting, there is now a data conversion script in using Node.js.
+Requirements are: a working Node.js installation (I tested successfully 0.6 on Windows) and the node-postgres module. Install the module with <code>npm install pg</code>.
+Then have a look into /server/data/convert.js and change database, table, output settings.
+Run the conversion with <code>node convert.js</code>.
+
+What it does:
+
+- reads height and footprint polygons from PostGIS.
+- turns height into a number if needed
+- swaps lat/lon of polygons if needed
+- creates a mysql dump file
 
 For any further information visit <a href="http://osmbuildings.org">http://osmbuildings.org</a>, follow <a href="https://twitter.com/osmbuildings">@osmbuildings</a> on Twitter or report issues here on Github.
