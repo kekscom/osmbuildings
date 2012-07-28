@@ -9,7 +9,7 @@ require_once './source/Abstract.php';
 if (!isset($_GET['n']) || !isset($_GET['w']) || !isset($_GET['s']) || !isset($_GET['e'])) {
     header('HTTP/1.0 400 Bad Request');
     echo 'Bounding box missing.';
-	exit;
+    exit;
 }
 
 if (!isset($_GET['z'])) {

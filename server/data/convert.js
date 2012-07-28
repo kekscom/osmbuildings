@@ -11,9 +11,9 @@ var
     pgBBox = null, // { n: .., w: .., s: .., e: .. } optional info to convert a certain segment of data (not tested yet)
 
     myTable = 'buildings', // the table name in mysql
-    myFile  = 'dump.sql', // the file name for dumping the data into
+    myFile = 'dump.sql', // the file name for dumping the data into
     myCountry = 'de', // optional info to update just parts of the data
-	myCity = 'frankfurt' // optional info to update just parts of the data
+    myCity = 'frankfurt' // optional info to update just parts of the data
 ;
 
 //*****************************************************************************
@@ -58,22 +58,22 @@ function filterByBBox() {
 //*****************************************************************************
 
 var BulkInsert = function(handle, query, limit, callback) {
-	var queue = [];
-	this.add = function(record) {
-		queue.push(record.join(','));
-		if (queue.length > limit) {
-			this.flush()
-		}
-	}
-	this.flush = function() {
+    var queue = [];
+    this.add = function(record) {
+        queue.push(record.join(','));
+        if (queue.length > limit) {
+            this.flush()
+        }
+    }
+    this.flush = function() {
         var sql = query.replace('{values}', '\n('+ queue.join('),\n(') +')');
         if (handle.path && handle.writable) {
             handle.write(sql);
         } else {
             handle.query(sql, callback);
         }
-		queue = [];
-	}
+        queue = [];
+    }
 };
 
 //*****************************************************************************
@@ -92,7 +92,7 @@ var query = "\
         ST_AsText(ST_ExteriorRing(" + pgFootprintField + ")) AS footprint\
     FROM\
         " + pgTable + "\
- 	WHERE " + filterByBBox(bbox) + "\
+     WHERE " + filterByBBox(bbox) + "\
     ORDER BY\
         height DESC\
 ";
@@ -102,7 +102,7 @@ sql.query(query, function(err, res) {
 
     for (var i = 0, il = res.rows.length; i < il; i++) {
         var row = res.rows[i];
-		var height = row.height ? row.height.replace(/\D/g, '') : null;
+        var height = row.height ? row.height.replace(/\D/g, '') : null;
         myInserter.add([
             height || 'NULL',
             'GEOMFROMTEXT(\'' + setLatLonOrder(row.footprint) + '\')',

@@ -91,7 +91,7 @@ Run the conversion with <code>node convert.js</code>.
 
 What it does:
 
-- reads height and footprint polygons from PostGIS.
+- reads height and footprint polygons from PostGIS
 - turns height into a number if needed
 - swaps lat/lon of polygons if needed
 - creates a mysql dump file

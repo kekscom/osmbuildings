@@ -5,7 +5,7 @@ function geoToPixel($lat, $lon, $zoomLevel) {
     $mapSize = $tileSize << $zoomLevel;
     $latitude  = min(1, max(0, .5-( log( tan( M_PI/4 + M_PI/2 * $lat/180)) / M_PI) / 2) );
     $longitude = $lon/360 + .5;
-	return array('x'=>intval($longitude*$mapSize), 'y'=>intval($latitude*$mapSize));
+    return array('x'=>intval($longitude*$mapSize), 'y'=>intval($latitude*$mapSize));
 }
 
 function strToPoly($str) {
@@ -31,32 +31,32 @@ function crop($n) {
 
 // detect polygon winding direction: clockwise or counter clockwise
 function getPolygonWinding($points) {
-	$num = count($points);
-	$maxN = $maxS = $points[0];
-	$maxE = $maxW = $points[1];
+    $num = count($points);
+    $maxN = $maxS = $points[0];
+    $maxE = $maxW = $points[1];
 
-	for ($i = 0; $i < $num-1; $i+=2) {
-		if ($points[$i+1] < $maxW) {
-			$maxW = $points[$i+1];
-			$WI = $i;
-		} else if ($points[$i+1] > $maxE) {
-			$maxE = $points[$i+1];
-			$EI = $i;
-		}
+    for ($i = 0; $i < $num-1; $i+=2) {
+        if ($points[$i+1] < $maxW) {
+            $maxW = $points[$i+1];
+            $WI = $i;
+        } else if ($points[$i+1] > $maxE) {
+            $maxE = $points[$i+1];
+            $EI = $i;
+        }
 
-		if ($points[$i] > $maxN) {
-			$maxN = $points[$i];
-			$NI = $i;
-		}
-	}
+        if ($points[$i] > $maxN) {
+            $maxN = $points[$i];
+            $NI = $i;
+        }
+    }
 
-	$W = $WI-$NI;
-	$E = $EI-$NI;
+    $W = $WI-$NI;
+    $E = $EI-$NI;
 
-	if ($W < 0) $W += $num;
-	if ($E < 0) $E += $num;
+    if ($W < 0) $W += $num;
+    if ($E < 0) $E += $num;
 
-	return ($W > $E) ? 'CW' : 'CCW';
+    return ($W > $E) ? 'CW' : 'CCW';
 }
 
 // Make polygon winding clockwise. This is needed for proper backface culling on client side.

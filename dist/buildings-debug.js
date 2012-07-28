@@ -7,7 +7,7 @@
     global.Int32Array = global.Int32Array || Array;
 
     var
-		version = '0.1a',
+        version = '0.1a',
 
         exp = Math.exp,
         atan = Math.atan,
@@ -31,9 +31,9 @@
 
         url,
         strokeRoofs,
-		wallColor = 'rgb(200,190,180)',
-		roofColor = 'rgb(250,240,230)',
-		strokeColor = 'rgb(145,140,135)',
+        wallColor = 'rgb(200,190,180)',
+        roofColor = 'rgb(250,240,230)',
+        strokeColor = 'rgb(145,140,135)',
 
         meta, data,
 
@@ -64,19 +64,19 @@
 
         context = canvas.getContext('2d')
         context.lineCap = 'round';
-		context.lineJoin = 'round';
+        context.lineJoin = 'round';
         context.lineWidth = 1;
 
         try { context.mozImageSmoothingEnabled = false } catch(err) {}
     }
 
-	function setStyle(style) {
-		style = style || {};
-		strokeRoofs = style.strokeRoofs !== undefined ? style.strokeRoofs : strokeRoofs;
-		wallColor   = style.wallColor   || wallColor;
-		roofColor   = style.roofColor   || roofColor;
-		strokeColor = style.strokeColor || strokeColor;
-	}
+    function setStyle(style) {
+        style = style || {};
+        strokeRoofs = style.strokeRoofs !== undefined ? style.strokeRoofs : strokeRoofs;
+        wallColor   = style.wallColor   || wallColor;
+        roofColor   = style.roofColor   || roofColor;
+        strokeColor = style.strokeColor || strokeColor;
+    }
 
     function pixelToGeo(x, y) {
         var res = {};
@@ -111,7 +111,7 @@
         return req;
     }
 
-	function loadData() {
+    function loadData() {
         if (zoom < MIN_ZOOM) {
             return;
         }
@@ -132,7 +132,7 @@
         }), onDataLoaded);
     }
 
-	//*** positioning helpers *************************************************
+    //*** positioning helpers *************************************************
 
     function setSize(w, h) {
         width = w;
@@ -157,7 +157,7 @@
         zoomAlpha = 1 - (zoom - MIN_ZOOM) * 0.3 / (MAX_ZOOM - MIN_ZOOM);
     }
 
-	//*** event handlers ******************************************************
+    //*** event handlers ******************************************************
 
     function onResize(e) {
         setSize(e.width, e.height);
@@ -237,7 +237,7 @@
         fadeIn();
     }
 
-	//*** rendering ***********************************************************
+    //*** rendering ***********************************************************
 
     function fadeIn() {
         fadeFactor = 0;
@@ -385,18 +385,18 @@
     function setAlpha(rgb, a) {
         var m = rgb.match(/rgba?\((\d+),(\d+),(\d+)(,([\d.]+))?\)/);
         return 'rgba(' + [m[1], m[2], m[3], (m[4] ? a * m[5] : a)].join(',') + ')';
-	}
+    }
 
-	var B = global.OSMBuildings = function (u, style) {
-		url = u;
-		setStyle(style);
-	}
+    var B = global.OSMBuildings = function (u, style) {
+        url = u;
+        setStyle(style);
+    }
 
-	B.prototype.version = version;
-	B.prototype.render = render;
-	B.prototype.setStyle = setStyle;
+    B.prototype.version = version;
+    B.prototype.render = render;
+    B.prototype.setStyle = setStyle;
 
-	//*** BEGIN leaflet patch
+    //*** BEGIN leaflet patch
 
     (function (proto) {
 
@@ -451,10 +451,10 @@
             map.attributionControl.removeAttribution(attribution);
 
             map.off({
-    //			move: function () {},
-    //			moveend: function () {},
-    //			zoomstart: onZoomStart,
-    //			zoomend: function () {}
+    //            move: function () {},
+    //            moveend: function () {},
+    //            zoomstart: onZoomStart,
+    //            zoomend: function () {}
             });
 
             canvas.parentNode.removeChild(canvas);
@@ -464,7 +464,7 @@
 
     }(B.prototype));
 
-	//*** END leaflet patch
+    //*** END leaflet patch
 
 }(this));
 
@@ -475,13 +475,13 @@
 var map = new L.Map('map');
 
 var buildings = new OSMBuildings(
-	'server/?w={w}&n={n}&e={e}&s={s}&z={z}',
-	{
-		strokeRoofs: false,
-		wallColor: 'rgb(190,170,150)',
-		roofColor: 'rgb(230,220,210)',
-		strokeColor: 'rgb(145,140,135)'
-	}
+    'server/?w={w}&n={n}&e={e}&s={s}&z={z}',
+    {
+        strokeRoofs: false,
+        wallColor: 'rgb(190,170,150)',
+        roofColor: 'rgb(230,220,210)',
+        strokeColor: 'rgb(145,140,135)'
+    }
 );
 
 buildings.addTo(map);

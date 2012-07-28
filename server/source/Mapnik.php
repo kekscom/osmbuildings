@@ -31,7 +31,7 @@ class Source_Mapnik extends Source_Abstract
                 height DESC
         ";
 
-		// alternative WHERE: ST_Intersects(ST_GeomFromText('%s', 4326), geom)
+        // alternative WHERE: ST_Intersects(ST_GeomFromText('%s', 4326), geom)
 
         $bboxStr = vsprintf('%1$.5f %2$.5f, %3$.5f %4$.5f', $bbox);
         $query = vsprintf($query, array_map('pg_escape_literal', array($bboxStr)));

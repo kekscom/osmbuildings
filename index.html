@@ -10,7 +10,7 @@ body {
     padding: 0;
 }
 img, canvas {
-	image-rendering: optimizeSpeed;
+    image-rendering: optimizeSpeed;
 }
 </style>
 
@@ -26,11 +26,11 @@ img, canvas {
 var map = new L.Map('map');
 
 var mapboxTiles = new L.TileLayer(
-	"http://{s}.tiles.mapbox.com/v3/mapbox.mapbox-streets/{z}/{x}/{y}.png",
-	{
-		attribution: 'Map tiles &copy; <a href="http://mapbox.com">MapBox</a>',
-		maxZoom: 17
-	}
+    "http://{s}.tiles.mapbox.com/v3/mapbox.mapbox-streets/{z}/{x}/{y}.png",
+    {
+        attribution: 'Map tiles &copy; <a href="http://mapbox.com">MapBox</a>',
+        maxZoom: 17
+    }
 );
 
 map.setView(new L.LatLng(52.52111, 13.40988), 17).addLayer(mapboxTiles);

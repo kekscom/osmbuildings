@@ -10,18 +10,18 @@ fs.copy = function (srcFile, dstFile) {
 }
 
 var Builder = {
-	minify: function (inFile, outFile) {
-		// ADVANCED_OPTIMIZATIONS, SIMPLE_OPTIMIZATIONS
+    minify: function (inFile, outFile) {
+        // ADVANCED_OPTIMIZATIONS, SIMPLE_OPTIMIZATIONS
         exec("java -jar closurecompiler/compiler.jar --compilation_level SIMPLE_OPTIMIZATIONS --js "+ inFile +" --js_output_file "+ outFile, function (err) {
             if (err !== null) {
-				console.log("exec error: "+ err);
-			}
+                console.log("exec error: "+ err);
+            }
         });
-	},
+    },
 
-	copy: function (src, dst) {
-		fs.copy(src, dst);
-	}
+    copy: function (src, dst) {
+        fs.copy(src, dst);
+    }
 };
 
 Builder.copy("../src/buildings.js", "../dist/buildings-debug.js");
