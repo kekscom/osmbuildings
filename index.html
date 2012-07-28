@@ -16,12 +16,12 @@ img, canvas {
 
 <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.3.1/leaflet.css" />
 <!--[if lte IE 8]><link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.3.1/leaflet.ie.css" /><![endif]-->
+<script src="dist/leaflet04-src.js"></script>
 <script src="dist/buildings.js"></script>
 </head>
 
 <body>
 <div id="map" style="height:500px;"></div>
-<script src="leaflet04-src.js"></script>
 <script>
 var map = new L.Map('map');
 
@@ -34,7 +34,7 @@ var mapboxTiles = new L.TileLayer(
 );
 
 map.setView(new L.LatLng(52.52111, 13.40988), 17).addLayer(mapboxTiles);
-// FFM 50.11294, 8.66771
+
 new OSMBuildings('server/?w={w}&n={n}&e={e}&s={s}&z={z}').addTo(map);
 </script>
 </body>
