@@ -32,7 +32,7 @@ class Source_Mapnik extends Source_Abstract
         ";
 
         $bboxStr = vsprintf('%1$.5f %2$.5f, %3$.5f %4$.5f', $bbox);
-        $query = vsprintf($query, array_map('pg_escape_literal', array($bboxStr)));
+        $query = vsprintf($query, array_map('pg_escape_string', array($bboxStr)));
 
         $this->_collection = pg_query($this->_link, $query);
         if (!$this->_collection) {
