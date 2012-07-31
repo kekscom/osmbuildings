@@ -149,14 +149,14 @@
         }), onDataLoaded);
     }
 
-    function setData(json) {
+    function setData(json, isLonLat) {
         if (!json) {
             rawData = null;
             render(); // effectively clears
             return;
         }
 
-        rawData = jsonToData(json);
+        rawData = jsonToData(json, isLonLat);
 
         meta = {
             n: 90,
@@ -172,7 +172,7 @@
         fadeIn();
     }
 
-    function jsonToData(json, data) {
+    function jsonToData(json, isLonLat, data) {
         data = data || [];
 //        if (typeof data === 'undefined') {
 //            data = [];
@@ -188,7 +188,7 @@
 
         if (features) {
             for (i = 0, il = features.length; i < il; i++) {
-                jsonToData(features[i], data);
+                jsonToData(features[i], isLonLat, data);
             }
             return data;
         }
@@ -204,8 +204,13 @@
             footprint = [];
             // TODO: combine this loop with winding handling
             for (i = 0, il = coords.length; i < il; i++) {
-                footprint.push(coords[i][1]);
-                footprint.push(coords[i][0]);
+                if (isLonLat) {
+                    footprint.push(coords[i][1]);
+                    footprint.push(coords[i][0]);
+                } else {
+                    footprint.push(coords[i][0]);
+                    footprint.push(coords[i][1]);
+                }
             }
             data.push([properties.height, makeClockwiseWinding(footprint)]);
         }
@@ -565,9 +570,9 @@
             return this;
         }
     };
-    B.prototype.setData = function (data) {
+    B.prototype.setData = function (data, isLonLat) {
         if (this.map) {
-            setData(data);
+            setData(data, isLonLat);
             return this;
         }
     };
