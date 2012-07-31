@@ -7,13 +7,17 @@
     global.Int32Array = global.Int32Array || Array;
 
     var
-        version = '0.1a',
+        VERSION = '0.1a',
 
         exp = Math.exp,
+        log = Math.log,
+        tan = Math.tan,
         atan = Math.atan,
         min = Math.min,
+        max = Math.max,
         PI = Math.PI,
         HALF_PI = PI / 2,
+        QUARTER_PI = PI / 4,
         RAD = 180 / PI,
 
         LAT = 'latitude', LON = 'longitude',
@@ -35,6 +39,7 @@
         roofColor = 'rgb(250,240,230)',
         strokeColor = 'rgb(145,140,135)',
 
+        rawData,
         meta, data,
 
         zoomAlpha = 1,
@@ -87,6 +92,18 @@
         return res;
     }
 
+    function geoToPixel(lat, lon, z) {
+        var
+            totalPixels = TILE_SIZE << z,
+            latitude = min(1, max(0, 0.5 - (log(tan(QUARTER_PI + HALF_PI * lat / 180)) / PI) / 2)),
+            longitude = lon / 360 + 0.5
+        ;
+        return {
+            x: ~~(longitude * totalPixels),
+            y: ~~(latitude  * totalPixels)
+        };
+    }
+
     function template(str, data) {
         return str.replace(/\{ *([\w_]+) *\}/g, function(x, key) {
             return data[key] || '';
@@ -112,7 +129,7 @@
     }
 
     function loadData() {
-        if (zoom < MIN_ZOOM) {
+        if (!url || zoom < MIN_ZOOM) {
             return;
         }
         var
@@ -130,6 +147,98 @@
             s: se[LAT],
             z: zoom
         }), onDataLoaded);
+    }
+
+    function setData(json) {
+        if (!json) {
+            rawData = null;
+            render(); // effectively clears
+            return;
+        }
+
+        rawData = jsonToData(json);
+        
+        meta = {
+            n: 90,
+            w: -180,
+            s: -90,
+            e: 180,
+            x: 0,
+            y: 0,
+            z: zoom
+        };
+        data = scaleData(rawData, zoom, true);
+
+        fadeIn();
+    }
+
+    function jsonToData(json, data) {
+        data = data || [];
+//        if (typeof data === 'undefined') {
+//            data = [];
+//        }
+
+        var
+            features = json[0] ? json : json.features,
+            geometry, coords, properties,
+            footprint,
+            p,
+            i, il
+        ;
+
+        if (features) {
+            for (i = 0, il = features.length; i < il; i++) {
+                jsonToData(features[i], data);
+            }
+            return data;
+        }
+
+        if (json.type === 'Feature') {
+            geometry = json.geometry;
+            properties = json.properties;
+        }
+//      else geometry = json
+
+        if (geometry.type == 'Polygon' && properties.height) {
+            coords = geometry.coordinates[0];
+            footprint = [];
+            for (i = 0, il = coords.length; i < il; i++) {
+                footprint.push(coords[i][1]);
+                footprint.push(coords[i][0]);
+            }
+            data.push([properties.height, footprint]);
+        }
+
+        return data;
+    }
+
+    function scaleData(data, zoom, isNew) {
+        var
+            res = [],
+            height,
+            coords,
+            footprint,
+            p,
+            z = MAX_ZOOM - zoom
+        ;
+
+        for (var i = 0, il = data.length; i < il; i++) {
+            height = data[i][0];
+            coords = data[i][1];
+            footprint = new Int32Array(coords.length);
+            for (var j = 0, jl = coords.length - 1; j < jl; j += 2) {
+                p = geoToPixel(coords[j], coords[j + 1], zoom);
+                footprint[j]     = p.x;
+                footprint[j + 1] = p.y;
+            }
+            res[i] = [
+                min(height >> z, MAX_HEIGHT),
+                footprint,
+                isNew
+            ];
+        }
+
+        return res;
     }
 
     //*** positioning helpers *************************************************
@@ -189,7 +298,12 @@
     function onZoomEnd(e) {
         isZooming = false;
         setZoom(e.zoom);
-        loadData();
+        if (!rawData) {
+            loadData();
+            return
+        }
+        data = scaleData(rawData, zoom);
+        render();
     }
 
     function onDataLoaded(res) {
@@ -392,9 +506,10 @@
         setStyle(style);
     }
 
-    B.prototype.version = version;
+    B.prototype.VERSION = VERSION;
     B.prototype.render = render;
     B.prototype.setStyle = setStyle;
+    B.prototype.setData = setData;
 
     //*** BEGIN leaflet patch
 
@@ -402,7 +517,7 @@
 
         var attribution = 'Buildings &copy; <a href="http://osmbuildings.org">OSM Buildings</a>';
 
-        proto.version += '-leaflet-patch';
+        proto.VERSION += '-leaflet-patch';
 
         proto.addTo = function(map) {
             proto.map = map;
@@ -451,10 +566,11 @@
             map.attributionControl.removeAttribution(attribution);
 
             map.off({
-    //            move: function () {},
-    //            moveend: function () {},
-    //            zoomstart: onZoomStart,
-    //            zoomend: function () {}
+//              move: function () {},
+//              moveend: function () {},
+//              zoomstart: onZoomStart,
+//              zoomend: function () {},
+//              viewreset: function() {}
             });
 
             canvas.parentNode.removeChild(canvas);
