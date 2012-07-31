@@ -51,40 +51,61 @@ var map = new L.Map('map');
 // Remember to obtain an API key from MapBox.
 // And keep the attribution part for proper copyright notice.
 var mapboxTiles = new L.TileLayer(
-	'http://{s}.tiles.mapbox.com/v3/mapbox.mapbox-streets/{z}/{x}/{y}.png',
-	{
-		attribution: 'Map tiles &copy; <a href="http://mapbox.com">MapBox</a>',
-		maxZoom: 17
-	}
+    'http://{s}.tiles.mapbox.com/v3/mapbox.mapbox-streets/{z}/{x}/{y}.png',
+    {
+        attribution: 'Map tiles &copy; <a href="http://mapbox.com">MapBox</a>',
+        maxZoom: 17
+    }
 );
 
-// there is just data for Berlin, Germany at the moment, lets start there
+// to point to the sample location Berlin, lets start there:
 map.setView(new L.LatLng(52.52111, 13.40988), 17).addLayer(mapboxTiles);
 
+// now create the buildings layer and attach it to the map:
+new OSMBuildings(map);
 
-// This finally creates the buildings layer.
-// As soon as you attach it to the map it starts loading data from your PHP/MySQL combo.
-// You will need to have this on the same server, otherwise there are cross origin issues.
-var buildings = new OSMBuildings(
-	'server/?w={w}&n={n}&e={e}&s={s}&z={z}',
-	{
-		strokeRoofs: false,
-		wallColor: 'rgb(190,170,150)',
-		roofColor: 'rgb(230,220,210)',
-		strokeColor: 'rgb(145,140,135)'
-	}
-);
-buildings.addTo(map);
+// if you like to load the server based Berlin or Frankfurt samples, start loading use loadData()
+// as soon as you do, it starts loading data from your PHP/MySQL combo
+// you will need to have this on the same server, otherwise there are cross origin issues
+new OSMBuildings(map).loadData('server/?w={w}&n={n}&e={e}&s={s}&z={z}');
 
-// Like to save code? This one liner basically does the same thing as above.
-new OSMBuildings('server/?w={w}&n={n}&e={e}&s={s}&z={z}').addTo(map);
+// or you like to put cutom objects on the map, use <a href="http://www.geojson.org/geojson-spec.html">GeoJSON</a>
+// the second parameter indicateds, whether your coordinates are ordered as lat/lon (default) or lon/lat
+// - you need to pass geocordinats in the respective coordinates properties.
+// - you need to pass a properties.height attribute
+// - only type Polygon is supported
+// example:
+
+var myGeoJSON = {
+    "type": "FeatureCollection",
+    "features": [
+        {
+            "type": "Feature",
+            "geometry": {
+                "type": "Polygon",
+                "coordinates": [
+                    [[13.38913,52.51670], [13.38919,52.51626], [13.39047,52.51634],
+                     [13.39045,52.51644], [13.39031,52.51643], [13.39028,52.51664],
+                     [13.39041,52.51664], [13.39040,52.51678], [13.38913,52.51670],
+                     [13.38913,52.51670]]
+                ]
+            },
+            "properties": {
+                "height": 50
+            }
+        }
+    ]
+};
+
+new OSMBuildings(map).setData(myGeoJSON[, islonLat=true]); 
 ```
+
 
 done.
 
 ## Data Conversion
 
-As PostGIS seems to be much more popular for handling Geometry and MySQL being much mor popular for commercial Webhosting, there is now a data conversion script in using Node.js.
+As PostGIS seems to be much more popular for handling geometry and MySQL being much more popular for commercial web hosting, there is now a data conversion script in using Node.js.
 Requirements are: a working Node.js installation (I tested successfully 0.6 on Windows) and the node-postgres module. Install the module with <code>npm install pg</code>.
 Then have a look into /server/data/convert.js and change database, table, output settings.
 Run the conversion with <code>node convert.js</code>.

@@ -1,6 +1,11 @@
 
 # Changelog
 
+## v0.1a @ 2012-08-01
+
+- GeoJSON support added
+- method chaining added
+
 ## v0.1a @ 2012-07-29
 
 - adding converter PostGIS > MySQL
