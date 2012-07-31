@@ -4,6 +4,7 @@
 // JSDOC
 
 var fs   = require("fs");
+var zlib = require("zlib");
 var exec = require("child_process").exec;
 var util = require("util");
 
@@ -23,6 +24,13 @@ var Builder = {
         });
     },
 
+    compress: function(inFile, outFile) {
+        var gzip = zlib.createGzip();
+        var inp  = fs.createReadStream(inFile);
+        var out  = fs.createWriteStream(outFile);
+        inp.pipe(gzip).pipe(out);
+    },
+
     copy: function (src, dst) {
         fs.copy(src, dst);
     }
@@ -30,3 +38,4 @@ var Builder = {
 
 Builder.copy("../src/buildings.js", "../dist/buildings-debug.js");
 Builder.minify("../src/buildings.js", "../dist/buildings.js");
+Builder.compress("../dist/buildings.js", "../dist/buildings.js.gz");
