@@ -157,7 +157,7 @@
         }
 
         rawData = jsonToData(json);
-        
+
         meta = {
             n: 90,
             w: -180,
@@ -202,11 +202,12 @@
         if (geometry.type == 'Polygon' && properties.height) {
             coords = geometry.coordinates[0];
             footprint = [];
+            // TODO: combine this loop with winding handling
             for (i = 0, il = coords.length; i < il; i++) {
                 footprint.push(coords[i][1]);
                 footprint.push(coords[i][0]);
             }
-            data.push([properties.height, footprint]);
+            data.push([properties.height, makeClockwiseWinding(footprint)]);
         }
 
         return data;
@@ -239,6 +240,53 @@
         }
 
         return res;
+    }
+
+    // detect polygon winding direction: clockwise or counter clockwise
+    // TODO: optimize
+    function getPolygonWinding(points) {
+        var num = points.length;
+        var maxN = maxS = points[0];
+        var maxE = maxW = points[1];
+        var WI, EI;
+
+        for (var i = 0; i < num - 1; i += 2) {
+            if (points[i + 1] < maxW) {
+                maxW = points[i + 1];
+                WI = i;
+            } else if (points[i + 1] > maxE) {
+                maxE = points[i + 1];
+                EI = i;
+            }
+
+            if (points[i] > maxN) {
+                maxN = points[i];
+                NI = i;
+            }
+        }
+
+        var W = WI-NI;
+        var E = EI-NI;
+
+        if (W < 0) W += num;
+        if (E < 0) E += num;
+
+        return (W > E) ? 'CW' : 'CCW';
+    }
+
+    // make polygon winding clockwise. This is needed for proper backface culling on client side.
+    // TODO: optimize
+    function makeClockwiseWinding(points) {
+        var winding = getPolygonWinding(points);
+        if (winding === 'CW') {
+            return points;
+        }
+        var revPoints = [];
+        for (var i = points.length - 2; i >= 0; i -= 2) {
+            revPoints.push(points[i]);
+            revPoints.push(points[i + 1]);
+        }
+        return revPoints;
     }
 
     //*** positioning helpers *************************************************
