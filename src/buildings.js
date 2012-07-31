@@ -501,15 +501,35 @@
         return 'rgba(' + [m[1], m[2], m[3], (m[4] ? a * m[5] : a)].join(',') + ')';
     }
 
-    var B = global.OSMBuildings = function (u, style) {
-        url = u;
-        setStyle(style);
-    }
-
+    var B = global.OSMBuildings = function (map) {
+        this.addTo(map);
+    };
     B.prototype.VERSION = VERSION;
-    B.prototype.render = render;
-    B.prototype.setStyle = setStyle;
-    B.prototype.setData = setData;
+    B.prototype.render = function () {
+        if (this.map) {
+            render();
+            return this;
+        }
+    };
+    B.prototype.setStyle = function (style) {
+        if (this.map) {
+            setStyle(style);
+            return this;
+        }
+    };
+    B.prototype.setData = function (data) {
+        if (this.map) {
+            setData(data);
+            return this;
+        }
+    };
+    B.prototype.loadData = function (u) {
+        if (this.map) {
+            url = u;
+            loadData();
+            return this;
+        }
+    };
 
     //*** BEGIN leaflet patch
 
@@ -520,7 +540,7 @@
         proto.VERSION += '-leaflet-patch';
 
         proto.addTo = function(map) {
-            proto.map = map;
+            this.map = map;
 
             function calcCenter() {
                 var half = map._size.divideBy(2);
@@ -558,8 +578,7 @@
             });
 
             map.attributionControl.addAttribution(attribution);
-
-            loadData();
+            return this;
         }
 
         proto.removeFrom = function(map) {
@@ -574,8 +593,8 @@
             });
 
             canvas.parentNode.removeChild(canvas);
-
-            proto.map = null;
+            this.map = null;
+            return this;
         }
 
     }(B.prototype));
