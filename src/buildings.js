@@ -525,11 +525,16 @@
 
             // fill roof and optionally stroke it
             context.fillStyle = roofColorAlpha;
+
             drawShape(roof, strokeRoofs);
         }
     }
 
     function drawShape(points, stroke) {
+        if (!points.length) {
+            return;
+        }
+
         context.beginPath();
         context.moveTo(points[0], points[1]);
         for (var i = 2, il = points.length; i < il; i += 2) {
@@ -600,7 +605,7 @@
                 return map._getTopLeftPoint().add(half);
             }
 
-            createCanvas(document.querySelector('.leaflet-control-container'));
+            createCanvas(document.querySelector('.leaflet-container'));
             MAX_ZOOM = map._layersMaxZoom;
 
             setSize(map._size.x, map._size.y);
