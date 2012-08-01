@@ -8,18 +8,29 @@ function geoToPixel($lat, $lon, $zoomLevel) {
     return array('x'=>intval($longitude*$mapSize), 'y'=>intval($latitude*$mapSize));
 }
 
+// parse from geometry text, swap llon/lat order
 function strToPoly($str) {
-    $res = explode(',', str_replace(' ', ',', preg_replace('/^[A-Z\(]+|\)+$/', '', $str)));
-    for ($i = 0; $i < count($res); $i++) {
-        $res[$i] *= 1;
+    global $coordsOrder;
+    $coords = explode(',', str_replace(' ', ',', preg_replace('/^[A-Z\(]+|\)+$/', '', $str)));
+    $res = array();
+
+    for ($i = 0; $i < count($coords)-1; $i+=2) {
+        if ($coordsOrder === 'lat,lon') {
+            $res[$i  ] = $coords[$i  ]*1;
+            $res[$i+1] = $coords[$i+1]*1;
+        } else {
+            $res[$i  ] = $coords[$i+1]*1;
+            $res[$i+1] = $coords[$i  ]*1;
+        }
     }
+
     return $res;
 }
 
 // creates the bounding box accoriding to expected lat/lon order
 function createBBox($n, $w, $s, $e) {
     global $coordsOrder;
-    if (preg_match('/^lat/i', $coordsOrder)) {
+    if ($coordsOrder === 'lat,lon') {
         return array($n, $w, $s, $e);
     }
     return array($w, $n, $e, $s);
@@ -32,8 +43,9 @@ function crop($n) {
 // detect polygon winding direction: clockwise or counter clockwise
 function getPolygonWinding($points) {
     $num = count($points);
-    $maxN = $maxS = $points[0];
-    $maxE = $maxW = $points[1];
+    $maxN = -90;
+    $maxE = -180;
+    $maxW =  180;
 
     for ($i = 0; $i < $num-1; $i+=2) {
         if ($points[$i+1] < $maxW) {

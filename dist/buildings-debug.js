@@ -65,7 +65,6 @@
         canvas.style.pointerEvents = 'none';
         canvas.style.left = 0;
         canvas.style.top = 0;
-        canvas.style.zIndex = 1000;
         parentNode.appendChild(canvas),
 
         context = canvas.getContext('2d')
@@ -204,6 +203,7 @@
             coords = geometry.coordinates[0];
             footprint = [];
             // TODO: combine this loop with winding handling
+            // TODO: optimize swapped keys
             for (i = 0, il = coords.length; i < il; i++) {
                 if (isLonLat) {
                     footprint.push(coords[i][1]);
@@ -251,10 +251,13 @@
     // detect polygon winding direction: clockwise or counter clockwise
     // TODO: optimize
     function getPolygonWinding(points) {
-        var num = points.length;
-        var maxN = maxS = points[0];
-        var maxE = maxW = points[1];
-        var WI, EI;
+        var
+            num = points.length,
+            maxN = -90,
+            maxE = -180,
+            maxW = 180,
+            WI, EI
+        ;
 
         for (var i = 0; i < num - 1; i += 2) {
             if (points[i + 1] < maxW) {
@@ -271,8 +274,10 @@
             }
         }
 
-        var W = WI-NI;
-        var E = EI-NI;
+        var
+            W = WI-NI,
+            E = EI-NI
+        ;
 
         if (W < 0) W += num;
         if (E < 0) E += num;
@@ -489,7 +494,7 @@
             roof = new Int32Array(footprint.length - 2);
             walls = [];
 
-            for (j = 0, jl = footprint.length - 1 - 2; j < jl; j += 2) {
+            for (j = 0, jl = footprint.length - 3; j < jl; j += 2) {
                 ax = footprint[j];
                 ay = footprint[j + 1];
                 bx = footprint[j + 2];
@@ -526,10 +531,17 @@
 
             // fill roof and optionally stroke it
             context.fillStyle = roofColorAlpha;
-
             drawShape(roof, strokeRoofs);
         }
     }
+
+//    function debugMarker(x, y, color) {
+//        context.fillStyle = color;
+//        context.beginPath();
+//        context.arc(x, y, 3, 0, PI*2, true); 
+//        context.closePath();
+//        context.fill();
+//    }
 
     function drawShape(points, stroke) {
         if (!points.length) {

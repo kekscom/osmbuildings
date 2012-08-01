@@ -4,6 +4,8 @@ require_once './config.php';
 require_once './functions.php';
 require_once './source/Abstract.php';
 
+$coordsOrder = preg_match('/^lat/i', $coordsOrder) ? 'lat,lon' : 'lon,lat';
+
 //*****************************************************************************
 
 if (!isset($_GET['n']) || !isset($_GET['w']) || !isset($_GET['s']) || !isset($_GET['e'])) {
@@ -73,7 +75,7 @@ while ($row = $source->fetch()) {
 
     $fp = array();
     for ($i = 0; $i < count($f)-1; $i+=2) {
-        $px = (preg_match('/^lat/i', $coordsOrder)) ? geoToPixel($f[$i], $f[$i+1], $Z) : geoToPixel($f[$i+1], $f[$i], $Z);
+        $px = geoToPixel($f[$i], $f[$i+1], $Z);
         $fp[$i]   = $px['x'] - $XY['x'] + $offsetX;
         $fp[$i+1] = $px['y'] - $XY['y'] + $offsetY;
     }
