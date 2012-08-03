@@ -21,7 +21,7 @@
         RAD = 180 / PI,
 
         LAT = 'latitude', LON = 'longitude',
-        HEIGHT = 0, FOOTPRINT = 1, IS_NEW = 2,
+        HEIGHT = 0, FOOTPRINT = 1, COLOR = 2, IS_NEW = 3,
 
         // map values
         width = 0, height = 0,
@@ -36,7 +36,7 @@
         url,
         strokeRoofs,
         wallColor = 'rgb(200,190,180)',
-        roofColor = 'rgb(250,240,230)',
+        roofColor = adjustLightness(wallColor, 0.2),
         strokeColor = 'rgb(145,140,135)',
 
         rawData,
@@ -78,9 +78,11 @@
     function setStyle(style) {
         style = style || {};
         strokeRoofs = style.strokeRoofs !== undefined ? style.strokeRoofs : strokeRoofs;
-        wallColor   = style.wallColor   || wallColor;
-        roofColor   = style.roofColor   || roofColor;
-        strokeColor = style.strokeColor || strokeColor;
+        if (style.fillColor) {
+            wallColor = style.fillColor;
+            roofColor = adjustLightness(wallColor, 0.2);
+        }
+        render();
     }
 
     function pixelToGeo(x, y) {
@@ -183,7 +185,8 @@
             geometry, coords, properties,
             footprint,
             p,
-            i, il
+            i, il,
+            item
         ;
 
         if (features) {
@@ -213,7 +216,12 @@
                     footprint.push(coords[i][1]);
                 }
             }
-            data.push([properties.height, makeClockwiseWinding(footprint)]);
+            var item = [];
+            item[HEIGHT]    = properties.height;
+            item[FOOTPRINT] = makeClockwiseWinding(footprint);
+            item[COLOR]     = properties.color;
+
+            data.push(item);
         }
 
         return data;
@@ -224,25 +232,27 @@
             res = [],
             height,
             coords,
+            color,
             footprint,
             p,
             z = MAX_ZOOM - zoom
         ;
 
         for (var i = 0, il = data.length; i < il; i++) {
-            height = data[i][0];
-            coords = data[i][1];
+            height = data[i][HEIGHT];
+            coords = data[i][FOOTPRINT];
+            color  = data[i][COLOR];
             footprint = new Int32Array(coords.length);
             for (var j = 0, jl = coords.length - 1; j < jl; j += 2) {
                 p = geoToPixel(coords[j], coords[j + 1], zoom);
                 footprint[j]     = p.x;
                 footprint[j + 1] = p.y;
             }
-            res[i] = [
-                min(height >> z, MAX_HEIGHT),
-                footprint,
-                isNew
-            ];
+            res[i] = [];
+            res[i][HEIGHT]    = min(height >> z, MAX_HEIGHT);
+            res[i][FOOTPRINT] = footprint;
+            res[i][COLOR]     = color;
+            res[i][IS_NEW]    = isNew;
         }
 
         return res;
@@ -256,7 +266,7 @@
             maxN = -90,
             maxE = -180,
             maxW = 180,
-            WI, EI
+            WI, EI, NI
         ;
 
         for (var i = 0; i < num - 1; i += 2) {
@@ -446,7 +456,9 @@
         var
             wallColorAlpha   = setAlpha(wallColor,   zoomAlpha),
             roofColorAlpha   = setAlpha(roofColor,   zoomAlpha),
-            strokeColorAlpha = setAlpha(strokeColor, zoomAlpha)
+            strokeColorAlpha = setAlpha(strokeColor, zoomAlpha),
+            itemWallColorAlpha,
+            itemRoofColorAlpha
         ;
 
         context.strokeStyle = strokeColorAlpha;
@@ -465,6 +477,12 @@
 
         for (i = 0, il = data.length; i < il; i++) {
             item = data[i];
+
+            if (item[COLOR]) {
+                itemWallColorAlpha = setAlpha(item[COLOR], zoomAlpha);
+                itemRoofColorAlpha = setAlpha(adjustLightness(item[COLOR], 0.2), zoomAlpha);
+            }
+
             isVisible = false;
             f = item[FOOTPRINT];
             footprint = new Int32Array(f.length);
@@ -483,7 +501,7 @@
             }
 
             // drawing walls
-            context.fillStyle = wallColorAlpha;
+            context.fillStyle = itemWallColorAlpha || wallColorAlpha;
 
             // when fading in, use a dynamic height
             h = item[IS_NEW] ? item[HEIGHT] * fadeFactor : item[HEIGHT];
@@ -530,7 +548,7 @@
             drawShape(walls);
 
             // fill roof and optionally stroke it
-            context.fillStyle = roofColorAlpha;
+            context.fillStyle = itemRoofColorAlpha || roofColorAlpha;
             drawShape(roof, strokeRoofs);
         }
     }
@@ -538,7 +556,7 @@
 //    function debugMarker(x, y, color) {
 //        context.fillStyle = color;
 //        context.beginPath();
-//        context.arc(x, y, 3, 0, PI*2, true); 
+//        context.arc(x, y, 3, 0, PI*2, true);
 //        context.closePath();
 //        context.fill();
 //    }
@@ -571,6 +589,71 @@
         var m = rgb.match(/rgba?\((\d+),(\d+),(\d+)(,([\d.]+))?\)/);
         return 'rgba(' + [m[1], m[2], m[3], (m[4] ? a * m[5] : a)].join(',') + ')';
     }
+
+    function toHSL(r, g, b) {
+        r /= 255, g /= 255, b /= 255;
+        var
+            max = Math.max(r, g, b), min = Math.min(r, g, b),
+            h, s, l = (max + min) / 2,
+            d
+        ;
+
+        if (max == min) {
+            h = s = 0; // achromatic
+        } else {
+            d = max - min;
+            s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+            switch (max) {
+                case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+                case g: h = (b - r) / d + 2; break;
+                case b: h = (r - g) / d + 4; break;
+            }
+            h /= 6;
+        }
+
+        return { h: h, s: s, l: l };
+    }
+
+    function hue2rgb(p, q, t) {
+        if (t < 0) t += 1;
+        if (t > 1) t -= 1;
+        if (t < 1/6) return p + (q - p) * 6 * t;
+        if (t < 1/2) return q;
+        if (t < 2/3) return p + (q - p) * (2 / 3 - t) * 6;
+        return p;
+    }
+
+    function toRGB(h, s, l){
+        var r, g, b;
+
+        if (s == 0) {
+            r = g = b = l; // achromatic
+        } else {
+            var
+                q = l < 0.5 ? l * (1 + s) : l + s - l * s,
+                p = 2 * l - q
+            ;
+            r = hue2rgb(p, q, h + 1/3);
+            g = hue2rgb(p, q, h);
+            b = hue2rgb(p, q, h - 1/3);
+        }
+
+        return { r: ~~(r * 255), g: ~~(g * 255), b: ~~(b * 255) };
+    }
+
+    function adjustLightness(rgb, amount) {
+        var
+            m = rgb.match(/rgba?\((\d+),(\d+),(\d+)(,([\d.]+))?\)/),
+            hsl = toHSL(m[1], m[2], m[3]),
+            rgb
+        ;
+
+        hsl.l += amount;
+        hsl.l = min(1, max(0, hsl.l));
+        rgb = toRGB(hsl.h, hsl.s, hsl.l);
+        return 'rgba(' + [rgb.r, rgb.g, rgb.b, (m[4] ? m[5] : 1)].join(',') + ')';
+    }
+
 
     var B = global.OSMBuildings = function (map) {
         this.addTo(map);
