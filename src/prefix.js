@@ -1,5 +1,34 @@
 /*jshint bitwise:false */
 
+/** @namespace OSMBuildings */
+
+/**
+ * @fileOverview OSM Buildings
+ *
+ * @author Jan Marsch (@kekscom)
+ * @version 0.1a
+ * @example
+var map = new L.Map('map');
+
+var buildings = new OSMBuildings(
+    'server/?w={w}&n={n}&e={e}&s={s}&z={z}',
+    {
+        strokeRoofs: false,
+        wallColor: 'rgb(190,170,150)',
+        roofColor: 'rgb(230,220,210)',
+        strokeColor: 'rgb(145,140,135)'
+    }
+);
+
+buildings.addTo(map);
+*/
+
+/**
+ * @example
+var map = new L.Map('map');
+new OSMBuildings('server/?w={w}&n={n}&e={e}&s={s}&z={z}').addTo(map);
+*/
+
 (function (global) {
 
     'use strict';
@@ -106,13 +135,13 @@
         };
     }
 
-    function template(str, data) {
-        return str.replace(/\{ *([\w_]+) *\}/g, function(x, key) {
-            return data[key] || '';
-        });
-    }
+	function template(str, data) {
+		return str.replace(/\{ *([\w_]+) *\}/g, function(x, key) {
+			return data[key] || '';
+		});
+	}
 
-    function xhr(url, callback) {
+	    function xhr(url, callback) {
         var req = new XMLHttpRequest();
         req.onreadystatechange = function () {
             if (req.readyState !== 4) {
@@ -655,29 +684,64 @@
         return 'rgba(' + [rgb.r, rgb.g, rgb.b, (m[4] ? m[5] : 1)].join(',') + ')';
     }
 
-
+    /**
+     * @public
+     * @class OSMBuildings
+     * @param {Object} map - a Leaflet map instance
+     */
     var B = global.OSMBuildings = function (map) {
         this.addTo(map);
     };
+
+    /**
+     * @public
+     * @constant {String} OSMBuildings.VERSION1 - version info
+     * @const {String} OSMBuildings.VERSION2 - version info
+     */
     B.prototype.VERSION = VERSION;
+
+    /**
+     * @public
+     * @name OSMBuildings.render
+     * @return {Object} OSMBuildings - the OSM Buildings instance, enables chaining
+     */
     B.prototype.render = function () {
         if (this.map) {
             render();
             return this;
         }
     };
+
+    /**
+     * @public
+     * @method OSMBuildings.setStyle
+     * @name OSMBuildings.setStyle
+     * @return {Object} OSMBuildings - the OSM Buildings instance, enables chaining
+     */
     B.prototype.setStyle = function (style) {
         if (this.map) {
             setStyle(style);
             return this;
         }
     };
+
+    /**
+     * @public
+     * @method OSMBuildings.setData
+     * @return {Object} OSMBuildings - the OSM Buildings instance, enables chaining
+     */
     B.prototype.setData = function (data, isLonLat) {
         if (this.map) {
             setData(data, isLonLat);
             return this;
         }
     };
+
+    /**
+     * @public
+     * @method OSMBuildings.loadData
+     * @return {Object} OSMBuildings - the OSM Buildings instance, enables chaining
+     */
     B.prototype.loadData = function (u) {
         if (this.map) {
             url = u;
@@ -685,100 +749,3 @@
             return this;
         }
     };
-
-    //*** BEGIN leaflet patch
-
-    (function (proto) {
-
-        var attribution = 'Buildings &copy; <a href="http://osmbuildings.org">OSM Buildings</a>';
-
-        proto.VERSION += '-leaflet-patch';
-
-        proto.addTo = function(map) {
-            this.map = map;
-
-            function calcCenter() {
-                var half = map._size.divideBy(2);
-                return map._getTopLeftPoint().add(half);
-            }
-
-            createCanvas(document.querySelector('.leaflet-container'));
-            MAX_ZOOM = map._layersMaxZoom;
-
-            setSize(map._size.x, map._size.y);
-            var c = calcCenter();
-            setCenter(c.x, c.y);
-            setZoom(map._zoom);
-
-            var resizeTimer;
-            window.addEventListener('resize', function () {
-                resizeTimer = setTimeout(function () {
-                    clearTimeout(resizeTimer);
-                    onResize({ width:map._size.x, height:map._size.y });
-                }, 100);
-            }, false);
-
-            map.on({
-                move: function () {
-                    onMove(calcCenter());
-                },
-                moveend: function () {
-                    onMoveEnd(calcCenter());
-                },
-                zoomstart: onZoomStart,
-                zoomend: function () {
-                    onZoomEnd({ zoom: map._zoom });
-                } //,
-//                viewreset: function handleResize() {}
-            });
-
-            map.attributionControl.addAttribution(attribution);
-            return this;
-        }
-
-        proto.removeFrom = function(map) {
-            map.attributionControl.removeAttribution(attribution);
-
-            map.off({
-//              move: function () {},
-//              moveend: function () {},
-//              zoomstart: onZoomStart,
-//              zoomend: function () {},
-//              viewreset: function() {}
-            });
-
-            canvas.parentNode.removeChild(canvas);
-            this.map = null;
-            return this;
-        }
-
-    }(B.prototype));
-
-    //*** END leaflet patch
-
-}(this));
-
-/*jshint bitwise:true */
-
-/**
- * @example
-var map = new L.Map('map');
-
-var buildings = new OSMBuildings(
-    'server/?w={w}&n={n}&e={e}&s={s}&z={z}',
-    {
-        strokeRoofs: false,
-        wallColor: 'rgb(190,170,150)',
-        roofColor: 'rgb(230,220,210)',
-        strokeColor: 'rgb(145,140,135)'
-    }
-);
-
-buildings.addTo(map);
-*/
-
-/**
- * @example
-var map = new L.Map('map');
-new OSMBuildings('server/?w={w}&n={n}&e={e}&s={s}&z={z}').addTo(map);
-*/

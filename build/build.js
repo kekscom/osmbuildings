@@ -1,41 +1,56 @@
 
 // TODO: strip comments in debug build
 // JSHINT
-// JSDOC
+// JSDOC http://www.2ality.com/2011/08/jsdoc-intro.html
 
-var fs   = require("fs");
-var zlib = require("zlib");
-var exec = require("child_process").exec;
-var util = require("util");
+var build = require('./builder/builder.js');
+var srcPath = '../src';
+var dstPath = '../dist';
 
-fs.copy = function (srcFile, dstFile) {
-    var srcStream = fs.createReadStream(srcFile);
-    var dstStream = fs.createWriteStream(dstFile);
-    util.pump(srcStream, dstStream);
+
+
+// leaflet
+var srcFiles = [
+	srcPath + '/prefix.js',
+	srcPath + '/leaflet.js',
+	srcPath + '/suffix.js'
+];
+
+// leaflet
+//var dstFile           = dstPath + '/osmbuildings.leaflet.js';
+//var dstFileCompressed = dstPath + '/osmbuildings.leaflet.js.gz';
+//var dstFileDebug      = dstPath + '/osmbuildings-debug.leaflet.js';
+var dstFile           = dstPath + '/buildings.js';
+var dstFileCompressed = dstPath + '/buildings.js.gz';
+var dstFileDebug      = dstPath + '/buildings-debug.js';
+
+
+
+function taskCombine() {
+    console.log('combining..');
+	build.combine(srcFiles, function(content) {
+		build.write(content, dstFileDebug, taskMinify);
+	});
 }
 
-var Builder = {
-    minify: function (inFile, outFile) {
-        // ADVANCED_OPTIMIZATIONS, SIMPLE_OPTIMIZATIONS
-        exec("java -jar closurecompiler/compiler.jar --compilation_level SIMPLE_OPTIMIZATIONS --js "+ inFile +" --js_output_file "+ outFile, function (err) {
-            if (err !== null) {
-                console.log("exec error: "+ err);
-            }
-        });
-    },
+function taskMinify() {
+    console.log('minifying..');
+    build.minify(dstFileDebug, dstFile, taskCompress);
+}
 
-    compress: function(inFile, outFile) {
-        var gzip = zlib.createGzip();
-        var inp  = fs.createReadStream(inFile);
-        var out  = fs.createWriteStream(outFile);
-        inp.pipe(gzip).pipe(out);
-    },
+function taskCompress() {
+    console.log('compressing..');
+    build.compress(dstFile, dstFileCompressed, taskDocumentation);
+}
 
-    copy: function (src, dst) {
-        fs.copy(src, dst);
-    }
-};
+function taskDocumentation() {
+    console.log('documenting..');
+    build.documentation(dstFileDebug, '../doc', taskSummary);
+}
 
-Builder.copy("../src/buildings.js", "../dist/buildings-debug.js");
-Builder.minify("../src/buildings.js", "../dist/buildings.js");
-Builder.compress("../dist/buildings.js", "../dist/buildings.js.gz");
+function taskSummary() {
+    console.log('\ndone');
+}
+
+console.clear();
+taskCombine();

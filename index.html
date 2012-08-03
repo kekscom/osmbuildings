@@ -130,7 +130,9 @@ var geojson = {
 };
 
 map.setView(new L.LatLng(52.49480, 13.42857), 17)
-new OSMBuildings(map).setData(geojson, true).setStyle({ "color": "rgb(200,210,250)" });
+var B = new OSMBuildings(map).setData(geojson, true).setStyle({ "color": "rgb(200,210,250)" });
+L.control.layers({}, {"Buildings":B}).addTo(map);
+
 
 </script>
 </body>

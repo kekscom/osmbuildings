@@ -69,6 +69,9 @@ var BulkInsert = function(handle, query, limit, callback) {
         var sql = query.replace('{values}', '\n('+ queue.join('),\n(') +')');
         if (handle.path && handle.writable) {
             handle.write(sql);
+            if (callback) {
+                callback();
+            }
         } else {
             handle.query(sql, callback);
         }
