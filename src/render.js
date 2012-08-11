@@ -29,17 +29,6 @@ function render() {
         return;
     }
 
-    // TODO: improve naming and checks
-    var
-        wallColorAlpha   = setAlpha(wallColor,   zoomAlpha),
-        roofColorAlpha   = setAlpha(roofColor,   zoomAlpha),
-        strokeColorAlpha = setAlpha(strokeColor, zoomAlpha),
-        itemWallColorAlpha,
-        itemRoofColorAlpha
-    ;
-
-    context.strokeStyle = strokeColorAlpha;
-
     var
         i, il, j, jl,
         item,
@@ -49,16 +38,17 @@ function render() {
         offY = originY - meta.y,
         footprint, roof, walls,
         isVisible,
-        ax, ay, bx, by, _a, _b
+        ax, ay, bx, by, _a, _b,
+        wallColorAlpha = setAlpha(wallColor, zoomAlpha),
+        roofColorAlpha = setAlpha(roofColor, zoomAlpha)
     ;
+
+    if (strokeRoofs) {
+        context.strokeStyle = setAlpha(strokeColor, zoomAlpha);
+    }
 
     for (i = 0, il = data.length; i < il; i++) {
         item = data[i];
-
-        if (item[COLOR]) {
-            itemWallColorAlpha = setAlpha(item[COLOR], zoomAlpha);
-            itemRoofColorAlpha = setAlpha(adjustLightness(item[COLOR], 0.2), zoomAlpha);
-        }
 
         isVisible = false;
         f = item[FOOTPRINT];
@@ -77,8 +67,7 @@ function render() {
             continue;
         }
 
-        // drawing walls
-        context.fillStyle = itemWallColorAlpha || wallColorAlpha;
+        context.fillStyle = item[COLOR] ? setAlpha(item[COLOR][0], zoomAlpha) : wallColorAlpha;
 
         // when fading in, use a dynamic height
         h = item[IS_NEW] ? item[HEIGHT] * fadeFactor : item[HEIGHT];
@@ -125,7 +114,7 @@ function render() {
         drawShape(walls);
 
         // fill roof and optionally stroke it
-        context.fillStyle = itemRoofColorAlpha || roofColorAlpha;
+        context.fillStyle = item[COLOR] ? setAlpha(item[COLOR][1], zoomAlpha) : roofColorAlpha;
         drawShape(roof, strokeRoofs);
     }
 }
@@ -160,4 +149,14 @@ function project(x, y, m) {
         x: ~~((x - CAM_X) * m + CAM_X),
         y: ~~((y - CAM_Y) * m + CAM_Y)
     };
+}
+
+function setStyle(style) {
+    style = style || {};
+    strokeRoofs = style.strokeRoofs !== undefined ? style.strokeRoofs : strokeRoofs;
+    if (style.fillColor) {
+        wallColor = style.fillColor;
+        roofColor = adjustLightness(wallColor, 0.2);
+    }
+    render();
 }

@@ -1,7 +1,10 @@
 
 (function (proto) {
 
-    var attribution = 'Buildings &copy; <a href="http://osmbuildings.org">OSM Buildings</a>';
+    var
+        attribution = 'Buildings &copy; <a href="http://osmbuildings.org">OSM Buildings</a>',
+        mapOnMove, mapOnMoveEnd, mapOnZoomStart, mapOnZoomEnd // remember event handlers in order to remove them properly
+    ;
 
     proto.VERSION += '-leaflet';
 
@@ -32,42 +35,65 @@
 
         var lastX = 0, lastY = 0;
 
-        map.on({
-            move: function () {
-                var mp = L.DomUtil.getPosition(map._mapPane);
-                CAM_X = halfWidth - (mp.x - lastX);
-                CAM_Y = height    - (mp.y - lastY);
-                render();
-            },
-            moveend: function () {
-                var mp = L.DomUtil.getPosition(map._mapPane);
-                lastX = mp.x;
-                lastY = mp.y;
-                canvas.style.left = -mp.x + 'px';
-                canvas.style.top  = -mp.y + 'px';
+        mapOnMove = function () {
+            var mp = L.DomUtil.getPosition(map._mapPane);
+            CAM_X = halfWidth - (mp.x - lastX);
+            CAM_Y = height    - (mp.y - lastY);
+            render();
+        };
 
-                CAM_X = halfWidth;
-                CAM_Y = height;
+        mapOnMoveEnd = function () {
+            var mp = L.DomUtil.getPosition(map._mapPane);
+            lastX = mp.x;
+            lastY = mp.y;
+            canvas.style.left = -mp.x + 'px';
+            canvas.style.top  = -mp.y + 'px';
 
-                var po = map.getPixelOrigin();
-                setOrigin(po.x - mp.x, po.y - mp.y);
+            CAM_X = halfWidth;
+            CAM_Y = height;
 
-                onMoveEnd();
-                render();
-            },
-            zoomstart: onZoomStart,
-            zoomend: function () {
-                onZoomEnd({ zoom: map._zoom });
-            } //,
+            var po = map.getPixelOrigin();
+            setOrigin(po.x - mp.x, po.y - mp.y);
+
+            onMoveEnd();
+            render();
+        };
+
+        mapOnZoomStart = onZoomStart;
+
+        mapOnZoomEnd = function () {
+            onZoomEnd({ zoom: map._zoom });
+        };
+
 //          viewreset: function () {
 //              onResize({ width: map._size.x, height: map._size.y });
 //          }
+
+        map.on({
+            move: mapOnMove,
+            moveend: mapOnMoveEnd,
+            zoomstart: mapOnZoomStart,
+            zoomend: mapOnZoomEnd
         });
 
-//      if (map.options.zoomAnimation) {
-//           canvas.className = 'leaflet-zoom-animated';
-//           map.on('zoomanim', onZoom);
-//      }
+
+//        var onZoom = function (opt) {
+//            var
+//                scale = map.getZoomScale(opt.zoom),
+//                offset = map._getCenterOffset(opt.center).divideBy(1 - 1 / scale),
+//                viewportPos = map.containerPointToLayerPoint(map.getSize().multiplyBy(-1)),
+//                origin = viewportPos.add(offset).round()
+//            ;
+//
+//            canvas.style[L.DomUtil.TRANSFORM] = L.DomUtil.getTranslateString((origin.multiplyBy(-1).add(L.DomUtil.getPosition(map._mapPane).multiplyBy(-1)).multiplyBy(scale).add(origin))) + ' scale(' + scale + ') ';
+//            canvas.style.border = "3px solid red";
+//            isZooming = true;
+//        };
+
+        if (map.options.zoomAnimation) {
+             canvas.className = 'leaflet-zoom-animated';
+//             map.on('zoomanim', onZoom);
+        }
 
         map.attributionControl.addAttribution(attribution);
 
@@ -76,13 +102,12 @@
 
     proto.onRemove = function (map) {
         map.attributionControl.removeAttribution(attribution);
-// TODO cleanup
+
         map.off({
-//          move: function () {},
-//          moveend: onMoveEnd,
-//          zoomstart: onZoomStart,
-//          zoomend: function () {},
-//          viewreset: function() {}
+            move: mapOnMove,
+            moveend: mapOnMoveEnd,
+            zoomstart: mapOnZoomStart,
+            zoomend: mapOnZoomEnd
         });
 
         canvas.parentNode.removeChild(canvas);

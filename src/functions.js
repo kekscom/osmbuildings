@@ -15,16 +15,6 @@ function createCanvas(parentNode) {
     try { context.mozImageSmoothingEnabled = false } catch(err) {}
 }
 
-function setStyle(style) {
-    style = style || {};
-    strokeRoofs = style.strokeRoofs !== undefined ? style.strokeRoofs : strokeRoofs;
-    if (style.fillColor) {
-        wallColor = style.fillColor;
-        roofColor = adjustLightness(wallColor, 0.2);
-    }
-    render();
-}
-
 function pixelToGeo(x, y) {
     var res = {};
     x /= size;
@@ -116,16 +106,17 @@ function setData(json, isLonLat) {
 
 function jsonToData(json, isLonLat, data) {
     data = data || [];
-//        if (typeof data === 'undefined') {
-//            data = [];
-//        }
+//    if (typeof data === 'undefined') {
+//        data = [];
+//    }
 
     var
         features = json[0] ? json : json.features,
         geometry, coords, properties,
-        footprint,
-        p,
+        footprint, heightSum,
         i, il,
+        lat = isLonLat ? 1 : 0,
+        lon = isLonLat ? 0 : 1,
         item
     ;
 
@@ -140,28 +131,27 @@ function jsonToData(json, isLonLat, data) {
         geometry = json.geometry;
         properties = json.properties;
     }
-//      else geometry = json
+//    else geometry = json
 
-    if (geometry.type == 'Polygon' && properties.height) {
+    if (geometry.type == 'Polygon') {
         coords = geometry.coordinates[0];
         footprint = [];
-        // TODO: combine this loop with winding handling
-        // TODO: optimize swapped keys
+        heightSum = 0;
         for (i = 0, il = coords.length; i < il; i++) {
-            if (isLonLat) {
-                footprint.push(coords[i][1]);
-                footprint.push(coords[i][0]);
-            } else {
-                footprint.push(coords[i][0]);
-                footprint.push(coords[i][1]);
-            }
+            footprint.push(coords[i][lat]);
+            footprint.push(coords[i][lon]);
+            heightSum += coords[i][2] || 0;
         }
-        var item = [];
-        item[HEIGHT]    = properties.height;
-        item[FOOTPRINT] = makeClockwiseWinding(footprint);
-        item[COLOR]     = properties.color;
 
-        data.push(item);
+        if (heightSum) {
+            item = [];
+            item[HEIGHT]    = ~~(heightSum/coords.length);
+            item[FOOTPRINT] = makeClockwiseWinding(footprint);
+            if (properties.color) {
+                item[COLOR] = [properties.color, adjustLightness(properties.color, 0.2)];
+            }
+            data.push(item);
+        }
     }
 
     return data;
@@ -170,28 +160,26 @@ function jsonToData(json, isLonLat, data) {
 function scaleData(data, zoom, isNew) {
     var
         res = [],
-        height,
-        coords,
-        color,
-        footprint,
+        i, il, j, jl,
+        item,
+        coords, footprint,
         p,
         z = MAX_ZOOM - zoom
     ;
 
-    for (var i = 0, il = data.length; i < il; i++) {
-        height = data[i][HEIGHT];
-        coords = data[i][FOOTPRINT];
-        color  = data[i][COLOR];
+    for (i = 0, il = data.length; i < il; i++) {
+        item = data[i];
+        coords = item[FOOTPRINT];
         footprint = new Int32Array(coords.length);
-        for (var j = 0, jl = coords.length - 1; j < jl; j += 2) {
+        for (j = 0, jl = coords.length - 1; j < jl; j += 2) {
             p = geoToPixel(coords[j], coords[j + 1], zoom);
             footprint[j]     = p.x;
             footprint[j + 1] = p.y;
         }
         res[i] = [];
-        res[i][HEIGHT]    = min(height >> z, MAX_HEIGHT);
+        res[i][HEIGHT]    = min(item[HEIGHT] >> z, MAX_HEIGHT);
         res[i][FOOTPRINT] = footprint;
-        res[i][COLOR]     = color;
+        res[i][COLOR]     = item[COLOR];
         res[i][IS_NEW]    = isNew;
     }
 
@@ -199,7 +187,6 @@ function scaleData(data, zoom, isNew) {
 }
 
 // detect polygon winding direction: clockwise or counter clockwise
-// TODO: optimize
 function getPolygonWinding(points) {
     var
         num = points.length,
@@ -236,7 +223,6 @@ function getPolygonWinding(points) {
 }
 
 // make polygon winding clockwise. This is needed for proper backface culling on client side.
-// TODO: optimize
 function makeClockwiseWinding(points) {
     var winding = getPolygonWinding(points);
     if (winding === 'CW') {

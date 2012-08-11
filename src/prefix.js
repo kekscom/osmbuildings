@@ -33,4 +33,4 @@ new OSMBuildings('server/?w={w}&n={n}&e={e}&s={s}&z={z}').addTo(map);
 
     'use strict';
 
-    global.Int32Array = global.Int32Array || Array;
+    global.Int32Array = global.Int32Array || global.Array;

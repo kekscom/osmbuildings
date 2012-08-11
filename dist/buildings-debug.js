@@ -35,7 +35,7 @@ new OSMBuildings('server/?w={w}&n={n}&e={e}&s={s}&z={z}').addTo(map);
 
     'use strict';
 
-    global.Int32Array = global.Int32Array || Array;
+    global.Int32Array = global.Int32Array || global.Array;
 
 
 //****** file: variables.js ******
@@ -108,16 +108,6 @@ function createCanvas(parentNode) {
     context.lineWidth = 1;
 
     try { context.mozImageSmoothingEnabled = false } catch(err) {}
-}
-
-function setStyle(style) {
-    style = style || {};
-    strokeRoofs = style.strokeRoofs !== undefined ? style.strokeRoofs : strokeRoofs;
-    if (style.fillColor) {
-        wallColor = style.fillColor;
-        roofColor = adjustLightness(wallColor, 0.2);
-    }
-    render();
 }
 
 function pixelToGeo(x, y) {
@@ -211,16 +201,17 @@ function setData(json, isLonLat) {
 
 function jsonToData(json, isLonLat, data) {
     data = data || [];
-//        if (typeof data === 'undefined') {
-//            data = [];
-//        }
+//    if (typeof data === 'undefined') {
+//        data = [];
+//    }
 
     var
         features = json[0] ? json : json.features,
         geometry, coords, properties,
-        footprint,
-        p,
+        footprint, heightSum,
         i, il,
+        lat = isLonLat ? 1 : 0,
+        lon = isLonLat ? 0 : 1,
         item
     ;
 
@@ -235,28 +226,27 @@ function jsonToData(json, isLonLat, data) {
         geometry = json.geometry;
         properties = json.properties;
     }
-//      else geometry = json
+//    else geometry = json
 
-    if (geometry.type == 'Polygon' && properties.height) {
+    if (geometry.type == 'Polygon') {
         coords = geometry.coordinates[0];
         footprint = [];
-        // TODO: combine this loop with winding handling
-        // TODO: optimize swapped keys
+        heightSum = 0;
         for (i = 0, il = coords.length; i < il; i++) {
-            if (isLonLat) {
-                footprint.push(coords[i][1]);
-                footprint.push(coords[i][0]);
-            } else {
-                footprint.push(coords[i][0]);
-                footprint.push(coords[i][1]);
-            }
+            footprint.push(coords[i][lat]);
+            footprint.push(coords[i][lon]);
+            heightSum += coords[i][2] || 0;
         }
-        var item = [];
-        item[HEIGHT]    = properties.height;
-        item[FOOTPRINT] = makeClockwiseWinding(footprint);
-        item[COLOR]     = properties.color;
 
-        data.push(item);
+        if (heightSum) {
+            item = [];
+            item[HEIGHT]    = ~~(heightSum/coords.length);
+            item[FOOTPRINT] = makeClockwiseWinding(footprint);
+            if (properties.color) {
+                item[COLOR] = [properties.color, adjustLightness(properties.color, 0.2)];
+            }
+            data.push(item);
+        }
     }
 
     return data;
@@ -265,28 +255,26 @@ function jsonToData(json, isLonLat, data) {
 function scaleData(data, zoom, isNew) {
     var
         res = [],
-        height,
-        coords,
-        color,
-        footprint,
+        i, il, j, jl,
+        item,
+        coords, footprint,
         p,
         z = MAX_ZOOM - zoom
     ;
 
-    for (var i = 0, il = data.length; i < il; i++) {
-        height = data[i][HEIGHT];
-        coords = data[i][FOOTPRINT];
-        color  = data[i][COLOR];
+    for (i = 0, il = data.length; i < il; i++) {
+        item = data[i];
+        coords = item[FOOTPRINT];
         footprint = new Int32Array(coords.length);
-        for (var j = 0, jl = coords.length - 1; j < jl; j += 2) {
+        for (j = 0, jl = coords.length - 1; j < jl; j += 2) {
             p = geoToPixel(coords[j], coords[j + 1], zoom);
             footprint[j]     = p.x;
             footprint[j + 1] = p.y;
         }
         res[i] = [];
-        res[i][HEIGHT]    = min(height >> z, MAX_HEIGHT);
+        res[i][HEIGHT]    = min(item[HEIGHT] >> z, MAX_HEIGHT);
         res[i][FOOTPRINT] = footprint;
-        res[i][COLOR]     = color;
+        res[i][COLOR]     = item[COLOR];
         res[i][IS_NEW]    = isNew;
     }
 
@@ -294,7 +282,6 @@ function scaleData(data, zoom, isNew) {
 }
 
 // detect polygon winding direction: clockwise or counter clockwise
-// TODO: optimize
 function getPolygonWinding(points) {
     var
         num = points.length,
@@ -331,7 +318,6 @@ function getPolygonWinding(points) {
 }
 
 // make polygon winding clockwise. This is needed for proper backface culling on client side.
-// TODO: optimize
 function makeClockwiseWinding(points) {
     var winding = getPolygonWinding(points);
     if (winding === 'CW') {
@@ -557,17 +543,6 @@ function render() {
         return;
     }
 
-    // TODO: improve naming and checks
-    var
-        wallColorAlpha   = setAlpha(wallColor,   zoomAlpha),
-        roofColorAlpha   = setAlpha(roofColor,   zoomAlpha),
-        strokeColorAlpha = setAlpha(strokeColor, zoomAlpha),
-        itemWallColorAlpha,
-        itemRoofColorAlpha
-    ;
-
-    context.strokeStyle = strokeColorAlpha;
-
     var
         i, il, j, jl,
         item,
@@ -577,16 +552,17 @@ function render() {
         offY = originY - meta.y,
         footprint, roof, walls,
         isVisible,
-        ax, ay, bx, by, _a, _b
+        ax, ay, bx, by, _a, _b,
+        wallColorAlpha = setAlpha(wallColor, zoomAlpha),
+        roofColorAlpha = setAlpha(roofColor, zoomAlpha)
     ;
+
+    if (strokeRoofs) {
+        context.strokeStyle = setAlpha(strokeColor, zoomAlpha);
+    }
 
     for (i = 0, il = data.length; i < il; i++) {
         item = data[i];
-
-        if (item[COLOR]) {
-            itemWallColorAlpha = setAlpha(item[COLOR], zoomAlpha);
-            itemRoofColorAlpha = setAlpha(adjustLightness(item[COLOR], 0.2), zoomAlpha);
-        }
 
         isVisible = false;
         f = item[FOOTPRINT];
@@ -605,8 +581,7 @@ function render() {
             continue;
         }
 
-        // drawing walls
-        context.fillStyle = itemWallColorAlpha || wallColorAlpha;
+        context.fillStyle = item[COLOR] ? setAlpha(item[COLOR][0], zoomAlpha) : wallColorAlpha;
 
         // when fading in, use a dynamic height
         h = item[IS_NEW] ? item[HEIGHT] * fadeFactor : item[HEIGHT];
@@ -653,7 +628,7 @@ function render() {
         drawShape(walls);
 
         // fill roof and optionally stroke it
-        context.fillStyle = itemRoofColorAlpha || roofColorAlpha;
+        context.fillStyle = item[COLOR] ? setAlpha(item[COLOR][1], zoomAlpha) : roofColorAlpha;
         drawShape(roof, strokeRoofs);
     }
 }
@@ -688,6 +663,16 @@ function project(x, y, m) {
         x: ~~((x - CAM_X) * m + CAM_X),
         y: ~~((y - CAM_Y) * m + CAM_Y)
     };
+}
+
+function setStyle(style) {
+    style = style || {};
+    strokeRoofs = style.strokeRoofs !== undefined ? style.strokeRoofs : strokeRoofs;
+    if (style.fillColor) {
+        wallColor = style.fillColor;
+        roofColor = adjustLightness(wallColor, 0.2);
+    }
+    render();
 }
 
 
@@ -765,7 +750,10 @@ B.prototype.loadData = function (u) {
 
 (function (proto) {
 
-    var attribution = 'Buildings &copy; <a href="http://osmbuildings.org">OSM Buildings</a>';
+    var
+        attribution = 'Buildings &copy; <a href="http://osmbuildings.org">OSM Buildings</a>',
+        mapOnMove, mapOnMoveEnd, mapOnZoomStart, mapOnZoomEnd // remember event handlers in order to remove them properly
+    ;
 
     proto.VERSION += '-leaflet';
 
@@ -796,42 +784,65 @@ B.prototype.loadData = function (u) {
 
         var lastX = 0, lastY = 0;
 
-        map.on({
-            move: function () {
-                var mp = L.DomUtil.getPosition(map._mapPane);
-                CAM_X = halfWidth - (mp.x - lastX);
-                CAM_Y = height    - (mp.y - lastY);
-                render();
-            },
-            moveend: function () {
-                var mp = L.DomUtil.getPosition(map._mapPane);
-                lastX = mp.x;
-                lastY = mp.y;
-                canvas.style.left = -mp.x + 'px';
-                canvas.style.top  = -mp.y + 'px';
+        mapOnMove = function () {
+            var mp = L.DomUtil.getPosition(map._mapPane);
+            CAM_X = halfWidth - (mp.x - lastX);
+            CAM_Y = height    - (mp.y - lastY);
+            render();
+        };
 
-                CAM_X = halfWidth;
-                CAM_Y = height;
+        mapOnMoveEnd = function () {
+            var mp = L.DomUtil.getPosition(map._mapPane);
+            lastX = mp.x;
+            lastY = mp.y;
+            canvas.style.left = -mp.x + 'px';
+            canvas.style.top  = -mp.y + 'px';
 
-                var po = map.getPixelOrigin();
-                setOrigin(po.x - mp.x, po.y - mp.y);
+            CAM_X = halfWidth;
+            CAM_Y = height;
 
-                onMoveEnd();
-                render();
-            },
-            zoomstart: onZoomStart,
-            zoomend: function () {
-                onZoomEnd({ zoom: map._zoom });
-            } //,
+            var po = map.getPixelOrigin();
+            setOrigin(po.x - mp.x, po.y - mp.y);
+
+            onMoveEnd();
+            render();
+        };
+
+        mapOnZoomStart = onZoomStart;
+
+        mapOnZoomEnd = function () {
+            onZoomEnd({ zoom: map._zoom });
+        };
+
 //          viewreset: function () {
 //              onResize({ width: map._size.x, height: map._size.y });
 //          }
+
+        map.on({
+            move: mapOnMove,
+            moveend: mapOnMoveEnd,
+            zoomstart: mapOnZoomStart,
+            zoomend: mapOnZoomEnd
         });
 
-//      if (map.options.zoomAnimation) {
-//           canvas.className = 'leaflet-zoom-animated';
-//           map.on('zoomanim', onZoom);
-//      }
+
+//        var onZoom = function (opt) {
+//            var
+//                scale = map.getZoomScale(opt.zoom),
+//                offset = map._getCenterOffset(opt.center).divideBy(1 - 1 / scale),
+//                viewportPos = map.containerPointToLayerPoint(map.getSize().multiplyBy(-1)),
+//                origin = viewportPos.add(offset).round()
+//            ;
+//
+//            canvas.style[L.DomUtil.TRANSFORM] = L.DomUtil.getTranslateString((origin.multiplyBy(-1).add(L.DomUtil.getPosition(map._mapPane).multiplyBy(-1)).multiplyBy(scale).add(origin))) + ' scale(' + scale + ') ';
+//            canvas.style.border = "3px solid red";
+//            isZooming = true;
+//        };
+
+        if (map.options.zoomAnimation) {
+             canvas.className = 'leaflet-zoom-animated';
+//             map.on('zoomanim', onZoom);
+        }
 
         map.attributionControl.addAttribution(attribution);
 
@@ -840,13 +851,12 @@ B.prototype.loadData = function (u) {
 
     proto.onRemove = function (map) {
         map.attributionControl.removeAttribution(attribution);
-// TODO cleanup
+
         map.off({
-//          move: function () {},
-//          moveend: onMoveEnd,
-//          zoomstart: onZoomStart,
-//          zoomend: function () {},
-//          viewreset: function() {}
+            move: mapOnMove,
+            moveend: mapOnMoveEnd,
+            zoomstart: mapOnZoomStart,
+            zoomend: mapOnZoomEnd
         });
 
         canvas.parentNode.removeChild(canvas);
