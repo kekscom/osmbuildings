@@ -22,8 +22,8 @@ B.prototype.VERSION = VERSION;
 B.prototype.render = function () {
     if (this.map) {
         render();
-        return this;
     }
+    return this;
 };
 
 /**
@@ -35,8 +35,8 @@ B.prototype.render = function () {
 B.prototype.setStyle = function (style) {
     if (this.map) {
         setStyle(style);
-        return this;
     }
+    return this;
 };
 
 /**
@@ -47,8 +47,8 @@ B.prototype.setStyle = function (style) {
 B.prototype.setData = function (data, isLonLat) {
     if (this.map) {
         setData(data, isLonLat);
-        return this;
     }
+    return this;
 };
 
 /**
@@ -60,6 +60,6 @@ B.prototype.loadData = function (u) {
     if (this.map) {
         url = u;
         loadData();
-        return this;
     }
+    return this;
 };

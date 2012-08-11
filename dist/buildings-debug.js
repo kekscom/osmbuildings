@@ -137,7 +137,7 @@ function template(str, data) {
     });
 }
 
-    function xhr(url, callback) {
+function xhr(url, callback) {
     var req = new XMLHttpRequest();
     req.onreadystatechange = function () {
         if (req.readyState !== 4) {
@@ -390,8 +390,7 @@ function toRGB(h, s, l){
 function adjustLightness(rgb, amount) {
     var
         m = rgb.match(/rgba?\((\d+),(\d+),(\d+)(,([\d.]+))?\)/),
-        hsl = toHSL(m[1], m[2], m[3]),
-        rgb
+        hsl = toHSL(m[1], m[2], m[3])
     ;
 
     hsl.l += amount;
@@ -702,8 +701,8 @@ B.prototype.VERSION = VERSION;
 B.prototype.render = function () {
     if (this.map) {
         render();
-        return this;
     }
+    return this;
 };
 
 /**
@@ -715,8 +714,8 @@ B.prototype.render = function () {
 B.prototype.setStyle = function (style) {
     if (this.map) {
         setStyle(style);
-        return this;
     }
+    return this;
 };
 
 /**
@@ -727,8 +726,8 @@ B.prototype.setStyle = function (style) {
 B.prototype.setData = function (data, isLonLat) {
     if (this.map) {
         setData(data, isLonLat);
-        return this;
     }
+    return this;
 };
 
 /**
@@ -740,8 +739,8 @@ B.prototype.loadData = function (u) {
     if (this.map) {
         url = u;
         loadData();
-        return this;
     }
+    return this;
 };
 
 
@@ -768,19 +767,10 @@ B.prototype.loadData = function (u) {
         createCanvas(map._panes.overlayPane);
         MAX_ZOOM = map._layersMaxZoom;
 
-//      onViewportUpdate();
         setSize(map._size.x, map._size.y);
         var po = map.getPixelOrigin(); // changes on zoom only!
         setOrigin(po.x, po.y);
         setZoom(map._zoom);
-
-        var resizeTimer;
-        global.addEventListener('resize', function () {
-            resizeTimer = setTimeout(function () {
-                clearTimeout(resizeTimer);
-                onResize({ width: map._size.x, height: map._size.y });
-            }, 100);
-        }, false);
 
         var lastX = 0, lastY = 0;
 
@@ -801,6 +791,7 @@ B.prototype.loadData = function (u) {
             CAM_X = halfWidth;
             CAM_Y = height;
 
+            setSize(map._size.x, map._size.y); // in case this is triggered by resize
             var po = map.getPixelOrigin();
             setOrigin(po.x - mp.x, po.y - mp.y);
 
@@ -814,17 +805,12 @@ B.prototype.loadData = function (u) {
             onZoomEnd({ zoom: map._zoom });
         };
 
-//          viewreset: function () {
-//              onResize({ width: map._size.x, height: map._size.y });
-//          }
-
         map.on({
             move: mapOnMove,
             moveend: mapOnMoveEnd,
             zoomstart: mapOnZoomStart,
             zoomend: mapOnZoomEnd
         });
-
 
 //        var onZoom = function (opt) {
 //            var

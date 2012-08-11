@@ -42,7 +42,7 @@ function template(str, data) {
     });
 }
 
-    function xhr(url, callback) {
+function xhr(url, callback) {
     var req = new XMLHttpRequest();
     req.onreadystatechange = function () {
         if (req.readyState !== 4) {
@@ -295,8 +295,7 @@ function toRGB(h, s, l){
 function adjustLightness(rgb, amount) {
     var
         m = rgb.match(/rgba?\((\d+),(\d+),(\d+)(,([\d.]+))?\)/),
-        hsl = toHSL(m[1], m[2], m[3]),
-        rgb
+        hsl = toHSL(m[1], m[2], m[3])
     ;
 
     hsl.l += amount;

@@ -19,19 +19,10 @@
         createCanvas(map._panes.overlayPane);
         MAX_ZOOM = map._layersMaxZoom;
 
-//      onViewportUpdate();
         setSize(map._size.x, map._size.y);
         var po = map.getPixelOrigin(); // changes on zoom only!
         setOrigin(po.x, po.y);
         setZoom(map._zoom);
-
-        var resizeTimer;
-        global.addEventListener('resize', function () {
-            resizeTimer = setTimeout(function () {
-                clearTimeout(resizeTimer);
-                onResize({ width: map._size.x, height: map._size.y });
-            }, 100);
-        }, false);
 
         var lastX = 0, lastY = 0;
 
@@ -52,6 +43,7 @@
             CAM_X = halfWidth;
             CAM_Y = height;
 
+            setSize(map._size.x, map._size.y); // in case this is triggered by resize
             var po = map.getPixelOrigin();
             setOrigin(po.x - mp.x, po.y - mp.y);
 
@@ -65,17 +57,12 @@
             onZoomEnd({ zoom: map._zoom });
         };
 
-//          viewreset: function () {
-//              onResize({ width: map._size.x, height: map._size.y });
-//          }
-
         map.on({
             move: mapOnMove,
             moveend: mapOnMoveEnd,
             zoomstart: mapOnZoomStart,
             zoomend: mapOnZoomEnd
         });
-
 
 //        var onZoom = function (opt) {
 //            var
