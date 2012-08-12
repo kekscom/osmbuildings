@@ -10,6 +10,7 @@ var dstPath = '../dist';
 // leaflet
 var srcFiles = [
 	srcPath + '/prefix.js',
+    srcPath + '/color.js',
 	srcPath + '/variables.js',
 	srcPath + '/functions.js',
     srcPath + '/events.js',

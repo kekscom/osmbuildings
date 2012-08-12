@@ -27,9 +27,9 @@ var
 
     url,
     strokeRoofs,
-    wallColor = 'rgb(200,190,180)',
-    roofColor = adjustLightness(wallColor, 0.2),
-    strokeColor = 'rgb(145,140,135)',
+    wallColor = new Color(200,190,180),
+    roofColor = wallColor.adjustLightness(0.2),
+    strokeColor = new Color(145,140,135),
 
     rawData,
     meta, data,

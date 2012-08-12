@@ -14,9 +14,7 @@ var buildings = new OSMBuildings(
     'server/?w={w}&n={n}&e={e}&s={s}&z={z}',
     {
         strokeRoofs: false,
-        wallColor: 'rgb(190,170,150)',
-        roofColor: 'rgb(230,220,210)',
-        strokeColor: 'rgb(145,140,135)'
+        wallColor: 'rgb(190,170,150)'
     }
 );
 

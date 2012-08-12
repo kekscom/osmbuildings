@@ -16,9 +16,7 @@ var buildings = new OSMBuildings(
     'server/?w={w}&n={n}&e={e}&s={s}&z={z}',
     {
         strokeRoofs: false,
-        wallColor: 'rgb(190,170,150)',
-        roofColor: 'rgb(230,220,210)',
-        strokeColor: 'rgb(145,140,135)'
+        wallColor: 'rgb(190,170,150)'
     }
 );
 
@@ -36,6 +34,109 @@ new OSMBuildings('server/?w={w}&n={n}&e={e}&s={s}&z={z}').addTo(map);
     'use strict';
 
     global.Int32Array = global.Int32Array || global.Array;
+
+
+//****** file: color.js ******
+
+
+function Color(r, g, b, a) {
+    this.r = r;
+    this.g = g;
+    this.b = b;
+    this.a = arguments.length < 4 ? 1 : a;
+}
+
+Color.prototype.toString = function () {
+    return 'rgba(' + [this.r, this.g, this.b, this.a].join(',') + ')';
+}
+
+Color.prototype.adjustLightness = function (amount) {
+    var hsla = Color.toHSLA(this);
+    hsla.l += amount;
+    hsla.l = Math.min(1, Math.max(0, hsla.l));
+    return Color.toRGB(hsla);
+};
+
+Color.prototype.adjustAlpha = function (a) {
+    return new Color(this.r, this.g, this.b, this.a * a);
+};
+
+Color.parse = function(str) {
+    var m;
+    if (~str.indexOf('#')) {
+        m = str.match(/^#?(\w{2})(\w{2})(\w{2})$/);
+        return new Color(
+            parseInt(m[1], 16),
+            parseInt(m[2], 16),
+            parseInt(m[3], 16)
+        );
+    }
+
+    m = str.match(/rgba?\((\d+)\D+(\d+)\D+(\d+)(\D+([\d.]+))?\)/);
+    return new Color(
+        m[1],
+        m[2],
+        m[3],
+        m[4] ? m[5] : 1
+    );
+};
+
+Color.toHSLA = function (rgba) {
+    var
+        r = rgba.r / 255,
+        g = rgba.g / 255,
+        b = rgba.b / 255,
+        max = Math.max(r, g, b), min = Math.min(r, g, b),
+        h, s, l = (max + min) / 2,
+        d
+    ;
+
+    if (max == min) {
+        h = s = 0; // achromatic
+    } else {
+        d = max - min;
+        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+        switch (max) {
+            case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+            case g: h = (b - r) / d + 2; break;
+            case b: h = (r - g) / d + 4; break;
+        }
+        h /= 6;
+    }
+
+    return { h: h, s: s, l: l, a: rgba.a };
+};
+
+Color.toRGB = function (hsla) {
+    var r, g, b;
+
+    if (hsla.s == 0) {
+        r = g = b = hsla.l; // achromatic
+    } else {
+        var
+            q = hsla.l < 0.5 ? hsla.l * (1 + hsla.s) : hsla.l + hsla.s - hsla.l * hsla.s,
+            p = 2 * hsla.l - q
+        ;
+        r = Color.hueToRGB(p, q, hsla.h + 1/3);
+        g = Color.hueToRGB(p, q, hsla.h);
+        b = Color.hueToRGB(p, q, hsla.h - 1/3);
+    }
+    return new Color(
+        ~~(r * 255),
+        ~~(g * 255),
+        ~~(b * 255),
+        hsla.a
+    );
+};
+
+Color.hueToRGB = function(p, q, t) {
+    if (t < 0) t += 1;
+    if (t > 1) t -= 1;
+    if (t < 1/6) return p + (q - p) * 6 * t;
+    if (t < 1/2) return q;
+    if (t < 2/3) return p + (q - p) * (2 / 3 - t) * 6;
+    return p;
+};
 
 
 //****** file: variables.js ******
@@ -69,9 +170,9 @@ var
 
     url,
     strokeRoofs,
-    wallColor = 'rgb(200,190,180)',
-    roofColor = adjustLightness(wallColor, 0.2),
-    strokeColor = 'rgb(145,140,135)',
+    wallColor = new Color(200,190,180),
+    roofColor = wallColor.adjustLightness(0.2),
+    strokeColor = new Color(145,140,135),
 
     rawData,
     meta, data,
@@ -210,6 +311,7 @@ function jsonToData(json, isLonLat, data) {
         features = json[0] ? json : json.features,
         geometry, coords, properties,
         footprint, heightSum,
+        color,
         i, il,
         lat = isLonLat ? 1 : 0,
         lon = isLonLat ? 0 : 1,
@@ -244,7 +346,8 @@ function jsonToData(json, isLonLat, data) {
             item[HEIGHT]    = ~~(heightSum/coords.length);
             item[FOOTPRINT] = makeClockwiseWinding(footprint);
             if (properties.color) {
-                item[COLOR] = [properties.color, adjustLightness(properties.color, 0.2)];
+                color = Color.parse(properties.color);
+                item[COLOR] = [color, color.adjustLightness(0.2)];
             }
             data.push(item);
         }
@@ -330,74 +433,6 @@ function makeClockwiseWinding(points) {
         revPoints.push(points[i + 1]);
     }
     return revPoints;
-}
-
-function setAlpha(rgb, a) {
-    var m = rgb.match(/rgba?\((\d+)\D+(\d+)\D+(\d+)(\D+([\d.]+))?\)/);
-    return 'rgba(' + [m[1], m[2], m[3], (m[4] ? a * m[5] : a)].join(',') + ')';
-}
-
-function toHSL(r, g, b) {
-    r /= 255, g /= 255, b /= 255;
-    var
-        max = Math.max(r, g, b), min = Math.min(r, g, b),
-        h, s, l = (max + min) / 2,
-        d
-    ;
-
-    if (max == min) {
-        h = s = 0; // achromatic
-    } else {
-        d = max - min;
-        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-        switch (max) {
-            case r: h = (g - b) / d + (g < b ? 6 : 0); break;
-            case g: h = (b - r) / d + 2; break;
-            case b: h = (r - g) / d + 4; break;
-        }
-        h /= 6;
-    }
-
-    return { h: h, s: s, l: l };
-}
-
-function hue2rgb(p, q, t) {
-    if (t < 0) t += 1;
-    if (t > 1) t -= 1;
-    if (t < 1/6) return p + (q - p) * 6 * t;
-    if (t < 1/2) return q;
-    if (t < 2/3) return p + (q - p) * (2 / 3 - t) * 6;
-    return p;
-}
-
-function toRGB(h, s, l){
-    var r, g, b;
-
-    if (s == 0) {
-        r = g = b = l; // achromatic
-    } else {
-        var
-            q = l < 0.5 ? l * (1 + s) : l + s - l * s,
-            p = 2 * l - q
-        ;
-        r = hue2rgb(p, q, h + 1/3);
-        g = hue2rgb(p, q, h);
-        b = hue2rgb(p, q, h - 1/3);
-    }
-
-    return { r: ~~(r * 255), g: ~~(g * 255), b: ~~(b * 255) };
-}
-
-function adjustLightness(rgb, amount) {
-    var
-        m = rgb.match(/rgba?\((\d+)\D+(\d+)\D+(\d+)(\D+([\d.]+))?\)/),
-        hsl = toHSL(m[1], m[2], m[3])
-    ;
-
-    hsl.l += amount;
-    hsl.l = min(1, max(0, hsl.l));
-    rgb = toRGB(hsl.h, hsl.s, hsl.l);
-    return 'rgba(' + [rgb.r, rgb.g, rgb.b, (m[4] ? m[5] : 1)].join(',') + ')';
 }
 
 function setSize(w, h) {
@@ -553,12 +588,12 @@ function render() {
         footprint, roof, walls,
         isVisible,
         ax, ay, bx, by, _a, _b,
-        wallColorAlpha = setAlpha(wallColor, zoomAlpha),
-        roofColorAlpha = setAlpha(roofColor, zoomAlpha)
+        wallColorAlpha = wallColor.adjustAlpha(zoomAlpha),
+        roofColorAlpha = roofColor.adjustAlpha(zoomAlpha)
     ;
 
     if (strokeRoofs) {
-        context.strokeStyle = setAlpha(strokeColor, zoomAlpha);
+        context.strokeStyle = strokeColor.adjustAlpha(zoomAlpha) + '';
     }
 
     for (i = 0, il = data.length; i < il; i++) {
@@ -581,7 +616,7 @@ function render() {
             continue;
         }
 
-        context.fillStyle = item[COLOR] ? setAlpha(item[COLOR][0], zoomAlpha) : wallColorAlpha;
+        context.fillStyle = (item[COLOR] ? item[COLOR][0].adjustAlpha(zoomAlpha) : wallColorAlpha) + '';
 
         // when fading in, use a dynamic height
         h = item[IS_NEW] ? item[HEIGHT] * fadeFactor : item[HEIGHT];
@@ -628,7 +663,7 @@ function render() {
         drawShape(walls);
 
         // fill roof and optionally stroke it
-        context.fillStyle = item[COLOR] ? setAlpha(item[COLOR][1], zoomAlpha) : roofColorAlpha;
+        context.fillStyle = (item[COLOR] ? item[COLOR][1].adjustAlpha(zoomAlpha) : roofColorAlpha) + '';
         drawShape(roof, strokeRoofs);
     }
 }
@@ -669,8 +704,8 @@ function setStyle(style) {
     style = style || {};
     strokeRoofs = style.strokeRoofs !== undefined ? style.strokeRoofs : strokeRoofs;
     if (style.fillColor) {
-        wallColor = style.fillColor;
-        roofColor = adjustLightness(wallColor, 0.2);
+        wallColor = Color.parse(style.fillColor);
+        roofColor = wallColor.adjustLightness(0.2);
     }
     render();
 }

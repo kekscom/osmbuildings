@@ -39,12 +39,12 @@ function render() {
         footprint, roof, walls,
         isVisible,
         ax, ay, bx, by, _a, _b,
-        wallColorAlpha = setAlpha(wallColor, zoomAlpha),
-        roofColorAlpha = setAlpha(roofColor, zoomAlpha)
+        wallColorAlpha = wallColor.adjustAlpha(zoomAlpha),
+        roofColorAlpha = roofColor.adjustAlpha(zoomAlpha)
     ;
 
     if (strokeRoofs) {
-        context.strokeStyle = setAlpha(strokeColor, zoomAlpha);
+        context.strokeStyle = strokeColor.adjustAlpha(zoomAlpha) + '';
     }
 
     for (i = 0, il = data.length; i < il; i++) {
@@ -67,7 +67,7 @@ function render() {
             continue;
         }
 
-        context.fillStyle = item[COLOR] ? setAlpha(item[COLOR][0], zoomAlpha) : wallColorAlpha;
+        context.fillStyle = (item[COLOR] ? item[COLOR][0].adjustAlpha(zoomAlpha) : wallColorAlpha) + '';
 
         // when fading in, use a dynamic height
         h = item[IS_NEW] ? item[HEIGHT] * fadeFactor : item[HEIGHT];
@@ -114,7 +114,7 @@ function render() {
         drawShape(walls);
 
         // fill roof and optionally stroke it
-        context.fillStyle = item[COLOR] ? setAlpha(item[COLOR][1], zoomAlpha) : roofColorAlpha;
+        context.fillStyle = (item[COLOR] ? item[COLOR][1].adjustAlpha(zoomAlpha) : roofColorAlpha) + '';
         drawShape(roof, strokeRoofs);
     }
 }
@@ -155,8 +155,8 @@ function setStyle(style) {
     style = style || {};
     strokeRoofs = style.strokeRoofs !== undefined ? style.strokeRoofs : strokeRoofs;
     if (style.fillColor) {
-        wallColor = style.fillColor;
-        roofColor = adjustLightness(wallColor, 0.2);
+        wallColor = Color.parse(style.fillColor);
+        roofColor = wallColor.adjustLightness(0.2);
     }
     render();
 }
