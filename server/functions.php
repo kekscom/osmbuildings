@@ -42,33 +42,15 @@ function crop($n) {
 
 // detect polygon winding direction: clockwise or counter clockwise
 function getPolygonWinding($points) {
-    $num = count($points);
-    $maxN = -90;
-    $maxE = -180;
-    $maxW =  180;
-
-    for ($i = 0; $i < $num-1; $i+=2) {
-        if ($points[$i+1] < $maxW) {
-            $maxW = $points[$i+1];
-            $WI = $i;
-        } else if ($points[$i+1] > $maxE) {
-            $maxE = $points[$i+1];
-            $EI = $i;
-        }
-
-        if ($points[$i] > $maxN) {
-            $maxN = $points[$i];
-            $NI = $i;
-        }
+    $a = 0;
+    for ($i = 0; $i < count($points); $i += 2) {
+        $x1 = $points[$i  ];
+        $y1 = $points[$i+1];
+        $x2 = $points[$i+2];
+        $y2 = $points[$i+3];
+        $a += $x1 * $y2 - $x2 * $y1;
     }
-
-    $W = $WI-$NI;
-    $E = $EI-$NI;
-
-    if ($W < 0) $W += $num;
-    if ($E < 0) $E += $num;
-
-    return ($W > $E) ? 'CW' : 'CCW';
+    return ($a / 2) > 0 ? 'CW' : 'CCW';
 }
 
 // Make polygon winding clockwise. This is needed for proper backface culling on client side.
