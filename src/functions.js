@@ -5,6 +5,7 @@ function createCanvas(parentNode) {
     canvas.style.pointerEvents = 'none';
     canvas.style.left = 0;
     canvas.style.top = 0;
+    canvas.style.imageRendering = 'optimizeSpeed';
     parentNode.appendChild(canvas),
 
     context = canvas.getContext('2d')
@@ -237,7 +238,7 @@ function makeClockwiseWinding(points) {
 }
 
 function setAlpha(rgb, a) {
-    var m = rgb.match(/rgba?\((\d+),(\d+),(\d+)(,([\d.]+))?\)/);
+    var m = rgb.match(/rgba?\((\d+)\D+(\d+)\D+(\d+)(\D+([\d.]+))?\)/);
     return 'rgba(' + [m[1], m[2], m[3], (m[4] ? a * m[5] : a)].join(',') + ')';
 }
 
@@ -294,7 +295,7 @@ function toRGB(h, s, l){
 
 function adjustLightness(rgb, amount) {
     var
-        m = rgb.match(/rgba?\((\d+),(\d+),(\d+)(,([\d.]+))?\)/),
+        m = rgb.match(/rgba?\((\d+)\D+(\d+)\D+(\d+)(\D+([\d.]+))?\)/),
         hsl = toHSL(m[1], m[2], m[3])
     ;
 
