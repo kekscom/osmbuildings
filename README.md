@@ -13,9 +13,9 @@ Actually I'm looking for a partner to provide a data service to you.
 
 ## Prerequisites
 
-1. You will need MySQL as data storage. Version 5.0.16 or better has the required <a href="http://dev.mysql.com/doc/refman/5.0/en/spatial-extensions.html">Spatial Extensions</a> enabled.
+1. You will need MySQL as data storage. Version 5.0.16 or better has the required [Spatial Extensions](http://dev.mysql.com/doc/refman/5.0/en/spatial-extensions.html) enabled.
 Everything can be done in different Geo enabled databases too. For now we just go MySQL.
-For those who have trouble importing the data into MySQL or running a different server, <a href="https://twitter.com/D_Guidi">Diego Guidi</a> did a great job creating a Shapefile.
+For those who have trouble importing the data into MySQL or running a different server, [Diego Guidi](https://twitter.com/D_Guidi) did a great job creating a Shapefile.
 
 * See Data conversion below *
 
@@ -28,7 +28,7 @@ Or just adapt and rename /server/config.sample.php for your needs.
 
 ## Integration
 
-I assume, Leaflet is already integrated in your html page. If not, head over to its <a href="http://leaflet.cloudmade.com/reference.html">documentation</a>.
+I assume, Leaflet is already integrated in your html page. If not, head over to its [documentation](http://leaflet.cloudmade.com/reference.html).
 Important: version 0.4 of Leaflet.js is required.
 
 Then in header section, add:
@@ -116,4 +116,4 @@ What it does:
 - swaps lat/lon of polygons if needed
 - creates a mysql dump file
 
-For any further information visit <a href="http://osmbuildings.org">http://osmbuildings.org</a>, follow <a href="https://twitter.com/osmbuildings">@osmbuildings</a> on Twitter or report issues here on Github.
+For any further information visit [http://osmbuildings.org](http://osmbuildings.org), follow [@osmbuildings](https://twitter.com/osmbuildings) on Twitter or report issues here on Github.
