@@ -1,4 +1,7 @@
-        var attribution = 'Buildings &copy; <a href="http://osmbuildings.org">OSM Buildings</a>';
+        var
+            attribution = 'Buildings &copy; <a href="http://osmbuildings.org">OSM Buildings</a>',
+            mapOnMove, mapOnMoveEnd, mapOnZoomEnd
+        ;
 
         this.VERSION += '-leaflet';
 
@@ -20,37 +23,41 @@
 
             var lastX = 0, lastY = 0;
 
+
+            mapOnMove = function () {
+                var mp = L.DomUtil.getPosition(map._mapPane);
+                camX = halfWidth - (mp.x - lastX);
+                camY = height    - (mp.y - lastY);
+                render();
+            }
+
+            mapOnMoveEnd = function () {
+                var mp = L.DomUtil.getPosition(map._mapPane);
+                lastX = mp.x;
+                lastY = mp.y;
+                canvas.style.left = -mp.x + 'px';
+                canvas.style.top  = -mp.y + 'px';
+
+                camX = halfWidth;
+                camY = height;
+
+                setSize(map._size.x, map._size.y); // in case this is triggered by resize
+                var po = map.getPixelOrigin();
+                setOrigin(po.x - mp.x, po.y - mp.y);
+
+                onMoveEnd();
+                render();
+            }
+
+            mapOnZoomEnd = function () {
+                onZoomEnd({ zoom: map._zoom });
+            }
+
             map.on({
-                move: function mapOnMove() {
-                    var mp = L.DomUtil.getPosition(map._mapPane);
-                    camX = halfWidth - (mp.x - lastX);
-                    camY = height    - (mp.y - lastY);
-                    render();
-                },
-
-                moveend: function mapOnMoveEnd() {
-                    var mp = L.DomUtil.getPosition(map._mapPane);
-                    lastX = mp.x;
-                    lastY = mp.y;
-                    canvas.style.left = -mp.x + 'px';
-                    canvas.style.top  = -mp.y + 'px';
-
-                    camX = halfWidth;
-                    camY = height;
-
-                    setSize(map._size.x, map._size.y); // in case this is triggered by resize
-                    var po = map.getPixelOrigin();
-                    setOrigin(po.x - mp.x, po.y - mp.y);
-
-                    onMoveEnd();
-                    render();
-                },
-
+                move: mapOnMove,
+                moveend: mapOnMoveEnd,
                 zoomstart: onZoomStart,
-
-                zoomend: function mapOnZoomEnd() {
-                    onZoomEnd({ zoom: map._zoom });
-                }
+                zoomend: mapOnZoomEnd
             });
 
     //        var onZoom = function (opt) {
