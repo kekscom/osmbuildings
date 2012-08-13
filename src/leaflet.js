@@ -1,86 +1,96 @@
+        var attribution = 'Buildings &copy; <a href="http://osmbuildings.org">OSM Buildings</a>';
 
-(function (proto) {
+        this.VERSION += '-leaflet';
 
-	template = L.Util.template; // override template function
-
-    var
-        oldInertia,
-        attribution = 'Buildings &copy; <a href="http://osmbuildings.org">OSM Buildings</a>'
-    ;
-
-    proto.VERSION += '-leaflet-patch';
-
-    proto.addTo = function (map) {
-        map.addLayer(this);
-        return this;
-    }
-
-    proto.onAdd = function (map) {
-        this.map = map;
-
-        function calcCenter() {
-            var half = map._size.divideBy(2);
-            return map._getTopLeftPoint().add(half);
+        this.addTo = function (map) {
+            map.addLayer(this);
+            return this;
         }
 
-//      createCanvas(map._panes.overlayPane);
-        createCanvas(document.querySelector('.leaflet-container'));
-        MAX_ZOOM = map._layersMaxZoom;
+        this.onAdd = function (map) {
+            this.map = map;
 
-//      onViewportUpdate();
-        setSize(map._size.x, map._size.y);
-        var c = calcCenter();
-        setCenter(c.x, c.y);
-        setZoom(map._zoom);
+            createCanvas(map._panes.overlayPane);
+            maxZoom = map._layersMaxZoom;
 
-        var resizeTimer;
-        window.addEventListener('resize', function () {
-            resizeTimer = setTimeout(function () {
-                clearTimeout(resizeTimer);
-                onResize({ width:map._size.x, height:map._size.y });
-            }, 100);
-        }, false);
+            setSize(map._size.x, map._size.y);
+            var po = map.getPixelOrigin(); // changes on zoom only!
+            setOrigin(po.x, po.y);
+            setZoom(map._zoom);
 
-        map.on({
-            move: function () {
-                onMove(calcCenter());
-            },
-            moveend: onMoveEnd,
-            zoomstart: onZoomStart,
-            zoomend: function () {
-                onZoomEnd({ zoom: map._zoom });
-            } //,
-//          viewreset: function () {
-//              onResize({ width: map._size.x, height: map._size.y });
-//          }
-        });
+            var lastX = 0, lastY = 0;
 
-//      if (map.options.zoomAnimation) {
-//           canvas.className = 'leaflet-zoom-animated';
-//           map.on('zoomanim', onZoom);
-//      }
+            map.on({
+                move: function mapOnMove() {
+                    var mp = L.DomUtil.getPosition(map._mapPane);
+                    camX = halfWidth - (mp.x - lastX);
+                    camY = height    - (mp.y - lastY);
+                    render();
+                },
 
-        oldInertia = map.options.inertia;
-        map.options.inertia = false;
-        map.attributionControl.addAttribution(attribution);
+                moveend: function mapOnMoveEnd() {
+                    var mp = L.DomUtil.getPosition(map._mapPane);
+                    lastX = mp.x;
+                    lastY = mp.y;
+                    canvas.style.left = -mp.x + 'px';
+                    canvas.style.top  = -mp.y + 'px';
 
-        render(); // in case of for re-adding this layer
-    }
+                    camX = halfWidth;
+                    camY = height;
 
-    proto.onRemove = function (map) {
-        map.attributionControl.removeAttribution(attribution);
-        map.options.inertia = oldInertia;
+                    setSize(map._size.x, map._size.y); // in case this is triggered by resize
+                    var po = map.getPixelOrigin();
+                    setOrigin(po.x - mp.x, po.y - mp.y);
 
-        map.off({
-//          move: function () {},
-//          moveend: onMoveEnd,
-//          zoomstart: onZoomStart,
-//          zoomend: function () {},
-//          viewreset: function() {}
-        });
+                    onMoveEnd();
+                    render();
+                },
 
-        canvas.parentNode.removeChild(canvas);
-        this.map = null;
-    }
+                zoomstart: onZoomStart,
 
-}(B.prototype));
+                zoomend: function mapOnZoomEnd() {
+                    onZoomEnd({ zoom: map._zoom });
+                }
+            });
+
+    //        var onZoom = function (opt) {
+    //            var
+    //                scale = map.getZoomScale(opt.zoom),
+    //                offset = map._getCenterOffset(opt.center).divideBy(1 - 1 / scale),
+    //                viewportPos = map.containerPointToLayerPoint(map.getSize().multiplyBy(-1)),
+    //                origin = viewportPos.add(offset).round()
+    //            ;
+    //
+    //            canvas.style[L.DomUtil.TRANSFORM] = L.DomUtil.getTranslateString((origin.multiplyBy(-1).add(L.DomUtil.getPosition(map._mapPane).multiplyBy(-1)).multiplyBy(scale).add(origin))) + ' scale(' + scale + ') ';
+    //            canvas.style.border = "3px solid red";
+    //            isZooming = true;
+    //        };
+
+            if (map.options.zoomAnimation) {
+                 canvas.className = 'leaflet-zoom-animated';
+    //             map.on('zoomanim', onZoom);
+            }
+
+            map.attributionControl.addAttribution(attribution);
+
+            render(); // in case of for re-adding this layer
+        }
+
+        this.onRemove = function (map) {
+            map.attributionControl.removeAttribution(attribution);
+
+            map.off({
+                move: mapOnMove,
+                moveend: mapOnMoveEnd,
+                zoomstart: onZoomStart,
+                zoomend: mapOnZoomEnd
+            });
+
+            canvas.parentNode.removeChild(canvas);
+            this.map = null;
+        }
+
+        // in case it has been passed to this, initialize map directly
+        if (arguments.length) {
+            this.addTo(arguments[0]);
+        }

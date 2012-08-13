@@ -1,162 +1,152 @@
-function fadeIn() {
-    fadeFactor = 0;
-    clearInterval(fadeTimer);
-    fadeTimer = setInterval(function () {
-        fadeFactor += 0.5 * 0.2; // amount * easing
-        if (fadeFactor > 1) {
+        function fadeIn() {
+            fadeFactor = 0;
             clearInterval(fadeTimer);
-            fadeFactor = 1;
-            // unset 'already present' marker
-            for (var i = 0, il = data.length; i < il; i++) {
-                data[i][IS_NEW] = 0;
+            fadeTimer = setInterval(function () {
+                fadeFactor += 0.5 * 0.2; // amount * easing
+                if (fadeFactor > 1) {
+                    clearInterval(fadeTimer);
+                    fadeFactor = 1;
+                    // unset 'already present' marker
+                    for (var i = 0, il = data.length; i < il; i++) {
+                        data[i][IS_NEW] = 0;
+                    }
+                }
+                render();
+            }, 33);
+        }
+
+        function render() {
+            context.clearRect(0, 0, width, height);
+
+            // data needed for rendering
+            if (!meta || !data) {
+                return;
             }
-        }
-        render();
-    }, 33);
-}
 
-function render() {
-    context.clearRect(0, 0, width, height);
-
-    // data needed for rendering
-    if (!meta || !data) {
-        return;
-    }
-
-    // show buildings in high zoom levels only
-    // avoid rendering during zoom
-    if (zoom < MIN_ZOOM || isZooming) {
-        return;
-    }
-
-    var
-        i, il, j, jl,
-        item,
-        f, h, m,
-        x, y,
-        offX = originX - meta.x,
-        offY = originY - meta.y,
-        footprint, roof, walls,
-        isVisible,
-        ax, ay, bx, by, _a, _b,
-        wallColorAlpha = wallColor.adjustAlpha(zoomAlpha),
-        roofColorAlpha = roofColor.adjustAlpha(zoomAlpha)
-    ;
-
-    if (strokeRoofs) {
-        context.strokeStyle = strokeColor.adjustAlpha(zoomAlpha) + '';
-    }
-
-    for (i = 0, il = data.length; i < il; i++) {
-        item = data[i];
-
-        isVisible = false;
-        f = item[FOOTPRINT];
-        footprint = new Int32Array(f.length);
-        for (j = 0, jl = f.length - 1; j < jl; j += 2) {
-            footprint[j]     = x = (f[j]     - offX);
-            footprint[j + 1] = y = (f[j + 1] - offY);
-
-            // checking footprint is sufficient for visibility
-            if (!isVisible) {
-                isVisible = (x > 0 && x < width && y > 0 && y < height);
+            // show buildings in high zoom levels only
+            // avoid rendering during zoom
+            if (zoom < MIN_ZOOM || isZooming) {
+                return;
             }
-        }
 
-        if (!isVisible) {
-            continue;
-        }
+            var
+                i, il, j, jl,
+                item,
+                f, h, m,
+                x, y,
+                offX = originX - meta.x,
+                offY = originY - meta.y,
+                footprint, roof, walls,
+                isVisible,
+                ax, ay, bx, by, _a, _b,
+                wallColorAlpha = wallColor.adjustAlpha(zoomAlpha),
+                roofColorAlpha = roofColor.adjustAlpha(zoomAlpha)
+            ;
 
-        context.fillStyle = (item[COLOR] ? item[COLOR][0].adjustAlpha(zoomAlpha) : wallColorAlpha) + '';
+            if (strokeRoofs) {
+                context.strokeStyle = strokeColor.adjustAlpha(zoomAlpha) + '';
+            }
 
-        // when fading in, use a dynamic height
-        h = item[IS_NEW] ? item[HEIGHT] * fadeFactor : item[HEIGHT];
+            for (i = 0, il = data.length; i < il; i++) {
+                item = data[i];
 
-        // precalculating projection height scale
-        m = CAM_Z / (CAM_Z - h);
+                isVisible = false;
+                f = item[FOOTPRINT];
+                footprint = new Int32Array(f.length);
+                for (j = 0, jl = f.length - 1; j < jl; j += 2) {
+                    footprint[j]     = x = (f[j]     - offX);
+                    footprint[j + 1] = y = (f[j + 1] - offY);
 
-        roof = new Int32Array(footprint.length - 2);
-        walls = [];
-
-        for (j = 0, jl = footprint.length - 3; j < jl; j += 2) {
-            ax = footprint[j];
-            ay = footprint[j + 1];
-            bx = footprint[j + 2];
-            by = footprint[j + 3];
-
-            // project 3d to 2d on extruded footprint
-            _a = project(ax, ay, m);
-            _b = project(bx, by, m);
-
-            // backface culling check. could this be precalculated partially?
-            if ((bx - ax) * (_a.y - ay) > (_a.x - ax) * (by - ay)) {
-                // face combining
-                if (!walls.length) {
-                    walls.unshift(ay);
-                    walls.unshift(ax);
-                    walls.push(_a.x);
-                    walls.push(_a.y);
+                    // checking footprint is sufficient for visibility
+                    if (!isVisible) {
+                        isVisible = (x > 0 && x < width && y > 0 && y < height);
+                    }
                 }
 
-                walls.unshift(by);
-                walls.unshift(bx);
-                walls.push(_b.x);
-                walls.push(_b.y);
-            } else {
-                drawShape(walls);
-                walls = [];
-            }
+                if (!isVisible) {
+                    continue;
+                }
 
-            roof[j]     = _a.x;
-            roof[j + 1] = _a.y;
+                context.fillStyle = (item[COLOR] ? item[COLOR][0].adjustAlpha(zoomAlpha) : wallColorAlpha) + '';
+
+                // when fading in, use a dynamic height
+                h = item[IS_NEW] ? item[HEIGHT] * fadeFactor : item[HEIGHT];
+
+                // precalculating projection height scale
+                m = CAM_Z / (CAM_Z - h);
+
+                roof = new Int32Array(footprint.length - 2);
+                walls = [];
+
+                for (j = 0, jl = footprint.length - 3; j < jl; j += 2) {
+                    ax = footprint[j];
+                    ay = footprint[j + 1];
+                    bx = footprint[j + 2];
+                    by = footprint[j + 3];
+
+                    // project 3d to 2d on extruded footprint
+                    _a = project(ax, ay, m);
+                    _b = project(bx, by, m);
+
+                    // backface culling check. could this be precalculated partially?
+                    if ((bx - ax) * (_a.y - ay) > (_a.x - ax) * (by - ay)) {
+                        // face combining
+                        if (!walls.length) {
+                            walls.unshift(ay);
+                            walls.unshift(ax);
+                            walls.push(_a.x);
+                            walls.push(_a.y);
+                        }
+
+                        walls.unshift(by);
+                        walls.unshift(bx);
+                        walls.push(_b.x);
+                        walls.push(_b.y);
+                    } else {
+                        drawShape(walls);
+                        walls = [];
+                    }
+
+                    roof[j]     = _a.x;
+                    roof[j + 1] = _a.y;
+                }
+
+                drawShape(walls);
+
+                // fill roof and optionally stroke it
+                context.fillStyle = (item[COLOR] ? item[COLOR][1].adjustAlpha(zoomAlpha) : roofColorAlpha) + '';
+                drawShape(roof, strokeRoofs);
+            }
         }
 
-        drawShape(walls);
+        //    function debugMarker(x, y, color, size) {
+        //        context.fillStyle = color || '#ffcc00';
+        //        context.beginPath();
+        //        context.arc(x, y, size || 3, 0, PI*2, true);
+        //        context.closePath();
+        //        context.fill();
+        //    }
 
-        // fill roof and optionally stroke it
-        context.fillStyle = (item[COLOR] ? item[COLOR][1].adjustAlpha(zoomAlpha) : roofColorAlpha) + '';
-        drawShape(roof, strokeRoofs);
-    }
-}
+        function drawShape(points, stroke) {
+            if (!points.length) {
+                return;
+            }
 
-//    function debugMarker(x, y, color, size) {
-//        context.fillStyle = color || '#ffcc00';
-//        context.beginPath();
-//        context.arc(x, y, size || 3, 0, PI*2, true);
-//        context.closePath();
-//        context.fill();
-//    }
+            context.beginPath();
+            context.moveTo(points[0], points[1]);
+            for (var i = 2, il = points.length; i < il; i += 2) {
+                context.lineTo(points[i], points[i + 1]);
+            }
+            context.closePath();
+            if (stroke) {
+                context.stroke();
+            }
+            context.fill();
+        }
 
-function drawShape(points, stroke) {
-    if (!points.length) {
-        return;
-    }
-
-    context.beginPath();
-    context.moveTo(points[0], points[1]);
-    for (var i = 2, il = points.length; i < il; i += 2) {
-        context.lineTo(points[i], points[i + 1]);
-    }
-    context.closePath();
-    if (stroke) {
-        context.stroke();
-    }
-    context.fill();
-}
-
-function project(x, y, m) {
-    return {
-        x: ~~((x - CAM_X) * m + CAM_X),
-        y: ~~((y - CAM_Y) * m + CAM_Y)
-    };
-}
-
-function setStyle(style) {
-    style = style || {};
-    strokeRoofs = style.strokeRoofs !== undefined ? style.strokeRoofs : strokeRoofs;
-    if (style.fillColor) {
-        wallColor = Color.parse(style.fillColor);
-        roofColor = wallColor.adjustLightness(0.2);
-    }
-    render();
-}
+        function project(x, y, m) {
+            return {
+                x: ~~((x - camX) * m + camX),
+                y: ~~((y - camY) * m + camY)
+            };
+        }

@@ -2,7 +2,6 @@
 var fs   = require('fs');
 var exec = require('child_process').exec;
 var util = require('util');
-var path = require('path');
 
 
 fs.copy = function (srcFile, dstFile, callback) {
@@ -23,14 +22,15 @@ if (!console.clear) {
 }
 
 
-exports.combine = function(files, callback) {
+exports.combine = function(path, files, callback) {
 	var
 		res = '',
 		content
 	;
+    path = path || '.';
 	for (var i = 0, il = files.length; i < il; i++) {
-		content = fs.readFileSync(files[i], 'utf8');
-		res += '//****** file: ' + path.basename(files[i]) + ' ******\n\n';
+		content = fs.readFileSync(path + '/' + files[i], 'utf8');
+		res += '//****** file: ' + files[i] + ' ******\n\n';
 		res += content + '\n\n';
 	}
 	if (callback) {
