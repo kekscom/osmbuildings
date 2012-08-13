@@ -70,9 +70,8 @@ new OSMBuildings(map);
 new OSMBuildings(map).loadData('server/?w={w}&n={n}&e={e}&s={s}&z={z}');
 
 // or you like to put cutom objects on the map, use <a href="http://www.geojson.org/geojson-spec.html">GeoJSON</a>
-// the second parameter indicateds, whether your coordinates are ordered as lat/lon (default) or lon/lat
-// - you need to pass geocordinats in the respective coordinates properties.
-// - you need to pass a properties.height attribute
+// the second parameter indicates, whether your coordinates are ordered as lat/lon (default) or lon/lat
+// - you need to pass geocordinates incl. altitude in the respective coordinates properties.
 // - only type Polygon is supported
 // example:
 
@@ -84,14 +83,14 @@ var myGeoJSON = {
             "geometry": {
                 "type": "Polygon",
                 "coordinates": [
-                    [[13.38913,52.51670], [13.38919,52.51626], [13.39047,52.51634],
-                     [13.39045,52.51644], [13.39031,52.51643], [13.39028,52.51664],
-                     [13.39041,52.51664], [13.39040,52.51678], [13.38913,52.51670],
-                     [13.38913,52.51670]]
+                    [[13.38913,52.51670,50], [13.38919,52.51626,50], [13.39047,52.51634,50],
+                     [13.39045,52.51644,50], [13.39031,52.51643,50], [13.39028,52.51664,50],
+                     [13.39041,52.51664,50], [13.39040,52.51678,50], [13.38913,52.51670,50],
+                     [13.38913,52.51670,50]]
                 ]
             },
             "properties": {
-                "height": 50
+                "color": "rgba(200,255,200,0.9)"
             }
         }
     ]
