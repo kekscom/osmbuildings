@@ -26,108 +26,118 @@ var OSMBuildings = (function (global) {
 
 var Color = (function () {
 
-    function hsla2rgb(hsla) {
-        var r, g, b;
+	function hsla2rgb(hsla) {
+		var r, g, b;
 
-        if (hsla.s == 0) {
-            r = g = b = hsla.l; // achromatic
-        } else {
-            var
-                q = hsla.l < 0.5 ? hsla.l * (1 + hsla.s) : hsla.l + hsla.s - hsla.l * hsla.s,
-                p = 2 * hsla.l - q
-            ;
-            r = hue2rgb(p, q, hsla.h + 1/3);
-            g = hue2rgb(p, q, hsla.h);
-            b = hue2rgb(p, q, hsla.h - 1/3);
-        }
-        return new Color(
-            ~~(r * 255),
-            ~~(g * 255),
-            ~~(b * 255),
-            hsla.a
-        );
-    };
+		if (hsla.s === 0) {
+			r = g = b = hsla.l; // achromatic
+		} else {
+			var
+				q = hsla.l < 0.5 ? hsla.l * (1 + hsla.s) : hsla.l + hsla.s - hsla.l * hsla.s,
+				p = 2 * hsla.l - q
+			;
+			r = hue2rgb(p, q, hsla.h + 1 / 3);
+			g = hue2rgb(p, q, hsla.h);
+			b = hue2rgb(p, q, hsla.h - 1 / 3);
+		}
+		return new Color(
+			~~(r * 255),
+			~~(g * 255),
+			~~(b * 255),
+			hsla.a
+		);
+	}
 
-    function hue2rgb(p, q, t) {
-        if (t < 0) t += 1;
-        if (t > 1) t -= 1;
-        if (t < 1/6) return p + (q - p) * 6 * t;
-        if (t < 1/2) return q;
-        if (t < 2/3) return p + (q - p) * (2 / 3 - t) * 6;
-        return p;
-    };
+	function hue2rgb(p, q, t) {
+		if (t < 0) {
+			t += 1;
+		}
+		if (t > 1) {
+			t -= 1;
+		}
+		if (t < 1 / 6) {
+			return p + (q - p) * 6 * t;
+		}
+		if (t < 1 / 2) {
+			return q;
+		}
+		if (t < 2 / 3) {
+			return p + (q - p) * (2 / 3 - t) * 6;
+		}
+		return p;
+	}
 
-    function C(r, g, b, a) {
-        this.r = r;
-        this.g = g;
-        this.b = b;
-        this.a = arguments.length < 4 ? 1 : a;
-    }
+	function C(r, g, b, a) {
+		this.r = r;
+		this.g = g;
+		this.b = b;
+		this.a = arguments.length < 4 ? 1 : a;
+	}
 
-    var proto = C.prototype;
+	var proto = C.prototype;
 
-    proto.toString = function () {
-        return 'rgba(' + [this.r, this.g, this.b, this.a].join(',') + ')';
-    }
+	proto.toString = function () {
+		return 'rgba(' + [this.r, this.g, this.b, this.a].join(',') + ')';
+	};
 
-    proto.adjustLightness = function (amount) {
-        var hsla = Color.toHSLA(this);
-        hsla.l += amount;
-        hsla.l = Math.min(1, Math.max(0, hsla.l));
-        return hsla2rgb(hsla);
-    };
+	proto.adjustLightness = function (amount) {
+		var hsla = Color.toHSLA(this);
+		hsla.l += amount;
+		hsla.l = Math.min(1, Math.max(0, hsla.l));
+		return hsla2rgb(hsla);
+	};
 
-    proto.adjustAlpha = function (a) {
-        return new Color(this.r, this.g, this.b, this.a * a);
-    };
+	proto.adjustAlpha = function (a) {
+		return new Color(this.r, this.g, this.b, this.a * a);
+	};
 
-    C.parse = function(str) {
-        var m;
-        if (~str.indexOf('#')) {
-            m = str.match(/^#?(\w{2})(\w{2})(\w{2})$/);
-            return new Color(
-                parseInt(m[1], 16),
-                parseInt(m[2], 16),
-                parseInt(m[3], 16)
-            );
-        }
+	C.parse = function(str) {
+		var m;
+		if (~str.indexOf('#')) {
+			m = str.match(/^#?(\w{2})(\w{2})(\w{2})$/);
+			return new Color(
+				parseInt(m[1], 16),
+				parseInt(m[2], 16),
+				parseInt(m[3], 16)
+			);
+		}
 
-        m = str.match(/rgba?\((\d+)\D+(\d+)\D+(\d+)(\D+([\d.]+))?\)/);
-        return new Color(
-            m[1],
-            m[2],
-            m[3],
-            m[4] ? m[5] : 1
-        );
-    };
+		m = str.match(/rgba?\((\d+)\D+(\d+)\D+(\d+)(\D+([\d.]+))?\)/);
+		return new Color(
+			m[1],
+			m[2],
+			m[3],
+			m[4] ? m[5] : 1
+		);
+	};
 
-    C.toHSLA = function (rgba) {
-        var
-            r = rgba.r / 255,
-            g = rgba.g / 255,
-            b = rgba.b / 255,
-            max = Math.max(r, g, b), min = Math.min(r, g, b),
-            h, s, l = (max + min) / 2,
-            d
-        ;
+	C.toHSLA = function (rgba) {
+		var
+			r = rgba.r / 255,
+			g = rgba.g / 255,
+			b = rgba.b / 255,
+			max = Math.max(r, g, b), min = Math.min(r, g, b),
+			h, s, l = (max + min) / 2,
+			d
+		;
 
-        if (max == min) {
-            h = s = 0; // achromatic
-        } else {
-            d = max - min;
-            s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-            switch (max) {
-                case r: h = (g - b) / d + (g < b ? 6 : 0); break;
-                case g: h = (b - r) / d + 2; break;
-                case b: h = (r - g) / d + 4; break;
-            }
-            h /= 6;
-        }
+		if (max === min) {
+			h = s = 0; // achromatic
+		} else {
+			d = max - min;
+			s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+			switch (max) {
+				case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+				case g: h = (b - r) / d + 2; break;
+				case b: h = (r - g) / d + 4; break;
+			}
+			h /= 6;
+		}
 
-        return { h: h, s: s, l: l, a: rgba.a };
-    };
+		return { h: h, s: s, l: l, a: rgba.a };
+	};
 
-    return C;
+	return C;
 
 }());
 
@@ -238,7 +248,7 @@ var Color = (function () {
         }
     //    else geometry = json
 
-        if (geometry.type == 'Polygon') {
+        if (geometry.type === 'Polygon') {
             coords = geometry.coordinates[0];
             footprint = [];
             heightSum = 0;
@@ -311,14 +321,14 @@ var Color = (function () {
             canvas.style.left = 0;
             canvas.style.top = 0;
             canvas.style.imageRendering = 'optimizeSpeed';
-            parentNode.appendChild(canvas),
+            parentNode.appendChild(canvas);
 
-            context = canvas.getContext('2d')
+            context = canvas.getContext('2d');
             context.lineCap = 'round';
             context.lineJoin = 'round';
             context.lineWidth = 1;
 
-            try { context.mozImageSmoothingEnabled = false } catch(err) {}
+            try { context.mozImageSmoothingEnabled = false; } catch(err) {}
         }
 
         function pixelToGeo(x, y) {
@@ -484,8 +494,8 @@ var Color = (function () {
             isZooming = false;
             setZoom(e.zoom);
             if (!rawData) {
-                loadData();
-                return
+				loadData();
+				return;
             }
             data = scaleData(rawData);
             render();
@@ -739,7 +749,7 @@ var Color = (function () {
         this.addTo = function (map) {
             map.addLayer(this);
             return this;
-        }
+        };
 
         this.onAdd = function (map) {
             this.map = map;
@@ -760,7 +770,7 @@ var Color = (function () {
                 camX = halfWidth - (mp.x - lastX);
                 camY = height    - (mp.y - lastY);
                 render();
-            }
+            };
 
             mapOnMoveEnd = function () {
                 var mp = L.DomUtil.getPosition(map._mapPane);
@@ -778,11 +788,11 @@ var Color = (function () {
 
                 onMoveEnd();
                 render();
-            }
+            };
 
             mapOnZoomEnd = function () {
                 onZoomEnd({ zoom: map._zoom });
-            }
+            };
 
             map.on({
                 move: mapOnMove,
@@ -812,7 +822,7 @@ var Color = (function () {
             map.attributionControl.addAttribution(attribution);
 
             render(); // in case of for re-adding this layer
-        }
+        };
 
         this.onRemove = function (map) {
             map.attributionControl.removeAttribution(attribution);
@@ -826,7 +836,7 @@ var Color = (function () {
 
             canvas.parentNode.removeChild(canvas);
             this.map = null;
-        }
+        };
 
         // in case it has been passed to this, initialize map directly
         if (arguments.length) {

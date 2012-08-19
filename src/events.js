@@ -29,8 +29,8 @@
             isZooming = false;
             setZoom(e.zoom);
             if (!rawData) {
-                loadData();
-                return
+				loadData();
+				return;
             }
             data = scaleData(rawData);
             render();

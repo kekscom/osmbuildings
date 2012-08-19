@@ -82,7 +82,7 @@
         }
     //    else geometry = json
 
-        if (geometry.type == 'Polygon') {
+        if (geometry.type === 'Polygon') {
             coords = geometry.coordinates[0];
             footprint = [];
             heightSum = 0;

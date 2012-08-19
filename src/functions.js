@@ -6,14 +6,14 @@
             canvas.style.left = 0;
             canvas.style.top = 0;
             canvas.style.imageRendering = 'optimizeSpeed';
-            parentNode.appendChild(canvas),
+            parentNode.appendChild(canvas);
 
-            context = canvas.getContext('2d')
+            context = canvas.getContext('2d');
             context.lineCap = 'round';
             context.lineJoin = 'round';
             context.lineWidth = 1;
 
-            try { context.mozImageSmoothingEnabled = false } catch(err) {}
+            try { context.mozImageSmoothingEnabled = false; } catch(err) {}
         }
 
         function pixelToGeo(x, y) {

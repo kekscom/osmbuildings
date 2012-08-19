@@ -8,7 +8,7 @@
         this.addTo = function (map) {
             map.addLayer(this);
             return this;
-        }
+        };
 
         this.onAdd = function (map) {
             this.map = map;
@@ -29,7 +29,7 @@
                 camX = halfWidth - (mp.x - lastX);
                 camY = height    - (mp.y - lastY);
                 render();
-            }
+            };
 
             mapOnMoveEnd = function () {
                 var mp = L.DomUtil.getPosition(map._mapPane);
@@ -47,11 +47,11 @@
 
                 onMoveEnd();
                 render();
-            }
+            };
 
             mapOnZoomEnd = function () {
                 onZoomEnd({ zoom: map._zoom });
-            }
+            };
 
             map.on({
                 move: mapOnMove,
@@ -81,7 +81,7 @@
             map.attributionControl.addAttribution(attribution);
 
             render(); // in case of for re-adding this layer
-        }
+        };
 
         this.onRemove = function (map) {
             map.attributionControl.removeAttribution(attribution);
@@ -95,7 +95,7 @@
 
             canvas.parentNode.removeChild(canvas);
             this.map = null;
-        }
+        };
 
         // in case it has been passed to this, initialize map directly
         if (arguments.length) {

@@ -1,8 +1,58 @@
 
-var fs   = require('fs');
-var exec = require('child_process').exec;
-var util = require('util');
+var fs      = require('fs');
+var closure = require('closure-compiler');
+var util    = require('util');
+var jshint  = require('jshint').JSHINT;
 
+var hintConfig = {
+	"browser": true,
+	"node": true,
+	"predef": ["L"],
+
+	"debug": false,
+	"devel": false,
+
+	"es5": false,
+	"strict": false,
+	"globalstrict": false,
+
+	"asi": false,
+	"laxbreak": false,
+	"bitwise": true,
+	"boss": false,
+	"curly": true,
+	"eqnull": false,
+	"evil": false,
+	"expr": false,
+	"forin": true,
+	"immed": true,
+	"latedef": true,
+	"loopfunc": false,
+	"noarg": true,
+	"regexp": true,
+	"regexdash": false,
+	"scripturl": false,
+	"shadow": false,
+	"supernew": false,
+	"undef": true,
+	"funcscope": false,
+
+	"newcap": true,
+	"noempty": true,
+	"nonew": true,
+	"nomen": false,
+	"onevar": false,
+	"plusplus": false,
+	"sub": false,
+	"indent": 4,
+
+	"eqeqeq": true,
+	"trailing": true,
+	"white": false,
+	"smarttabs": true
+};
+
+//*****************************************************************************
 
 fs.copy = function (srcFile, dstFile, callback) {
     var
@@ -13,53 +63,70 @@ fs.copy = function (srcFile, dstFile, callback) {
         dst.on('close', callback);
     }
     util.pump(src, dst);
-}
+};
 
 if (!console.clear) {
-    console.clear = function() {
+    console.clear = function () {
         process.stdout.write('\033[2J\033[0;0H');
     }
 }
 
+//*****************************************************************************
 
-exports.combine = function(path, files, callback) {
+exports.combine = function (srcPath, srcFiles, dstFile, callback) {
 	var
 		res = '',
-		content
+		str
 	;
-    path = path || '.';
-	for (var i = 0, il = files.length; i < il; i++) {
-		content = fs.readFileSync(path + '/' + files[i], 'utf8');
-		res += '//****** file: ' + files[i] + ' ******\n\n';
-		res += content + '\n\n';
+    srcPath = srcPath || '.';
+	for (var i = 0, il = srcFiles.length; i < il; i++) {
+		str = this.read(srcPath + '/' + srcFiles[i], 'utf8');
+		res += '//****** file: ' + srcFiles[i] + ' ******\n\n';
+		res += str + '\n\n';
 	}
-	if (callback) {
-		callback(res);
-	}
-	return res;
-}
+	this.write(res, dstFile, callback);
+};
 
-exports.write = function(str, file, callback) {
-	fs.writeFile(file, str, 'utf8');
+exports.read = function (file) {
+	return fs.readFileSync(file, 'utf8');
+};
+
+exports.write = function (str, file, callback) {
+	fs.writeFileSync(file, str, 'utf8');
 	if (callback) {
 		callback();
 	}
-}
+};
 
 exports.minify = function (srcFile, dstFile, callback) {
-	// WHITESPACE_ONLY, ADVANCED_OPTIMIZATIONS, SIMPLE_OPTIMIZATIONS
-	var cmd = 'java -jar "closurecompiler/compiler.jar" --compilation_level SIMPLE_OPTIMIZATIONS --js "'+ srcFile +'" --js_output_file "'+ dstFile + '"';
-	exec(cmd, function (err) {
-		if (err !== null) {
-			console.log('exec error: '+ err);
-		}
-		if (callback) {
-			callback();
-		}
-	});
-}
+	var options = {
+		compilation_level: 'SIMPLE_OPTIMIZATIONS',	// WHITESPACE_ONLY, ADVANCED_OPTIMIZATIONS, SIMPLE_OPTIMIZATIONS
+		js: srcFile,
+		js_output_file: dstFile
+	}; 
+	closure.compile('', options, callback);
+};
 
-exports.compress = function(srcFile, dstFile, callback) {
+exports.jshint = function (file, callback) {
+	var str = this.read(file);
+	jshint(str, hintConfig);
+	
+	var err = jshint.errors,
+		i, il, line;
+
+	if (err.length) {
+		console.log('jshint ' + file);
+	}
+	for (i = 0, il = err.length; i < il; i++) {
+		console.log(' L ' + err[i].line + ' C ' + err[i].character + ': ' + err[i].reason);
+	}
+
+	if (callback) {
+		callback(!!il);
+	}
+};
+
+exports.compress = function (srcFile, dstFile, callback) {
 	var
 		zlib = require('zlib'),
 		gzip = zlib.createGzip(),
@@ -70,17 +137,14 @@ exports.compress = function(srcFile, dstFile, callback) {
 	   dst.on('close', callback);
 	}
 	src.pipe(gzip).pipe(dst);
-}
+};
 
 exports.copy = function (srcFile, dstFile, callback) {
 	fs.copy(srcFile, dstFile, callback);
-}
+};
 
-exports.documentation = function(srcFile, dstPath, callback) {
+exports.documentation = function (srcFile, dstPath, callback) {
 	var dox = require('dox');
-	var comments = dox.parseComments(fs.readFileSync(srcFile, 'utf8'));
-	fs.writeFileSync(dstPath + '/dox.json', JSON.stringify(comments));
-	if (callback) {
-		callback();
-	}
-}
+	var comments = dox.parseComments(this.read(srcFile));
+	this.write(JSON.stringify(comments), dstPath + '/dox.json', callback);
+};
