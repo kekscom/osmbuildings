@@ -1,1 +1,2 @@
 node build.js
+PAUSE

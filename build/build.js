@@ -1,64 +1,83 @@
 
-
 var build = require('./builder/builder.js');
 var srcPath = '../src';
 var dstPath = '../dist';
 
-var srcFiles          = require(srcPath + '/files.json');
-var dstFile           = dstPath + '/buildings.js';
-var dstFileCompressed = dstPath + '/buildings.js.gz';
-var dstFileDebug      = dstPath + '/buildings-debug.js';
+var srcFiles     = require('./files.json');
+var dstFile      = dstPath + '/buildings.js';
+var dstFileGzip  = dstPath + '/buildings.js.gz';
+var dstFileDebug = dstPath + '/buildings-debug.js';
 
 //*****************************************************************************
+
+function taskStart() {
+    console.clear();
+    console.log(new Date().toISOString());
+    taskCombine();
+}
 
 function taskCombine() {
     console.log('combining..');
-	build.combine(srcPath, srcFiles, dstFileDebug, taskJSHint);
+	build.combine(srcPath, srcFiles, function (res) {
+        build.write(res, dstFileDebug, taskJsHint);
+    });
 }
 
-function taskJSHint() {
+function taskJsHint(str) {
     console.log('hinting..');
-	build.jshint(dstFileDebug, function (res) {
-		if (res) {
-			process.exit();
-		}
-		taskMinify();
+	build.jshint(str, function (err) {
+		if (err.length) {
+            console.log(err.join('\n'));
+            taskAbort();
+		} else {
+            taskMinify(str);
+        }
 	});
 }
 
-function taskMinify() {
+function taskMinify(str) {
     console.log('minifying..');
-    build.minify(dstFileDebug, dstFile, taskCompress);
+    build.minify(str, function (res) {
+        build.write(res, dstFile, taskCompress);
+    });
 }
 
-function taskCompress() {
+function taskCompress(str) {
     console.log('compressing..');
-    build.compress(dstFile, dstFileCompressed, taskDocumentation);
+    build.compress(dstFile, dstFileGzip, taskEnd);
 }
 
 // JSDOC http://www.2ality.com/2011/08/jsdoc-intro.html
-function taskDocumentation() {
-    console.log('documenting..');
-    build.documentation(dstFileDebug, '../doc', taskSummary);
+//function taskDocumentation() {
+//    console.log('documenting..');
+//    build.documentation(dstFileDebug, '../doc', taskEnd);
+//}
+
+function taskAbort() {
+    // process.exit();
 }
 
-function taskSummary() {
-    console.log('\ndone');
+function taskEnd() {
+    console.log('done');
+    taskAbort();
 }
 
 //*****************************************************************************
 
-/*
-var fs = require('fs');
-for (var i = 0, il = srcFiles.length; i < il; i++) {
-	console.log('watching ' + srcPath + '/' + srcFiles[i]);
-	fs.watch(srcPath + '/' + srcFiles[i], function (e, filename) {
-		console.log(arguments);
-		// check, whether a build is running
-		// trigger a quick build
-	});
-}
-*/
+var
+    arguments = process.argv.splice(2),
+    timer
+;
 
-console.clear();
-taskCombine();
+if (!~arguments.indexOf('watch')) {
+    taskStart();
+} else {
+    console.log('watching..');
+    var fs = require('fs');
+    for (var i = 0, il = srcFiles.length; i < il; i++) {
+        fs.watch(srcPath + '/' + srcFiles[i], { persistent: true }, function () {
+            clearTimeout(timer);
+            timer = setTimeout(taskStart, 500);
+        });
+    }
+}

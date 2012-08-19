@@ -1,6 +1,5 @@
 //****** file: prefix.js ******
 
-/*jshint bitwise:false */
 
 var OSMBuildings = (function (global) {
 
@@ -856,5 +855,4 @@ var Color = (function () {
 
 }(this));
 
-/*jshint bitwise:true */
 

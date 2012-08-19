@@ -4,7 +4,7 @@ var closure = require('closure-compiler');
 var util    = require('util');
 var jshint  = require('jshint').JSHINT;
 
-var hintConfig = {
+var jshintOptions = {
 	"browser": true,
 	"node": true,
 	"predef": ["L"],
@@ -18,7 +18,7 @@ var hintConfig = {
 
 	"asi": false,
 	"laxbreak": false,
-	"bitwise": true,
+	"bitwise": false,
 	"boss": false,
 	"curly": true,
 	"eqnull": false,
@@ -52,6 +52,10 @@ var hintConfig = {
 	"smarttabs": true
 };
 
+var closureOptions = {
+    compilation_level: 'SIMPLE_OPTIMIZATIONS'	// WHITESPACE_ONLY, ADVANCED_OPTIMIZATIONS, SIMPLE_OPTIMIZATIONS
+};
+
 //*****************************************************************************
 
 fs.copy = function (srcFile, dstFile, callback) {
@@ -73,20 +77,6 @@ if (!console.clear) {
 
 //*****************************************************************************
 
-exports.combine = function (srcPath, srcFiles, dstFile, callback) {
-	var
-		res = '',
-		str
-	;
-    srcPath = srcPath || '.';
-	for (var i = 0, il = srcFiles.length; i < il; i++) {
-		str = this.read(srcPath + '/' + srcFiles[i], 'utf8');
-		res += '//****** file: ' + srcFiles[i] + ' ******\n\n';
-		res += str + '\n\n';
-	}
-	this.write(res, dstFile, callback);
-};
-
 exports.read = function (file) {
 	return fs.readFileSync(file, 'utf8');
 };
@@ -94,36 +84,51 @@ exports.read = function (file) {
 exports.write = function (str, file, callback) {
 	fs.writeFileSync(file, str, 'utf8');
 	if (callback) {
-		callback();
+		callback(str);
 	}
 };
 
-exports.minify = function (srcFile, dstFile, callback) {
-	var options = {
-		compilation_level: 'SIMPLE_OPTIMIZATIONS',	// WHITESPACE_ONLY, ADVANCED_OPTIMIZATIONS, SIMPLE_OPTIMIZATIONS
-		js: srcFile,
-		js_output_file: dstFile
-	}; 
-	closure.compile('', options, callback);
-};
-
-exports.jshint = function (file, callback) {
-	var str = this.read(file);
-	jshint(str, hintConfig);
-	
-	var err = jshint.errors,
-		i, il, line;
-
-	if (err.length) {
-		console.log('jshint ' + file);
+exports.combine = function (path, files, callback) {
+	var
+		str,
+		res = ''
+	;
+    path = path || '.';
+	for (var i = 0, il = files.length; i < il; i++) {
+		str = this.read(path + '/' + files[i]);
+		res += '//****** file: ' + files[i] + ' ******\n\n';
+		res += str + '\n\n';
 	}
-	for (i = 0, il = err.length; i < il; i++) {
-		console.log(' L ' + err[i].line + ' C ' + err[i].character + ': ' + err[i].reason);
-	}
-
 	if (callback) {
-		callback(!!il);
+		callback(res);
 	}
+};
+
+exports.jshint = function (str, callback) {
+	jshint(str, jshintOptions);
+
+    var
+        err = jshint.errors,
+        res = []
+    ;
+
+    if (err.length) {
+        for (var i = 0, il = err.length; i < il && err[i]; i++) {
+            res.push('L ' + err[i].line + ' C ' + err[i].character + ': ' + err[i].reason);
+        }
+    }
+
+    if (callback) {
+		callback(res);
+	}
+};
+
+exports.minify = function (str, callback) {
+	closure.compile(str, closureOptions, function (err, res) {
+        if (callback) {
+            callback(res);
+        }
+    });
 };
 
 exports.compress = function (srcFile, dstFile, callback) {
@@ -144,7 +149,7 @@ exports.copy = function (srcFile, dstFile, callback) {
 };
 
 exports.documentation = function (srcFile, dstPath, callback) {
-	var dox = require('dox');
-	var comments = dox.parseComments(this.read(srcFile));
-	this.write(JSON.stringify(comments), dstPath + '/dox.json', callback);
+//	var dox = require('dox');
+//	var comments = dox.parseComments(this.read(srcFile));
+//	this.write(JSON.stringify(comments), dstPath + '/dox.json', callback);
 };
