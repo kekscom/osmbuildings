@@ -1,6 +1,6 @@
-# OSM Buildings
+<img src="https://raw.github.com/kekscom/osmbuildings/master/doc/logo.png"/>
 
-A JavaScript library for visualizing 3D OSM building data on interactive maps
+OSM Buildings is a JavaScript library for visualizing 3D OSM building data on interactive maps.
 
 ## Important
 
