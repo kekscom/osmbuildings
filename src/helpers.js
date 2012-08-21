@@ -47,8 +47,7 @@
         }
         var revPoints = [];
         for (var i = points.length - 2; i >= 0; i -= 2) {
-            revPoints.push(points[i]);
-            revPoints.push(points[i + 1]);
+            revPoints.push(points[i], points[i + 1]);
         }
         return revPoints;
     }
@@ -59,13 +58,15 @@
         }
 
         var
+            i, il,
+            j, jl,
             features = json[0] ? json : json.features,
             geometry, coords, properties,
             footprint, heightSum,
-            color,
-            i, il,
+            propHeight, color,
             lat = isLonLat ? 1 : 0,
             lon = isLonLat ? 0 : 1,
+            alt = 2,
             item
         ;
 
@@ -80,27 +81,30 @@
             geometry = json.geometry;
             properties = json.properties;
         }
-    //    else geometry = json
+//      else geometry = json
 
         if (geometry.type === 'Polygon') {
-            coords = geometry.coordinates[0];
-            footprint = [];
-            heightSum = 0;
-            for (i = 0, il = coords.length; i < il; i++) {
-                footprint.push(coords[i][lat]);
-                footprint.push(coords[i][lon]);
-                heightSum += coords[i][2] || 0;
-            }
+            propHeight = properties.height;
+            color = Color.parse(properties.color || properties.style.fillColor);
 
-            if (heightSum) {
-                item = [];
-                item[HEIGHT]    = ~~(heightSum/coords.length);
-                item[FOOTPRINT] = makeClockwiseWinding(footprint);
-                if (properties.color) {
-                    color = Color.parse(properties.color);
-                    item[COLOR] = [color, color.adjustLightness(0.2)];
+            for (i = 0, il = geometry.coordinates.length; i < il; i++) {
+                coords = geometry.coordinates[i];
+                footprint = [];
+                heightSum = 0;
+                for (j = 0, jl = coords.length; j < jl; j++) {
+                    footprint.push(coords[j][lat], coords[j][lon]);
+                    heightSum += propHeight || coords[j][alt] || 0;
                 }
-                res.push(item);
+
+                if (heightSum) {
+                    item = [];
+                    item[HEIGHT] = ~~(heightSum/coords.length);
+                    item[FOOTPRINT] = makeClockwiseWinding(footprint);
+                    if (color) {
+                        item[COLOR] = [color, color.adjustLightness(0.2)];
+                    }
+                    res.push(item);
+                }
             }
         }
 

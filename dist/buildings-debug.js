@@ -6,6 +6,27 @@ var OSMBuildings = (function (global) {
     'use strict';
 
 
+//****** file: constants.js ******
+
+    // private constants, general to all instances
+    var
+        VERSION = '0.1.5a',
+
+        PI = Math.PI,
+        HALF_PI = PI / 2,
+        QUARTER_PI = PI / 4,
+        RAD = 180 / PI,
+
+        TILE_SIZE = 256,
+        MIN_ZOOM = 14, // for buildings only, GeoJSON should not be affected
+
+        CAM_Z = 400,
+        MAX_HEIGHT = CAM_Z - 50,
+
+        LAT = 'latitude', LON = 'longitude',
+        HEIGHT = 0, FOOTPRINT = 1, COLOR = 2, IS_NEW = 3
+    ;
+
 //****** file: shortcuts.js ******
 
     // object access shortcuts
@@ -20,146 +41,128 @@ var OSMBuildings = (function (global) {
     ;
 
 
-//****** file: color.js ******
+//****** file: lib/Color.js ******
 
 
 var Color = (function () {
 
-	function hsla2rgb(hsla) {
-		var r, g, b;
+    function hsla2rgb(hsla) {
+        var r, g, b;
 
-		if (hsla.s === 0) {
-			r = g = b = hsla.l; // achromatic
-		} else {
-			var
-				q = hsla.l < 0.5 ? hsla.l * (1 + hsla.s) : hsla.l + hsla.s - hsla.l * hsla.s,
-				p = 2 * hsla.l - q
-			;
-			r = hue2rgb(p, q, hsla.h + 1 / 3);
-			g = hue2rgb(p, q, hsla.h);
-			b = hue2rgb(p, q, hsla.h - 1 / 3);
-		}
-		return new Color(
-			~~(r * 255),
-			~~(g * 255),
-			~~(b * 255),
-			hsla.a
-		);
-	}
+        if (hsla.s === 0) {
+            r = g = b = hsla.l; // achromatic
+        } else {
+            var
+                q = hsla.l < 0.5 ? hsla.l * (1 + hsla.s) : hsla.l + hsla.s - hsla.l * hsla.s,
+                p = 2 * hsla.l - q
+            ;
+            r = hue2rgb(p, q, hsla.h + 1 / 3);
+            g = hue2rgb(p, q, hsla.h);
+            b = hue2rgb(p, q, hsla.h - 1 / 3);
+        }
+        return new Color(
+            ~~(r * 255),
+            ~~(g * 255),
+            ~~(b * 255),
+            hsla.a
+        );
+    }
 
-	function hue2rgb(p, q, t) {
-		if (t < 0) {
-			t += 1;
-		}
-		if (t > 1) {
-			t -= 1;
-		}
-		if (t < 1 / 6) {
-			return p + (q - p) * 6 * t;
-		}
-		if (t < 1 / 2) {
-			return q;
-		}
-		if (t < 2 / 3) {
-			return p + (q - p) * (2 / 3 - t) * 6;
-		}
-		return p;
-	}
+    function hue2rgb(p, q, t) {
+        if (t < 0) {
+            t += 1;
+        }
+        if (t > 1) {
+            t -= 1;
+        }
+        if (t < 1 / 6) {
+            return p + (q - p) * 6 * t;
+        }
+        if (t < 1 / 2) {
+            return q;
+        }
+        if (t < 2 / 3) {
+            return p + (q - p) * (2 / 3 - t) * 6;
+        }
+        return p;
+    }
 
-	function C(r, g, b, a) {
-		this.r = r;
-		this.g = g;
-		this.b = b;
-		this.a = arguments.length < 4 ? 1 : a;
-	}
+    function C(r, g, b, a) {
+        this.r = r;
+        this.g = g;
+        this.b = b;
+        this.a = arguments.length < 4 ? 1 : a;
+    }
 
-	var proto = C.prototype;
+    var proto = C.prototype;
 
-	proto.toString = function () {
-		return 'rgba(' + [this.r, this.g, this.b, this.a].join(',') + ')';
-	};
+    proto.toString = function () {
+        return 'rgba(' + [this.r, this.g, this.b, this.a].join(',') + ')';
+    };
 
-	proto.adjustLightness = function (amount) {
-		var hsla = Color.toHSLA(this);
-		hsla.l += amount;
-		hsla.l = Math.min(1, Math.max(0, hsla.l));
-		return hsla2rgb(hsla);
-	};
+    proto.adjustLightness = function (amount) {
+        var hsla = Color.toHSLA(this);
+        hsla.l += amount;
+        hsla.l = Math.min(1, Math.max(0, hsla.l));
+        return hsla2rgb(hsla);
+    };
 
-	proto.adjustAlpha = function (a) {
-		return new Color(this.r, this.g, this.b, this.a * a);
-	};
+    proto.adjustAlpha = function (a) {
+        return new Color(this.r, this.g, this.b, this.a * a);
+    };
 
-	C.parse = function(str) {
-		var m;
-		if (~str.indexOf('#')) {
-			m = str.match(/^#?(\w{2})(\w{2})(\w{2})$/);
-			return new Color(
-				parseInt(m[1], 16),
-				parseInt(m[2], 16),
-				parseInt(m[3], 16)
-			);
-		}
+    C.parse = function(str) {
+        var m;
+        if (~str.indexOf('#')) {
+            m = str.match(/^#?(\w{2})(\w{2})(\w{2})(\w{2})?$/);
+            return new Color(
+                parseInt(m[1], 16),
+                parseInt(m[2], 16),
+                parseInt(m[3], 16),
+                m[4] ? parseInt(m[4], 16) / 255 : 1
+            );
+        }
 
-		m = str.match(/rgba?\((\d+)\D+(\d+)\D+(\d+)(\D+([\d.]+))?\)/);
-		return new Color(
-			m[1],
-			m[2],
-			m[3],
-			m[4] ? m[5] : 1
-		);
-	};
+        m = str.match(/rgba?\((\d+)\D+(\d+)\D+(\d+)(\D+([\d.]+))?\)/);
+        if (m) {
+            return new Color(
+                m[1],
+                m[2],
+                m[3],
+                m[4] ? m[5] : 1
+            );
+        }
+    };
 
-	C.toHSLA = function (rgba) {
-		var
-			r = rgba.r / 255,
-			g = rgba.g / 255,
-			b = rgba.b / 255,
-			max = Math.max(r, g, b), min = Math.min(r, g, b),
-			h, s, l = (max + min) / 2,
-			d
-		;
+    C.toHSLA = function (rgba) {
+        var
+            r = rgba.r / 255,
+            g = rgba.g / 255,
+            b = rgba.b / 255,
+            max = Math.max(r, g, b), min = Math.min(r, g, b),
+            h, s, l = (max + min) / 2,
+            d
+        ;
 
-		if (max === min) {
-			h = s = 0; // achromatic
-		} else {
-			d = max - min;
-			s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-			switch (max) {
-				case r: h = (g - b) / d + (g < b ? 6 : 0); break;
-				case g: h = (b - r) / d + 2; break;
-				case b: h = (r - g) / d + 4; break;
-			}
-			h /= 6;
-		}
+        if (max === min) {
+            h = s = 0; // achromatic
+        } else {
+            d = max - min;
+            s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+            switch (max) {
+                case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+                case g: h = (b - r) / d + 2; break;
+                case b: h = (r - g) / d + 4; break;
+            }
+            h /= 6;
+        }
 
-		return { h: h, s: s, l: l, a: rgba.a };
-	};
+        return { h: h, s: s, l: l, a: rgba.a };
+    };
 
-	return C;
+    return C;
 
 }());
-
-//****** file: constants.js ******
-
-    // private constants, general to all instances
-    var
-        VERSION = '0.1.5a',
-
-        PI = Math.PI,
-        HALF_PI = PI / 2,
-        QUARTER_PI = PI / 4,
-        RAD = 180 / PI,
-
-        TILE_SIZE = 256,
-        MIN_ZOOM = 14,
-
-        CAM_Z = 400,
-        MAX_HEIGHT = CAM_Z - 50,
-
-        LAT = 'latitude', LON = 'longitude',
-        HEIGHT = 0, FOOTPRINT = 1, COLOR = 2, IS_NEW = 3
-    ;
 
 //****** file: helpers.js ******
 
@@ -212,8 +215,7 @@ var Color = (function () {
         }
         var revPoints = [];
         for (var i = points.length - 2; i >= 0; i -= 2) {
-            revPoints.push(points[i]);
-            revPoints.push(points[i + 1]);
+            revPoints.push(points[i], points[i + 1]);
         }
         return revPoints;
     }
@@ -224,13 +226,15 @@ var Color = (function () {
         }
 
         var
+            i, il,
+            j, jl,
             features = json[0] ? json : json.features,
             geometry, coords, properties,
             footprint, heightSum,
-            color,
-            i, il,
+            propHeight, color,
             lat = isLonLat ? 1 : 0,
             lon = isLonLat ? 0 : 1,
+            alt = 2,
             item
         ;
 
@@ -245,27 +249,30 @@ var Color = (function () {
             geometry = json.geometry;
             properties = json.properties;
         }
-    //    else geometry = json
+//      else geometry = json
 
         if (geometry.type === 'Polygon') {
-            coords = geometry.coordinates[0];
-            footprint = [];
-            heightSum = 0;
-            for (i = 0, il = coords.length; i < il; i++) {
-                footprint.push(coords[i][lat]);
-                footprint.push(coords[i][lon]);
-                heightSum += coords[i][2] || 0;
-            }
+            propHeight = properties.height;
+            color = Color.parse(properties.color || properties.style.fillColor);
 
-            if (heightSum) {
-                item = [];
-                item[HEIGHT]    = ~~(heightSum/coords.length);
-                item[FOOTPRINT] = makeClockwiseWinding(footprint);
-                if (properties.color) {
-                    color = Color.parse(properties.color);
-                    item[COLOR] = [color, color.adjustLightness(0.2)];
+            for (i = 0, il = geometry.coordinates.length; i < il; i++) {
+                coords = geometry.coordinates[i];
+                footprint = [];
+                heightSum = 0;
+                for (j = 0, jl = coords.length; j < jl; j++) {
+                    footprint.push(coords[j][lat], coords[j][lon]);
+                    heightSum += propHeight || coords[j][alt] || 0;
                 }
-                res.push(item);
+
+                if (heightSum) {
+                    item = [];
+                    item[HEIGHT] = ~~(heightSum/coords.length);
+                    item[FOOTPRINT] = makeClockwiseWinding(footprint);
+                    if (color) {
+                        item[COLOR] = [color, color.adjustLightness(0.2)];
+                    }
+                    res.push(item);
+                }
             }
         }
 
@@ -303,6 +310,7 @@ var Color = (function () {
             fadeFactor = 1,
             fadeTimer,
 
+            minZoom = MIN_ZOOM,
             maxZoom = 20,
             camX, camY,
 
@@ -339,7 +347,7 @@ var Color = (function () {
             return res;
         }
 
-        function geoToPixel(lat, lon, z) {
+        function geoToPixel(lat, lon) {
             var
                 latitude = min(1, max(0, 0.5 - (log(tan(QUARTER_PI + HALF_PI * lat / 180)) / PI) / 2)),
                 longitude = lon / 360 + 0.5
@@ -379,6 +387,7 @@ var Color = (function () {
             }
 
             rawData = parseGeoJSON(json, isLonLat);
+            minZoom = 0;
 
             meta = {
                 n: 90,
@@ -427,7 +436,7 @@ var Color = (function () {
 //****** file: properties.js ******
 
         function setSize(w, h) {
-            width = w;
+            width  = w;
             height = h;
             halfWidth  = ~~(width / 2);
             halfHeight = ~~(height / 2);
@@ -445,8 +454,7 @@ var Color = (function () {
         function setZoom(z) {
             zoom = z;
             size = TILE_SIZE << zoom;
-            // maxAlpha - (zoom-MIN_ZOOM) * (maxAlpha-minAlpha) / (maxZoom-MIN_ZOOM)
-            zoomAlpha = 1 - (zoom - MIN_ZOOM) * 0.3 / (maxZoom - MIN_ZOOM);
+            zoomAlpha = 1 - (zoom - minZoom) * 0.3 / (maxZoom - minZoom);
         }
 
         function setStyle(style) {
@@ -493,8 +501,8 @@ var Color = (function () {
             isZooming = false;
             setZoom(e.zoom);
             if (!rawData) {
-				loadData();
-				return;
+                loadData();
+                return;
             }
             data = scaleData(rawData);
             render();
@@ -508,6 +516,7 @@ var Color = (function () {
                 offX = 0, offY = 0
             ;
 
+            minZoom = MIN_ZOOM;
             req = null;
 
             // no response or response not matching current zoom (= too old response)
@@ -575,7 +584,7 @@ var Color = (function () {
 
             // show buildings in high zoom levels only
             // avoid rendering during zoom
-            if (zoom < MIN_ZOOM || isZooming) {
+            if (zoom < minZoom || isZooming) {
                 return;
             }
 
@@ -644,19 +653,15 @@ var Color = (function () {
                         if (!walls.length) {
                             walls.unshift(ay);
                             walls.unshift(ax);
-                            walls.push(_a.x);
-                            walls.push(_a.y);
+                            walls.push(_a.x, _a.y);
                         }
-
                         walls.unshift(by);
                         walls.unshift(bx);
-                        walls.push(_b.x);
-                        walls.push(_b.y);
+                        walls.push(_b.x, _b.y);
                     } else {
                         drawShape(walls);
                         walls = [];
                     }
-
                     roof[j]     = _a.x;
                     roof[j + 1] = _a.y;
                 }
@@ -669,13 +674,13 @@ var Color = (function () {
             }
         }
 
-        //    function debugMarker(x, y, color, size) {
-        //        context.fillStyle = color || '#ffcc00';
-        //        context.beginPath();
-        //        context.arc(x, y, size || 3, 0, PI*2, true);
-        //        context.closePath();
-        //        context.fill();
-        //    }
+//        function debugMarker(x, y, color, size) {
+//            context.fillStyle = color || '#ffcc00';
+//            context.beginPath();
+//            context.arc(x, y, size || 3, 0, PI*2, true);
+//            context.closePath();
+//            context.fill();
+//        }
 
         function drawShape(points, stroke) {
             if (!points.length) {

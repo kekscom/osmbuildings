@@ -1,9 +1,9 @@
 [
-	"prefix.js",
-	"shortcuts.js",
+    "prefix.js",
+    "shortcuts.js",
     "color.js",
-	"constants.js",
-	"helpers.js",
+    "constants.js",
+    "helpers.js",
     "core.prefix.js",
         "variables.js",
         "functions.js",
@@ -13,5 +13,5 @@
         "public.js",
         "leaflet.js",
     "core.suffix.js",
-	"suffix.js"
+    "suffix.js"
 ]

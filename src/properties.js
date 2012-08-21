@@ -1,5 +1,5 @@
         function setSize(w, h) {
-            width = w;
+            width  = w;
             height = h;
             halfWidth  = ~~(width / 2);
             halfHeight = ~~(height / 2);
@@ -17,8 +17,7 @@
         function setZoom(z) {
             zoom = z;
             size = TILE_SIZE << zoom;
-            // maxAlpha - (zoom-MIN_ZOOM) * (maxAlpha-minAlpha) / (maxZoom-MIN_ZOOM)
-            zoomAlpha = 1 - (zoom - MIN_ZOOM) * 0.3 / (maxZoom - MIN_ZOOM);
+            zoomAlpha = 1 - (zoom - minZoom) * 0.3 / (maxZoom - minZoom);
         }
 
         function setStyle(style) {

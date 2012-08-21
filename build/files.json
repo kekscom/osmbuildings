@@ -1,8 +1,8 @@
 [
 	"prefix.js",
-	"shortcuts.js",
-    "color.js",
 	"constants.js",
+	"shortcuts.js",
+    "lib/Color.js",
 	"helpers.js",
     "core.prefix.js",
         "variables.js",

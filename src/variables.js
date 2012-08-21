@@ -22,6 +22,7 @@
             fadeFactor = 1,
             fadeTimer,
 
+            minZoom = MIN_ZOOM,
             maxZoom = 20,
             camX, camY,
 

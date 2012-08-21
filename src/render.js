@@ -25,7 +25,7 @@
 
             // show buildings in high zoom levels only
             // avoid rendering during zoom
-            if (zoom < MIN_ZOOM || isZooming) {
+            if (zoom < minZoom || isZooming) {
                 return;
             }
 
@@ -94,19 +94,15 @@
                         if (!walls.length) {
                             walls.unshift(ay);
                             walls.unshift(ax);
-                            walls.push(_a.x);
-                            walls.push(_a.y);
+                            walls.push(_a.x, _a.y);
                         }
-
                         walls.unshift(by);
                         walls.unshift(bx);
-                        walls.push(_b.x);
-                        walls.push(_b.y);
+                        walls.push(_b.x, _b.y);
                     } else {
                         drawShape(walls);
                         walls = [];
                     }
-
                     roof[j]     = _a.x;
                     roof[j + 1] = _a.y;
                 }
@@ -119,13 +115,13 @@
             }
         }
 
-        //    function debugMarker(x, y, color, size) {
-        //        context.fillStyle = color || '#ffcc00';
-        //        context.beginPath();
-        //        context.arc(x, y, size || 3, 0, PI*2, true);
-        //        context.closePath();
-        //        context.fill();
-        //    }
+//        function debugMarker(x, y, color, size) {
+//            context.fillStyle = color || '#ffcc00';
+//            context.beginPath();
+//            context.arc(x, y, size || 3, 0, PI*2, true);
+//            context.closePath();
+//            context.fill();
+//        }
 
         function drawShape(points, stroke) {
             if (!points.length) {

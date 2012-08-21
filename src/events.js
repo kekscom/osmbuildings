@@ -29,8 +29,8 @@
             isZooming = false;
             setZoom(e.zoom);
             if (!rawData) {
-				loadData();
-				return;
+                loadData();
+                return;
             }
             data = scaleData(rawData);
             render();
@@ -44,6 +44,7 @@
                 offX = 0, offY = 0
             ;
 
+            minZoom = MIN_ZOOM;
             req = null;
 
             // no response or response not matching current zoom (= too old response)

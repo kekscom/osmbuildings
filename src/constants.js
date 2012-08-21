@@ -8,7 +8,7 @@
         RAD = 180 / PI,
 
         TILE_SIZE = 256,
-        MIN_ZOOM = 14,
+        MIN_ZOOM = 14, // for buildings only, GeoJSON should not be affected
 
         CAM_Z = 400,
         MAX_HEIGHT = CAM_Z - 50,

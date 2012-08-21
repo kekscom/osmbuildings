@@ -25,7 +25,7 @@
             return res;
         }
 
-        function geoToPixel(lat, lon, z) {
+        function geoToPixel(lat, lon) {
             var
                 latitude = min(1, max(0, 0.5 - (log(tan(QUARTER_PI + HALF_PI * lat / 180)) / PI) / 2)),
                 longitude = lon / 360 + 0.5
@@ -65,6 +65,7 @@
             }
 
             rawData = parseGeoJSON(json, isLonLat);
+            minZoom = 0;
 
             meta = {
                 n: 90,
