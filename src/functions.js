@@ -66,6 +66,7 @@
 
             rawData = parseGeoJSON(json, isLonLat);
             minZoom = 0;
+            setZoom(zoom); // recalculating all zoom related variables
 
             meta = {
                 n: 90,

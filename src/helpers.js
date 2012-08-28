@@ -61,7 +61,7 @@
             i, il,
             j, jl,
             features = json[0] ? json : json.features,
-            geometry, coords, properties,
+            geometry, polygons, coords, properties,
             footprint, heightSum,
             propHeight, color,
             lat = isLonLat ? 1 : 0,
@@ -84,11 +84,18 @@
 //      else geometry = json
 
         if (geometry.type === 'Polygon') {
+            polygons = [geometry.coordinates];
+        }
+        if (geometry.type === 'MultiPolygon') {
+            polygons = geometry.coordinates;
+        }
+
+        if (polygons) {
             propHeight = properties.height;
             color = Color.parse(properties.color || properties.style.fillColor);
 
-            for (i = 0, il = geometry.coordinates.length; i < il; i++) {
-                coords = geometry.coordinates[i];
+            for (i = 0, il = polygons.length; i < il; i++) {
+                coords = polygons[i][0];
                 footprint = [];
                 heightSum = 0;
                 for (j = 0, jl = coords.length; j < jl; j++) {

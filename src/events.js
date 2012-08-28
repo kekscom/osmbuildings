@@ -45,6 +45,7 @@
             ;
 
             minZoom = MIN_ZOOM;
+            setZoom(zoom); // recalculating all zoom related variables
             req = null;
 
             // no response or response not matching current zoom (= too old response)

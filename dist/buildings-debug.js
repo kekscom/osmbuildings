@@ -229,7 +229,7 @@ var Color = (function () {
             i, il,
             j, jl,
             features = json[0] ? json : json.features,
-            geometry, coords, properties,
+            geometry, polygons, coords, properties,
             footprint, heightSum,
             propHeight, color,
             lat = isLonLat ? 1 : 0,
@@ -252,11 +252,18 @@ var Color = (function () {
 //      else geometry = json
 
         if (geometry.type === 'Polygon') {
+            polygons = [geometry.coordinates];
+        }
+        if (geometry.type === 'MultiPolygon') {
+            polygons = geometry.coordinates;
+        }
+
+        if (polygons) {
             propHeight = properties.height;
             color = Color.parse(properties.color || properties.style.fillColor);
 
-            for (i = 0, il = geometry.coordinates.length; i < il; i++) {
-                coords = geometry.coordinates[i];
+            for (i = 0, il = polygons.length; i < il; i++) {
+                coords = polygons[i][0];
                 footprint = [];
                 heightSum = 0;
                 for (j = 0, jl = coords.length; j < jl; j++) {
@@ -388,6 +395,7 @@ var Color = (function () {
 
             rawData = parseGeoJSON(json, isLonLat);
             minZoom = 0;
+            setZoom(zoom); // recalculating all zoom related variables
 
             meta = {
                 n: 90,
@@ -517,6 +525,7 @@ var Color = (function () {
             ;
 
             minZoom = MIN_ZOOM;
+            setZoom(zoom); // recalculating all zoom related variables
             req = null;
 
             // no response or response not matching current zoom (= too old response)
