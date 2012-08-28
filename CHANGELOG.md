@@ -1,12 +1,16 @@
 # Changelog
 
+## v0.1.5a @ 2012-08-29
+
+- JSHint is now part of the build process
+- GeoJSON: min zoom removed, height property re-enabled, multi polygons enabled
+
 ## v0.1.5a @ 2012-08-13
 
 - support for GeoJSON improved
 - deep integration with Leaflet in order to avoid jittery movement
 - enabled individual building colors
 - polygon winding fixed
-
 
 ## v0.1a
 
