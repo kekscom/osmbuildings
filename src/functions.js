@@ -105,6 +105,7 @@
                 res[i][HEIGHT]    = min(item[HEIGHT] >> z, MAX_HEIGHT);
                 res[i][FOOTPRINT] = footprint;
                 res[i][COLOR]     = item[COLOR];
+                res[i][CENTER]    = getCenter(footprint);
                 res[i][IS_NEW]    = isNew;
             }
 

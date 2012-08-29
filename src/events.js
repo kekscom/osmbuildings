@@ -64,7 +64,7 @@
                 // identify already present buildings to fade in new ones
                 for (i = 0, il = data.length; i < il; i++) {
                     // id key: x,y of first point - good enough
-                    keyList[i] = (data[i][FOOTPRINT][0] + offX) + ',' + (data[i][FOOTPRINT][1] + offY);
+                    keyList[i] = (data[i][CENTER][0] + offX) + ',' + (data[i][CENTER][1] + offY);
                 }
             }
 
@@ -74,7 +74,8 @@
             for (i = 0, il = resData.length; i < il; i++) {
                 data[i] = resData[i];
                 data[i][HEIGHT] = min(data[i][HEIGHT], MAX_HEIGHT);
-                k = data[i][FOOTPRINT][0] + ',' + data[i][FOOTPRINT][1];
+                data[i][CENTER] = getCenter(data[i][FOOTPRINT]);
+                k = data[i][CENTER].join(',');
                 data[i][IS_NEW] = !(keyList && ~keyList.indexOf(k));
             }
 

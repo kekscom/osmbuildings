@@ -6,5 +6,7 @@
         tan = Math.tan,
         atan = Math.atan,
         min = Math.min,
-        max = Math.max
+        max = Math.max,
+        sqrt = Math.sqrt,
+        abs = Math.abs
     ;

@@ -40,12 +40,17 @@
                 isVisible,
                 ax, ay, bx, by, _a, _b,
                 wallColorAlpha = wallColor.adjustAlpha(zoomAlpha),
-                roofColorAlpha = roofColor.adjustAlpha(zoomAlpha)
+                roofColorAlpha = roofColor.adjustAlpha(zoomAlpha),
+                camForDistance = [camX + meta.x, camY + meta.y]
             ;
 
             if (strokeRoofs) {
                 context.strokeStyle = strokeColor.adjustAlpha(zoomAlpha) + '';
             }
+
+            data.sort(function (a, b) {
+                return distance(a[CENTER], camForDistance) - distance(b[CENTER], camForDistance);
+            });
 
             for (i = 0, il = data.length; i < il; i++) {
                 item = data[i];

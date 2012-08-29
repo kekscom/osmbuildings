@@ -1,3 +1,25 @@
+    function distance(a, b) {
+        var
+            dx = a[0] - b[0],
+            dy = a[1] - b[1]
+        ;
+        return sqrt(dx * dx + dy * dy);
+    }
+
+    function getCenter(points) {
+        var
+            i, il,
+            x = 0, y = 0
+        ;
+        for (i = 0, il = points.length - 1; i < il; i += 2) {
+//          x += points[i] - offX;
+//          y += points[i + 1] - offY;
+            x += points[i];
+            y += points[i + 1];
+        }
+        return [ ~~(x/il), ~~(y/il) ];
+    }
+
     function template(str, data) {
         return str.replace(/\{ *([\w_]+) *\}/g, function(x, key) {
             return data[key] || '';

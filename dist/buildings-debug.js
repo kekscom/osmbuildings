@@ -24,7 +24,7 @@ var OSMBuildings = (function (global) {
         MAX_HEIGHT = CAM_Z - 50,
 
         LAT = 'latitude', LON = 'longitude',
-        HEIGHT = 0, FOOTPRINT = 1, COLOR = 2, IS_NEW = 3
+        HEIGHT = 0, FOOTPRINT = 1, COLOR = 2, CENTER = 3, IS_NEW = 4
     ;
 
 //****** file: shortcuts.js ******
@@ -37,7 +37,9 @@ var OSMBuildings = (function (global) {
         tan = Math.tan,
         atan = Math.atan,
         min = Math.min,
-        max = Math.max
+        max = Math.max,
+        sqrt = Math.sqrt,
+        abs = Math.abs
     ;
 
 
@@ -165,6 +167,28 @@ var Color = (function () {
 }());
 
 //****** file: helpers.js ******
+
+    function distance(a, b) {
+        var
+            dx = a[0] - b[0],
+            dy = a[1] - b[1]
+        ;
+        return sqrt(dx * dx + dy * dy);
+    }
+
+    function getCenter(points) {
+        var
+            i, il,
+            x = 0, y = 0
+        ;
+        for (i = 0, il = points.length - 1; i < il; i += 2) {
+//          x += points[i] - offX;
+//          y += points[i + 1] - offY;
+            x += points[i];
+            y += points[i + 1];
+        }
+        return [ ~~(x/il), ~~(y/il) ];
+    }
 
     function template(str, data) {
         return str.replace(/\{ *([\w_]+) *\}/g, function(x, key) {
@@ -434,6 +458,7 @@ var Color = (function () {
                 res[i][HEIGHT]    = min(item[HEIGHT] >> z, MAX_HEIGHT);
                 res[i][FOOTPRINT] = footprint;
                 res[i][COLOR]     = item[COLOR];
+                res[i][CENTER]    = getCenter(footprint);
                 res[i][IS_NEW]    = isNew;
             }
 
@@ -544,7 +569,7 @@ var Color = (function () {
                 // identify already present buildings to fade in new ones
                 for (i = 0, il = data.length; i < il; i++) {
                     // id key: x,y of first point - good enough
-                    keyList[i] = (data[i][FOOTPRINT][0] + offX) + ',' + (data[i][FOOTPRINT][1] + offY);
+                    keyList[i] = (data[i][CENTER][0] + offX) + ',' + (data[i][CENTER][1] + offY);
                 }
             }
 
@@ -554,7 +579,8 @@ var Color = (function () {
             for (i = 0, il = resData.length; i < il; i++) {
                 data[i] = resData[i];
                 data[i][HEIGHT] = min(data[i][HEIGHT], MAX_HEIGHT);
-                k = data[i][FOOTPRINT][0] + ',' + data[i][FOOTPRINT][1];
+                data[i][CENTER] = getCenter(data[i][FOOTPRINT]);
+                k = data[i][CENTER].join(',');
                 data[i][IS_NEW] = !(keyList && ~keyList.indexOf(k));
             }
 
@@ -608,19 +634,24 @@ var Color = (function () {
                 isVisible,
                 ax, ay, bx, by, _a, _b,
                 wallColorAlpha = wallColor.adjustAlpha(zoomAlpha),
-                roofColorAlpha = roofColor.adjustAlpha(zoomAlpha)
+                roofColorAlpha = roofColor.adjustAlpha(zoomAlpha),
+                camForDistance = [camX + meta.x, camY + meta.y]
             ;
 
             if (strokeRoofs) {
                 context.strokeStyle = strokeColor.adjustAlpha(zoomAlpha) + '';
             }
 
+            data.sort(function (a, b) {
+                return distance(a[CENTER], camForDistance) - distance(b[CENTER], camForDistance);
+            });
+
             for (i = 0, il = data.length; i < il; i++) {
                 item = data[i];
 
                 isVisible = false;
                 f = item[FOOTPRINT];
-                footprint = [];
+                footprint = []; // typed array would be created each pass and is way too slow
                 for (j = 0, jl = f.length - 1; j < jl; j += 2) {
                     footprint[j]     = x = (f[j]     - offX);
                     footprint[j + 1] = y = (f[j + 1] - offY);
@@ -643,7 +674,7 @@ var Color = (function () {
                 // precalculating projection height scale
                 m = CAM_Z / (CAM_Z - h);
 
-                roof = [];
+                roof = []; // typed array would be created each pass and is way too slow
                 walls = [];
 
                 for (j = 0, jl = footprint.length - 3; j < jl; j += 2) {
