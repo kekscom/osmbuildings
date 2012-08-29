@@ -6,5 +6,6 @@
         tan = Math.tan,
         atan = Math.atan,
         min = Math.min,
-        max = Math.max
+        max = Math.max,
+        doc = global.document
     ;

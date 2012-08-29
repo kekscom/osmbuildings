@@ -1,5 +1,6 @@
+
         function createCanvas(parentNode) {
-            canvas = global.document.createElement('canvas');
+            canvas = doc.createElement('canvas');
             canvas.style.webkitTransform = 'translate3d(0,0,0)';
             canvas.style.position = 'absolute';
             canvas.style.pointerEvents = 'none';
@@ -36,77 +37,8 @@
             };
         }
 
-        function loadData() {
-            if (!url || zoom < MIN_ZOOM) {
-                return;
-            }
-            var
-                // create bounding box of double viewport size
-                nw = pixelToGeo(originX         - halfWidth, originY          - halfHeight),
-                se = pixelToGeo(originX + width + halfWidth, originY + height + halfHeight)
-            ;
-            if (req) {
-                req.abort();
-            }
-            req = xhr(template(url, {
-                w: nw[LON],
-                n: nw[LAT],
-                e: se[LON],
-                s: se[LAT],
-                z: zoom
-            }), onDataLoaded);
-        }
-
-        function setData(json, isLonLat) {
-            if (!json) {
-                rawData = null;
-                render(); // effectively clears
-                return;
-            }
-
-            rawData = parseGeoJSON(json, isLonLat);
-            minZoom = 0;
-            setZoom(zoom); // recalculating all zoom related variables
-
-            meta = {
-                n: 90,
-                w: -180,
-                s: -90,
-                e: 180,
-                x: 0,
-                y: 0,
-                z: zoom
-            };
-            data = scaleData(rawData, true);
-
-            fadeIn();
-        }
-
-        function scaleData(data, isNew) {
-            var
-                res = [],
-                i, il, j, jl,
-                item,
-                coords, footprint,
-                p,
-                z = maxZoom - zoom
-            ;
-
-            for (i = 0, il = data.length; i < il; i++) {
-                item = data[i];
-                coords = item[FOOTPRINT];
-                footprint = new Int32Array(coords.length);
-                for (j = 0, jl = coords.length - 1; j < jl; j += 2) {
-                    p = geoToPixel(coords[j], coords[j + 1]);
-                    footprint[j]     = p.x;
-                    footprint[j + 1] = p.y;
-                }
-                res[i] = [];
-                res[i][HEIGHT]    = min(item[HEIGHT] >> z, MAX_HEIGHT);
-                res[i][FOOTPRINT] = footprint;
-                res[i][COLOR]     = item[COLOR];
-                res[i][IS_NEW]    = isNew;
-            }
-
-            return res;
+        function template(str, data) {
+            return str.replace(/\{ *([\w_]+) *\}/g, function(x, key) {
+                return data[key] || '';
+            });
         }

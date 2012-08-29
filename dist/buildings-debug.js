@@ -37,7 +37,8 @@ var OSMBuildings = (function (global) {
         tan = Math.tan,
         atan = Math.atan,
         min = Math.min,
-        max = Math.max
+        max = Math.max,
+        doc = global.document
     ;
 
 
@@ -164,128 +165,6 @@ var Color = (function () {
 
 }());
 
-//****** file: helpers.js ******
-
-    function template(str, data) {
-        return str.replace(/\{ *([\w_]+) *\}/g, function(x, key) {
-            return data[key] || '';
-        });
-    }
-
-    function xhr(url, callback) {
-        var x = new XMLHttpRequest();
-        x.onreadystatechange = function () {
-            if (x.readyState !== 4) {
-                return;
-            }
-            if (!x.status || x.status < 200 || x.status > 299) {
-                return;
-            }
-            if (x.responseText) {
-                callback(JSON.parse(x.responseText));
-            }
-        };
-        x.open('GET', url);
-        x.send(null);
-        return x;
-    }
-
-    // detect polygon winding direction: clockwise or counter clockwise
-    function getPolygonWinding(points) {
-        var
-            x1, y1, x2, y2,
-            a = 0,
-            i, il
-        ;
-        for (i = 0, il = points.length - 3; i < il; i += 2) {
-            x1 = points[i    ];
-            y1 = points[i + 1];
-            x2 = points[i + 2];
-            y2 = points[i + 3];
-            a += x1 * y2 - x2 * y1;
-        }
-        return (a / 2) > 0 ? 'CW' : 'CCW';
-    }
-
-    // make polygon winding clockwise. This is needed for proper backface culling on client side.
-    function makeClockwiseWinding(points) {
-        var winding = getPolygonWinding(points);
-        if (winding === 'CW') {
-            return points;
-        }
-        var revPoints = [];
-        for (var i = points.length - 2; i >= 0; i -= 2) {
-            revPoints.push(points[i], points[i + 1]);
-        }
-        return revPoints;
-    }
-
-    function parseGeoJSON(json, isLonLat, res) {
-        if (res === undefined) {
-            res = [];
-        }
-
-        var
-            i, il,
-            j, jl,
-            features = json[0] ? json : json.features,
-            geometry, polygons, coords, properties,
-            footprint, heightSum,
-            propHeight, color,
-            lat = isLonLat ? 1 : 0,
-            lon = isLonLat ? 0 : 1,
-            alt = 2,
-            item
-        ;
-
-        if (features) {
-            for (i = 0, il = features.length; i < il; i++) {
-                parseGeoJSON(features[i], isLonLat, res);
-            }
-            return res;
-        }
-
-        if (json.type === 'Feature') {
-            geometry = json.geometry;
-            properties = json.properties;
-        }
-//      else geometry = json
-
-        if (geometry.type === 'Polygon') {
-            polygons = [geometry.coordinates];
-        }
-        if (geometry.type === 'MultiPolygon') {
-            polygons = geometry.coordinates;
-        }
-
-        if (polygons) {
-            propHeight = properties.height;
-            color = Color.parse(properties.color || properties.style.fillColor);
-
-            for (i = 0, il = polygons.length; i < il; i++) {
-                coords = polygons[i][0];
-                footprint = [];
-                heightSum = 0;
-                for (j = 0, jl = coords.length; j < jl; j++) {
-                    footprint.push(coords[j][lat], coords[j][lon]);
-                    heightSum += propHeight || coords[j][alt] || 0;
-                }
-
-                if (heightSum) {
-                    item = [];
-                    item[HEIGHT] = ~~(heightSum/coords.length);
-                    item[FOOTPRINT] = makeClockwiseWinding(footprint);
-                    if (color) {
-                        item[COLOR] = [color, color.adjustLightness(0.2)];
-                    }
-                    res.push(item);
-                }
-            }
-        }
-
-        return res;
-    }
-
 //****** file: core.prefix.js ******
 
     function B() {
@@ -327,8 +206,9 @@ var Color = (function () {
 
 //****** file: functions.js ******
 
+
         function createCanvas(parentNode) {
-            canvas = global.document.createElement('canvas');
+            canvas = doc.createElement('canvas');
             canvas.style.webkitTransform = 'translate3d(0,0,0)';
             canvas.style.position = 'absolute';
             canvas.style.pointerEvents = 'none';
@@ -365,6 +245,34 @@ var Color = (function () {
             };
         }
 
+        function template(str, data) {
+            return str.replace(/\{ *([\w_]+) *\}/g, function(x, key) {
+                return data[key] || '';
+            });
+        }
+
+
+//****** file: data.js ******
+
+
+        function xhr(url, callback) {
+            var x = new XMLHttpRequest();
+            x.onreadystatechange = function () {
+                if (x.readyState !== 4) {
+                    return;
+                }
+                if (!x.status || x.status < 200 || x.status > 299) {
+                    return;
+                }
+                if (x.responseText) {
+                    callback(JSON.parse(x.responseText));
+                }
+            };
+            x.open('GET', url);
+            x.send(null);
+            return x;
+        }
+
         function loadData() {
             if (!url || zoom < MIN_ZOOM) {
                 return;
@@ -384,136 +292,6 @@ var Color = (function () {
                 s: se[LAT],
                 z: zoom
             }), onDataLoaded);
-        }
-
-        function setData(json, isLonLat) {
-            if (!json) {
-                rawData = null;
-                render(); // effectively clears
-                return;
-            }
-
-            rawData = parseGeoJSON(json, isLonLat);
-            minZoom = 0;
-            setZoom(zoom); // recalculating all zoom related variables
-
-            meta = {
-                n: 90,
-                w: -180,
-                s: -90,
-                e: 180,
-                x: 0,
-                y: 0,
-                z: zoom
-            };
-            data = scaleData(rawData, true);
-
-            fadeIn();
-        }
-
-        function scaleData(data, isNew) {
-            var
-                res = [],
-                i, il, j, jl,
-                item,
-                coords, footprint,
-                p,
-                z = maxZoom - zoom
-            ;
-
-            for (i = 0, il = data.length; i < il; i++) {
-                item = data[i];
-                coords = item[FOOTPRINT];
-                footprint = new Int32Array(coords.length);
-                for (j = 0, jl = coords.length - 1; j < jl; j += 2) {
-                    p = geoToPixel(coords[j], coords[j + 1]);
-                    footprint[j]     = p.x;
-                    footprint[j + 1] = p.y;
-                }
-                res[i] = [];
-                res[i][HEIGHT]    = min(item[HEIGHT] >> z, MAX_HEIGHT);
-                res[i][FOOTPRINT] = footprint;
-                res[i][COLOR]     = item[COLOR];
-                res[i][IS_NEW]    = isNew;
-            }
-
-            return res;
-        }
-
-
-//****** file: properties.js ******
-
-        function setSize(w, h) {
-            width  = w;
-            height = h;
-            halfWidth  = ~~(width / 2);
-            halfHeight = ~~(height / 2);
-            camX = halfWidth;
-            camY = height;
-            canvas.width = width;
-            canvas.height = height;
-        }
-
-        function setOrigin(x, y) {
-            originX = x;
-            originY = y;
-        }
-
-        function setZoom(z) {
-            zoom = z;
-            size = TILE_SIZE << zoom;
-            zoomAlpha = 1 - (zoom - minZoom) * 0.3 / (maxZoom - minZoom);
-        }
-
-        function setStyle(style) {
-            style = style || {};
-            strokeRoofs = style.strokeRoofs !== undefined ? style.strokeRoofs : strokeRoofs;
-            if (style.fillColor) {
-                wallColor = Color.parse(style.fillColor);
-                roofColor = wallColor.adjustLightness(0.2);
-            }
-            render();
-        }
-
-
-//****** file: events.js ******
-
-        function onResize(e) {
-            setSize(e.width, e.height);
-            render();
-            loadData();
-        }
-
-        function onMove(e) {
-            setOrigin(e.x, e.y);
-            render();
-        }
-
-        function onMoveEnd(e) {
-            var
-                nw = pixelToGeo(originX,         originY),
-                se = pixelToGeo(originX + width, originY + height)
-            ;
-            // check, whether viewport is still within loaded data bounding box
-            if (meta && (nw[LAT] > meta.n || nw[LON] < meta.w || se[LAT] < meta.s || se[LON] > meta.e)) {
-                loadData();
-            }
-        }
-
-        function onZoomStart(e) {
-            isZooming = true;
-            render(); // effectively clears
-        }
-
-        function onZoomEnd(e) {
-            isZooming = false;
-            setZoom(e.zoom);
-            if (!rawData) {
-                loadData();
-                return;
-            }
-            data = scaleData(rawData);
-            render();
         }
 
         function onDataLoaded(res) {
@@ -561,6 +339,250 @@ var Color = (function () {
             resMeta = resData = keyList = null; // gc
 
             fadeIn();
+        }
+
+        // detect polygon winding direction: clockwise or counter clockwise
+        function getPolygonWinding(points) {
+            var
+                x1, y1, x2, y2,
+                a = 0,
+                i, il
+            ;
+            for (i = 0, il = points.length - 3; i < il; i += 2) {
+                x1 = points[i    ];
+                y1 = points[i + 1];
+                x2 = points[i + 2];
+                y2 = points[i + 3];
+                a += x1 * y2 - x2 * y1;
+            }
+            return (a / 2) > 0 ? 'CW' : 'CCW';
+        }
+
+        // make polygon winding clockwise. This is needed for proper backface culling on client side.
+        function makeClockwiseWinding(points) {
+            var winding = getPolygonWinding(points);
+            if (winding === 'CW') {
+                return points;
+            }
+            var revPoints = [];
+            for (var i = points.length - 2; i >= 0; i -= 2) {
+                revPoints.push(points[i], points[i + 1]);
+            }
+            return revPoints;
+        }
+
+        function scaleData(data, isNew) {
+            var
+                res = [],
+                i, il, j, jl,
+                item,
+                coords, footprint,
+                p,
+                z = maxZoom - zoom
+            ;
+
+            for (i = 0, il = data.length; i < il; i++) {
+                item = data[i];
+                coords = item[FOOTPRINT];
+                footprint = new Int32Array(coords.length);
+                for (j = 0, jl = coords.length - 1; j < jl; j += 2) {
+                    p = geoToPixel(coords[j], coords[j + 1]);
+                    footprint[j]     = p.x;
+                    footprint[j + 1] = p.y;
+                }
+                res[i] = [];
+                res[i][HEIGHT]    = min(item[HEIGHT] >> z, MAX_HEIGHT);
+                res[i][FOOTPRINT] = footprint;
+                res[i][COLOR]     = item[COLOR];
+                res[i][IS_NEW]    = isNew;
+            }
+
+            return res;
+        }
+
+        function geoJSON(url, isLatLon) {
+            if (typeof url === 'object') {
+                setData(url, !isLatLon);
+                return;
+            }
+            var
+                el = doc.documentElement,
+                callback = 'jsonpCallback',
+                script = doc.createElement('script')
+            ;
+            global[callback] = function (res) {
+                delete global[callback];
+                el.removeChild(script);
+                setData(res, !isLatLon);
+            };
+            el.insertBefore(script, el.lastChild).src = url.replace(/\{callback\}/, callback);
+        }
+
+        function parseGeoJSON(json, isLonLat, res) {
+            if (res === undefined) {
+                res = [];
+            }
+
+            var
+                i, il,
+                j, jl,
+                features = json[0] ? json : json.features,
+                geometry, polygons, coords, properties,
+                footprint, heightSum,
+                propHeight, color,
+                lat = isLonLat ? 1 : 0,
+                lon = isLonLat ? 0 : 1,
+                alt = 2,
+                item
+            ;
+
+            if (features) {
+                for (i = 0, il = features.length; i < il; i++) {
+                    parseGeoJSON(features[i], isLonLat, res);
+                }
+                return res;
+            }
+
+            if (json.type === 'Feature') {
+                geometry = json.geometry;
+                properties = json.properties;
+            }
+    //      else geometry = json
+
+            if (geometry.type === 'Polygon') {
+                polygons = [geometry.coordinates];
+            }
+            if (geometry.type === 'MultiPolygon') {
+                polygons = geometry.coordinates;
+            }
+
+            if (polygons) {
+                propHeight = properties.height;
+                color = Color.parse(properties.color || properties.style.fillColor);
+
+                for (i = 0, il = polygons.length; i < il; i++) {
+                    coords = polygons[i][0];
+                    footprint = [];
+                    heightSum = 0;
+                    for (j = 0, jl = coords.length; j < jl; j++) {
+                        footprint.push(coords[j][lat], coords[j][lon]);
+                        heightSum += propHeight || coords[j][alt] || 0;
+                    }
+
+                    if (heightSum) {
+                        item = [];
+                        item[HEIGHT] = ~~(heightSum/coords.length);
+                        item[FOOTPRINT] = makeClockwiseWinding(footprint);
+                        if (color) {
+                            item[COLOR] = [color, color.adjustLightness(0.2)];
+                        }
+                        res.push(item);
+                    }
+                }
+            }
+
+            return res;
+        }
+
+        function setData(json, isLonLat) {
+            if (!json) {
+                rawData = null;
+                render(); // effectively clears
+                return;
+            }
+
+            rawData = parseGeoJSON(json, isLonLat);
+            minZoom = 0;
+            setZoom(zoom); // recalculating all zoom related variables
+
+            meta = {
+                n: 90,
+                w: -180,
+                s: -90,
+                e: 180,
+                x: 0,
+                y: 0,
+                z: zoom
+            };
+            data = scaleData(rawData, true);
+
+            fadeIn();
+        }
+
+//****** file: properties.js ******
+
+        function setSize(w, h) {
+            width  = w;
+            height = h;
+            halfWidth  = ~~(width / 2);
+            halfHeight = ~~(height / 2);
+            camX = halfWidth;
+            camY = height;
+            canvas.width = width;
+            canvas.height = height;
+        }
+
+        function setOrigin(x, y) {
+            originX = x;
+            originY = y;
+        }
+
+        function setZoom(z) {
+            zoom = z;
+            size = TILE_SIZE << zoom;
+            zoomAlpha = 1 - (zoom - minZoom) * 0.3 / (maxZoom - minZoom);
+        }
+
+        function setStyle(style) {
+            style = style || {};
+            strokeRoofs = style.strokeRoofs !== undefined ? style.strokeRoofs : strokeRoofs;
+            if (style.fillColor) {
+                wallColor = Color.parse(style.fillColor);
+                roofColor = wallColor.adjustLightness(0.2);
+            }
+            render();
+        }
+
+
+//****** file: events.js ******
+
+
+        function onResize(e) {
+            setSize(e.width, e.height);
+            render();
+            loadData();
+        }
+
+        function onMove(e) {
+            setOrigin(e.x, e.y);
+            render();
+        }
+
+        function onMoveEnd(e) {
+            var
+                nw = pixelToGeo(originX,         originY),
+                se = pixelToGeo(originX + width, originY + height)
+            ;
+            // check, whether viewport is still within loaded data bounding box
+            if (meta && (nw[LAT] > meta.n || nw[LON] < meta.w || se[LAT] < meta.s || se[LON] > meta.e)) {
+                loadData();
+            }
+        }
+
+        function onZoomStart(e) {
+            isZooming = true;
+            render(); // effectively clears
+        }
+
+        function onZoomEnd(e) {
+            isZooming = false;
+            setZoom(e.zoom);
+            if (!rawData) {
+                loadData();
+                return;
+            }
+            data = scaleData(rawData);
+            render();
         }
 
 
@@ -620,7 +642,7 @@ var Color = (function () {
 
                 isVisible = false;
                 f = item[FOOTPRINT];
-                footprint = [];
+                footprint = []; // typed array would be created each pass and is way too slow
                 for (j = 0, jl = f.length - 1; j < jl; j += 2) {
                     footprint[j]     = x = (f[j]     - offX);
                     footprint[j + 1] = y = (f[j + 1] - offY);
@@ -643,7 +665,7 @@ var Color = (function () {
                 // precalculating projection height scale
                 m = CAM_Z / (CAM_Z - h);
 
-                roof = [];
+                roof = []; // typed array would be created each pass and is way too slow
                 walls = [];
 
                 for (j = 0, jl = footprint.length - 3; j < jl; j += 2) {
@@ -721,31 +743,29 @@ var Color = (function () {
         this.VERSION = VERSION;
 
         this.render = function () {
-            if (this.map) {
-                render();
-            }
+            render();
             return this;
         };
 
         this.setStyle = function (style) {
-            if (this.map) {
-                setStyle(style);
-            }
+            setStyle(style);
             return this;
         };
 
         this.setData = function (data, isLonLat) {
-            if (this.map) {
-                setData(data, isLonLat);
-            }
+            console.warn('OSMBuildings.loadData() is deprecated and will be removed soon.\nUse OSMBuildings.loadData({url|object}, isLatLon?) instead.');
+            setData(data, isLonLat);
             return this;
         };
 
         this.loadData = function (u) {
-            if (this.map) {
-                url = u;
-                loadData();
-            }
+            url = u;
+            loadData();
+            return this;
+        };
+
+        this.geoJSON = function (url, isLatLon) {
+            geoJSON(url, isLatLon);
             return this;
         };
 
