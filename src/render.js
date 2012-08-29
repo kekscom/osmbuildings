@@ -52,7 +52,7 @@
 
                 isVisible = false;
                 f = item[FOOTPRINT];
-                footprint = [];
+                footprint = []; // typed array would be created each pass and is way too slow
                 for (j = 0, jl = f.length - 1; j < jl; j += 2) {
                     footprint[j]     = x = (f[j]     - offX);
                     footprint[j + 1] = y = (f[j + 1] - offY);
@@ -75,7 +75,7 @@
                 // precalculating projection height scale
                 m = CAM_Z / (CAM_Z - h);
 
-                roof = [];
+                roof = []; // typed array would be created each pass and is way too slow
                 walls = [];
 
                 for (j = 0, jl = footprint.length - 3; j < jl; j += 2) {
