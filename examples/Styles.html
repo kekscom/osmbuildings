@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>OSM Buildings - Examples - Styles</title>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.4.4/leaflet.css">
+    <link rel="stylesheet" href="assets/styles.css">
+    <!--[if lte IE 8]><link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.4.4/leaflet.ie.css" /><![endif]-->
+    <script src="http://cdn.leafletjs.com/leaflet-0.4.4/leaflet.js"></script>
+    <script src="../dist/buildings.js"></script>
+</head>
+
+<body>
+    <div id="map"></div>
+
+    <script>
+    var map = new L.Map('map').setView([52.50440, 13.33522], 17);
+
+    new L.TileLayer(
+        'http://{s}.tiles.mapbox.com/v3/mapbox.mapbox-streets/{z}/{x}/{y}.png',
+        { attribution: 'Map tiles &copy; <a href="http://mapbox.com">MapBox</a>', maxZoom: 17 }
+    ).addTo(map);
+
+    var osmb = new OSMBuildings(map).loadData('../server/?w={w}&n={n}&e={e}&s={s}&z={z}');
+
+    var
+        fillColor = 'rgb(200,190,180)',
+        strokeRoofs = false
+    ;
+    function setStyle(el) {
+        if (el.nodeName === 'BUTTON') {
+            fillColor = el.style.backgroundColor;
+        } else {
+            strokeRoofs = !!el.checked;
+        }
+        osmb.setStyle({ fillColor: fillColor, strokeRoofs: strokeRoofs });
+        code.innerHTML = 'new OSMBuildings(map)\n\t.setStyle({ fillColor: ' + fillColor + ', strokeRoofs: ' + strokeRoofs + ' });';
+    }
+    </script>
+
+    <div id="description">
+    <h1>Examples: Styles</h1>
+
+    <p>Change building styles on the fly</p>
+
+        <p>color: <button class="sampleColor" name="fillColor" style="background:rgb(250,220,100)" onclick="setStyle(this)"></button>
+        <button class="sampleColor" name="fillColor" style="background:rgba(100,100,250,0.7)" onclick="setStyle(this)"></button>
+        <button class="sampleColor" name="fillColor" style="background:rgb(250,100,100)" onclick="setStyle(this)"></button>
+        <label><input name="strokeRoofs" type="checkbox" value="1" onclick="setStyle(this)">stroke roofs</label></p>
+
+        <p><code id="stylesCode"></code></p>
+
+        <script>
+        var stylesCode = document.getElementById('stylesCode');
+        stylesCode.innerHTML = 'new OSMBuildings(map)\n\t.setStyle({ fillColor: ' + fillColor + ', strokeRoofs: ' + strokeRoofs + ' });';
+        </script>
+
+    </div>
+
+</body>
+</html>
