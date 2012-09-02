@@ -96,7 +96,7 @@ var myGeoJSON = {
     ]
 };
 
-new OSMBuildings(map).setData(myGeoJSON[, islonLat=true]); 
+new OSMBuildings(map).geoJSON(myGeoJSON[, isLatLon=true]); 
 ```
 
 
