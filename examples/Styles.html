@@ -29,12 +29,15 @@
             Your server needs to be running for this example.</p>
 
         <p>
-            Color:
-            <button class="sampleColor" style="background:rgb(250,220,100);cursor:pointer;border:1px solid #666;width:50px;" onclick="setStyle(this)"></button>
-            <button class="sampleColor" style="background:rgba(100,100,250,0.7);cursor:pointer;border:1px solid #666;width:50px;" onclick="setStyle(this)"></button>
-            <button class="sampleColor" style="background:rgb(250,100,100);cursor:pointer;border:1px solid #666;width:50px;" onclick="setStyle(this)"></button>
-            Roofs:
-            <label style="cursor:pointer;"><input name="strokeRoofs" type="checkbox" value="1" onclick="setStyle(this)">stroke</label>
+            Wall color:
+            <button class="color" style="background:rgb(250,220,100);" onclick="setStyle(this, 'wall')"></button>
+            <button class="color" style="background:rgba(100,100,250,0.7);" onclick="setStyle(this, 'wall')"></button>
+            <button class="color" style="background:rgb(250,100,100);" onclick="setStyle(this, 'wall')"></button><br>
+            Roof color:
+            <button class="color" style="background:rgb(220,220,50);" onclick="setStyle(this, 'roof')"></button>
+            <button class="color" style="background:rgb(150,100,150);" onclick="setStyle(this, 'roof')"></button>
+            <button class="color" style="background:rgb(200,150,100);" onclick="setStyle(this, 'roof')"></button>
+            <label style="cursor:pointer;"><input name="strokeRoofs" type="checkbox" value="1" onclick="setStyle(this, 'stroke')">stroke</label>
         </p>
     </div>
 
@@ -59,18 +62,26 @@
     code.style.height = '180px';
     code.style.backgroundColor = '#eeeeee';
 
-    var fillColor = 'rgb(200,190,180)', strokeRoofs = false;
-    function setStyle(el) {
+    var
+        wallColor = 'rgb(200,190,180)',
+        roofColor = null,
+        strokeRoofs = false
+    ;
+    function setStyle(el, type) {
         if (el) {
-            if (el.nodeName === 'BUTTON') {
-                fillColor = el.style.backgroundColor;
-            } else {
+            if (type === 'wall') {
+                wallColor = el.style.backgroundColor;
+            }
+            if (type === 'roof') {
+                roofColor = el.style.backgroundColor;
+            }
+            if (type === 'stroke') {
                 strokeRoofs = !!el.checked;
             }
         }
-        osmb.setStyle({ fillColor: fillColor, strokeRoofs: strokeRoofs });
+        osmb.setStyle({ wallColor: wallColor, roofColor: roofColor, strokeRoofs: strokeRoofs });
 
-        code.innerText = src.innerText + 'osmb.setStyle({ fillColor: ' + fillColor + ', strokeRoofs: ' + strokeRoofs + ' });';
+        code.innerText = src.innerText + 'osmb.setStyle({ wallColor: \'' + wallColor + '\', roofColor: \'' + roofColor + '\', strokeRoofs: ' + strokeRoofs + ' });';
         hljs.highlightBlock(code);
     }
 

@@ -50,3 +50,9 @@ h1 {
     width: 700px;
     margin: 0 auto;
 }
+
+button.color {
+    cursor:pointer;
+    border:1px solid #666;
+    width:50px;
+}

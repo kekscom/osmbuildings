@@ -80,11 +80,11 @@ var Color = (function () {
 
         m = str.match(/rgba?\((\d+)\D+(\d+)\D+(\d+)(\D+([\d.]+))?\)/);
         if (m) {
-            return new Color(
-                m[1],
-                m[2],
-                m[3],
-                m[4] ? m[5] : 1
+             return new Color(
+                parseInt(m[1], 10),
+                parseInt(m[2], 10),
+                parseInt(m[3], 10),
+                m[4] ? parseFloat(m[5], 10) : 1
             );
         }
     };

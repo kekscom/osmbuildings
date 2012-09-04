@@ -23,9 +23,14 @@
         function setStyle(style) {
             style = style || {};
             strokeRoofs = style.strokeRoofs !== undefined ? style.strokeRoofs : strokeRoofs;
-            if (style.fillColor) {
-                wallColor = Color.parse(style.fillColor);
-                roofColor = wallColor.adjustLightness(0.2);
+            if (style.wallColor) {
+                wallColor = Color.parse(style.wallColor);
+                if (!style.roofColor) {
+                    roofColor = wallColor.adjustLightness(0.2);
+                }
+            }
+            if (style.roofColor) {
+                roofColor = Color.parse(style.roofColor);
             }
             render();
         }

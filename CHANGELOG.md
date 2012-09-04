@@ -1,16 +1,22 @@
 # Changelog
 
-## v0.1.5a @ 2012-08-29
+## v0.1.6a @ 2012-09-04
 
+- GeoJSON: min zoom removed
+- GeoJSON: height property re-enabled
+- GeoJSON: multi polygons enabled
+- Examples are rebuilt entirely
+- Roof colors are re-enbled
 - JSHint is now part of the build process
-- GeoJSON: min zoom removed, height property re-enabled, multi polygons enabled
 
-## v0.1.5a @ 2012-08-13
+
+## v0.1.5a
 
 - support for GeoJSON improved
 - deep integration with Leaflet in order to avoid jittery movement
 - enabled individual building colors
 - polygon winding fixed
+
 
 ## v0.1a
 

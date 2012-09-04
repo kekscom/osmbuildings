@@ -126,11 +126,11 @@ var Color = (function () {
 
         m = str.match(/rgba?\((\d+)\D+(\d+)\D+(\d+)(\D+([\d.]+))?\)/);
         if (m) {
-            return new Color(
-                m[1],
-                m[2],
-                m[3],
-                m[4] ? m[5] : 1
+             return new Color(
+                parseInt(m[1], 10),
+                parseInt(m[2], 10),
+                parseInt(m[3], 10),
+                m[4] ? parseFloat(m[5], 10) : 1
             );
         }
     };
@@ -429,7 +429,7 @@ var Color = (function () {
                 features = json[0] ? json : json.features,
                 geometry, polygons, coords, properties,
                 footprint, heightSum,
-                propHeight, color,
+                propHeight, propWallColor, propRoofColor,
                 lat = isLonLat ? 1 : 0,
                 lon = isLonLat ? 0 : 1,
                 alt = 2,
@@ -458,7 +458,20 @@ var Color = (function () {
 
             if (polygons) {
                 propHeight = properties.height;
-                color = Color.parse(properties.color || properties.style.fillColor);
+                if (properties.color) {
+                    propWallColor = Color.parse(properties.color);
+                    propRoofColor = propWallColor.adjustLightness(0.2);
+                } else {
+                    if (properties.wallColor) {
+                        propWallColor = Color.parse(properties.wallColor);
+                        if (!properties.roofColor) {
+                            propRoofColor = propWallColor.adjustLightness(0.2);
+                        }
+                    }
+                    if (properties.roofColor) {
+                        propRoofColor = Color.parse(properties.roofColor);
+                    }
+                }
 
                 for (i = 0, il = polygons.length; i < il; i++) {
                     coords = polygons[i][0];
@@ -473,8 +486,8 @@ var Color = (function () {
                         item = [];
                         item[HEIGHT] = ~~(heightSum/coords.length);
                         item[FOOTPRINT] = makeClockwiseWinding(footprint);
-                        if (color) {
-                            item[COLOR] = [color, color.adjustLightness(0.2)];
+                        if (propWallColor || propRoofColor) {
+                            item[COLOR] = [propWallColor, propRoofColor];
                         }
                         res.push(item);
                     }
@@ -536,9 +549,14 @@ var Color = (function () {
         function setStyle(style) {
             style = style || {};
             strokeRoofs = style.strokeRoofs !== undefined ? style.strokeRoofs : strokeRoofs;
-            if (style.fillColor) {
-                wallColor = Color.parse(style.fillColor);
-                roofColor = wallColor.adjustLightness(0.2);
+            if (style.wallColor) {
+                wallColor = Color.parse(style.wallColor);
+                if (!style.roofColor) {
+                    roofColor = wallColor.adjustLightness(0.2);
+                }
+            }
+            if (style.roofColor) {
+                roofColor = Color.parse(style.roofColor);
             }
             render();
         }
