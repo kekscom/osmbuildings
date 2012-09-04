@@ -58,6 +58,8 @@ function taskAbort() {
 }
 
 function taskEnd() {
+    build.copy(dstFile,      '../examples/js/buildings.js');
+    build.copy(dstFileDebug, '../examples/js/buildings-debug.js');
     console.log('done');
     taskAbort();
 }
