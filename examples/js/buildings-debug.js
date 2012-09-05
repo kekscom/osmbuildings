@@ -10,7 +10,7 @@ var OSMBuildings = (function (global) {
 
     // private constants, general to all instances
     var
-        VERSION = '0.1.5a',
+        VERSION = '0.1.6a',
 
         PI = Math.PI,
         HALF_PI = PI / 2,
@@ -98,12 +98,12 @@ var Color = (function () {
     var proto = C.prototype;
 
     proto.toString = function () {
-        return 'rgba(' + [this.r, this.g, this.b, this.a].join(',') + ')';
+        return 'rgba(' + [this.r, this.g, this.b, this.a.toFixed(2)].join(',') + ')';
     };
 
-    proto.adjustLightness = function (amount) {
+    proto.adjustLightness = function (l) {
         var hsla = Color.toHSLA(this);
-        hsla.l += amount;
+        hsla.l *= l;
         hsla.l = Math.min(1, Math.max(0, hsla.l));
         return hsla2rgb(hsla);
     };
@@ -186,7 +186,7 @@ var Color = (function () {
             url,
             strokeRoofs,
             wallColor = new Color(200,190,180),
-            roofColor = wallColor.adjustLightness(0.2),
+            roofColor = null,
             strokeColor = new Color(145,140,135),
 
             rawData,
@@ -458,19 +458,11 @@ var Color = (function () {
 
             if (polygons) {
                 propHeight = properties.height;
-                if (properties.color) {
-                    propWallColor = Color.parse(properties.color);
-                    propRoofColor = propWallColor.adjustLightness(0.2);
-                } else {
-                    if (properties.wallColor) {
-                        propWallColor = Color.parse(properties.wallColor);
-                        if (!properties.roofColor) {
-                            propRoofColor = propWallColor.adjustLightness(0.2);
-                        }
-                    }
-                    if (properties.roofColor) {
-                        propRoofColor = Color.parse(properties.roofColor);
-                    }
+                if (properties.color || properties.wallColor) {
+                    propWallColor = Color.parse(properties.color || properties.wallColor);
+                }
+                if (properties.roofColor) {
+                    propRoofColor = Color.parse(properties.roofColor);
                 }
 
                 for (i = 0, il = polygons.length; i < il; i++) {
@@ -549,11 +541,8 @@ var Color = (function () {
         function setStyle(style) {
             style = style || {};
             strokeRoofs = style.strokeRoofs !== undefined ? style.strokeRoofs : strokeRoofs;
-            if (style.wallColor) {
-                wallColor = Color.parse(style.wallColor);
-                if (!style.roofColor) {
-                    roofColor = wallColor.adjustLightness(0.2);
-                }
+            if (style.color || style.wallColor) {
+                wallColor = Color.parse(style.color || style.wallColor);
             }
             if (style.roofColor) {
                 roofColor = Color.parse(style.roofColor);
@@ -647,8 +636,8 @@ var Color = (function () {
                 footprint, roof, walls,
                 isVisible,
                 ax, ay, bx, by, _a, _b,
-                wallColorAlpha = wallColor.adjustAlpha(zoomAlpha),
-                roofColorAlpha = roofColor.adjustAlpha(zoomAlpha)
+                wallColorAlpha = wallColor.adjustAlpha(zoomAlpha) + '',
+                roofColorAlpha = (roofColor || wallColor.adjustLightness(1.2)).adjustAlpha(zoomAlpha) + ''
             ;
 
             if (strokeRoofs) {
@@ -675,7 +664,7 @@ var Color = (function () {
                     continue;
                 }
 
-                context.fillStyle = (item[COLOR] ? item[COLOR][0].adjustAlpha(zoomAlpha) : wallColorAlpha) + '';
+                context.fillStyle = item[COLOR] && item[COLOR][0] ? item[COLOR][0].adjustAlpha(zoomAlpha) + '' : wallColorAlpha;
 
                 // when fading in, use a dynamic height
                 h = item[IS_NEW] ? item[HEIGHT] * fadeFactor : item[HEIGHT];
@@ -717,8 +706,14 @@ var Color = (function () {
 
                 drawShape(walls);
 
+                // TODO refactor this to a lookup table
                 // fill roof and optionally stroke it
-                context.fillStyle = (item[COLOR] ? item[COLOR][1].adjustAlpha(zoomAlpha) : roofColorAlpha) + '';
+                context.fillStyle = !item[COLOR] ? roofColorAlpha : // no item color => use default roof color (which is in worst case build from default wall color)
+                    item[COLOR][1] ? item[COLOR][1].adjustAlpha(zoomAlpha) + '' : // item roof color exists => adapt & use it
+                    roofColorAlpha ? roofColorAlpha : // default roof color exists => use it
+                    item[COLOR][0].adjustLightness(1.2).adjustAlpha(zoomAlpha) + '' // item wall color exists => adapt & use it
+                ;
+
                 drawShape(roof, strokeRoofs);
             }
         }
@@ -788,7 +783,7 @@ var Color = (function () {
         };
 
 
-//****** file: leaflet.js ******
+//****** file: engines/Leaflet.js ******
 
         var
             attribution = 'Buildings &copy; <a href="http://osmbuildings.org">OSM Buildings</a>',

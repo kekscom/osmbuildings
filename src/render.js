@@ -39,8 +39,8 @@
                 footprint, roof, walls,
                 isVisible,
                 ax, ay, bx, by, _a, _b,
-                wallColorAlpha = wallColor.adjustAlpha(zoomAlpha),
-                roofColorAlpha = roofColor.adjustAlpha(zoomAlpha)
+                wallColorAlpha = wallColor.adjustAlpha(zoomAlpha) + '',
+                roofColorAlpha = (roofColor || wallColor.adjustLightness(1.2)).adjustAlpha(zoomAlpha) + ''
             ;
 
             if (strokeRoofs) {
@@ -67,7 +67,7 @@
                     continue;
                 }
 
-                context.fillStyle = (item[COLOR] ? item[COLOR][0].adjustAlpha(zoomAlpha) : wallColorAlpha) + '';
+                context.fillStyle = item[COLOR] && item[COLOR][0] ? item[COLOR][0].adjustAlpha(zoomAlpha) + '' : wallColorAlpha;
 
                 // when fading in, use a dynamic height
                 h = item[IS_NEW] ? item[HEIGHT] * fadeFactor : item[HEIGHT];
@@ -109,8 +109,14 @@
 
                 drawShape(walls);
 
+                // TODO refactor this to a lookup table
                 // fill roof and optionally stroke it
-                context.fillStyle = (item[COLOR] ? item[COLOR][1].adjustAlpha(zoomAlpha) : roofColorAlpha) + '';
+                context.fillStyle = !item[COLOR] ? roofColorAlpha : // no item color => use default roof color (which is in worst case build from default wall color)
+                    item[COLOR][1] ? item[COLOR][1].adjustAlpha(zoomAlpha) + '' : // item roof color exists => adapt & use it
+                    roofColorAlpha ? roofColorAlpha : // default roof color exists => use it
+                    item[COLOR][0].adjustLightness(1.2).adjustAlpha(zoomAlpha) + '' // item wall color exists => adapt & use it
+                ;
+
                 drawShape(roof, strokeRoofs);
             }
         }

@@ -12,7 +12,7 @@
             url,
             strokeRoofs,
             wallColor = new Color(200,190,180),
-            roofColor = wallColor.adjustLightness(0.2),
+            roofColor = null,
             strokeColor = new Color(145,140,135),
 
             rawData,

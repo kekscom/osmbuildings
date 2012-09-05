@@ -52,12 +52,12 @@ var Color = (function () {
     var proto = C.prototype;
 
     proto.toString = function () {
-        return 'rgba(' + [this.r, this.g, this.b, this.a].join(',') + ')';
+        return 'rgba(' + [this.r, this.g, this.b, this.a.toFixed(2)].join(',') + ')';
     };
 
-    proto.adjustLightness = function (amount) {
+    proto.adjustLightness = function (l) {
         var hsla = Color.toHSLA(this);
-        hsla.l += amount;
+        hsla.l *= l;
         hsla.l = Math.min(1, Math.max(0, hsla.l));
         return hsla2rgb(hsla);
     };

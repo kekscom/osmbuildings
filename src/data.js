@@ -202,19 +202,11 @@
 
             if (polygons) {
                 propHeight = properties.height;
-                if (properties.color) {
-                    propWallColor = Color.parse(properties.color);
-                    propRoofColor = propWallColor.adjustLightness(0.2);
-                } else {
-                    if (properties.wallColor) {
-                        propWallColor = Color.parse(properties.wallColor);
-                        if (!properties.roofColor) {
-                            propRoofColor = propWallColor.adjustLightness(0.2);
-                        }
-                    }
-                    if (properties.roofColor) {
-                        propRoofColor = Color.parse(properties.roofColor);
-                    }
+                if (properties.color || properties.wallColor) {
+                    propWallColor = Color.parse(properties.color || properties.wallColor);
+                }
+                if (properties.roofColor) {
+                    propRoofColor = Color.parse(properties.roofColor);
                 }
 
                 for (i = 0, il = polygons.length; i < il; i++) {

@@ -36,7 +36,10 @@
         { attribution: 'Map tiles &copy; <a href="http://mapbox.com">MapBox</a>, sample data <a href="http://www.geosprocket.com/">geosprocket.com</a>', maxZoom: 17 }
     ).addTo(map);
 
-    new OSMBuildings(map).geoJSON('http://geosprocket.cartodb.com/api/v2/sql?q=SELECT%20*%20FROM%20rt_bld2%20&format=geojson&callback={callback}');
+    new OSMBuildings(map)
+        .setStyle({ roofColor: 'rgb(240, 100, 100)' })
+        .geoJSON('http://geosprocket.cartodb.com/api/v2/sql?q=SELECT%20*%20FROM%20rt_bld2%20&format=geojson&callback={callback}')
+    ;
     </script>
 
     <script>
