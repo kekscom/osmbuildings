@@ -710,7 +710,7 @@ var Color = (function () {
                 // fill roof and optionally stroke it
                 context.fillStyle = !item[COLOR] ? roofColorAlpha : // no item color => use default roof color (which is in worst case build from default wall color)
                     item[COLOR][1] ? item[COLOR][1].adjustAlpha(zoomAlpha) + '' : // item roof color exists => adapt & use it
-                    roofColorAlpha ? roofColorAlpha : // default roof color exists => use it
+                    roofColor ? roofColorAlpha : // default roof color exists => use it
                     item[COLOR][0].adjustLightness(1.2).adjustAlpha(zoomAlpha) + '' // item wall color exists => adapt & use it
                 ;
 
