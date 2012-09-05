@@ -101,17 +101,12 @@
     var code = document.querySelector('#code');
     var src = document.querySelector('#src');
 
+    code.style.overflow = 'auto';
+    code.style.height = '180px';
+    code.style.backgroundColor = '#eeeeee';
+
     code.innerText = src.innerText;
     hljs.highlightBlock(code);
-
-    code.onclick = function (e) {
-        this.className += ' large';
-        e.cancelBubble = true;
-    }
-
-    document.onclick = function () {
-        code.className = code.className.replace(/ large/g, '');
-    };
 
     // hack: keeps drawing, but hides ui
     map.removeControl(drawControl);
