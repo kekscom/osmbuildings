@@ -1,28 +1,30 @@
-        this.VERSION = VERSION;
 
-        this.render = function () {
+        osmb.VERSION = VERSION;
+
+        osmb.render = function () {
             render();
-            return this;
+            return osmb;
         };
 
-        this.setStyle = function (style) {
+        osmb.setStyle = function (style) {
             setStyle(style);
-            return this;
+            return osmb;
         };
 
-        this.setData = function (data, isLonLat) {
+        osmb.setData = function (data, isLonLat) {
+            // DEPRECATED
             console.warn('OSMBuildings.loadData() is deprecated and will be removed soon.\nUse OSMBuildings.loadData({url|object}, isLatLon?) instead.');
             setData(data, isLonLat);
-            return this;
+            return osmb;
         };
 
-        this.loadData = function (u) {
+        osmb.loadData = function (u) {
             url = u;
             loadData();
-            return this;
+            return osmb;
         };
 
-        this.geoJSON = function (url, isLatLon) {
+        osmb.geoJSON = function (url, isLatLon) {
             geoJSON(url, isLatLon);
-            return this;
+            return osmb;
         };

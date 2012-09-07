@@ -32,7 +32,7 @@ L.Polyline.include({
 			p = points[i - 1];
 			p1 = points[i];
 
-			
+
 			if (this._lineSegmentsIntersectsRange(p, p1, i - 2)) {
 				return true;
 			}
@@ -149,7 +149,7 @@ L.Handler.Draw = L.Handler.extend({
 		this.fire('activated');
 		L.Handler.prototype.enable.call(this);
 	},
-	
+
 	addHooks: function () {
 		if (this._map) {
 			L.DomUtil.disableTextSelection();
@@ -234,7 +234,7 @@ L.Polyline.Draw = L.Handler.Draw.extend({
 		}
 		L.Handler.Draw.prototype.initialize.call(this, map, options);
 	},
-	
+
 	addHooks: function () {
 		L.Handler.Draw.prototype.addHooks.call(this);
 		if (this._map) {
@@ -262,7 +262,7 @@ L.Polyline.Draw = L.Handler.Draw.extend({
 		this._clearHideErrorTimeout();
 
 		this._cleanUpShape();
-		
+
 		// remove markers from map
 		this._map.removeLayer(this._markerGroup);
 		delete this._markerGroup;
@@ -342,18 +342,18 @@ L.Polyline.Draw = L.Handler.Draw.extend({
 		if (this._markers.length > 1) {
 			this._markers[this._markers.length - 1].on('click', this._finishShape, this);
 		}
-		
+
 		// Remove the old marker click handler (as only the last point should close the polyline)
 		if (this._markers.length > 2) {
 			this._markers[this._markers.length - 2].off('click', this._finishShape);
 		}
 	},
-	
+
 	_createMarker: function (latlng) {
 		var marker = new L.Marker(latlng, {
 			icon: this.options.icon
 		});
-		
+
 		this._markerGroup.addLayer(marker);
 
 		return marker;
@@ -370,7 +370,7 @@ L.Polyline.Draw = L.Handler.Draw.extend({
 		if (!this._guidesContainer) {
 			this._guidesContainer = L.DomUtil.create('div', 'leaflet-draw-guides', this._pane);
 		}
-	
+
 		//draw a dash every GuildeLineDistance
 		for (i = this.options.guidelineDistance; i < length; i += this.options.guidelineDistance) {
 			//work out fraction along line we are
@@ -428,7 +428,7 @@ L.Polyline.Draw = L.Handler.Draw.extend({
 			distance = this._measurementRunningTotal + this._currentLatLng.distanceTo(this._markers[this._markers.length - 1].getLatLng());
 			// show metres when distance is < 1km, then show km
 			distanceStr = distance  > 1000 ? (distance  / 1000).toFixed(2) + ' km' : Math.ceil(distance) + ' m';
-			
+
 			if (this._markers.length === 1) {
 				labelText = {
 					text: 'Click to continue drawing line.',
@@ -465,7 +465,7 @@ L.Polyline.Draw = L.Handler.Draw.extend({
 		this._errorShown = false;
 
 		this._clearHideErrorTimeout();
-		
+
 		// Revert label
 		L.DomUtil.removeClass(this._label, 'leaflet-error-draw-label');
 		L.DomUtil.removeClass(this._label, 'leaflet-flash-anim');
@@ -592,7 +592,7 @@ L.SimpleShape.Draw = L.Handler.Draw.extend({
 	_onMouseDown: function (e) {
 		this._isDrawing = true;
 		this._startLatLng = e.latlng;
-		
+
 		this._updateLabelText({ text: 'Release mouse to finish drawing.' });
 
 		L.DomEvent
@@ -614,7 +614,7 @@ L.SimpleShape.Draw = L.Handler.Draw.extend({
 
 	_onMouseUp: function (e) {
 		this._fireCreatedEvent();
-		
+
 		this.disable();
 	}
 });
@@ -656,7 +656,7 @@ L.Control.Draw = L.Control.extend({
 			);
 			this.handlers.polygon.on('activated', this._disableInactiveModes, this);
 		}
-		
+
 		return container;
 	},
 

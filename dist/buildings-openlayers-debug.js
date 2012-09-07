@@ -1,7 +1,7 @@
 //****** file: prefix.js ******
 
 
-var OSMBuildings = (function (global) {
+(function (global) {
 
     'use strict';
 
@@ -167,13 +167,16 @@ var Color = (function () {
 
 //****** file: core.prefix.js ******
 
-    function B() {
+
+    global.OSMBuildings = function () {
 
 
 //****** file: variables.js ******
 
         // private variables, specific to an instance
         var
+            osmb = this,
+
             width = 0, height = 0,
             halfWidth = 0, halfHeight = 0,
             originX = 0, originY = 0,
@@ -715,146 +718,16 @@ var Color = (function () {
                 ;
 
                 drawShape(roof, strokeRoofs);
-                drawRoof(roof);
             }
         }
 
-
-
-
-
-function circle(x, y, diameter, stroke) {
-    ellipse(x, y, diameter, diameter, stroke);
-}
-
-function ellipse(x, y, w, h, stroke) {
-    var
-        w2 = w / 2, h2 = h / 2,
-        hB = w2 * 0.5522848,
-        vB = h2 * 0.5522848,
-        eX = x + w2, eY = y + h2,
-        mX = x, mY = y
-    ;
-
-    x -= w2;
-    y -= h2;
-
-    context.beginPath();
-    context.moveTo(x, mY);
-    context.bezierCurveTo( x,      mY - vB, mX - hB,  y,      mX, y);
-    context.bezierCurveTo(mX + hB,       y, eX,      mY - vB, eX, mY);
-    context.bezierCurveTo(eX,      mY + vB, mX + hB, eY,      mX, eY);
-    context.bezierCurveTo(mX - hB,      eY,  x,      mY + vB,  x, mY);
-    context.closePath();
-    context.fill();
-    if (stroke) {
-        context.stroke();
-    }
-}
-
-        function drawRoof2(points) {
-            context.fillStyle = 'rgba(240,0,0,0.25)';
-            context.strokeStyle = strokeColor.adjustAlpha(zoomAlpha) + '';
-
-            var
-                h = 20,
-                center = [
-                    (points[0] + points[2] + points[4] + points[6]) / 4,
-                    (points[1] + points[3] + points[5] + points[7]) / 4
-                ],
-                apex = project(center[0], center[1], CAM_Z / (CAM_Z - h))
-            ;
-
-            var d = 65;
-            circle(center[0], center[1], d, d, true);
-
-            context.beginPath();
-            context.moveTo(center[0] - d / 2, center[1]);
-            context.lineTo(apex.x, apex.y);
-            context.lineTo(center[0] + d / 2, center[1]);
-            context.stroke();
-
-            context.beginPath();
-            context.moveTo(center[0], center[1] - d / 2);
-            context.lineTo(apex.x, apex.y);
-            context.lineTo(center[0], center[1] + d / 2);
-            context.stroke();
-        }
-
-
-        function drawRoof(points) {
-            context.fillStyle = 'rgba(240,0,0,0.25)';
-            context.strokeStyle = strokeColor.adjustAlpha(zoomAlpha) + '';
-
-            var
-                h = 10,
-                center = [
-                    (points[0] + points[2] + points[4] + points[6]) / 4,
-                    (points[1] + points[3] + points[5] + points[7]) / 4
-                ],
-                apex = project(center[0], center[1], CAM_Z / (CAM_Z - h))
-            ;
-
-            var d = 65;
-            circle(center[0], center[1], d, d, true);
-            debugMarker(apex.x, apex.y);
-
-            var d2 = d / 2;
-            var w = center[0] - d2;
-            var e = center[0] + d2;
-            var n = center[1] - d2;
-            var s = center[1] + d2;
-
-            context.beginPath();
-            context.moveTo(w, center[1]);
-            context.bezierCurveTo((apex.x + w) / 2.05, center[1] + (apex.y - center[1]) * 1.5, (apex.x + e) / 1.95, center[1] + (apex.y - center[1]) * 1.5, e, center[1]);
-            context.stroke();
-
-            context.beginPath();
-            context.moveTo(center[0], n);
-            context.bezierCurveTo(center[0] + (apex.x - center[0]) * 1.5, (apex.y + n) / 2.05, center[0] + (apex.x - center[0]) * 1.5, (apex.y + s) / 1.95, center[0], s);
-            context.stroke();
-        }
-
-        function drawRoof1(points) {
-            context.fillStyle = 'rgba(240,0,0,0.25)';
-            var
-                h = 20 + 10,
-                center = [
-                    (points[0] + points[2] + points[4] + points[6]) / 4,
-                    (points[1] + points[3] + points[5] + points[7]) / 4
-                ],
-                apex = project(center[0], center[1], CAM_Z / (CAM_Z - h))
-            ;
-            drawShape([
-                points[0], points[1],
-                points[2], points[3],
-                apex.x, apex.y
-            ], true);
-            drawShape([
-                points[2], points[3],
-                points[4], points[5],
-                apex.x, apex.y
-            ], true);
-            drawShape([
-                points[4], points[5],
-                points[6], points[7],
-                apex.x, apex.y
-            ], true);
-            drawShape([
-                points[6], points[7],
-                points[0], points[1],
-                apex.x, apex.y
-            ], true);
-        }
-
-        function debugMarker(x, y, color, size) {
-            context.fillStyle = color || '#ffcc00';
-            context.beginPath();
-            context.arc(x, y, size || 3, 0, PI*2, true);
-            context.closePath();
-            context.fill();
-        }
+//        function debugMarker(x, y, color, size) {
+//            context.fillStyle = color || '#ffcc00';
+//            context.beginPath();
+//            context.arc(x, y, size || 3, 0, PI*2, true);
+//            context.closePath();
+//            context.fill();
+//        }
 
         function drawShape(points, stroke) {
             if (!points.length) {
@@ -883,33 +756,35 @@ function ellipse(x, y, w, h, stroke) {
 
 //****** file: public.js ******
 
-        this.VERSION = VERSION;
 
-        this.render = function () {
+        osmb.VERSION = VERSION;
+
+        osmb.render = function () {
             render();
-            return this;
+            return osmb;
         };
 
-        this.setStyle = function (style) {
+        osmb.setStyle = function (style) {
             setStyle(style);
-            return this;
+            return osmb;
         };
 
-        this.setData = function (data, isLonLat) {
+        osmb.setData = function (data, isLonLat) {
+            // DEPRECATED
             console.warn('OSMBuildings.loadData() is deprecated and will be removed soon.\nUse OSMBuildings.loadData({url|object}, isLatLon?) instead.');
             setData(data, isLonLat);
-            return this;
+            return osmb;
         };
 
-        this.loadData = function (u) {
+        osmb.loadData = function (u) {
             url = u;
             loadData();
-            return this;
+            return osmb;
         };
 
-        this.geoJSON = function (url, isLatLon) {
+        osmb.geoJSON = function (url, isLatLon) {
             geoJSON(url, isLatLon);
-            return this;
+            return osmb;
         };
 
 
@@ -921,15 +796,15 @@ function ellipse(x, y, w, h, stroke) {
             blockMoveEvent // needed as Leaflet fires moveend and zoomend together
         ;
 
-        this.VERSION += '-leaflet';
+        osmb.VERSION += '-leaflet';
 
-        this.addTo = function (map) {
-            map.addLayer(this);
-            return this;
+        osmb.addTo = function (map) {
+            map.addLayer(osmb);
+            return osmb;
         };
 
-        this.onAdd = function (map) {
-            this.map = map;
+        osmb.onAdd = function (map) {
+            osmb.map = map;
 
             createCanvas(map._panes.overlayPane);
             maxZoom = map._layersMaxZoom;
@@ -1013,7 +888,7 @@ function ellipse(x, y, w, h, stroke) {
             render(); // in case of for re-adding this layer
         };
 
-        this.onRemove = function (map) {
+        osmb.onRemove = function (map) {
             map.attributionControl.removeAttribution(attribution);
 
             map.off({
@@ -1024,20 +899,18 @@ function ellipse(x, y, w, h, stroke) {
             });
 
             canvas.parentNode.removeChild(canvas);
-            this.map = null;
+            osmb.map = null;
         };
 
-        // in case it has been passed to this, initialize map directly
+        // in case it has been passed as parameter, initialize map directly
         if (arguments.length) {
-            this.addTo(arguments[0]);
+            osmb.addTo(arguments[0]);
         }
 
 
 //****** file: core.suffix.js ******
 
-    }
-
-    return B;
+    };
 
 
 //****** file: suffix.js ******

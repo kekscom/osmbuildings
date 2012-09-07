@@ -11,7 +11,7 @@
         "events.js",
         "render.js",
         "public.js",
-        "leaflet.js",
+        "engines/Leaflet.js",
     "core.suffix.js",
 	"suffix.js"
 ]

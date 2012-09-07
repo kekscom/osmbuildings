@@ -1,21 +1,49 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>OSM Buildings - Examples - Styles</title>
+    <title>OSM Buildings &raquo; Examples &raquo; Styles</title>
     <meta http-equiv="content-type" content="text/html; charset=utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.4.4/leaflet.css">
     <link rel="stylesheet" href="assets/styles.css">
+
+    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.4.4/leaflet.css">
     <!--[if lte IE 8]><link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.4.4/leaflet.ie.css" /><![endif]-->
     <script src="http://cdn.leafletjs.com/leaflet-0.4.4/leaflet.js"></script>
-    <script src="../dist/buildings.js"></script>
+
+    <link rel="stylesheet" href="js/highlight/github.css">
+    <script src="js/highlight/highlight.pack.js"></script>
+
+    <script src="js/buildings.js"></script>
 </head>
 
 <body>
+    <div id="header"></div>
+
     <div id="map"></div>
 
-    <script>
+    <div id="description">
+        <h1>Examples &raquo; Styles</h1>
+
+        <p>Change building styles and check the source code how .setStyle() got affected.<br>
+            Your server needs to be running for this example.</p>
+
+        <p>
+            Wall color:
+            <button class="color" style="background:rgb(250,220,100);" onclick="setStyle(this, 'wall')"></button>
+            <button class="color" style="background:rgba(100,100,250,0.7);" onclick="setStyle(this, 'wall')"></button>
+            <button class="color" style="background:rgb(250,100,100);" onclick="setStyle(this, 'wall')"></button><br>
+            Roof color:
+            <button class="color" style="background:rgb(220,220,50);" onclick="setStyle(this, 'roof')"></button>
+            <button class="color" style="background:rgb(150,100,150);" onclick="setStyle(this, 'roof')"></button>
+            <button class="color" style="background:rgb(200,150,100);" onclick="setStyle(this, 'roof')"></button>
+            <label style="cursor:pointer;"><input name="strokeRoofs" type="checkbox" value="1" onclick="setStyle(this, 'stroke')">stroke</label>
+        </p>
+    </div>
+
+    <pre id="code" class="javascript"></pre>
+
+    <script id="src">
     var map = new L.Map('map').setView([52.50440, 13.33522], 17);
 
     new L.TileLayer(
@@ -24,40 +52,40 @@
     ).addTo(map);
 
     var osmb = new OSMBuildings(map).loadData('../server/?w={w}&n={n}&e={e}&s={s}&z={z}');
-
-    var
-        fillColor = 'rgb(200,190,180)',
-        strokeRoofs = false
-    ;
-    function setStyle(el) {
-        if (el.nodeName === 'BUTTON') {
-            fillColor = el.style.backgroundColor;
-        } else {
-            strokeRoofs = !!el.checked;
-        }
-        osmb.setStyle({ fillColor: fillColor, strokeRoofs: strokeRoofs });
-        code.innerHTML = 'new OSMBuildings(map)\n\t.setStyle({ fillColor: ' + fillColor + ', strokeRoofs: ' + strokeRoofs + ' });';
-    }
     </script>
 
-    <div id="description">
-    <h1>Examples: Styles</h1>
+    <script>
+    var code = document.querySelector('#code');
+    var src = document.querySelector('#src');
 
-    <p>Change building styles on the fly</p>
+    code.style.overflow = 'auto';
+    code.style.height = '180px';
+    code.style.backgroundColor = '#eeeeee';
 
-        <p>color: <button class="sampleColor" name="fillColor" style="background:rgb(250,220,100)" onclick="setStyle(this)"></button>
-        <button class="sampleColor" name="fillColor" style="background:rgba(100,100,250,0.7)" onclick="setStyle(this)"></button>
-        <button class="sampleColor" name="fillColor" style="background:rgb(250,100,100)" onclick="setStyle(this)"></button>
-        <label><input name="strokeRoofs" type="checkbox" value="1" onclick="setStyle(this)">stroke roofs</label></p>
+    var
+        wallColor = 'rgb(200,190,180)',
+        roofColor = null,
+        strokeRoofs = false
+    ;
+    function setStyle(el, type) {
+        if (el) {
+            if (type === 'wall') {
+                wallColor = el.style.backgroundColor;
+            }
+            if (type === 'roof') {
+                roofColor = el.style.backgroundColor;
+            }
+            if (type === 'stroke') {
+                strokeRoofs = !!el.checked;
+            }
+        }
+        osmb.setStyle({ wallColor: wallColor, roofColor: roofColor, strokeRoofs: strokeRoofs });
 
-        <p><code id="stylesCode"></code></p>
+        code.innerText = src.innerText + 'osmb.setStyle({ wallColor: \'' + wallColor + '\', roofColor: \'' + roofColor + '\', strokeRoofs: ' + strokeRoofs + ' });';
+        hljs.highlightBlock(code);
+    }
 
-        <script>
-        var stylesCode = document.getElementById('stylesCode');
-        stylesCode.innerHTML = 'new OSMBuildings(map)\n\t.setStyle({ fillColor: ' + fillColor + ', strokeRoofs: ' + strokeRoofs + ' });';
-        </script>
-
-    </div>
-
+    setStyle();
+    </script>
 </body>
 </html>

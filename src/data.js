@@ -173,7 +173,7 @@
                 features = json[0] ? json : json.features,
                 geometry, polygons, coords, properties,
                 footprint, heightSum,
-                propHeight, color,
+                propHeight, propWallColor, propRoofColor,
                 lat = isLonLat ? 1 : 0,
                 lon = isLonLat ? 0 : 1,
                 alt = 2,
@@ -202,7 +202,12 @@
 
             if (polygons) {
                 propHeight = properties.height;
-                color = Color.parse(properties.color || properties.style.fillColor);
+                if (properties.color || properties.wallColor) {
+                    propWallColor = Color.parse(properties.color || properties.wallColor);
+                }
+                if (properties.roofColor) {
+                    propRoofColor = Color.parse(properties.roofColor);
+                }
 
                 for (i = 0, il = polygons.length; i < il; i++) {
                     coords = polygons[i][0];
@@ -217,8 +222,8 @@
                         item = [];
                         item[HEIGHT] = ~~(heightSum/coords.length);
                         item[FOOTPRINT] = makeClockwiseWinding(footprint);
-                        if (color) {
-                            item[COLOR] = [color, color.adjustLightness(0.2)];
+                        if (propWallColor || propRoofColor) {
+                            item[COLOR] = [propWallColor, propRoofColor];
                         }
                         res.push(item);
                     }
