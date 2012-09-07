@@ -1,1 +1,1 @@
-    function B() {
+    global.OSMBuildings = function () {

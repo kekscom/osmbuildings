@@ -1,7 +1,7 @@
 //****** file: prefix.js ******
 
 
-var OSMBuildings = (function (global) {
+(function (global) {
 
     'use strict';
 
@@ -24,7 +24,7 @@ var OSMBuildings = (function (global) {
         MAX_HEIGHT = CAM_Z - 50,
 
         LAT = 'latitude', LON = 'longitude',
-        HEIGHT = 0, FOOTPRINT = 1, COLOR = 2, CENTER = 3, IS_NEW = 4
+        HEIGHT = 0, FOOTPRINT = 1, COLOR = 2, IS_NEW = 3
     ;
 
 //****** file: shortcuts.js ******
@@ -38,8 +38,6 @@ var OSMBuildings = (function (global) {
         atan = Math.atan,
         min = Math.min,
         max = Math.max,
-        sqrt = Math.sqrt,
-        abs = Math.abs,
         doc = global.document
     ;
 
@@ -128,7 +126,7 @@ var Color = (function () {
 
         m = str.match(/rgba?\((\d+)\D+(\d+)\D+(\d+)(\D+([\d.]+))?\)/);
         if (m) {
-            return new Color(
+             return new Color(
                 parseInt(m[1], 10),
                 parseInt(m[2], 10),
                 parseInt(m[3], 10),
@@ -169,13 +167,16 @@ var Color = (function () {
 
 //****** file: core.prefix.js ******
 
-    function B() {
+
+    global.OSMBuildings = function () {
 
 
 //****** file: variables.js ******
 
         // private variables, specific to an instance
         var
+            osmb = this,
+
             width = 0, height = 0,
             halfWidth = 0, halfHeight = 0,
             originX = 0, originY = 0,
@@ -247,33 +248,33 @@ var Color = (function () {
             };
         }
 
-    function template(str, data) {
-        return str.replace(/\{ *([\w_]+) *\}/g, function(x, key) {
-            return data[key] || '';
-        });
-    }
+        function template(str, data) {
+            return str.replace(/\{ *([\w_]+) *\}/g, function(x, key) {
+                return data[key] || '';
+            });
+        }
 
 
 //****** file: data.js ******
 
 
-    function xhr(url, callback) {
-        var x = new XMLHttpRequest();
-        x.onreadystatechange = function () {
-            if (x.readyState !== 4) {
-                return;
-            }
-            if (!x.status || x.status < 200 || x.status > 299) {
-                return;
-            }
-            if (x.responseText) {
-                callback(JSON.parse(x.responseText));
-            }
-        };
-        x.open('GET', url);
-        x.send(null);
-        return x;
-    }
+        function xhr(url, callback) {
+            var x = new XMLHttpRequest();
+            x.onreadystatechange = function () {
+                if (x.readyState !== 4) {
+                    return;
+                }
+                if (!x.status || x.status < 200 || x.status > 299) {
+                    return;
+                }
+                if (x.responseText) {
+                    callback(JSON.parse(x.responseText));
+                }
+            };
+            x.open('GET', url);
+            x.send(null);
+            return x;
+        }
 
         function loadData() {
             if (!url || zoom < MIN_ZOOM) {
@@ -343,35 +344,35 @@ var Color = (function () {
             fadeIn();
         }
 
-    // detect polygon winding direction: clockwise or counter clockwise
-    function getPolygonWinding(points) {
-        var
-            x1, y1, x2, y2,
-            a = 0,
-            i, il
-        ;
-        for (i = 0, il = points.length - 3; i < il; i += 2) {
-            x1 = points[i    ];
-            y1 = points[i + 1];
-            x2 = points[i + 2];
-            y2 = points[i + 3];
-            a += x1 * y2 - x2 * y1;
+        // detect polygon winding direction: clockwise or counter clockwise
+        function getPolygonWinding(points) {
+            var
+                x1, y1, x2, y2,
+                a = 0,
+                i, il
+            ;
+            for (i = 0, il = points.length - 3; i < il; i += 2) {
+                x1 = points[i    ];
+                y1 = points[i + 1];
+                x2 = points[i + 2];
+                y2 = points[i + 3];
+                a += x1 * y2 - x2 * y1;
+            }
+            return (a / 2) > 0 ? 'CW' : 'CCW';
         }
-        return (a / 2) > 0 ? 'CW' : 'CCW';
-    }
 
-    // make polygon winding clockwise. This is needed for proper backface culling on client side.
-    function makeClockwiseWinding(points) {
-        var winding = getPolygonWinding(points);
-        if (winding === 'CW') {
-            return points;
+        // make polygon winding clockwise. This is needed for proper backface culling on client side.
+        function makeClockwiseWinding(points) {
+            var winding = getPolygonWinding(points);
+            if (winding === 'CW') {
+                return points;
+            }
+            var revPoints = [];
+            for (var i = points.length - 2; i >= 0; i -= 2) {
+                revPoints.push(points[i], points[i + 1]);
+            }
+            return revPoints;
         }
-        var revPoints = [];
-        for (var i = points.length - 2; i >= 0; i -= 2) {
-            revPoints.push(points[i], points[i + 1]);
-        }
-        return revPoints;
-    }
 
         function scaleData(data, isNew) {
             var
@@ -420,46 +421,46 @@ var Color = (function () {
             el.insertBefore(script, el.lastChild).src = url.replace(/\{callback\}/, callback);
         }
 
-    function parseGeoJSON(json, isLonLat, res) {
-        if (res === undefined) {
-            res = [];
-        }
-
-        var
-            i, il,
-            j, jl,
-            features = json[0] ? json : json.features,
-            geometry, polygons, coords, properties,
-            footprint, heightSum,
-                propHeight, propWallColor, propRoofColor,
-            lat = isLonLat ? 1 : 0,
-            lon = isLonLat ? 0 : 1,
-            alt = 2,
-            item
-        ;
-
-        if (features) {
-            for (i = 0, il = features.length; i < il; i++) {
-                parseGeoJSON(features[i], isLonLat, res);
+        function parseGeoJSON(json, isLonLat, res) {
+            if (res === undefined) {
+                res = [];
             }
-            return res;
-        }
 
-        if (json.type === 'Feature') {
-            geometry = json.geometry;
-            properties = json.properties;
-        }
+            var
+                i, il,
+                j, jl,
+                features = json[0] ? json : json.features,
+                geometry, polygons, coords, properties,
+                footprint, heightSum,
+                propHeight, propWallColor, propRoofColor,
+                lat = isLonLat ? 1 : 0,
+                lon = isLonLat ? 0 : 1,
+                alt = 2,
+                item
+            ;
+
+            if (features) {
+                for (i = 0, il = features.length; i < il; i++) {
+                    parseGeoJSON(features[i], isLonLat, res);
+                }
+                return res;
+            }
+
+            if (json.type === 'Feature') {
+                geometry = json.geometry;
+                properties = json.properties;
+            }
     //      else geometry = json
 
-        if (geometry.type === 'Polygon') {
-            polygons = [geometry.coordinates];
-        }
-        if (geometry.type === 'MultiPolygon') {
-            polygons = geometry.coordinates;
-        }
+            if (geometry.type === 'Polygon') {
+                polygons = [geometry.coordinates];
+            }
+            if (geometry.type === 'MultiPolygon') {
+                polygons = geometry.coordinates;
+            }
 
-        if (polygons) {
-            propHeight = properties.height;
+            if (polygons) {
+                propHeight = properties.height;
                 if (properties.color || properties.wallColor) {
                     propWallColor = Color.parse(properties.color || properties.wallColor);
                 }
@@ -467,29 +468,29 @@ var Color = (function () {
                     propRoofColor = Color.parse(properties.roofColor);
                 }
 
-            for (i = 0, il = polygons.length; i < il; i++) {
-                coords = polygons[i][0];
-                footprint = [];
-                heightSum = 0;
-                for (j = 0, jl = coords.length; j < jl; j++) {
-                    footprint.push(coords[j][lat], coords[j][lon]);
-                    heightSum += propHeight || coords[j][alt] || 0;
-                }
+                for (i = 0, il = polygons.length; i < il; i++) {
+                    coords = polygons[i][0];
+                    footprint = [];
+                    heightSum = 0;
+                    for (j = 0, jl = coords.length; j < jl; j++) {
+                        footprint.push(coords[j][lat], coords[j][lon]);
+                        heightSum += propHeight || coords[j][alt] || 0;
+                    }
 
-                if (heightSum) {
-                    item = [];
-                    item[HEIGHT] = ~~(heightSum/coords.length);
-                    item[FOOTPRINT] = makeClockwiseWinding(footprint);
+                    if (heightSum) {
+                        item = [];
+                        item[HEIGHT] = ~~(heightSum/coords.length);
+                        item[FOOTPRINT] = makeClockwiseWinding(footprint);
                         if (propWallColor || propRoofColor) {
                             item[COLOR] = [propWallColor, propRoofColor];
+                        }
+                        res.push(item);
                     }
-                    res.push(item);
                 }
             }
-        }
 
-        return res;
-    }
+            return res;
+        }
 
         function setData(json, isLonLat) {
             if (!json) {
@@ -646,10 +647,6 @@ var Color = (function () {
                 context.strokeStyle = strokeColor.adjustAlpha(zoomAlpha) + '';
             }
 
-            data.sort(function (a, b) {
-                return distance(a[CENTER], camForDistance) - distance(b[CENTER], camForDistance);
-            });
-
             for (i = 0, il = data.length; i < il; i++) {
                 item = data[i];
 
@@ -759,33 +756,35 @@ var Color = (function () {
 
 //****** file: public.js ******
 
-        this.VERSION = VERSION;
 
-        this.render = function () {
-                render();
-            return this;
+        osmb.VERSION = VERSION;
+
+        osmb.render = function () {
+            render();
+            return osmb;
         };
 
-        this.setStyle = function (style) {
-                setStyle(style);
-            return this;
+        osmb.setStyle = function (style) {
+            setStyle(style);
+            return osmb;
         };
 
-        this.setData = function (data, isLonLat) {
+        osmb.setData = function (data, isLonLat) {
+            // DEPRECATED
             console.warn('OSMBuildings.loadData() is deprecated and will be removed soon.\nUse OSMBuildings.loadData({url|object}, isLatLon?) instead.');
-                setData(data, isLonLat);
-            return this;
+            setData(data, isLonLat);
+            return osmb;
         };
 
-        this.loadData = function (u) {
-                url = u;
-                loadData();
-            return this;
+        osmb.loadData = function (u) {
+            url = u;
+            loadData();
+            return osmb;
         };
 
-        this.geoJSON = function (url, isLatLon) {
+        osmb.geoJSON = function (url, isLatLon) {
             geoJSON(url, isLatLon);
-            return this;
+            return osmb;
         };
 
 
@@ -797,15 +796,15 @@ var Color = (function () {
             blockMoveEvent // needed as Leaflet fires moveend and zoomend together
         ;
 
-        this.VERSION += '-leaflet';
+        osmb.VERSION += '-leaflet';
 
-        this.addTo = function (map) {
-            map.addLayer(this);
-            return this;
+        osmb.addTo = function (map) {
+            map.addLayer(osmb);
+            return osmb;
         };
 
-        this.onAdd = function (map) {
-            this.map = map;
+        osmb.onAdd = function (map) {
+            osmb.map = map;
 
             createCanvas(map._panes.overlayPane);
             maxZoom = map._layersMaxZoom;
@@ -889,7 +888,7 @@ var Color = (function () {
             render(); // in case of for re-adding this layer
         };
 
-        this.onRemove = function (map) {
+        osmb.onRemove = function (map) {
             map.attributionControl.removeAttribution(attribution);
 
             map.off({
@@ -900,20 +899,18 @@ var Color = (function () {
             });
 
             canvas.parentNode.removeChild(canvas);
-            this.map = null;
+            osmb.map = null;
         };
 
-        // in case it has been passed to this, initialize map directly
+        // in case it has been passed as parameter, initialize map directly
         if (arguments.length) {
-            this.addTo(arguments[0]);
+            osmb.addTo(arguments[0]);
         }
 
 
 //****** file: core.suffix.js ******
 
-    }
-
-    return B;
+    };
 
 
 //****** file: suffix.js ******

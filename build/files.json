@@ -3,15 +3,15 @@
 	"constants.js",
 	"shortcuts.js",
     "lib/Color.js",
-	"helpers.js",
     "core.prefix.js",
         "variables.js",
         "functions.js",
+        "data.js",
         "properties.js",
         "events.js",
         "render.js",
         "public.js",
-        "leaflet.js",
+        "engines/Leaflet.js",
     "core.suffix.js",
 	"suffix.js"
 ]

@@ -8,5 +8,6 @@
         min = Math.min,
         max = Math.max,
         sqrt = Math.sqrt,
-        abs = Math.abs
+        abs = Math.abs,
+        doc = global.document
     ;

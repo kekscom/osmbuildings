@@ -1,5 +1,6 @@
+
         function createCanvas(parentNode) {
-            canvas = global.document.createElement('canvas');
+            canvas = doc.createElement('canvas');
             canvas.style.webkitTransform = 'translate3d(0,0,0)';
             canvas.style.position = 'absolute';
             canvas.style.pointerEvents = 'none';
@@ -36,78 +37,30 @@
             };
         }
 
-        function loadData() {
-            if (!url || zoom < MIN_ZOOM) {
-                return;
-            }
-            var
-                // create bounding box of double viewport size
-                nw = pixelToGeo(originX         - halfWidth, originY          - halfHeight),
-                se = pixelToGeo(originX + width + halfWidth, originY + height + halfHeight)
-            ;
-            if (req) {
-                req.abort();
-            }
-            req = xhr(template(url, {
-                w: nw[LON],
-                n: nw[LAT],
-                e: se[LON],
-                s: se[LAT],
-                z: zoom
-            }), onDataLoaded);
+        function template(str, data) {
+            return str.replace(/\{ *([\w_]+) *\}/g, function(x, key) {
+                return data[key] || '';
+            });
         }
 
-        function setData(json, isLonLat) {
-            if (!json) {
-                rawData = null;
-                render(); // effectively clears
-                return;
-            }
-
-            rawData = parseGeoJSON(json, isLonLat);
-            minZoom = 0;
-            setZoom(zoom); // recalculating all zoom related variables
-
-            meta = {
-                n: 90,
-                w: -180,
-                s: -90,
-                e: 180,
-                x: 0,
-                y: 0,
-                z: zoom
-            };
-            data = scaleData(rawData, true);
-
-            fadeIn();
+        function distance(a, b) {
+            var
+                dx = a[0] - b[0],
+                dy = a[1] - b[1]
+            ;
+            return sqrt(dx * dx + dy * dy);
         }
 
-        function scaleData(data, isNew) {
+        function getCenter(points) {
             var
-                res = [],
-                i, il, j, jl,
-                item,
-                coords, footprint,
-                p,
-                z = maxZoom - zoom
+                i, il,
+                x = 0, y = 0
             ;
-
-            for (i = 0, il = data.length; i < il; i++) {
-                item = data[i];
-                coords = item[FOOTPRINT];
-                footprint = new Int32Array(coords.length);
-                for (j = 0, jl = coords.length - 1; j < jl; j += 2) {
-                    p = geoToPixel(coords[j], coords[j + 1]);
-                    footprint[j]     = p.x;
-                    footprint[j + 1] = p.y;
-                }
-                res[i] = [];
-                res[i][HEIGHT]    = min(item[HEIGHT] >> z, MAX_HEIGHT);
-                res[i][FOOTPRINT] = footprint;
-                res[i][COLOR]     = item[COLOR];
-                res[i][CENTER]    = getCenter(footprint);
-                res[i][IS_NEW]    = isNew;
+            for (i = 0, il = points.length - 1; i < il; i += 2) {
+    //          x += points[i] - offX;
+    //          y += points[i + 1] - offY;
+                x += points[i];
+                y += points[i + 1];
             }
-
-            return res;
+            return [ ~~(x/il), ~~(y/il) ];
         }

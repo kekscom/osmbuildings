@@ -1,17 +1,18 @@
         var
             attribution = 'Buildings &copy; <a href="http://osmbuildings.org">OSM Buildings</a>',
-            mapOnMove, mapOnMoveEnd, mapOnZoomEnd
+            mapOnMove, mapOnMoveEnd, mapOnZoomEnd,
+            blockMoveEvent // needed as Leaflet fires moveend and zoomend together
         ;
 
-        this.VERSION += '-leaflet';
+        osmb.VERSION += '-leaflet';
 
-        this.addTo = function (map) {
-            map.addLayer(this);
-            return this;
+        osmb.addTo = function (map) {
+            map.addLayer(osmb);
+            return osmb;
         };
 
-        this.onAdd = function (map) {
-            this.map = map;
+        osmb.onAdd = function (map) {
+            osmb.map = map;
 
             createCanvas(map._panes.overlayPane);
             maxZoom = map._layersMaxZoom;
@@ -23,7 +24,6 @@
 
             var lastX = 0, lastY = 0;
 
-
             mapOnMove = function () {
                 var mp = L.DomUtil.getPosition(map._mapPane);
                 camX = halfWidth - (mp.x - lastX);
@@ -32,7 +32,16 @@
             };
 
             mapOnMoveEnd = function () {
-                var mp = L.DomUtil.getPosition(map._mapPane);
+                if (blockMoveEvent) {
+                    blockMoveEvent = false;
+                    return;
+                }
+
+                var
+                    mp = L.DomUtil.getPosition(map._mapPane),
+                    po = map.getPixelOrigin()
+                ;
+
                 lastX = mp.x;
                 lastY = mp.y;
                 canvas.style.left = -mp.x + 'px';
@@ -42,15 +51,19 @@
                 camY = height;
 
                 setSize(map._size.x, map._size.y); // in case this is triggered by resize
-                var po = map.getPixelOrigin();
                 setOrigin(po.x - mp.x, po.y - mp.y);
-
                 onMoveEnd();
                 render();
             };
 
             mapOnZoomEnd = function () {
+                var
+                    mp = L.DomUtil.getPosition(map._mapPane),
+                    po = map.getPixelOrigin()
+                ;
+                setOrigin(po.x - mp.x, po.y - mp.y);
                 onZoomEnd({ zoom: map._zoom });
+                blockMoveEvent = true;
             };
 
             map.on({
@@ -83,7 +96,7 @@
             render(); // in case of for re-adding this layer
         };
 
-        this.onRemove = function (map) {
+        osmb.onRemove = function (map) {
             map.attributionControl.removeAttribution(attribution);
 
             map.off({
@@ -94,10 +107,10 @@
             });
 
             canvas.parentNode.removeChild(canvas);
-            this.map = null;
+            osmb.map = null;
         };
 
-        // in case it has been passed to this, initialize map directly
+        // in case it has been passed as parameter, initialize map directly
         if (arguments.length) {
-            this.addTo(arguments[0]);
+            osmb.addTo(arguments[0]);
         }
