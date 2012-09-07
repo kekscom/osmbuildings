@@ -1,1 +1,1 @@
-node build.js watch
+node build.js --watch

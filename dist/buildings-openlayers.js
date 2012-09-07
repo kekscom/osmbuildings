@@ -1,3 +1,8 @@
+/**
+ * Copyright (C) 2012 OSM Buildings, Jan Marsch
+ * A leightweight JavaScript library for visualizing 3D building geometry on interactive maps.
+ * @osmbuildings, http://osmbuildings.org
+ */
 (function(fa){var V=Math.PI,Aa=V/2,Fa=V/4,Ga=180/V,Ha=256,ka=14,la=400,Ba=la-50,W="latitude",X="longitude",J=0,I=1,z=2,ga=3,Ca=Ca||Array,Ia=Math.exp,Ja=Math.log,Ka=Math.tan,La=Math.atan,ma=Math.min,Ma=Math.max,na=fa.document,w=function(){function Y(g,h,k){if(k<0)k+=1;if(k>1)k-=1;if(k<1/6)return g+(h-g)*6*k;if(k<0.5)return h;if(k<2/3)return g+(h-g)*(2/3-k)*6;return g}function E(g,h,k,l){this.r=g;this.g=h;this.b=k;this.a=arguments.length<4?1:l}var Z=E.prototype;Z.toString=function(){return"rgba("+[this.r,
 this.g,this.b,this.a.toFixed(2)].join(",")+")"};Z.adjustLightness=function(g){var h=w.toHSLA(this);h.l*=g;h.l=Math.min(1,Math.max(0,h.l));var k,l;if(h.s===0)g=k=l=h.l;else{l=h.l<0.5?h.l*(1+h.s):h.l+h.s-h.l*h.s;var v=2*h.l-l;g=Y(v,l,h.h+1/3);k=Y(v,l,h.h);l=Y(v,l,h.h-1/3)}return new w(~~(g*255),~~(k*255),~~(l*255),h.a)};Z.adjustAlpha=function(g){return new w(this.r,this.g,this.b,this.a*g)};E.parse=function(g){if(~g.indexOf("#")){g=g.match(/^#?(\w{2})(\w{2})(\w{2})(\w{2})?$/);return new w(parseInt(g[1],
 16),parseInt(g[2],16),parseInt(g[3],16),g[4]?parseInt(g[4],16)/255:1)}if(g=g.match(/rgba?\((\d+)\D+(\d+)\D+(\d+)(\D+([\d.]+))?\)/))return new w(parseInt(g[1],10),parseInt(g[2],10),parseInt(g[3],10),g[4]?parseFloat(g[5],10):1)};E.toHSLA=function(g){var h=g.r/255,k=g.g/255,l=g.b/255,v=Math.max(h,k,l),x=Math.min(h,k,l),A,$=(v+x)/2,B;if(v===x)A=x=0;else{B=v-x;x=$>0.5?B/(2-v-x):B/(v+x);switch(v){case h:A=(k-l)/B+(k<l?6:0);break;case k:A=(l-h)/B+2;break;case l:A=(h-k)/B+4;break}A/=6}return{h:A,s:x,l:$,

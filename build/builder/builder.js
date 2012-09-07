@@ -1,8 +1,6 @@
 
-var fs      = require('fs');
-var closure = require('closure-compiler');
-var util    = require('util');
-var jshint  = require('jshint').JSHINT;
+var fs   = require('fs');
+var util = require('util');
 
 var jshintOptions = {
 	"browser": true,
@@ -58,17 +56,6 @@ var closureOptions = {
 
 //*****************************************************************************
 
-fs.copy = function (srcFile, dstFile, callback) {
-    var
-        src = fs.createReadStream(srcFile),
-        dst = fs.createWriteStream(dstFile)
-    ;
-    if (callback) {
-        dst.on('close', callback);
-    }
-    util.pump(src, dst);
-};
-
 if (!console.clear) {
     console.clear = function () {
         process.stdout.write('\033[2J\033[0;0H');
@@ -77,79 +64,79 @@ if (!console.clear) {
 
 //*****************************************************************************
 
+exports.watch = function (files, callback) {
+    var timer;
+    console.log('watching..');
+    for (var i = 0, il = files.length; i < il; i++) {
+        console.log('  ' + files[i]);
+        fs.watch(files[i], { persistent: true }, function () {
+            clearTimeout(timer);
+            timer = setTimeout(callback, 500);
+        });
+    }
+}
+
 exports.read = function (file) {
 	return fs.readFileSync(file, 'utf8');
 };
 
-exports.write = function (str, file, callback) {
+exports.write = function (str, file) {
 	fs.writeFileSync(file, str, 'utf8');
-	if (callback) {
-		callback(str);
-	}
 };
 
-exports.combine = function (path, files, callback) {
+exports.combine = function (files) {
 	var
 		str,
 		res = ''
 	;
-    path = path || '.';
+    console.log('combining..');
 	for (var i = 0, il = files.length; i < il; i++) {
-		str = this.read(path + '/' + files[i]);
+        console.log('  ' + files[i]);
+		str = this.read(files[i]);
 		res += '//****** file: ' + files[i] + ' ******\n\n';
 		res += str + '\n\n';
 	}
-	if (callback) {
-		callback(res);
-	}
+    return res;
 };
 
-exports.jshint = function (str, callback) {
+exports.jshint = function (str) {
+    var jshint = require('jshint').JSHINT;
+
+    console.log('hinting..');
 	jshint(str, jshintOptions);
 
-    var
-        err = jshint.errors,
-        res = []
-    ;
+    var err = jshint.errors;
 
     if (err.length) {
         for (var i = 0, il = err.length; i < il && err[i]; i++) {
-            res.push('L ' + err[i].line + ' C ' + err[i].character + ': ' + err[i].reason);
+            console.log('  L ' + err[i].line + ' C ' + err[i].character + ': ' + err[i].reason);
         }
+        return false;
     }
 
-    if (callback) {
-		callback(res);
-	}
+    return true;
 };
 
 exports.minify = function (str, callback) {
-	closure.compile(str, closureOptions, function (err, res) {
-        if (callback) {
-            callback(res);
-        }
-    });
+    var closure = require('closure-compiler');
+    console.log('minifying..');
+	closure.compile(str, closureOptions, callback);
 };
 
-exports.compress = function (srcFile, dstFile, callback) {
-	var
-		zlib = require('zlib'),
-		gzip = zlib.createGzip(),
-		src = fs.createReadStream(srcFile),
-		dst = fs.createWriteStream(dstFile)
-	;
-	if (callback) {
-	   dst.on('close', callback);
-	}
-	src.pipe(gzip).pipe(dst);
+exports.gzip = function (str, callback) {
+	var zlib = require('zlib');
+    console.log('compressing..');
+    zlib.gzip(str, callback);
 };
 
-exports.copy = function (srcFile, dstFile, callback) {
-	fs.copy(srcFile, dstFile, callback);
+exports.copy = function (srcFile, dstFile) {
+    fs.writeFileSync(dstFile, fs.readFileSync(srcFile));
 };
 
-exports.documentation = function (srcFile, dstPath, callback) {
-//	var dox = require('dox');
-//	var comments = dox.parseComments(this.read(srcFile));
-//	this.write(JSON.stringify(comments), dstPath + '/dox.json', callback);
-};
+// JSDOC http://www.2ality.com/2011/08/jsdoc-intro.html
+//exports.documentation = function (srcFile, dstPath, callback) {
+//    var dox = require('dox');
+//    console.log('documenting..');
+//    var comments = dox.parseComments(this.read(srcFile));
+//    this.write(JSON.stringify(comments), dstPath + '/dox.json', callback);
+//};
