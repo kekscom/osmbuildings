@@ -787,7 +787,8 @@ var Color = (function () {
 
         var
             attribution = 'Buildings &copy; <a href="http://osmbuildings.org">OSM Buildings</a>',
-            mapOnMove, mapOnMoveEnd, mapOnZoomEnd
+            mapOnMove, mapOnMoveEnd, mapOnZoomEnd,
+            blockMoveEvent // needed as Leaflet fires moveend and zoomend together
         ;
 
         this.VERSION += '-leaflet';
@@ -810,7 +811,6 @@ var Color = (function () {
 
             var lastX = 0, lastY = 0;
 
-
             mapOnMove = function () {
                 var mp = L.DomUtil.getPosition(map._mapPane);
                 camX = halfWidth - (mp.x - lastX);
@@ -819,7 +819,16 @@ var Color = (function () {
             };
 
             mapOnMoveEnd = function () {
-                var mp = L.DomUtil.getPosition(map._mapPane);
+                if (blockMoveEvent) {
+                    blockMoveEvent = false;
+                    return;
+                }
+
+                var
+                    mp = L.DomUtil.getPosition(map._mapPane),
+                    po = map.getPixelOrigin()
+                ;
+
                 lastX = mp.x;
                 lastY = mp.y;
                 canvas.style.left = -mp.x + 'px';
@@ -829,15 +838,19 @@ var Color = (function () {
                 camY = height;
 
                 setSize(map._size.x, map._size.y); // in case this is triggered by resize
-                var po = map.getPixelOrigin();
                 setOrigin(po.x - mp.x, po.y - mp.y);
-
                 onMoveEnd();
                 render();
             };
 
             mapOnZoomEnd = function () {
+                var
+                    mp = L.DomUtil.getPosition(map._mapPane),
+                    po = map.getPixelOrigin()
+                ;
+                setOrigin(po.x - mp.x, po.y - mp.y);
                 onZoomEnd({ zoom: map._zoom });
+                blockMoveEvent = true;
             };
 
             map.on({
