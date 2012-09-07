@@ -1,7 +1,7 @@
 //****** file: prefix.js ******
 
 
-var OSMBuildings = (function (global) {
+(function (global) {
 
     'use strict';
 
@@ -10,7 +10,7 @@ var OSMBuildings = (function (global) {
 
     // private constants, general to all instances
     var
-        VERSION = '0.1.5a',
+        VERSION = '0.1.6a',
 
         PI = Math.PI,
         HALF_PI = PI / 2,
@@ -98,12 +98,12 @@ var Color = (function () {
     var proto = C.prototype;
 
     proto.toString = function () {
-        return 'rgba(' + [this.r, this.g, this.b, this.a].join(',') + ')';
+        return 'rgba(' + [this.r, this.g, this.b, this.a.toFixed(2)].join(',') + ')';
     };
 
-    proto.adjustLightness = function (amount) {
+    proto.adjustLightness = function (l) {
         var hsla = Color.toHSLA(this);
-        hsla.l += amount;
+        hsla.l *= l;
         hsla.l = Math.min(1, Math.max(0, hsla.l));
         return hsla2rgb(hsla);
     };
@@ -126,11 +126,11 @@ var Color = (function () {
 
         m = str.match(/rgba?\((\d+)\D+(\d+)\D+(\d+)(\D+([\d.]+))?\)/);
         if (m) {
-            return new Color(
-                m[1],
-                m[2],
-                m[3],
-                m[4] ? m[5] : 1
+             return new Color(
+                parseInt(m[1], 10),
+                parseInt(m[2], 10),
+                parseInt(m[3], 10),
+                m[4] ? parseFloat(m[5], 10) : 1
             );
         }
     };
@@ -167,13 +167,16 @@ var Color = (function () {
 
 //****** file: core.prefix.js ******
 
-    function B() {
+
+    global.OSMBuildings = function () {
 
 
 //****** file: variables.js ******
 
         // private variables, specific to an instance
         var
+            osmb = this,
+
             width = 0, height = 0,
             halfWidth = 0, halfHeight = 0,
             originX = 0, originY = 0,
@@ -186,7 +189,7 @@ var Color = (function () {
             url,
             strokeRoofs,
             wallColor = new Color(200,190,180),
-            roofColor = wallColor.adjustLightness(0.2),
+            roofColor = null,
             strokeColor = new Color(145,140,135),
 
             rawData,
@@ -429,7 +432,7 @@ var Color = (function () {
                 features = json[0] ? json : json.features,
                 geometry, polygons, coords, properties,
                 footprint, heightSum,
-                propHeight, color,
+                propHeight, propWallColor, propRoofColor,
                 lat = isLonLat ? 1 : 0,
                 lon = isLonLat ? 0 : 1,
                 alt = 2,
@@ -458,7 +461,12 @@ var Color = (function () {
 
             if (polygons) {
                 propHeight = properties.height;
-                color = Color.parse(properties.color || properties.style.fillColor);
+                if (properties.color || properties.wallColor) {
+                    propWallColor = Color.parse(properties.color || properties.wallColor);
+                }
+                if (properties.roofColor) {
+                    propRoofColor = Color.parse(properties.roofColor);
+                }
 
                 for (i = 0, il = polygons.length; i < il; i++) {
                     coords = polygons[i][0];
@@ -473,8 +481,8 @@ var Color = (function () {
                         item = [];
                         item[HEIGHT] = ~~(heightSum/coords.length);
                         item[FOOTPRINT] = makeClockwiseWinding(footprint);
-                        if (color) {
-                            item[COLOR] = [color, color.adjustLightness(0.2)];
+                        if (propWallColor || propRoofColor) {
+                            item[COLOR] = [propWallColor, propRoofColor];
                         }
                         res.push(item);
                     }
@@ -536,9 +544,11 @@ var Color = (function () {
         function setStyle(style) {
             style = style || {};
             strokeRoofs = style.strokeRoofs !== undefined ? style.strokeRoofs : strokeRoofs;
-            if (style.fillColor) {
-                wallColor = Color.parse(style.fillColor);
-                roofColor = wallColor.adjustLightness(0.2);
+            if (style.color || style.wallColor) {
+                wallColor = Color.parse(style.color || style.wallColor);
+            }
+            if (style.roofColor) {
+                roofColor = Color.parse(style.roofColor);
             }
             render();
         }
@@ -629,8 +639,8 @@ var Color = (function () {
                 footprint, roof, walls,
                 isVisible,
                 ax, ay, bx, by, _a, _b,
-                wallColorAlpha = wallColor.adjustAlpha(zoomAlpha),
-                roofColorAlpha = roofColor.adjustAlpha(zoomAlpha)
+                wallColorAlpha = wallColor.adjustAlpha(zoomAlpha) + '',
+                roofColorAlpha = (roofColor || wallColor.adjustLightness(1.2)).adjustAlpha(zoomAlpha) + ''
             ;
 
             if (strokeRoofs) {
@@ -657,7 +667,7 @@ var Color = (function () {
                     continue;
                 }
 
-                context.fillStyle = (item[COLOR] ? item[COLOR][0].adjustAlpha(zoomAlpha) : wallColorAlpha) + '';
+                context.fillStyle = item[COLOR] && item[COLOR][0] ? item[COLOR][0].adjustAlpha(zoomAlpha) + '' : wallColorAlpha;
 
                 // when fading in, use a dynamic height
                 h = item[IS_NEW] ? item[HEIGHT] * fadeFactor : item[HEIGHT];
@@ -699,8 +709,14 @@ var Color = (function () {
 
                 drawShape(walls);
 
+                // TODO refactor this to a lookup table
                 // fill roof and optionally stroke it
-                context.fillStyle = (item[COLOR] ? item[COLOR][1].adjustAlpha(zoomAlpha) : roofColorAlpha) + '';
+                context.fillStyle = !item[COLOR] ? roofColorAlpha : // no item color => use default roof color (which is in worst case build from default wall color)
+                    item[COLOR][1] ? item[COLOR][1].adjustAlpha(zoomAlpha) + '' : // item roof color exists => adapt & use it
+                    roofColor ? roofColorAlpha : // default roof color exists => use it
+                    item[COLOR][0].adjustLightness(1.2).adjustAlpha(zoomAlpha) + '' // item wall color exists => adapt & use it
+                ;
+
                 drawShape(roof, strokeRoofs);
             }
         }
@@ -740,141 +756,161 @@ var Color = (function () {
 
 //****** file: public.js ******
 
-        this.VERSION = VERSION;
 
-        this.render = function () {
+        osmb.VERSION = VERSION;
+
+        osmb.render = function () {
             render();
-            return this;
+            return osmb;
         };
 
-        this.setStyle = function (style) {
+        osmb.setStyle = function (style) {
             setStyle(style);
-            return this;
+            return osmb;
         };
 
-        this.setData = function (data, isLonLat) {
+        osmb.setData = function (data, isLonLat) {
+            // DEPRECATED
             console.warn('OSMBuildings.loadData() is deprecated and will be removed soon.\nUse OSMBuildings.loadData({url|object}, isLatLon?) instead.');
             setData(data, isLonLat);
-            return this;
+            return osmb;
         };
 
-        this.loadData = function (u) {
+        osmb.loadData = function (u) {
             url = u;
             loadData();
-            return this;
+            return osmb;
         };
 
-        this.geoJSON = function (url, isLatLon) {
+        osmb.geoJSON = function (url, isLatLon) {
             geoJSON(url, isLatLon);
-            return this;
+            return osmb;
         };
 
 
-//****** file: openlayers.js ******
+//****** file: engines/Leaflet.js ******
 
-/*global OpenLayers:false */
+        var
+            attribution = 'Buildings &copy; <a href="http://osmbuildings.org">OSM Buildings</a>',
+            mapOnMove, mapOnMoveEnd, mapOnZoomEnd,
+            blockMoveEvent // needed as Leaflet fires moveend and zoomend together
+        ;
 
-        OpenLayers.Layer.Buildings = OpenLayers.Class( OpenLayers.Layer, {
-            CLASS_NAME: 'OpenLayers.Layer.Buildings',
-            isBaseLayer: false,
-            alwaysInRange: true,
-            attribution: 'Buildings &copy; <a href="http://osmbuildings.org">OSM Buildings</a>',
-            initialize: function( name, b, options )
-            {
-                OpenLayers.Layer.prototype.initialize.apply( this, [name, options] );
-                this.b = b;
-            },
-            updateOrigin: function()
-            {
-                var origin = this.map.getLonLatFromPixel( new OpenLayers.Pixel( 0, 0 ) )
-                        .transform( this.map.getProjectionObject(), new OpenLayers.Projection( "EPSG:4326" ) );
-                var originPx = geoToPixel( origin.lat, origin.lon );
-                setOrigin( originPx.x, originPx.y );
-            },
-            setMap: function( map )
-            {
-                if( !this.map )
-                {
-                    OpenLayers.Layer.prototype.setMap.apply( this, arguments );
-                    createCanvas( this.div );
-                    var newSize = this.map.getSize();
-                    setSize( newSize.w, newSize.h );
-                    setZoom( this.map.getZoom() );
-                    this.updateOrigin();
-                    loadData();
-                }
-            },
-            removeMap: function( map )
-            {
-                canvas.parentNode.removeChild( canvas );
-                OpenLayers.Layer.prototype.removeMap.apply( this, arguments );
-            },
-            onMapResize: function()
-            {
-                OpenLayers.Layer.prototype.onMapResize.apply( this, arguments );
-                var newSize = this.map.getSize();
-                setSize( newSize.w, newSize.h );
+        osmb.VERSION += '-leaflet';
+
+        osmb.addTo = function (map) {
+            map.addLayer(osmb);
+            return osmb;
+        };
+
+        osmb.onAdd = function (map) {
+            osmb.map = map;
+
+            createCanvas(map._panes.overlayPane);
+            maxZoom = map._layersMaxZoom;
+
+            setSize(map._size.x, map._size.y);
+            var po = map.getPixelOrigin(); // changes on zoom only!
+            setOrigin(po.x, po.y);
+            setZoom(map._zoom);
+
+            var lastX = 0, lastY = 0;
+
+            mapOnMove = function () {
+                var mp = L.DomUtil.getPosition(map._mapPane);
+                camX = halfWidth - (mp.x - lastX);
+                camY = height    - (mp.y - lastY);
                 render();
-            },
-            moveTo: function( bounds, zoomChanged, dragging )
-            {
-                var result = OpenLayers.Layer.prototype.moveTo.apply( this, arguments );
-                if( !dragging )
-                {
-                    var offsetLeft = parseInt( this.map.layerContainerDiv.style.left, 10 );
-                    offsetLeft = -Math.round( offsetLeft );
-                    var offsetTop = parseInt( this.map.layerContainerDiv.style.top, 10 );
-                    offsetTop = -Math.round( offsetTop );
+            };
 
-                    this.div.style.left = offsetLeft + 'px';
-                    this.div.style.top = offsetTop + 'px';
+            mapOnMoveEnd = function () {
+                if (blockMoveEvent) {
+                    blockMoveEvent = false;
+                    return;
                 }
-                if( zoomChanged )
-                {
-                    setZoom( this.map.getZoom() );
-                    if( rawData )
-                    {
-                        data = scaleData( rawData );
-                    }
-                }
-                this.updateOrigin();
+
+                var
+                    mp = L.DomUtil.getPosition(map._mapPane),
+                    po = map.getPixelOrigin()
+                ;
+
+                lastX = mp.x;
+                lastY = mp.y;
+                canvas.style.left = -mp.x + 'px';
+                canvas.style.top  = -mp.y + 'px';
+
                 camX = halfWidth;
                 camY = height;
+
+                setSize(map._size.x, map._size.y); // in case this is triggered by resize
+                setOrigin(po.x - mp.x, po.y - mp.y);
+                onMoveEnd();
                 render();
-                onMoveEnd( {} );
-                return result;
-            },
-            moveByPx: function( dx, dy )
-            {
-                var result = OpenLayers.Layer.prototype.moveByPx.apply( this, arguments );
-                camX += dx;
-                camY += dy;
-                render();
-                return result;
+            };
+
+            mapOnZoomEnd = function () {
+                var
+                    mp = L.DomUtil.getPosition(map._mapPane),
+                    po = map.getPixelOrigin()
+                ;
+                setOrigin(po.x - mp.x, po.y - mp.y);
+                onZoomEnd({ zoom: map._zoom });
+                blockMoveEvent = true;
+            };
+
+            map.on({
+                move: mapOnMove,
+                moveend: mapOnMoveEnd,
+                zoomstart: onZoomStart,
+                zoomend: mapOnZoomEnd
+            });
+
+    //        var onZoom = function (opt) {
+    //            var
+    //                scale = map.getZoomScale(opt.zoom),
+    //                offset = map._getCenterOffset(opt.center).divideBy(1 - 1 / scale),
+    //                viewportPos = map.containerPointToLayerPoint(map.getSize().multiplyBy(-1)),
+    //                origin = viewportPos.add(offset).round()
+    //            ;
+    //
+    //            canvas.style[L.DomUtil.TRANSFORM] = L.DomUtil.getTranslateString((origin.multiplyBy(-1).add(L.DomUtil.getPosition(map._mapPane).multiplyBy(-1)).multiplyBy(scale).add(origin))) + ' scale(' + scale + ') ';
+    //            canvas.style.border = "3px solid red";
+    //            isZooming = true;
+    //        };
+
+            if (map.options.zoomAnimation) {
+                 canvas.className = 'leaflet-zoom-animated';
+    //             map.on('zoomanim', onZoom);
             }
-        } );
 
-        this.VERSION += '-openlayers';
+            map.attributionControl.addAttribution(attribution);
 
-        this.addTo = function( map )
-        {
-            this.layer = new OpenLayers.Layer.Buildings( 'OSMBuildings', this );
-            map.addLayer( this.layer );
-            return this;
+            render(); // in case of for re-adding this layer
         };
 
-        // in case it has been passed to this, initialize map directly
-        if( arguments.length )
-        {
-            this.addTo( arguments[0] );
+        osmb.onRemove = function (map) {
+            map.attributionControl.removeAttribution(attribution);
+
+            map.off({
+                move: mapOnMove,
+                moveend: mapOnMoveEnd,
+                zoomstart: onZoomStart,
+                zoomend: mapOnZoomEnd
+            });
+
+            canvas.parentNode.removeChild(canvas);
+            osmb.map = null;
+        };
+
+        // in case it has been passed as parameter, initialize map directly
+        if (arguments.length) {
+            osmb.addTo(arguments[0]);
         }
 
 
 //****** file: core.suffix.js ******
 
-    }
-
-    return B;
+    };
 
 
 //****** file: suffix.js ******

@@ -4,15 +4,15 @@
             blockMoveEvent // needed as Leaflet fires moveend and zoomend together
         ;
 
-        this.VERSION += '-leaflet';
+        osmb.VERSION += '-leaflet';
 
-        this.addTo = function (map) {
-            map.addLayer(this);
-            return this;
+        osmb.addTo = function (map) {
+            map.addLayer(osmb);
+            return osmb;
         };
 
-        this.onAdd = function (map) {
-            this.map = map;
+        osmb.onAdd = function (map) {
+            osmb.map = map;
 
             createCanvas(map._panes.overlayPane);
             maxZoom = map._layersMaxZoom;
@@ -96,7 +96,7 @@
             render(); // in case of for re-adding this layer
         };
 
-        this.onRemove = function (map) {
+        osmb.onRemove = function (map) {
             map.attributionControl.removeAttribution(attribution);
 
             map.off({
@@ -107,10 +107,10 @@
             });
 
             canvas.parentNode.removeChild(canvas);
-            this.map = null;
+            osmb.map = null;
         };
 
-        // in case it has been passed to this, initialize map directly
+        // in case it has been passed as parameter, initialize map directly
         if (arguments.length) {
-            this.addTo(arguments[0]);
+            osmb.addTo(arguments[0]);
         }

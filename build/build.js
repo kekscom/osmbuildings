@@ -4,9 +4,26 @@ var srcPath = '../src';
 var dstPath = '../dist';
 
 var srcFiles     = require('./files.json');
-var dstFile      = dstPath + '/buildings.js';
-var dstFileGzip  = dstPath + '/buildings.js.gz';
-var dstFileDebug = dstPath + '/buildings-debug.js';
+//var dstFile      = dstPath + '/buildings.js';
+//var dstFileGzip  = dstPath + '/buildings.js.gz';
+//var dstFileDebug = dstPath + '/buildings-debug.js';
+
+//var dstFile      = dstPath + '/buildings-leaflet.js';
+//var dstFileGzip  = dstPath + '/buildings-leaflet.js.gz';
+//var dstFileDebug = dstPath + '/buildings-leaflet-debug.js';
+
+var dstFile      = dstPath + '/buildings-openlayers.js';
+var dstFileGzip  = dstPath + '/buildings-openlayers.js.gz';
+var dstFileDebug = dstPath + '/buildings-openlayers-debug.js';
+
+var COPYRIGHT = '/*\n Copyright (c) 2010-2012, CloudMade, Vladimir Agafonkin\n' +
+                ' Leaflet is an open-source JavaScript library for mobile-friendly interactive maps.\n' +
+                ' http://leaflet.cloudmade.com\n*/\n';
+
+// VERSION!
+// all enginges
+// batch copy
+// DEBUG / DEV mode (hint config) , beautify
 
 //*****************************************************************************
 

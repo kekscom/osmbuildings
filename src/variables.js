@@ -1,5 +1,7 @@
         // private variables, specific to an instance
         var
+            osmb = this,
+
             width = 0, height = 0,
             halfWidth = 0, halfHeight = 0,
             originX = 0, originY = 0,

@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="assets/styles.css">
 
     <script src="http://www.openlayers.org/api/OpenLayers.js"></script>
+
     <link rel="stylesheet" href="js/highlight/github.css">
     <script src="js/highlight/highlight.pack.js"></script>
 
@@ -25,34 +26,14 @@
         <p>Integrating with OpenLayers. Requires buildings.js to be built with openlayers.js</p>
     </div>
 
-    <pre id="code" class="javascript"></pre>
-
     <script id="src">
-    var map = window.OLMap = new OpenLayers.Map("map");
+    var map = new OpenLayers.Map('map');
     map.addLayer(new OpenLayers.Layer.OSM());
-    map.setCenter( new OpenLayers.LonLat( -76.77786, 39.37133 ).transform(
-            new OpenLayers.Projection( "EPSG:4326" ),
-            map.getProjectionObject()
-    ), 17 );
-
-    var osmb = new OSMBuildings(map);
-    osmb.geoJSON('http://geosprocket.cartodb.com/api/v2/sql?q=SELECT%20*%20FROM%20rt_bld2%20&format=geojson&callback={callback}');
-    </script>
-
-    <script>
-    var code = document.querySelector('#code');
-    var src = document.querySelector('#src');
-    code.innerText = src.innerText;
-    hljs.highlightBlock(code);
-
-    code.onclick = function (e) {
-        this.className += ' large';
-        e.cancelBubble = true;
-    };
-
-    document.onclick = function () {
-        code.className = code.className.replace(/ large/g, '');
-    };
+    map.setCenter(new OpenLayers.LonLat(13.33522, 52.50440).transform(
+        new OpenLayers.Projection('EPSG:4326'),
+        map.getProjectionObject()
+    ), 17);
+    var osmb = new OSMBuildings(map).loadData('../server/?w={w}&n={n}&e={e}&s={s}&z={z}');
     </script>
 </body>
 </html>
