@@ -1,6 +1,6 @@
     // private constants, general to all instances
     var
-        VERSION = '0.1.6a',
+        VERSION = /*<version=*/'0.1.6a'/*>*/,
 
         PI = Math.PI,
         HALF_PI = PI / 2,

@@ -1,6 +1,7 @@
 
 var fs   = require('fs');
 var util = require('util');
+var path = require('path');
 
 var jshintOptions = {
 	"browser": true,
@@ -16,7 +17,7 @@ var jshintOptions = {
 
 	"asi": false,
 	"laxbreak": false,
-	"bitwise": false,
+	"bitwise": true,
 	"boss": false,
 	"curly": true,
 	"eqnull": false,
@@ -46,7 +47,7 @@ var jshintOptions = {
 
 	"eqeqeq": true,
 	"trailing": true,
-	"white": false,
+	"white": true,
 	"smarttabs": true
 };
 
@@ -68,7 +69,7 @@ exports.watch = function (files, callback) {
     var timer;
     console.log('watching..');
     for (var i = 0, il = files.length; i < il; i++) {
-        console.log('  ' + files[i]);
+        console.log('  ' + path.basename(files[i]));
         fs.watch(files[i], { persistent: true }, function () {
             clearTimeout(timer);
             timer = setTimeout(callback, 500);
@@ -91,9 +92,9 @@ exports.combine = function (files) {
 	;
     console.log('combining..');
 	for (var i = 0, il = files.length; i < il; i++) {
-        console.log('  ' + files[i]);
+        console.log('  ' + path.basename(files[i]));
 		str = this.read(files[i]);
-		res += '//****** file: ' + files[i] + ' ******\n\n';
+		res += '//****** file: ' + path.basename(files[i]) + ' ******\n\n';
 		res += str + '\n\n';
 	}
     return res;
@@ -108,8 +109,28 @@ exports.jshint = function (str) {
     var err = jshint.errors;
 
     if (err.length) {
+        var
+            lines = str.split('\n'),
+            prevFile = ''
+        ;
+
         for (var i = 0, il = err.length; i < il && err[i]; i++) {
-            console.log('  L ' + err[i].line + ' C ' + err[i].character + ': ' + err[i].reason);
+
+            // find the related filename
+            var lineNo = -2; // shoud start from 1 but errors have strange line numbers
+            for (var j = err[i].line; j >= 0; j--) {
+                var m = lines[j].match(/^\/\/\*{6} file: (.+) \*{6}$/);
+                if (m) {
+                    if (m[1] !== prevFile) {
+                        console.log('  ' + m[1]);
+                        prevFile = m[1];
+                    }
+                    break;
+                }
+                lineNo++;
+            }
+
+            console.log('    Line ' + lineNo + ': ' + err[i].reason);
         }
         return false;
     }
@@ -132,6 +153,13 @@ exports.gzip = function (str, callback) {
 exports.copy = function (srcFile, dstFile) {
     fs.writeFileSync(dstFile, fs.readFileSync(srcFile));
 };
+
+exports.setVars = function (str, data) {
+    // example: /*<version=*/'0.1.6a'/*>*/
+    return str.replace(/\/\*\<([^=]+)=\*\/('?)([^']*)('?)\/\*\>\*\//g, function(all, key, q1, value, q2) {
+        return q1 + (data[key] || value) + q2;
+    });
+}
 
 // JSDOC http://www.2ality.com/2011/08/jsdoc-intro.html
 //exports.documentation = function (srcFile, dstPath, callback) {

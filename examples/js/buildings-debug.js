@@ -3,15 +3,16 @@
  * A leightweight JavaScript library for visualizing 3D building geometry on interactive maps.
  * @osmbuildings, http://osmbuildings.org
  */
-//****** src file: ../src/prefix.js ******
+//****** file: ../src/prefix.js ******
 
+/*jshint bitwise:false */
 
 (function (global) {
 
     'use strict';
 
 
-//****** src file: ../src/constants.js ******
+//****** file: ../src/constants.js ******
 
     // private constants, general to all instances
     var
@@ -32,7 +33,7 @@
         HEIGHT = 0, FOOTPRINT = 1, COLOR = 2, IS_NEW = 3
     ;
 
-//****** src file: ../src/shortcuts.js ******
+//****** file: ../src/shortcuts.js ******
 
     // object access shortcuts
     var
@@ -47,7 +48,7 @@
     ;
 
 
-//****** src file: ../src/lib/Color.js ******
+//****** file: ../src/lib/Color.js ******
 
 
 var Color = (function () {
@@ -170,12 +171,12 @@ var Color = (function () {
 
 }());
 
-//****** src file: ../src/core.prefix.js ******
+//****** file: ../src/core.prefix.js ******
 
     global.OSMBuildings = function () {
 
 
-//****** src file: ../src/variables.js ******
+//****** file: ../src/variables.js ******
 
         // private variables, specific to an instance
         var
@@ -211,7 +212,7 @@ var Color = (function () {
         ;
 
 
-//****** src file: ../src/functions.js ******
+//****** file: ../src/functions.js ******
 
 
         function createCanvas(parentNode) {
@@ -259,7 +260,7 @@ var Color = (function () {
         }
 
 
-//****** src file: ../src/data.js ******
+//****** file: ../src/data.js ******
 
 
         function xhr(url, callback) {
@@ -521,7 +522,7 @@ var Color = (function () {
             fadeIn();
         }
 
-//****** src file: ../src/properties.js ******
+//****** file: ../src/properties.js ******
 
         function setSize(w, h) {
             width  = w;
@@ -558,7 +559,7 @@ var Color = (function () {
         }
 
 
-//****** src file: ../src/events.js ******
+//****** file: ../src/events.js ******
 
 
         function onResize(e) {
@@ -600,7 +601,7 @@ var Color = (function () {
         }
 
 
-//****** src file: ../src/render.js ******
+//****** file: ../src/render.js ******
 
         function fadeIn() {
             fadeFactor = 0;
@@ -758,7 +759,7 @@ var Color = (function () {
         }
 
 
-//****** src file: ../src/public.js ******
+//****** file: ../src/public.js ******
 
 
         osmb.VERSION = VERSION;
@@ -792,7 +793,7 @@ var Color = (function () {
         };
 
 
-//****** src file: ../src/engines/Leaflet.js ******
+//****** file: ../src/engines/Leaflet.js ******
 
         var
             attribution = 'Buildings &copy; <a href="http://osmbuildings.org">OSM Buildings</a>',
@@ -912,14 +913,15 @@ var Color = (function () {
         }
 
 
-//****** src file: ../src/core.suffix.js ******
+//****** file: ../src/core.suffix.js ******
 
     };
 
 
-//****** src file: ../src/suffix.js ******
+//****** file: ../src/suffix.js ******
 
 
 }(this));
 
+/*jshint bitwise:true */
 
