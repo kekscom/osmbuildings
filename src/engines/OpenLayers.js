@@ -1,3 +1,11 @@
+// new OpenLayers.Layer.Buildings('name?', layerOptions);
+// new OpenLayers.Layer.Google('Google Physical', { type: G_PHYSICAL_MAP });
+// new OpenLayers.Layer.GML("GeoJSON", "geo.json", {
+//     projection: new OpenLayers.Projection("EPSG:4326"),
+//     format: OpenLayers.Format.GeoJSON
+// });
+// map.addLayer(...);
+
 
         OpenLayers.Layer.Buildings = OpenLayers.Class(OpenLayers.Layer, {
             CLASS_NAME: 'OpenLayers.Layer.Buildings',
@@ -5,9 +13,8 @@
             alwaysInRange: true,
             attribution: 'Buildings &copy; <a href="http://osmbuildings.org">OSM Buildings</a>',
 
-            initialize: function(name, b, options) {
+            initialize: function(name, options) {
                 OpenLayers.Layer.prototype.initialize.apply( this, [name, options] );
-                this.b = b;
             },
 
             updateOrigin: function() {
@@ -29,7 +36,7 @@
                 }
             },
 
-            removeMap: function( map ) {
+            removeMap: function(map) {
                 canvas.parentNode.removeChild( canvas );
                 OpenLayers.Layer.prototype.removeMap.apply( this, arguments );
             },
@@ -41,10 +48,9 @@
                 render();
             },
 
-            moveTo: function( bounds, zoomChanged, dragging ) {
+            moveTo: function(bounds, zoomChanged, dragging) {
                 var result = OpenLayers.Layer.prototype.moveTo.apply( this, arguments );
-                if( !dragging )
-                {
+                if(!dragging) {
                     var offsetLeft = parseInt( this.map.layerContainerDiv.style.left, 10 );
                     offsetLeft = -Math.round( offsetLeft );
                     var offsetTop = parseInt( this.map.layerContainerDiv.style.top, 10 );
@@ -53,14 +59,14 @@
                     this.div.style.left = offsetLeft + 'px';
                     this.div.style.top = offsetTop + 'px';
                 }
-                if( zoomChanged )
-                {
+
+                if (zoomChanged){
                     setZoom( this.map.getZoom() );
-                    if( rawData )
-                    {
+                    if (rawData) {
                         data = scaleData( rawData );
                     }
                 }
+
                 this.updateOrigin();
                 camX = halfWidth;
                 camY = height;
@@ -68,15 +74,15 @@
                 onMoveEnd( {} );
                 return result;
             },
-            moveByPx: function( dx, dy )
-            {
+
+            moveByPx: function(dx, dy) {
                 var result = OpenLayers.Layer.prototype.moveByPx.apply( this, arguments );
                 camX += dx;
                 camY += dy;
                 render();
                 return result;
             }
-        } );
+        });
 
         osmb.VERSION += '-openlayers';
 
@@ -85,8 +91,3 @@
             map.addLayer( this.layer );
             return this;
         };
-
-        // in case it has been passed to this, initialize map directly
-        if( arguments.length ) {
-            osmb.addTo( arguments[0] );
-        }

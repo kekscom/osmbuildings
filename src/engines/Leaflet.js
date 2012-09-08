@@ -1,3 +1,6 @@
+// new L.BuildingsLayer()
+// layer.addTo(map)
+
         var
             attribution = 'Buildings &copy; <a href="http://osmbuildings.org">OSM Buildings</a>',
             mapOnMove, mapOnMoveEnd, mapOnZoomEnd,

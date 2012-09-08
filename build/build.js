@@ -21,6 +21,7 @@ var
 ;
 
 function taskStart() {
+    console.clear();
     console.log(new Date().toISOString().replace(/T/, ' ').substring(0, 16) +
         (options.debug ? ' *** DEBUG ***' : '')
     );
@@ -58,11 +59,9 @@ function taskAbort() {
 
 function taskEnd() {
     builder.write(jsCombined, config.dstFileDebug);
-    builder.copy(config.dstFileDebug, '../examples/js/buildings-debug.js');
 
     if (!options.debug) {
         builder.write(jsMinified, config.dstFile);
-        builder.copy(config.dstFile, '../examples/js/buildings.js');
     }
 
     console.log('done');
@@ -79,5 +78,3 @@ if (options.watch) {
 } else {
     taskStart();
 }
-
-// JSHINT -> line, file

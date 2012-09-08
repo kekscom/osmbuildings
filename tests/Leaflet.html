@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Tests Leaflet</title>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <style>
+    body {
+        margin: 0;
+        padding: 0;
+        font-family: Arial, Helvetica, sans-serif;
+    }
+
+    #map {
+        width: 700px;
+        height: 400px;
+        margin: 0 auto;
+        border: 1px solid #ccc;
+    }
+
+    #description {
+        width: 700px;
+        margin: 0 auto;
+    }
+
+    button.color {
+        cursor: pointer;
+        border: 1px solid #666;
+        width: 50px;
+    }
+    </style>
+
+    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.4.4/leaflet.css">
+    <!--[if lte IE 8]><link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.4.4/leaflet.ie.css" /><![endif]-->
+    <script src="http://cdn.leafletjs.com/leaflet-0.4.4/leaflet.js"></script>
+
+    <script src="../dist/buildings-debug.js"></script>
+</head>
+
+<body>
+    <div id="map"></div>
+
+    <script>
+    var map = new L.Map('map').setView([52.50440, 13.33522], 17);
+
+    new L.TileLayer(
+        'http://{s}.tiles.mapbox.com/v3/mapbox.mapbox-streets/{z}/{x}/{y}.png',
+        { attribution: 'Map tiles &copy; <a href="http://mapbox.com">MapBox</a>', maxZoom: 17 }
+    ).addTo(map);
+
+    var osmb = new OSMBuildings(map).loadData('../server/?w={w}&n={n}&e={e}&s={s}&z={z}');
+    L.control.layers({}, { Buildings: osmb }).addTo(map);
+
+    var
+        wallColor = 'rgb(200,190,180)',
+        roofColor = null,
+        strokeRoofs = false
+    ;
+    function setStyle(el, type) {
+        if (el) {
+            if (type === 'wall') {
+                wallColor = el.style.backgroundColor;
+            }
+            if (type === 'roof') {
+                roofColor = el.style.backgroundColor;
+            }
+            if (type === 'stroke') {
+                strokeRoofs = !!el.checked;
+            }
+        }
+        osmb.setStyle({ wallColor: wallColor, roofColor: roofColor, strokeRoofs: strokeRoofs });
+    }
+
+    setStyle();
+    </script>
+
+    <div id="description">
+        <p>
+            Wall:
+            <button class="color" style="background:rgb(250,220,100);" onclick="setStyle(this, 'wall')"></button>
+            <button class="color" style="background:rgba(100,100,250,0.7);" onclick="setStyle(this, 'wall')"></button>
+            Roof:
+            <button class="color" style="background:rgb(220,220,50);" onclick="setStyle(this, 'roof')"></button>
+            <button class="color" style="background:rgb(150,100,150);" onclick="setStyle(this, 'roof')"></button>
+            <label style="cursor:pointer;"><input name="strokeRoofs" type="checkbox" value="1" onclick="setStyle(this, 'stroke')">stroke</label>
+        </p>
+    </div>
+
+</body>
+</html>

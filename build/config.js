@@ -15,31 +15,25 @@ exports.srcFiles = [
     srcPath + '/constants.js',
     srcPath + '/shortcuts.js',
     srcPath + '/lib/Color.js',
-    srcPath + '/core.prefix.js',
-        srcPath + '/variables.js',
-        srcPath + '/functions.js',
-        srcPath + '/data.js',
-        srcPath + '/properties.js',
-        srcPath + '/events.js',
-        srcPath + '/render.js',
-        srcPath + '/public.js',
-//      srcPath + '/engines/OpenLayers.js',
-        srcPath + '/engines/Leaflet.js',
-    srcPath + '/core.suffix.js',
+    srcPath + '/variables.js',
+    srcPath + '/functions.js',
+    srcPath + '/data.js',
+    srcPath + '/properties.js',
+    srcPath + '/events.js',
+    srcPath + '/render.js',
+    srcPath + '/public.js',
+    srcPath + '/engines/Leaflet.js',
+//    {
+//        leaflet: srcPath + '/engines/Leaflet.js',
+//        openlayers: srcPath + '/engines/OpenLayers.js'
+//    },
     srcPath + '/suffix.js'
 ];
 
+exports.dstFile      = dstPath + '/buildings.js';
+exports.dstFileDebug = dstPath + '/buildings-debug.js';
 
-
-
-
-
-
-//exports.dstFile      = dstPath + '/buildings-leaflet.js';
-//exports.dstFileGzip  = dstPath + '/buildings-leaflet.js.gz';
-//exports.dstFileDebug = dstPath + '/buildings-leaflet-debug.js';
-
-exports.dstFile      = dstPath + '/buildings-openlayers.js';
-exports.dstFileGzip  = dstPath + '/buildings-openlayers.js.gz';
-exports.dstFileDebug = dstPath + '/buildings-openlayers-debug.js';
-
+// exports.dstFile      = dstPath + '/buildings-leaflet.js';
+// exports.dstFileDebug = dstPath + '/buildings-leaflet-debug.js';
+// exports.dstFile      = dstPath + '/buildings-openlayers.js';
+// exports.dstFileDebug = dstPath + '/buildings-openlayers-debug.js';

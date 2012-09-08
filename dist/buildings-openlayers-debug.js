@@ -3,16 +3,16 @@
  * A leightweight JavaScript library for visualizing 3D building geometry on interactive maps.
  * @osmbuildings, http://osmbuildings.org
  */
-//****** file: ../src/prefix.js ******
+//****** file: prefix.js ******
 
 /*jshint bitwise:false */
 
 (function (global) {
-
+    global.OSMBuildings = function () {
     'use strict';
 
 
-//****** file: ../src/constants.js ******
+//****** file: constants.js ******
 
     // private constants, general to all instances
     var
@@ -33,7 +33,7 @@
         HEIGHT = 0, FOOTPRINT = 1, COLOR = 2, IS_NEW = 3
     ;
 
-//****** file: ../src/shortcuts.js ******
+//****** file: shortcuts.js ******
 
     // object access shortcuts
     var
@@ -48,7 +48,7 @@
     ;
 
 
-//****** file: ../src/lib/Color.js ******
+//****** file: Color.js ******
 
 
 var Color = (function () {
@@ -171,12 +171,12 @@ var Color = (function () {
 
 }());
 
-//****** file: ../src/core.prefix.js ******
+//****** file: core.prefix.js ******
 
     global.OSMBuildings = function () {
 
 
-//****** file: ../src/variables.js ******
+//****** file: variables.js ******
 
         // private variables, specific to an instance
         var
@@ -212,7 +212,7 @@ var Color = (function () {
         ;
 
 
-//****** file: ../src/functions.js ******
+//****** file: functions.js ******
 
 
         function createCanvas(parentNode) {
@@ -260,7 +260,7 @@ var Color = (function () {
         }
 
 
-//****** file: ../src/data.js ******
+//****** file: data.js ******
 
 
         function xhr(url, callback) {
@@ -522,7 +522,7 @@ var Color = (function () {
             fadeIn();
         }
 
-//****** file: ../src/properties.js ******
+//****** file: properties.js ******
 
         function setSize(w, h) {
             width  = w;
@@ -559,7 +559,7 @@ var Color = (function () {
         }
 
 
-//****** file: ../src/events.js ******
+//****** file: events.js ******
 
 
         function onResize(e) {
@@ -601,7 +601,7 @@ var Color = (function () {
         }
 
 
-//****** file: ../src/render.js ******
+//****** file: render.js ******
 
         function fadeIn() {
             fadeFactor = 0;
@@ -759,7 +759,7 @@ var Color = (function () {
         }
 
 
-//****** file: ../src/public.js ******
+//****** file: public.js ******
 
 
         osmb.VERSION = VERSION;
@@ -793,7 +793,10 @@ var Color = (function () {
         };
 
 
-//****** file: ../src/engines/Leaflet.js ******
+//****** file: Leaflet.js ******
+
+// new L.BuildingsLayer()
+// layer.addTo(map)
 
         var
             attribution = 'Buildings &copy; <a href="http://osmbuildings.org">OSM Buildings</a>',
@@ -913,12 +916,12 @@ var Color = (function () {
         }
 
 
-//****** file: ../src/core.suffix.js ******
+//****** file: core.suffix.js ******
 
     };
 
 
-//****** file: ../src/suffix.js ******
+//****** file: suffix.js ******
 
 
 }(this));
