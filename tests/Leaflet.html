@@ -53,39 +53,17 @@
     var osmb = new OSMBuildings(map).loadData('../server/?w={w}&n={n}&e={e}&s={s}&z={z}');
     L.control.layers({}, { Buildings: osmb }).addTo(map);
 
-    var
-        wallColor = 'rgb(200,190,180)',
-        roofColor = null,
-        strokeRoofs = false
-    ;
-    function setStyle(el, type) {
-        if (el) {
-            if (type === 'wall') {
-                wallColor = el.style.backgroundColor;
-            }
-            if (type === 'roof') {
-                roofColor = el.style.backgroundColor;
-            }
-            if (type === 'stroke') {
-                strokeRoofs = !!el.checked;
-            }
+    function setStyle(el) {
+        if (el.checked) {
+            osmb.setStyle({ wallColor: 'rgb(100,100,250,0.7)', roofColor: 'rgb(220,220,50)', strokeRoofs: true });
+        } else {
+            osmb.setStyle({ wallColor: 'rgb(200,190,180)', roofColor: null, strokeRoofs: false });
         }
-        osmb.setStyle({ wallColor: wallColor, roofColor: roofColor, strokeRoofs: strokeRoofs });
     }
-
-    setStyle();
     </script>
 
     <div id="description">
-        <p>
-            Wall:
-            <button class="color" style="background:rgb(250,220,100);" onclick="setStyle(this, 'wall')"></button>
-            <button class="color" style="background:rgba(100,100,250,0.7);" onclick="setStyle(this, 'wall')"></button>
-            Roof:
-            <button class="color" style="background:rgb(220,220,50);" onclick="setStyle(this, 'roof')"></button>
-            <button class="color" style="background:rgb(150,100,150);" onclick="setStyle(this, 'roof')"></button>
-            <label style="cursor:pointer;"><input name="strokeRoofs" type="checkbox" value="1" onclick="setStyle(this, 'stroke')">stroke</label>
-        </p>
+        <label><input type="checkbox" value="1" onclick="setStyle(this)">Styles</label>
     </div>
 
 </body>
