@@ -1,9 +1,17 @@
+/**
+ * Copyright (C) 2012 OSM Buildings, Jan Marsch
+ * A leightweight JavaScript library for visualizing 3D building geometry on interactive maps.
+ * @osmbuildings, http://osmbuildings.org
+ */
 //****** file: prefix.js ******
 
+/*jshint bitwise:false */
 
-var OSMBuildings = (function (global) {
+(function (global) {
 
     'use strict';
+
+    global.OSMBuildings = function () {
 
 
 //****** file: constants.js ******
@@ -42,7 +50,7 @@ var OSMBuildings = (function (global) {
     ;
 
 
-//****** file: lib/Color.js ******
+//****** file: Color.js ******
 
 
 var Color = (function () {
@@ -165,15 +173,12 @@ var Color = (function () {
 
 }());
 
-//****** file: core.prefix.js ******
-
-    function B() {
-
-
 //****** file: variables.js ******
 
         // private variables, specific to an instance
         var
+            osmb = this,
+
             width = 0, height = 0,
             halfWidth = 0, halfHeight = 0,
             originX = 0, originY = 0,
@@ -883,37 +888,42 @@ function ellipse(x, y, w, h, stroke) {
 
 //****** file: public.js ******
 
-        this.VERSION = VERSION;
 
-        this.render = function () {
+        osmb.VERSION = VERSION;
+
+        osmb.render = function () {
             render();
-            return this;
+            return osmb;
         };
 
-        this.setStyle = function (style) {
+        osmb.setStyle = function (style) {
             setStyle(style);
-            return this;
+            return osmb;
         };
 
-        this.setData = function (data, isLonLat) {
+        osmb.setData = function (data, isLonLat) {
+            // DEPRECATED
             console.warn('OSMBuildings.loadData() is deprecated and will be removed soon.\nUse OSMBuildings.loadData({url|object}, isLatLon?) instead.');
             setData(data, isLonLat);
-            return this;
+            return osmb;
         };
 
-        this.loadData = function (u) {
+        osmb.loadData = function (u) {
             url = u;
             loadData();
-            return this;
+            return osmb;
         };
 
-        this.geoJSON = function (url, isLatLon) {
+        osmb.geoJSON = function (url, isLatLon) {
             geoJSON(url, isLatLon);
-            return this;
+            return osmb;
         };
 
 
-//****** file: engines/Leaflet.js ******
+//****** file: Leaflet.js ******
+
+// new L.BuildingsLayer()
+// layer.addTo(map)
 
         var
             attribution = 'Buildings &copy; <a href="http://osmbuildings.org">OSM Buildings</a>',
@@ -921,15 +931,15 @@ function ellipse(x, y, w, h, stroke) {
             blockMoveEvent // needed as Leaflet fires moveend and zoomend together
         ;
 
-        this.VERSION += '-leaflet';
+        osmb.VERSION += '-leaflet';
 
-        this.addTo = function (map) {
-            map.addLayer(this);
-            return this;
+        osmb.addTo = function (map) {
+            map.addLayer(osmb);
+            return osmb;
         };
 
-        this.onAdd = function (map) {
-            this.map = map;
+        osmb.onAdd = function (map) {
+            osmb.map = map;
 
             createCanvas(map._panes.overlayPane);
             maxZoom = map._layersMaxZoom;
@@ -1013,7 +1023,7 @@ function ellipse(x, y, w, h, stroke) {
             render(); // in case of for re-adding this layer
         };
 
-        this.onRemove = function (map) {
+        osmb.onRemove = function (map) {
             map.attributionControl.removeAttribution(attribution);
 
             map.off({
@@ -1024,25 +1034,20 @@ function ellipse(x, y, w, h, stroke) {
             });
 
             canvas.parentNode.removeChild(canvas);
-            this.map = null;
+            osmb.map = null;
         };
 
-        // in case it has been passed to this, initialize map directly
+        // in case it has been passed as parameter, initialize map directly
         if (arguments.length) {
-            this.addTo(arguments[0]);
+            osmb.addTo(arguments[0]);
         }
-
-
-//****** file: core.suffix.js ******
-
-    }
-
-    return B;
 
 
 //****** file: suffix.js ******
 
+    };
 
 }(this));
 
+/*jshint bitwise:true */
 

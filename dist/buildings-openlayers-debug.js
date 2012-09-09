@@ -1,8 +1,14 @@
+/**
+ * Copyright (C) 2012 OSM Buildings, Jan Marsch
+ * A leightweight JavaScript library for visualizing 3D building geometry on interactive maps.
+ * @osmbuildings, http://osmbuildings.org
+ */
 //****** file: prefix.js ******
 
+/*jshint bitwise:false */
 
 (function (global) {
-
+    global.OSMBuildings = function () {
     'use strict';
 
 
@@ -42,7 +48,7 @@
     ;
 
 
-//****** file: lib/Color.js ******
+//****** file: Color.js ******
 
 
 var Color = (function () {
@@ -166,7 +172,6 @@ var Color = (function () {
 }());
 
 //****** file: core.prefix.js ******
-
 
     global.OSMBuildings = function () {
 
@@ -788,7 +793,10 @@ var Color = (function () {
         };
 
 
-//****** file: engines/Leaflet.js ******
+//****** file: Leaflet.js ******
+
+// new L.BuildingsLayer()
+// layer.addTo(map)
 
         var
             attribution = 'Buildings &copy; <a href="http://osmbuildings.org">OSM Buildings</a>',
@@ -918,4 +926,5 @@ var Color = (function () {
 
 }(this));
 
+/*jshint bitwise:true */
 
