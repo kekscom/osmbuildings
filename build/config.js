@@ -12,8 +12,6 @@ exports.VERSION = '0.1.6a';
 
 exports.srcFiles = [
     srcPath + '/prefix.js',
-    srcPath + '/constants.js',
-    srcPath + '/shortcuts.js',
     srcPath + '/lib/Color.js',
     srcPath + '/variables.js',
     srcPath + '/functions.js',
