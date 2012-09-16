@@ -1,119 +1,123 @@
-// new L.BuildingsLayer()
-// layer.addTo(map)
+
+L.BuildingsLayer = L.Class.extend({
+
+    map: null,
+    canvas: null,
+    osmb: null,
+
+    _lastX: 0,
+    _lastY: 0,
+    _blockMoveEvent: false, // needed as Leaflet fires moveend and zoomend together
+
+    _onMove: function () {
+        var mp = L.DomUtil.getPosition(this.map._mapPane);
+        this.osmb.setCam(
+//                this.osmb.halfWidth - (mp.x - this._lastX),
+//                this.osmb.height    - (mp.y - this._lastY)
+        );
+        this.osmb.render();
+    },
+
+    _onMoveEnd: function () {
+        if (this._blockMoveEvent) {
+            this._blockMoveEvent = false;
+            return;
+        }
 
         var
-            attribution = 'Buildings &copy; <a href="http://osmbuildings.org">OSM Buildings</a>',
-            mapOnMove, mapOnMoveEnd, mapOnZoomEnd,
-            blockMoveEvent // needed as Leaflet fires moveend and zoomend together
+            mp = L.DomUtil.getPosition(this.map._mapPane),
+            po = this.map.getPixelOrigin()
         ;
 
-        osmb.VERSION += '-leaflet';
+        this._lastX = mp.x;
+        this._lastY = mp.y;
+        this.canvas.style.left = -mp.x + 'px';
+        this.canvas.style.top  = -mp.y + 'px';
 
-        osmb.addTo = function (map) {
-            map.addLayer(osmb);
-            return osmb;
-        };
+        this.osmb.setCam(
+//                this.osmb.halfWidth,
+//                this.osmb.height
+        );
 
-        osmb.onAdd = function (map) {
-            osmb.map = map;
+        this.osmb.setSize(this.map._size.x, this.map._size.y); // in case this is triggered by resize
+        this.osmb.setOrigin(po.x - mp.x, po.y - mp.y);
+        this.osmb.onMoveEnd();
+        this.osmb.render();
+    },
 
-            createCanvas(map._panes.overlayPane);
-            maxZoom = map._layersMaxZoom;
+    _onZoomStart: function () {
+        this.osmb.onZoomStart();
+    },
 
-            setSize(map._size.x, map._size.y);
-            var po = map.getPixelOrigin(); // changes on zoom only!
-            setOrigin(po.x, po.y);
-            setZoom(map._zoom);
+    _onZoomEnd: function () {
+        var
+            mp = L.DomUtil.getPosition(this.map._mapPane),
+            po = this.map.getPixelOrigin()
+        ;
+        this.osmb.setOrigin(po.x - mp.x, po.y - mp.y);
+        this.osmb.onZoomEnd({ zoom: this.map._zoom });
+        this._blockMoveEvent = true;
+    },
 
-            var lastX = 0, lastY = 0;
+    initialize: function (url) {
+        this.osmb = new OSMBuildings(url);
+    },
 
-            mapOnMove = function () {
-                var mp = L.DomUtil.getPosition(map._mapPane);
-                camX = halfWidth - (mp.x - lastX);
-                camY = height    - (mp.y - lastY);
-                render();
-            };
+    addTo: function (map) {
+        map.addLayer(this);
+	    return this;
+    },
 
-            mapOnMoveEnd = function () {
-                if (blockMoveEvent) {
-                    blockMoveEvent = false;
-                    return;
-                }
+    onAdd: function (map) {
+        this.map = map;
+        this.canvas = this.osmb.createCanvas(this.map._panes.overlayPane);
 
-                var
-                    mp = L.DomUtil.getPosition(map._mapPane),
-                    po = map.getPixelOrigin()
-                ;
+        this.osmb.setMaxZoom(this.map._layersMaxZoom);
 
-                lastX = mp.x;
-                lastY = mp.y;
-                canvas.style.left = -mp.x + 'px';
-                canvas.style.top  = -mp.y + 'px';
+        this.osmb.setSize(this.map._size.x, this.map._size.y);
+        var po = this.map.getPixelOrigin(); // changes on zoom only!
+        this.osmb.setOrigin(po.x, po.y);
+        this.osmb.setZoom(this.map._zoom);
 
-                camX = halfWidth;
-                camY = height;
+        this.map.on({
+            move:      this._onMove,
+            moveend:   this._onMoveEnd,
+            zoomstart: this._onZoomStart,
+            zoomend:   this._onZoomEnd
+        }, this);
 
-                setSize(map._size.x, map._size.y); // in case this is triggered by resize
-                setOrigin(po.x - mp.x, po.y - mp.y);
-                onMoveEnd();
-                render();
-            };
+//        var onZoom = function (opt) {
+//            var
+//                scale = this.map.getZoomScale(opt.zoom),
+//                offset = this.map._getCenterOffset(opt.center).divideBy(1 - 1 / scale),
+//                viewportPos = this.map.containerPointToLayerPoint(this.map.getSize().multiplyBy(-1)),
+//                origin = viewportPos.add(offset).round()
+//            ;
+//
+//            this.canvas.style[L.DomUtil.TRANSFORM] = L.DomUtil.getTranslateString((origin.multiplyBy(-1).add(L.DomUtil.getPosition(this.map._mapPane).multiplyBy(-1)).multiplyBy(scale).add(origin))) + ' scale(' + scale + ') ';
+//        };
 
-            mapOnZoomEnd = function () {
-                var
-                    mp = L.DomUtil.getPosition(map._mapPane),
-                    po = map.getPixelOrigin()
-                ;
-                setOrigin(po.x - mp.x, po.y - mp.y);
-                onZoomEnd({ zoom: map._zoom });
-                blockMoveEvent = true;
-            };
-
-            map.on({
-                move: mapOnMove,
-                moveend: mapOnMoveEnd,
-                zoomstart: onZoomStart,
-                zoomend: mapOnZoomEnd
-            });
-
-    //        var onZoom = function (opt) {
-    //            var
-    //                scale = map.getZoomScale(opt.zoom),
-    //                offset = map._getCenterOffset(opt.center).divideBy(1 - 1 / scale),
-    //                viewportPos = map.containerPointToLayerPoint(map.getSize().multiplyBy(-1)),
-    //                origin = viewportPos.add(offset).round()
-    //            ;
-    //
-    //            canvas.style[L.DomUtil.TRANSFORM] = L.DomUtil.getTranslateString((origin.multiplyBy(-1).add(L.DomUtil.getPosition(map._mapPane).multiplyBy(-1)).multiplyBy(scale).add(origin))) + ' scale(' + scale + ') ';
-    //            canvas.style.border = "3px solid red";
-    //            isZooming = true;
-    //        };
-
-            if (map.options.zoomAnimation) {
-                 canvas.className = 'leaflet-zoom-animated';
-    //             map.on('zoomanim', onZoom);
-            }
-
-            map.attributionControl.addAttribution(attribution);
-
-            render(); // in case of for re-adding this layer
-        };
-
-        osmb.onRemove = function (map) {
-            map.attributionControl.removeAttribution(attribution);
-
-            map.off({
-                move: mapOnMove,
-                moveend: mapOnMoveEnd,
-                zoomstart: onZoomStart,
-                zoomend: mapOnZoomEnd
-            });
-
-            canvas.parentNode.removeChild(canvas);
-            osmb.map = null;
-        };
-
-        // in case it has been passed as parameter, initialize map directly
-        if (arguments.length) {
-            osmb.addTo(arguments[0]);
+        if (this.map.options.zoomAnimation) {
+             this.canvas.className = 'leaflet-zoom-animated';
+//           this.map.on('zoomanim', this.osmb.onZoom);
         }
+
+        this.map.attributionControl.addAttribution(OSMBuildings.ATTRIBUTION);
+        this.osmb.loadData(); // initially - yes. otherwise?
+        this.osmb.render(); // in case of re-adding this layer
+    },
+
+    onRemove: function (map) {
+        map.attributionControl.removeAttribution(OSMBuildings.ATTRIBUTION);
+
+        this.map.off({
+            move:      this._onMove,
+            moveend:   this._onMoveEnd,
+            zoomstart: this._onZoomStart,
+            zoomend:   this._onZoomEnd
+        }, this);
+
+        this.map = null;
+        this.canvas.parentNode.removeChild(this.canvas);
+    }
+});

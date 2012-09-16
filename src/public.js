@@ -1,30 +1,16 @@
-
-        osmb.VERSION = VERSION;
-
-        osmb.render = function () {
-            render();
-            return osmb;
-        };
-
-        osmb.setStyle = function (style) {
-            setStyle(style);
-            return osmb;
-        };
-
-        osmb.setData = function (data, isLonLat) {
-            // DEPRECATED
-            console.warn('OSMBuildings.loadData() is deprecated and will be removed soon.\nUse OSMBuildings.loadData({url|object}, isLatLon?) instead.');
-            setData(data, isLonLat);
-            return osmb;
-        };
-
-        osmb.loadData = function (u) {
-            url = u;
-            loadData();
-            return osmb;
-        };
-
-        osmb.geoJSON = function (url, isLatLon) {
-            geoJSON(url, isLatLon);
-            return osmb;
-        };
+        this.loadData = loadData;
+        this.geoJSON = geoJSON;
+        this.onResize = onResize;
+        this.onMove = onMove;
+        this.onMoveEnd = onMoveEnd;
+        this.onZoomStart = onZoomStart;
+        this.onZoomEnd = onZoomEnd;
+        this.createCanvas = createCanvas;
+        this.setMaxZoom = setMaxZoom;
+        this.setMinZoom = setMinZoom;
+        this.render = render;
+        this.setSize = setSize;
+        this.setOrigin = setOrigin;
+        this.setZoom = setZoom;
+        this.setCam = setCam;
+        this.setStyle = setStyle;

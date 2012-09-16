@@ -1,3 +1,4 @@
+
         function setSize(w, h) {
             width  = w;
             height = h;
@@ -18,6 +19,11 @@
             zoom = z;
             size = TILE_SIZE << zoom;
             zoomAlpha = 1 - (zoom - minZoom) * 0.3 / (maxZoom - minZoom);
+        }
+
+        function setCam(x, y) {
+            camX = x;
+            camY = y;
         }
 
         function setStyle(style) {

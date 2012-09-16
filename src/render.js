@@ -1,3 +1,4 @@
+
         function fadeIn() {
             fadeFactor = 0;
             clearInterval(fadeTimer);
@@ -121,13 +122,13 @@
             }
         }
 
-//        function debugMarker(x, y, color, size) {
-//            context.fillStyle = color || '#ffcc00';
-//            context.beginPath();
-//            context.arc(x, y, size || 3, 0, PI*2, true);
-//            context.closePath();
-//            context.fill();
-//        }
+        function debugMarker(x, y, color, size) {
+            context.fillStyle = color || '#ffcc00';
+            context.beginPath();
+            context.arc(x, y, size || 3, 0, PI*2, true);
+            context.closePath();
+            context.fill();
+        }
 
         function drawShape(points, stroke) {
             if (!points.length) {

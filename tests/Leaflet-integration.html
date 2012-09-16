@@ -24,7 +24,8 @@
     <!--[if lte IE 8]><link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.4.4/leaflet.ie.css" /><![endif]-->
     <script src="http://cdn.leafletjs.com/leaflet-0.4.4/leaflet.js"></script>
 
-    <script src="../dist/buildings-debug.js"></script>
+    <!--script src="../dist/buildings-debug.js"></script-->
+    <script src="../src/engines/Leaflet.integration.js"></script>
 </head>
 
 <body>
@@ -38,16 +39,20 @@
         { attribution: 'Map tiles &copy; <a href="http://mapbox.com">MapBox</a>', maxZoom: 17 }
     ).addTo(map);
 
-    var osmb = new OSMBuildings(map).loadData('../server/?w={w}&n={n}&e={e}&s={s}&z={z}');
-    L.control.layers({}, { Buildings: osmb }).addTo(map);
+//    var osmb = new OSMBuildings(map).loadData('../server/?w={w}&n={n}&e={e}&s={s}&z={z}');
+//    L.control.layers({}, { Buildings: osmb }).addTo(map);
+//
+//    function setStyle(el) {
+//        if (el.checked) {
+//            osmb.setStyle({ wallColor: 'rgb(100,100,250,0.7)', roofColor: 'rgb(220,220,50)', strokeRoofs: true });
+//        } else {
+//            osmb.setStyle({ wallColor: 'rgb(200,190,180)', roofColor: false, strokeRoofs: false });
+//        }
+//    }
 
-    function setStyle(el) {
-        if (el.checked) {
-            osmb.setStyle({ wallColor: 'rgb(100,100,250,0.7)', roofColor: 'rgb(220,220,50)', strokeRoofs: true });
-        } else {
-            osmb.setStyle({ wallColor: 'rgb(200,190,180)', roofColor: false, strokeRoofs: false });
-        }
-    }
+    var l = new L.BuildingsLayer('../server/?w={w}&n={n}&e={e}&s={s}&z={z}');
+    l.addTo(map);
+
     </script>
 
     <label><input type="checkbox" value="1" onclick="setStyle(this)">Styles</label>
