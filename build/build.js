@@ -33,12 +33,12 @@ function taskStart() {
 
     if (options.debug) {
         taskEnd();
-        return; // reachable in watch mode
+        return;
     }
 
     if (!builder.jshint(jsCombined, options.debug)) {
         taskAbort();
-        return; // reachable in watch mode
+        return;
     }
 
     builder.minify(jsCombined, function (err, res) {
@@ -58,13 +58,16 @@ function taskAbort() {
 }
 
 function taskEnd() {
-    builder.write(jsCombined, config.dstFileDebug);
-
     if (!options.debug) {
+		builder.write(jsCombined, config.dstFileDebug);
         builder.write(jsMinified, config.dstFile);
-    }
+    } else {
+		builder.write(jsCombined, config.dstFileDebug);
+        builder.write(jsCombined, config.dstFile); // mock minified file by using debug version
+	}
 
     console.log('done');
+
     if (!options.watch) {
         process.exit();
     }

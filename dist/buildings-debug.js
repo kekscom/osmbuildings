@@ -14,42 +14,6 @@
     global.OSMBuildings = function () {
 
 
-//****** file: constants.js ******
-
-    // private constants, general to all instances
-    var
-        VERSION = '0.1.6a',
-
-        PI = Math.PI,
-        HALF_PI = PI / 2,
-        QUARTER_PI = PI / 4,
-        RAD = 180 / PI,
-
-        TILE_SIZE = 256,
-        MIN_ZOOM = 14, // for buildings only, GeoJSON should not be affected
-
-        CAM_Z = 400,
-        MAX_HEIGHT = CAM_Z - 50,
-
-        LAT = 'latitude', LON = 'longitude',
-        HEIGHT = 0, FOOTPRINT = 1, COLOR = 2, IS_NEW = 3
-    ;
-
-//****** file: shortcuts.js ******
-
-    // object access shortcuts
-    var
-        Int32Array = Int32Array || Array,
-        exp = Math.exp,
-        log = Math.log,
-        tan = Math.tan,
-        atan = Math.atan,
-        min = Math.min,
-        max = Math.max,
-        doc = global.document
-    ;
-
-
 //****** file: Color.js ******
 
 
@@ -122,6 +86,7 @@ var Color = (function () {
 
     C.parse = function(str) {
         var m;
+        str += '';
         if (~str.indexOf('#')) {
             m = str.match(/^#?(\w{2})(\w{2})(\w{2})(\w{2})?$/);
             return new Color(
@@ -175,38 +140,70 @@ var Color = (function () {
 
 //****** file: variables.js ******
 
-        // private variables, specific to an instance
-        var
-            osmb = this,
 
-            width = 0, height = 0,
-            halfWidth = 0, halfHeight = 0,
-            originX = 0, originY = 0,
-            zoom, size,
+    // object access shortcuts
+    var
+        Int32Array = Int32Array || Array,
+        exp = Math.exp,
+        log = Math.log,
+        tan = Math.tan,
+        atan = Math.atan,
+        min = Math.min,
+        max = Math.max,
+        doc = global.document
+    ;
 
-            req,
+    // private constants, shared to all instances
+    var
+        VERSION = '0.1.6a',
 
-            canvas, context,
+        PI = Math.PI,
+        HALF_PI = PI / 2,
+        QUARTER_PI = PI / 4,
+        RAD = 180 / PI,
 
-            url,
-            strokeRoofs,
-            wallColor = new Color(200,190,180),
-            roofColor = null,
-            strokeColor = new Color(145,140,135),
+        TILE_SIZE = 256,
+        MIN_ZOOM = 14, // for buildings data only, GeoJSON should not be affected
 
-            rawData,
-            meta, data,
+        CAM_Z = 400,
+        MAX_HEIGHT = CAM_Z - 50,
 
-            zoomAlpha = 1,
-            fadeFactor = 1,
-            fadeTimer,
+        LAT = 'latitude', LON = 'longitude',
+        HEIGHT = 0, FOOTPRINT = 1, COLOR = 2, IS_NEW = 3
+    ;
 
-            minZoom = MIN_ZOOM,
-            maxZoom = 20,
-            camX, camY,
+    // private variables, specific to an instance
+    var
+        osmb = this,
 
-            isZooming = false
-        ;
+        width = 0, height = 0,
+        halfWidth = 0, halfHeight = 0,
+        originX = 0, originY = 0,
+        zoom, size,
+
+        req,
+
+        canvas, context,
+
+        url,
+        strokeRoofs,
+        wallColor = new Color(200,190,180),
+        roofColor = null,
+        strokeColor = new Color(145,140,135),
+
+        rawData,
+        meta, data,
+
+        zoomAlpha = 1,
+        fadeFactor = 1,
+        fadeTimer,
+
+        minZoom = MIN_ZOOM,
+        maxZoom = 20,
+        camX, camY,
+
+        isZooming = false
+    ;
 
 
 //****** file: functions.js ******
@@ -549,7 +546,7 @@ var Color = (function () {
             if (style.color || style.wallColor) {
                 wallColor = Color.parse(style.color || style.wallColor);
             }
-            if (style.roofColor) {
+            if (style.roofColor !== undefined) { // allow explicit falsy values in order to remove roof color
                 roofColor = Color.parse(style.roofColor);
             }
             render();
@@ -694,12 +691,12 @@ var Color = (function () {
                     if ((bx - ax) * (_a.y - ay) > (_a.x - ax) * (by - ay)) {
                         // face combining
                         if (!walls.length) {
-                            walls.unshift(ay);
-                            walls.unshift(ax);
+                            walls.unshift(ay + 0.5);
+                            walls.unshift(ax + 0.5);
                             walls.push(_a.x, _a.y);
                         }
-                        walls.unshift(by);
-                        walls.unshift(bx);
+                        walls.unshift(by + 0.5);
+                        walls.unshift(bx + 0.5);
                         walls.push(_b.x, _b.y);
                     } else {
                         drawShape(walls);
@@ -880,8 +877,8 @@ function ellipse(x, y, w, h, stroke) {
 
         function project(x, y, m) {
             return {
-                x: ~~((x - camX) * m + camX),
-                y: ~~((y - camY) * m + camY)
+                x: ~~((x - camX) * m + camX) + 0.5,
+                y: ~~((y - camY) * m + camY) + 0.5
             };
         }
 

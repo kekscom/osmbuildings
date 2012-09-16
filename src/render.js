@@ -92,12 +92,12 @@
                     if ((bx - ax) * (_a.y - ay) > (_a.x - ax) * (by - ay)) {
                         // face combining
                         if (!walls.length) {
-                            walls.unshift(ay);
-                            walls.unshift(ax);
+                            walls.unshift(ay + 0.5);
+                            walls.unshift(ax + 0.5);
                             walls.push(_a.x, _a.y);
                         }
-                        walls.unshift(by);
-                        walls.unshift(bx);
+                        walls.unshift(by + 0.5);
+                        walls.unshift(bx + 0.5);
                         walls.push(_b.x, _b.y);
                     } else {
                         drawShape(walls);
@@ -278,7 +278,7 @@ function ellipse(x, y, w, h, stroke) {
 
         function project(x, y, m) {
             return {
-                x: ~~((x - camX) * m + camX),
-                y: ~~((y - camY) * m + camY)
+                x: ~~((x - camX) * m + camX) + 0.5, // + 0.5: disabling(!) anti alias
+                y: ~~((y - camY) * m + camY) + 0.5  // + 0.5: disabling(!) anti alias
             };
         }
