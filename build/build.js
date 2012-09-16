@@ -1,102 +1,83 @@
 
-var build = require('./builder/builder.js');
-var srcPath = '../src';
-var dstPath = '../dist';
+// TODO: sizes, size comparison, duration
+// TODO: beautify code for other engines
+// TODO: build for multiple engines
 
-var srcFiles     = require('./files.json');
-//var dstFile      = dstPath + '/buildings.js';
-//var dstFileGzip  = dstPath + '/buildings.js.gz';
-//var dstFileDebug = dstPath + '/buildings-debug.js';
+var builder = require('./builder/builder.js');
+var config  = require('./config.js');
 
-//var dstFile      = dstPath + '/buildings-leaflet.js';
-//var dstFileGzip  = dstPath + '/buildings-leaflet.js.gz';
-//var dstFileDebug = dstPath + '/buildings-leaflet-debug.js';
-
-var dstFile      = dstPath + '/buildings-openlayers.js';
-var dstFileGzip  = dstPath + '/buildings-openlayers.js.gz';
-var dstFileDebug = dstPath + '/buildings-openlayers-debug.js';
-
-var COPYRIGHT = '/*\n Copyright (c) 2010-2012, CloudMade, Vladimir Agafonkin\n' +
-                ' Leaflet is an open-source JavaScript library for mobile-friendly interactive maps.\n' +
-                ' http://leaflet.cloudmade.com\n*/\n';
-
-// VERSION!
-// all enginges
-// batch copy
-// DEBUG / DEV mode (hint config) , beautify
-
-//*****************************************************************************
-
-function taskStart() {
-    console.clear();
-    console.log(new Date().toISOString());
-    taskCombine();
-}
-
-function taskCombine() {
-    console.log('combining..');
-	build.combine(srcPath, srcFiles, function (res) {
-        build.write(res, dstFileDebug, taskJsHint);
-    });
-}
-
-function taskJsHint(str) {
-    console.log('hinting..');
-	build.jshint(str, function (err) {
-		if (err.length) {
-            console.log(err.join('\n'));
-            taskAbort();
-		} else {
-            taskMinify(str);
-        }
-	});
-}
-
-function taskMinify(str) {
-    console.log('minifying..');
-    build.minify(str, function (res) {
-        build.write(res, dstFile, taskCompress);
-    });
-}
-
-function taskCompress(str) {
-    console.log('compressing..');
-    build.compress(dstFile, dstFileGzip, taskEnd);
-}
-
-// JSDOC http://www.2ality.com/2011/08/jsdoc-intro.html
-//function taskDocumentation() {
-//    console.log('documenting..');
-//    build.documentation(dstFileDebug, '../doc', taskEnd);
-//}
-
-function taskAbort() {
-    // process.exit();
-}
-
-function taskEnd() {
-    build.copy(dstFile,      '../examples/js/buildings.js');
-    build.copy(dstFileDebug, '../examples/js/buildings-debug.js');
-    console.log('done');
-    taskAbort();
-}
+var options = {};
+process.argv.splice(2).forEach(function (item) {
+    var pairs = item.split('=')
+    options[ pairs[0].replace(/^--/, '') ] = pairs.length > 1 ? pairs[1] : true;
+});
 
 //*****************************************************************************
 
 var
-    arguments = process.argv.splice(2),
-    timer
+    jsCombined,
+    jsMinified,
+    jsGzipSize = 0
 ;
 
-if (!~arguments.indexOf('watch')) {
-    taskStart();
-} else {
-    console.log('watching..');
-    var fs = require('fs');
-    for (var i = 0, il = srcFiles.length; i < il; i++) {
-        fs.watch(srcPath + '/' + srcFiles[i], { persistent: true }, function () {
-            clearTimeout(timer);
-            timer = setTimeout(taskStart, 500);
-        });
+function taskStart() {
+    console.clear();
+    console.log(new Date().toISOString().replace(/T/, ' ').substring(0, 16) +
+        (options.debug ? ' *** DEBUG ***' : '')
+    );
+
+    jsCombined = builder.setVars(
+        config.COPYRIGHT + builder.combine(config.srcFiles),
+        { version: config.VERSION }
+    );
+
+    if (options.debug) {
+        taskEnd();
+        return;
     }
+
+    if (!builder.jshint(jsCombined, options.debug)) {
+        taskAbort();
+        return;
+    }
+
+    builder.minify(jsCombined, function (err, res) {
+        jsMinified = config.COPYRIGHT + res;
+        builder.gzip(jsMinified, function (err, res) {
+            jsGzipSize = res.length;
+            taskEnd();
+        });
+    });
+}
+
+function taskAbort() {
+    console.log('aborted');
+    if (!options.watch) {
+        process.exit();
+    }
+}
+
+function taskEnd() {
+    if (!options.debug) {
+		builder.write(jsCombined, config.dstFileDebug);
+        builder.write(jsMinified, config.dstFile);
+    } else {
+		builder.write(jsCombined, config.dstFileDebug);
+        builder.write(jsCombined, config.dstFile); // mock minified file by using debug version
+	}
+
+    console.log('done');
+
+    if (!options.watch) {
+        process.exit();
+    }
+}
+
+//*****************************************************************************
+
+if (options.watch) {
+    options.debug = true;
+    builder.watch(config.srcFiles, taskStart);
+} else {
+    taskStart();
 }

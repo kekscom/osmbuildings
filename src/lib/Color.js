@@ -68,6 +68,7 @@ var Color = (function () {
 
     C.parse = function(str) {
         var m;
+        str += '';
         if (~str.indexOf('#')) {
             m = str.match(/^#?(\w{2})(\w{2})(\w{2})(\w{2})?$/);
             return new Color(

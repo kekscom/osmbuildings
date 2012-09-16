@@ -26,7 +26,7 @@
             if (style.color || style.wallColor) {
                 wallColor = Color.parse(style.color || style.wallColor);
             }
-            if (style.roofColor) {
+            if (style.roofColor !== undefined) { // allow explicit falsy values in order to remove roof color
                 roofColor = Color.parse(style.roofColor);
             }
             render();

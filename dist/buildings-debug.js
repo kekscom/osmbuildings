@@ -1,13 +1,20 @@
+/**
+ * Copyright (C) 2012 OSM Buildings, Jan Marsch
+ * A leightweight JavaScript library for visualizing 3D building geometry on interactive maps.
+ * @osmbuildings, http://osmbuildings.org
+ */
 //****** file: prefix.js ******
 
+/*jshint bitwise:false */
 
-var OSMBuildings = (function (global) {
+(function (global) {
 
     'use strict';
 
+    global.OSMBuildings = function () {
 
-//****** file: constants.js ******
 
+<<<<<<< HEAD
     // private constants, general to all instances
     var
         VERSION = '0.1.6a',
@@ -45,6 +52,9 @@ var OSMBuildings = (function (global) {
 
 
 //****** file: lib/Color.js ******
+=======
+//****** file: Color.js ******
+>>>>>>> master
 
 
 var Color = (function () {
@@ -116,6 +126,7 @@ var Color = (function () {
 
     C.parse = function(str) {
         var m;
+        str += '';
         if (~str.indexOf('#')) {
             m = str.match(/^#?(\w{2})(\w{2})(\w{2})(\w{2})?$/);
             return new Color(
@@ -167,43 +178,72 @@ var Color = (function () {
 
 }());
 
-//****** file: core.prefix.js ******
-
-    function B() {
-
-
 //****** file: variables.js ******
 
-        // private variables, specific to an instance
-        var
-            width = 0, height = 0,
-            halfWidth = 0, halfHeight = 0,
-            originX = 0, originY = 0,
-            zoom, size,
 
-            req,
+    // object access shortcuts
+    var
+        Int32Array = Int32Array || Array,
+        exp = Math.exp,
+        log = Math.log,
+        tan = Math.tan,
+        atan = Math.atan,
+        min = Math.min,
+        max = Math.max,
+        doc = global.document
+    ;
 
-            canvas, context,
+    // private constants, shared to all instances
+    var
+        VERSION = '0.1.6a',
 
-            url,
-            strokeRoofs,
-            wallColor = new Color(200,190,180),
-            roofColor = null,
-            strokeColor = new Color(145,140,135),
+        PI = Math.PI,
+        HALF_PI = PI / 2,
+        QUARTER_PI = PI / 4,
+        RAD = 180 / PI,
 
-            rawData,
-            meta, data,
+        TILE_SIZE = 256,
+        MIN_ZOOM = 14, // for buildings data only, GeoJSON should not be affected
 
-            zoomAlpha = 1,
-            fadeFactor = 1,
-            fadeTimer,
+        CAM_Z = 400,
+        MAX_HEIGHT = CAM_Z - 50,
 
-            minZoom = MIN_ZOOM,
-            maxZoom = 20,
-            camX, camY,
+        LAT = 'latitude', LON = 'longitude',
+        HEIGHT = 0, FOOTPRINT = 1, COLOR = 2, IS_NEW = 3
+    ;
 
-            isZooming = false
-        ;
+    // private variables, specific to an instance
+    var
+        osmb = this,
+
+        width = 0, height = 0,
+        halfWidth = 0, halfHeight = 0,
+        originX = 0, originY = 0,
+        zoom, size,
+
+        req,
+
+        canvas, context,
+
+        url,
+        strokeRoofs,
+        wallColor = new Color(200,190,180),
+        roofColor = null,
+        strokeColor = new Color(145,140,135),
+
+        rawData,
+        meta, data,
+
+        zoomAlpha = 1,
+        fadeFactor = 1,
+        fadeTimer,
+
+        minZoom = MIN_ZOOM,
+        maxZoom = 20,
+        camX, camY,
+
+        isZooming = false
+    ;
 
 
 //****** file: functions.js ******
@@ -546,7 +586,7 @@ var Color = (function () {
             if (style.color || style.wallColor) {
                 wallColor = Color.parse(style.color || style.wallColor);
             }
-            if (style.roofColor) {
+            if (style.roofColor !== undefined) { // allow explicit falsy values in order to remove roof color
                 roofColor = Color.parse(style.roofColor);
             }
             render();
@@ -695,12 +735,12 @@ var Color = (function () {
                     if ((bx - ax) * (_a.y - ay) > (_a.x - ax) * (by - ay)) {
                         // face combining
                         if (!walls.length) {
-                            walls.unshift(ay);
-                            walls.unshift(ax);
+                            walls.unshift(ay + 0.5);
+                            walls.unshift(ax + 0.5);
                             walls.push(_a.x, _a.y);
                         }
-                        walls.unshift(by);
-                        walls.unshift(bx);
+                        walls.unshift(by + 0.5);
+                        walls.unshift(bx + 0.5);
                         walls.push(_b.x, _b.y);
                     } else {
                         drawShape(walls);
@@ -751,16 +791,16 @@ var Color = (function () {
 
         function project(x, y, m) {
             return {
-                x: ~~((x - camX) * m + camX),
-                y: ~~((y - camY) * m + camY)
+                x: ~~((x - camX) * m + camX) + 0.5,
+                y: ~~((y - camY) * m + camY) + 0.5
             };
         }
 
 
 //****** file: public.js ******
 
-        this.VERSION = VERSION;
 
+<<<<<<< HEAD
         this.render = function () {
                 render();
             return this;
@@ -769,10 +809,24 @@ var Color = (function () {
         this.setStyle = function (style) {
                 setStyle(style);
             return this;
+=======
+        osmb.VERSION = VERSION;
+
+        osmb.render = function () {
+            render();
+            return osmb;
         };
 
-        this.setData = function (data, isLonLat) {
+        osmb.setStyle = function (style) {
+            setStyle(style);
+            return osmb;
+>>>>>>> master
+        };
+
+        osmb.setData = function (data, isLonLat) {
+            // DEPRECATED
             console.warn('OSMBuildings.loadData() is deprecated and will be removed soon.\nUse OSMBuildings.loadData({url|object}, isLatLon?) instead.');
+<<<<<<< HEAD
                 setData(data, isLonLat);
             return this;
         };
@@ -781,15 +835,28 @@ var Color = (function () {
                 url = u;
                 loadData();
             return this;
+=======
+            setData(data, isLonLat);
+            return osmb;
         };
 
-        this.geoJSON = function (url, isLatLon) {
+        osmb.loadData = function (u) {
+            url = u;
+            loadData();
+            return osmb;
+>>>>>>> master
+        };
+
+        osmb.geoJSON = function (url, isLatLon) {
             geoJSON(url, isLatLon);
-            return this;
+            return osmb;
         };
 
 
-//****** file: engines/Leaflet.js ******
+//****** file: Leaflet.js ******
+
+// new L.BuildingsLayer()
+// layer.addTo(map)
 
         var
             attribution = 'Buildings &copy; <a href="http://osmbuildings.org">OSM Buildings</a>',
@@ -797,15 +864,15 @@ var Color = (function () {
             blockMoveEvent // needed as Leaflet fires moveend and zoomend together
         ;
 
-        this.VERSION += '-leaflet';
+        osmb.VERSION += '-leaflet';
 
-        this.addTo = function (map) {
-            map.addLayer(this);
-            return this;
+        osmb.addTo = function (map) {
+            map.addLayer(osmb);
+            return osmb;
         };
 
-        this.onAdd = function (map) {
-            this.map = map;
+        osmb.onAdd = function (map) {
+            osmb.map = map;
 
             createCanvas(map._panes.overlayPane);
             maxZoom = map._layersMaxZoom;
@@ -889,7 +956,7 @@ var Color = (function () {
             render(); // in case of for re-adding this layer
         };
 
-        this.onRemove = function (map) {
+        osmb.onRemove = function (map) {
             map.attributionControl.removeAttribution(attribution);
 
             map.off({
@@ -900,25 +967,20 @@ var Color = (function () {
             });
 
             canvas.parentNode.removeChild(canvas);
-            this.map = null;
+            osmb.map = null;
         };
 
-        // in case it has been passed to this, initialize map directly
+        // in case it has been passed as parameter, initialize map directly
         if (arguments.length) {
-            this.addTo(arguments[0]);
+            osmb.addTo(arguments[0]);
         }
-
-
-//****** file: core.suffix.js ******
-
-    }
-
-    return B;
 
 
 //****** file: suffix.js ******
 
+    };
 
 }(this));
 
+/*jshint bitwise:true */
 
