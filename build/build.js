@@ -14,6 +14,23 @@ process.argv.splice(2).forEach(function (item) {
 
 //*****************************************************************************
 
+function getFile(file, func) {
+    if (typeof file === 'string') {
+        return file;
+    }
+    if (options.debug) {
+        return file.default;
+    }
+    for (var mode in file) {
+        if (mode === 'debug') {
+            continue;
+        }
+        return file[mode];
+    }
+}
+
+//*****************************************************************************
+
 var
     jsCombined,
     jsMinified,

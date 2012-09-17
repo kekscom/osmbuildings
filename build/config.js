@@ -13,8 +13,8 @@ exports.VERSION = '0.1.6a';
 exports.srcFiles = [
     srcPath + '/prefix.js',
     srcPath + '/shortcuts.js',
-    srcPath + '/constants.js',
     srcPath + '/lib/Color.js',
+    srcPath + '/constants.js',
         srcPath + '/prefix.class.js',
         srcPath + '/variables.js',
         srcPath + '/functions.js',
@@ -35,7 +35,15 @@ exports.srcFiles = [
 exports.dstFile      = dstPath + '/buildings.js';
 exports.dstFileDebug = dstPath + '/buildings-debug.js';
 
-// exports.dstFile      = dstPath + '/buildings-leaflet.js';
-// exports.dstFileDebug = dstPath + '/buildings-leaflet-debug.js';
-// exports.dstFile      = dstPath + '/buildings-openlayers.js';
-// exports.dstFileDebug = dstPath + '/buildings-openlayers-debug.js';
+
+//exports.dstFile = {
+//    default: dstPath + '/buildings.js',
+//    leaflet: dstPath + '/buildings-leaflet.js',
+//    openlayers: dstPath + '/buildings-openlayers.js'
+//};
+//
+//exports.dstFileDebug = {
+//    default: dstPath + '/buildings-debug.js',
+//    leaflet: exports.dstFileDebug = dstPath + '/buildings-leaflet-debug.js',
+//    openlayers: dstPath + '/buildings-openlayers-debug.js'
+//};

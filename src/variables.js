@@ -12,7 +12,7 @@
             url,
             strokeRoofs,
             wallColor = new Color(200,190,180),
-            roofColor = null,
+            roofColor,
             strokeColor = new Color(145,140,135),
 
             rawData,
@@ -26,5 +26,5 @@
             maxZoom = 20,
             camX, camY,
 
-            isZooming = false
+            isZooming
         ;

@@ -191,7 +191,7 @@
                 geometry = json.geometry;
                 properties = json.properties;
             }
-    //      else geometry = json
+        //      else geometry = json
 
             if (geometry.type === 'Polygon') {
                 polygons = [geometry.coordinates];

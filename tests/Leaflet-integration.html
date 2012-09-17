@@ -41,13 +41,16 @@
     var osmb = new L.BuildingsLayer('../server/?w={w}&n={n}&e={e}&s={s}&z={z}').addTo(map);
     L.control.layers({}, { Buildings: osmb }).addTo(map);
 
-    function setStyle(el) {
-        if (el.checked) {
-            osmb.setStyle({ wallColor: 'rgb(100,100,250,0.7)', roofColor: 'rgb(220,220,50)', strokeRoofs: true });
-        } else {
-            osmb.setStyle({ wallColor: 'rgb(200,190,180)', roofColor: false, strokeRoofs: false });
-        }
-    }
+//    var osmb = new OSMBuildings(map).loadData('../server/?w={w}&n={n}&e={e}&s={s}&z={z}');
+//    L.control.layers({}, { Buildings: osmb }).addTo(map);
+//
+//    function setStyle(el) {
+//        if (el.checked) {
+//            osmb.setStyle({ wallColor: 'rgb(100,100,250,0.7)', roofColor: 'rgb(220,220,50)', strokeRoofs: true });
+//        } else {
+//            osmb.setStyle({ wallColor: 'rgb(200,190,180)', roofColor: false, strokeRoofs: false });
+//        }
+//    }
     </script>
 
     <label><input type="checkbox" value="1" onclick="setStyle(this)">Styles</label>

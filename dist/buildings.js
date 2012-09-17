@@ -25,29 +25,6 @@
     ;
 
 
-//****** file: constants.js ******
-
-    // constants, shared to all instances
-    var
-        VERSION = '0.1.6a',
-        ATTRIBUTION = '&copy; <a href="http://osmbuildings.org">OSM Buildings</a>',
-
-        PI = Math.PI,
-        HALF_PI = PI / 2,
-        QUARTER_PI = PI / 4,
-        RAD = 180 / PI,
-
-        TILE_SIZE = 256,
-        MIN_ZOOM = 14, // for buildings data only, GeoJSON should not be affected
-
-        CAM_Z = 400,
-        MAX_HEIGHT = CAM_Z - 50,
-
-        LAT = 'latitude', LON = 'longitude',
-        HEIGHT = 0, FOOTPRINT = 1, COLOR = 2, IS_NEW = 3
-    ;
-
-
 //****** file: Color.js ******
 
 
@@ -173,6 +150,29 @@ var Color = (function () {
 }());
 
 
+//****** file: constants.js ******
+
+    // constants, shared to all instances
+    var
+        VERSION = '0.1.6a',
+        ATTRIBUTION = '&copy; <a href="http://osmbuildings.org">OSM Buildings</a>',
+
+        PI = Math.PI,
+        HALF_PI = PI / 2,
+        QUARTER_PI = PI / 4,
+        RAD = 180 / PI,
+
+        TILE_SIZE = 256,
+        MIN_ZOOM = 14, // for buildings data only, GeoJSON should not be affected
+
+        CAM_Z = 400,
+        MAX_HEIGHT = CAM_Z - 50,
+
+        LAT = 'latitude', LON = 'longitude',
+        HEIGHT = 0, FOOTPRINT = 1, COLOR = 2, IS_NEW = 3
+    ;
+
+
 //****** file: prefix.class.js ******
 
     if (!global.L) {
@@ -198,7 +198,7 @@ var Color = (function () {
             url,
             strokeRoofs,
             wallColor = new Color(200,190,180),
-            roofColor = null,
+            roofColor,
             strokeColor = new Color(145,140,135),
 
             rawData,
@@ -212,21 +212,21 @@ var Color = (function () {
             maxZoom = 20,
             camX, camY,
 
-            isZooming = false
+            isZooming
         ;
 
 
 //****** file: functions.js ******
 
 
-        function createCanvas(parentNode) {
+        function createCanvas (parentNode) {
             canvas = doc.createElement('canvas');
-            canvas.style.webkitTransform = 'translate3d(0,0,0)';
+            canvas.style.webkitTransform = 'translate3d(0,0,0)'; // turn on hw acceleration
+            canvas.style.imageRendering = 'optimizeSpeed';
             canvas.style.position = 'absolute';
             canvas.style.pointerEvents = 'none';
             canvas.style.left = 0;
             canvas.style.top = 0;
-            canvas.style.imageRendering = 'optimizeSpeed';
             parentNode.appendChild(canvas);
 
             context = canvas.getContext('2d');
@@ -234,7 +234,12 @@ var Color = (function () {
             context.lineJoin = 'round';
             context.lineWidth = 1;
 
-            try { context.mozImageSmoothingEnabled = false; } catch(err) {}
+            try {
+                context.mozImageSmoothingEnabled = false;
+            } catch(err) {
+            }
+
+            return canvas;
         }
 
         function pixelToGeo(x, y) {
@@ -259,8 +264,16 @@ var Color = (function () {
 
         function template(str, data) {
             return str.replace(/\{ *([\w_]+) *\}/g, function(x, key) {
-                return data[key] || '';
+                return data[key];
             });
+        }
+
+        function setMaxZoom(z) {
+            maxZoom = z;
+        }
+
+        function setMinZoom(z) {
+            minZoom = z;
         }
 
 
@@ -459,7 +472,7 @@ var Color = (function () {
                 geometry = json.geometry;
                 properties = json.properties;
             }
-    //      else geometry = json
+        //      else geometry = json
 
             if (geometry.type === 'Polygon') {
                 polygons = [geometry.coordinates];
@@ -528,6 +541,7 @@ var Color = (function () {
 
 //****** file: properties.js ******
 
+
         function setSize(w, h) {
             width  = w;
             height = h;
@@ -548,6 +562,11 @@ var Color = (function () {
             zoom = z;
             size = TILE_SIZE << zoom;
             zoomAlpha = 1 - (zoom - minZoom) * 0.3 / (maxZoom - minZoom);
+        }
+
+        function setCam(x, y) {
+            camX = x;
+            camY = y;
         }
 
         function setStyle(style) {
@@ -606,6 +625,7 @@ var Color = (function () {
 
 
 //****** file: render.js ******
+
 
         function fadeIn() {
             fadeFactor = 0;
@@ -776,8 +796,8 @@ var Color = (function () {
         };
 
 
-//****** file: Leaflet.js ******
 
+//****** file: Leaflet.js ******
 
         var
             mapOnMove, mapOnMoveEnd, mapOnZoomEnd,
@@ -887,7 +907,6 @@ var Color = (function () {
             canvas.parentNode.removeChild(canvas);
             this.map = null;
         };
-
 
 
 //****** file: suffix.class.js ******

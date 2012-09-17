@@ -1,4 +1,3 @@
-
         var
             mapOnMove, mapOnMoveEnd, mapOnZoomEnd,
             blockMoveEvent // needed as Leaflet fires moveend and zoomend together
@@ -107,4 +106,3 @@
             canvas.parentNode.removeChild(canvas);
             this.map = null;
         };
-

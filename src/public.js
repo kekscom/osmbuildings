@@ -7,3 +7,4 @@
             geoJSON(url, isLatLon);
             return this;
         };
+
