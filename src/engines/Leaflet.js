@@ -1,21 +1,16 @@
-// new L.BuildingsLayer()
-// layer.addTo(map)
 
         var
-            attribution = 'Buildings &copy; <a href="http://osmbuildings.org">OSM Buildings</a>',
             mapOnMove, mapOnMoveEnd, mapOnZoomEnd,
             blockMoveEvent // needed as Leaflet fires moveend and zoomend together
         ;
 
-        osmb.VERSION += '-leaflet';
-
-        osmb.addTo = function (map) {
-            map.addLayer(osmb);
-            return osmb;
+        this.addTo = function (map) {
+            map.addLayer(this);
+            return this;
         };
 
-        osmb.onAdd = function (map) {
-            osmb.map = map;
+        this.onAdd = function (map) {
+            this.map = map;
 
             createCanvas(map._panes.overlayPane);
             maxZoom = map._layersMaxZoom;
@@ -94,13 +89,13 @@
     //             map.on('zoomanim', onZoom);
             }
 
-            map.attributionControl.addAttribution(attribution);
-
+            map.attributionControl.addAttribution(ATTRIBUTION);
+            loadData(); // TODO: usually on instantiation. other reasons? check!
             render(); // in case of for re-adding this layer
         };
 
-        osmb.onRemove = function (map) {
-            map.attributionControl.removeAttribution(attribution);
+        this.onRemove = function (map) {
+            map.attributionControl.removeAttribution(ATTRIBUTION);
 
             map.off({
                 move: mapOnMove,
@@ -110,10 +105,6 @@
             });
 
             canvas.parentNode.removeChild(canvas);
-            osmb.map = null;
+            this.map = null;
         };
 
-        // in case it has been passed as parameter, initialize map directly
-        if (arguments.length) {
-            osmb.addTo(arguments[0]);
-        }

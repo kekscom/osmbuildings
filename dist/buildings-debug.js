@@ -7,11 +7,45 @@
 
 /*jshint bitwise:false */
 
-(function (global) {
+(function (global) { 'use strict';
 
-    'use strict';
 
-    global.OSMBuildings = function () {
+//****** file: shortcuts.js ******
+
+    // object access shortcuts
+    var
+        Int32Array = Int32Array || Array,
+        exp = Math.exp,
+        log = Math.log,
+        tan = Math.tan,
+        atan = Math.atan,
+        min = Math.min,
+        max = Math.max,
+        doc = global.document
+    ;
+
+
+//****** file: constants.js ******
+
+    // constants, shared to all instances
+    var
+        VERSION = '0.1.6a',
+        ATTRIBUTION = '&copy; <a href="http://osmbuildings.org">OSM Buildings</a>',
+
+        PI = Math.PI,
+        HALF_PI = PI / 2,
+        QUARTER_PI = PI / 4,
+        RAD = 180 / PI,
+
+        TILE_SIZE = 256,
+        MIN_ZOOM = 14, // for buildings data only, GeoJSON should not be affected
+
+        CAM_Z = 400,
+        MAX_HEIGHT = CAM_Z - 50,
+
+        LAT = 'latitude', LON = 'longitude',
+        HEIGHT = 0, FOOTPRINT = 1, COLOR = 2, IS_NEW = 3
+    ;
 
 
 //****** file: Color.js ******
@@ -84,7 +118,7 @@ var Color = (function () {
         return new Color(this.r, this.g, this.b, this.a * a);
     };
 
-    C.parse = function(str) {
+    C.parse = function (str) {
         var m;
         str += '';
         if (~str.indexOf('#')) {
@@ -138,72 +172,48 @@ var Color = (function () {
 
 }());
 
+
+//****** file: prefix.class.js ******
+
+    if (!global.L) {
+        return false;
+    }
+
+    global.L.BuildingsLayer = function (u) {
+
+
 //****** file: variables.js ******
 
+        // private variables, specific to an instance
+        var
+            width = 0, height = 0,
+            halfWidth = 0, halfHeight = 0,
+            originX = 0, originY = 0,
+            zoom, size,
 
-    // object access shortcuts
-    var
-        Int32Array = Int32Array || Array,
-        exp = Math.exp,
-        log = Math.log,
-        tan = Math.tan,
-        atan = Math.atan,
-        min = Math.min,
-        max = Math.max,
-        doc = global.document
-    ;
+            req,
 
-    // private constants, shared to all instances
-    var
-        VERSION = '0.1.6a',
+            canvas, context,
 
-        PI = Math.PI,
-        HALF_PI = PI / 2,
-        QUARTER_PI = PI / 4,
-        RAD = 180 / PI,
+            url,
+            strokeRoofs,
+            wallColor = new Color(200,190,180),
+            roofColor = null,
+            strokeColor = new Color(145,140,135),
 
-        TILE_SIZE = 256,
-        MIN_ZOOM = 14, // for buildings data only, GeoJSON should not be affected
+            rawData,
+            meta, data,
 
-        CAM_Z = 400,
-        MAX_HEIGHT = CAM_Z - 50,
+            zoomAlpha = 1,
+            fadeFactor = 1,
+            fadeTimer,
 
-        LAT = 'latitude', LON = 'longitude',
-        HEIGHT = 0, FOOTPRINT = 1, COLOR = 2, IS_NEW = 3
-    ;
+            minZoom = MIN_ZOOM,
+            maxZoom = 20,
+            camX, camY,
 
-    // private variables, specific to an instance
-    var
-        osmb = this,
-
-        width = 0, height = 0,
-        halfWidth = 0, halfHeight = 0,
-        originX = 0, originY = 0,
-        zoom, size,
-
-        req,
-
-        canvas, context,
-
-        url,
-        strokeRoofs,
-        wallColor = new Color(200,190,180),
-        roofColor = null,
-        strokeColor = new Color(145,140,135),
-
-        rawData,
-        meta, data,
-
-        zoomAlpha = 1,
-        fadeFactor = 1,
-        fadeTimer,
-
-        minZoom = MIN_ZOOM,
-        maxZoom = 20,
-        camX, camY,
-
-        isZooming = false
-    ;
+            isZooming = false
+        ;
 
 
 //****** file: functions.js ******
@@ -720,13 +730,13 @@ var Color = (function () {
             }
         }
 
-//        function debugMarker(x, y, color, size) {
-//            context.fillStyle = color || '#ffcc00';
-//            context.beginPath();
-//            context.arc(x, y, size || 3, 0, PI*2, true);
-//            context.closePath();
-//            context.fill();
-//        }
+        function debugMarker(x, y, color, size) {
+            context.fillStyle = color || '#ffcc00';
+            context.beginPath();
+            context.arc(x, y, size || 3, 0, PI*2, true);
+            context.closePath();
+            context.fill();
+        }
 
         function drawShape(points, stroke) {
             if (!points.length) {
@@ -747,66 +757,40 @@ var Color = (function () {
 
         function project(x, y, m) {
             return {
-                x: ~~((x - camX) * m + camX) + 0.5,
-                y: ~~((y - camY) * m + camY) + 0.5
+                x: ~~((x - camX) * m + camX) + 0.5, // + 0.5: disabling(!) anti alias
+                y: ~~((y - camY) * m + camY) + 0.5  // + 0.5: disabling(!) anti alias
             };
         }
 
 
 //****** file: public.js ******
 
-
-        osmb.VERSION = VERSION;
-
-        osmb.render = function () {
-            render();
-            return osmb;
-        };
-
-        osmb.setStyle = function (style) {
+        this.setStyle = function (style) {
             setStyle(style);
-            return osmb;
+            return this;
         };
 
-        osmb.setData = function (data, isLonLat) {
-            // DEPRECATED
-            console.warn('OSMBuildings.loadData() is deprecated and will be removed soon.\nUse OSMBuildings.loadData({url|object}, isLatLon?) instead.');
-            setData(data, isLonLat);
-            return osmb;
-        };
-
-        osmb.loadData = function (u) {
-            url = u;
-            loadData();
-            return osmb;
-        };
-
-        osmb.geoJSON = function (url, isLatLon) {
+        this.geoJSON = function (url, isLatLon) {
             geoJSON(url, isLatLon);
-            return osmb;
+            return this;
         };
 
 
 //****** file: Leaflet.js ******
 
-// new L.BuildingsLayer()
-// layer.addTo(map)
 
         var
-            attribution = 'Buildings &copy; <a href="http://osmbuildings.org">OSM Buildings</a>',
             mapOnMove, mapOnMoveEnd, mapOnZoomEnd,
             blockMoveEvent // needed as Leaflet fires moveend and zoomend together
         ;
 
-        osmb.VERSION += '-leaflet';
-
-        osmb.addTo = function (map) {
-            map.addLayer(osmb);
-            return osmb;
+        this.addTo = function (map) {
+            map.addLayer(this);
+            return this;
         };
 
-        osmb.onAdd = function (map) {
-            osmb.map = map;
+        this.onAdd = function (map) {
+            this.map = map;
 
             createCanvas(map._panes.overlayPane);
             maxZoom = map._layersMaxZoom;
@@ -885,13 +869,13 @@ var Color = (function () {
     //             map.on('zoomanim', onZoom);
             }
 
-            map.attributionControl.addAttribution(attribution);
-
+            map.attributionControl.addAttribution(ATTRIBUTION);
+            loadData(); // TODO: usually on instantiation. other reasons? check!
             render(); // in case of for re-adding this layer
         };
 
-        osmb.onRemove = function (map) {
-            map.attributionControl.removeAttribution(attribution);
+        this.onRemove = function (map) {
+            map.attributionControl.removeAttribution(ATTRIBUTION);
 
             map.off({
                 move: mapOnMove,
@@ -901,18 +885,21 @@ var Color = (function () {
             });
 
             canvas.parentNode.removeChild(canvas);
-            osmb.map = null;
+            this.map = null;
         };
 
-        // in case it has been passed as parameter, initialize map directly
-        if (arguments.length) {
-            osmb.addTo(arguments[0]);
-        }
+
+
+//****** file: suffix.class.js ******
+
+        url = u;
+    };
+
+    global.L.BuildingsLayer.VERSION = VERSION;
+    global.L.BuildingsLayer.ATTRIBUTION = ATTRIBUTION;
 
 
 //****** file: suffix.js ******
-
-    };
 
 }(this));
 

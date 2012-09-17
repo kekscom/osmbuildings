@@ -12,19 +12,23 @@ exports.VERSION = '0.1.6a';
 
 exports.srcFiles = [
     srcPath + '/prefix.js',
+    srcPath + '/shortcuts.js',
+    srcPath + '/constants.js',
     srcPath + '/lib/Color.js',
-    srcPath + '/variables.js',
-    srcPath + '/functions.js',
-    srcPath + '/data.js',
-    srcPath + '/properties.js',
-    srcPath + '/events.js',
-    srcPath + '/render.js',
-    srcPath + '/public.js',
-    srcPath + '/engines/Leaflet.js',
-//    {
-//        leaflet: srcPath + '/engines/Leaflet.js',
-//        openlayers: srcPath + '/engines/OpenLayers.js'
-//    },
+        srcPath + '/prefix.class.js',
+        srcPath + '/variables.js',
+        srcPath + '/functions.js',
+        srcPath + '/data.js',
+        srcPath + '/properties.js',
+        srcPath + '/events.js',
+        srcPath + '/render.js',
+        srcPath + '/public.js',
+        srcPath + '/engines/Leaflet.js',
+    //    {
+    //        leaflet: srcPath + '/engines/Leaflet.js',
+    //        openlayers: srcPath + '/engines/OpenLayers.js'
+    //    },
+        srcPath + '/suffix.class.js',
     srcPath + '/suffix.js'
 ];
 
