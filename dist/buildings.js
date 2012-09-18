@@ -176,7 +176,7 @@ var Color = (function () {
 //****** file: prefix.class.js ******
 
     if (!global.L) {
-        return false;
+        throw 'Leaflet is not available.';
     }
 
     global.L.BuildingsLayer = function (u) {
