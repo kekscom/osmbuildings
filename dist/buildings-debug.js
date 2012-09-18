@@ -537,7 +537,6 @@ var Color = (function () {
 
 
         function setSize(w, h) {
-            debugger
             width  = w;
             height = h;
             halfWidth  = ~~(width / 2);
@@ -790,9 +789,9 @@ var Color = (function () {
             return this;
         };
 
-        this.setCam = function(x, y) {
-            camX = x;
-            camY = y;
+        this.setCamOffset = function(x, y) {
+            camX = halfWidth + x;
+            camY = height    + y;
         };
 
         this.createCanvas = createCanvas;
@@ -811,13 +810,6 @@ var Color = (function () {
         this.setOrigin   = setOrigin;
         this.setSize     = setSize;
         this.setZoom     = setZoom;
-
-        this.getHalfWidth = function () {
-            return halfWidth;
-        };
-        this.getHeight = function () {
-            return height;
-        };
 
 
 //****** file: suffix.class.js ******

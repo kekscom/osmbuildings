@@ -5,9 +5,9 @@ L.BuildingsLayer = L.Class.extend({
 
     _onMove: function () {
         var mp = L.DomUtil.getPosition(this.map._mapPane);
-        this.osmb.setCam(
-            this.osmb.getHalfWidth() - (mp.x - this._lastX),
-            this.osmb.getHeight()    - (mp.y - this._lastY)
+        this.osmb.setCamOffset(
+            this._lastX - mp.x,
+            this._lastY - mp.y
         );
         this.osmb.render();
     },
@@ -27,10 +27,7 @@ L.BuildingsLayer = L.Class.extend({
         this._lastY = mp.y;
         this.canvas.style.left = -mp.x + 'px';
         this.canvas.style.top  = -mp.y + 'px';
-        this.osmb.setCam(
-            this.osmb.getHalfWidth(),
-            this.osmb.getHeight()
-        );
+        this.osmb.setCamOffset(0, 0);
 
         this.osmb.setSize(this.map._size.x, this.map._size.y); // in case this is triggered by resize
         this.osmb.setOrigin(po.x - mp.x, po.y - mp.y);
