@@ -7,7 +7,12 @@
 
 /*jshint bitwise:false */
 
-(function (global) { 'use strict';
+if (!L) {
+    throw 'Leaflet is not available.';
+}
+
+L.BuildingsLayer = (function (global) {
+    'use strict';
 
 
 //****** file: shortcuts.js ******
@@ -175,11 +180,8 @@ var Color = (function () {
 
 //****** file: prefix.class.js ******
 
-    if (!global.L) {
-        throw 'Leaflet is not available.';
-    }
-
-    global.L.BuildingsLayer = function (u) {
+    function constructor(u) {
+        url = u;
 
 
 //****** file: variables.js ******
@@ -911,14 +913,16 @@ var Color = (function () {
 
 //****** file: suffix.class.js ******
 
-        url = u;
-    };
-
-    global.L.BuildingsLayer.VERSION = VERSION;
-    global.L.BuildingsLayer.ATTRIBUTION = ATTRIBUTION;
 
 
 //****** file: suffix.js ******
+
+    };
+
+    constructor.VERSION = VERSION;
+    constructor.ATTRIBUTION = ATTRIBUTION;
+
+    return constructor;
 
 }(this));
 
