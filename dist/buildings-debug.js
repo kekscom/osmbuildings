@@ -1,5 +1,3 @@
-alert('Old version of OSM Buildings!');
-
 /**
  * Copyright (C) 2012 OSM Buildings, Jan Marsch
  * A leightweight JavaScript library for visualizing 3D building geometry on interactive maps.
@@ -218,7 +216,6 @@ var Color = (function () {
 
 //****** file: functions.js ******
 
-
         function createCanvas (parentNode) {
             canvas = doc.createElement('canvas');
             canvas.style.webkitTransform = 'translate3d(0,0,0)'; // turn on hw acceleration
@@ -274,7 +271,6 @@ var Color = (function () {
 
 
 //****** file: data.js ******
-
 
         function xhr(url, callback) {
             var x = new XMLHttpRequest();
@@ -537,7 +533,6 @@ var Color = (function () {
 
 //****** file: properties.js ******
 
-
         function setSize(w, h) {
             width  = w;
             height = h;
@@ -580,7 +575,6 @@ var Color = (function () {
 
 //****** file: events.js ******
 
-
         function onResize(e) {
             setSize(e.width, e.height);
             render();
@@ -621,7 +615,6 @@ var Color = (function () {
 
 
 //****** file: render.js ******
-
 
         function fadeIn() {
             fadeFactor = 0;
@@ -796,14 +789,12 @@ var Color = (function () {
             camY = height    + y;
         };
 
-        this.createCanvas = createCanvas;
-
-        this.destroyCanvas = destroyCanvas;
-
         this.setMaxZoom = function (z) {
             maxZoom = z;
         };
 
+        this.createCanvas = createCanvas;
+        this.destroyCanvas = destroyCanvas;
         this.loadData    = loadData;
         this.onMoveEnd   = onMoveEnd;
         this.onZoomEnd   = onZoomEnd;
@@ -812,6 +803,12 @@ var Color = (function () {
         this.setOrigin   = setOrigin;
         this.setSize     = setSize;
         this.setZoom     = setZoom;
+
+// OPENLAYERS
+//        this.geoToPixel()
+//        this.data
+//        this.rawData
+//        this.scaleData()
 
 
 //****** file: suffix.class.js ******
