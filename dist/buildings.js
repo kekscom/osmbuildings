@@ -1,36 +1,962 @@
-<<<<<<< HEAD
-var OSMBuildings=function(ja){var O=Math.PI,xa=O/2,Ea=O/4,Fa=180/O,Ga=256,ka=14,S=400,ya=S-50,T="latitude",U="longitude",I=0,H=1,J=2,da=3,za=za||Array,Ha=Math.exp,Ia=Math.log,Ja=Math.tan,Ka=Math.atan,la=Math.min,La=Math.max,ma=ja.document,E=function(){function V(i,l,m){if(m<0)m+=1;if(m>1)m-=1;if(m<1/6)return i+(l-i)*6*m;if(m<0.5)return l;if(m<2/3)return i+(l-i)*(2/3-m)*6;return i}function D(i,l,m,n){this.r=i;this.g=l;this.b=m;this.a=arguments.length<4?1:n}var W=D.prototype;W.toString=function(){return"rgba("+
-[this.r,this.g,this.b,this.a].join(",")+")"};W.adjustLightness=function(i){var l=E.toHSLA(this);l.l+=i;l.l=Math.min(1,Math.max(0,l.l));var m,n;if(l.s===0)i=m=n=l.l;else{n=l.l<0.5?l.l*(1+l.s):l.l+l.s-l.l*l.s;var w=2*l.l-n;i=V(w,n,l.h+1/3);m=V(w,n,l.h);n=V(w,n,l.h-1/3)}return new E(~~(i*255),~~(m*255),~~(n*255),l.a)};W.adjustAlpha=function(i){return new E(this.r,this.g,this.b,this.a*i)};D.parse=function(i){if(~i.indexOf("#")){i=i.match(/^#?(\w{2})(\w{2})(\w{2})(\w{2})?$/);return new E(parseInt(i[1],
-16),parseInt(i[2],16),parseInt(i[3],16),i[4]?parseInt(i[4],16)/255:1)}if(i=i.match(/rgba?\((\d+)\D+(\d+)\D+(\d+)(\D+([\d.]+))?\)/))return new E(i[1],i[2],i[3],i[4]?i[5]:1)};D.toHSLA=function(i){var l=i.r/255,m=i.g/255,n=i.b/255,w=Math.max(l,m,n),x=Math.min(l,m,n),A,X=(w+x)/2,F;if(w===x)A=x=0;else{F=w-x;x=X>0.5?F/(2-w-x):F/(w+x);switch(w){case l:A=(m-n)/F+(m<n?6:0);break;case m:A=(n-l)/F+2;break;case n:A=(l-m)/F+4;break}A/=6}return{h:A,s:x,l:X,a:i.a}};return D}();return function(){function V(a){q=
-ma.createElement("canvas");q.style.webkitTransform="translate3d(0,0,0)";q.style.position="absolute";q.style.pointerEvents="none";q.style.left=0;q.style.top=0;q.style.imageRendering="optimizeSpeed";a.appendChild(q);h=q.getContext("2d");h.lineCap="round";h.lineJoin="round";h.lineWidth=1;try{h.mozImageSmoothingEnabled=false}catch(e){}}function D(a,e){var b={};a/=Y;e/=Y;b[T]=e<=0?90:e>=1?-90:Fa*(2*Ka(Ha(O*(1-2*e)))-xa);b[U]=(a===1?1:(a%1+1)%1)*360-180;return b}function W(a,e){return a.replace(/\{ *([\w_]+) *\}/g,
-function(b,d){return e[d]||""})}function i(a,e){var b=new XMLHttpRequest;b.onreadystatechange=function(){if(b.readyState===4)!b.status||b.status<200||b.status>299||b.responseText&&e(JSON.parse(b.responseText))};b.open("GET",a);b.send(null);return b}function l(){if(!(!na||y<ka)){var a=D(P-Q,R-oa),e=D(P+K+Q,R+B+oa);ea&&ea.abort();ea=i(W(na,{w:a[U],n:a[T],e:e[U],s:e[T],z:y}),m)}}function m(a){var e,b,d,c=[],f=0,j=0;Z=ka;fa(y);ea=null;if(!(!a||a.meta.z!==y)){d=a.meta;b=a.data;if(u&&o&&u.z===d.z){f=u.x-
-d.x;j=u.y-d.y;a=0;for(e=o.length;a<e;a++)c[a]=o[a][H][0]+f+","+(o[a][H][1]+j)}u=d;o=[];a=0;for(e=b.length;a<e;a++){o[a]=b[a];o[a][I]=la(o[a][I],ya);d=o[a][H][0]+","+o[a][H][1];o[a][da]=!(c&&~c.indexOf(d))}Aa()}}function n(a,e){var b=[],d,c,f,j,g,v,s,k,p=pa-y;d=0;for(c=a.length;d<c;d++){g=a[d];v=g[H];s=new za(v.length);f=0;for(j=v.length-1;f<j;f+=2){k=v[f+1];var r=la(1,La(0,0.5-Ia(Ja(Ea+xa*v[f]/180))/O/2));k={x:~~((k/360+0.5)*Y),y:~~(r*Y)};s[f]=k.x;s[f+1]=k.y}b[d]=[];b[d][I]=la(g[I]>>p,ya);b[d][H]=
-s;b[d][J]=g[J];b[d][da]=e}return b}function w(a,e){if(typeof a==="object")A(a,!e);else{var b=ma.documentElement,d=ma.createElement("script");ja.jsonpCallback=function(c){delete ja.jsonpCallback;b.removeChild(d);A(c,!e)};b.insertBefore(d,b.lastChild).src=a.replace(/\{callback\}/,"jsonpCallback")}}function x(a,e,b){if(b===undefined)b=[];var d,c,f,j=a[0]?a:a.features,g,v,s,k,p=e?1:0,r=e?0:1;if(j){d=0;for(a=j.length;d<a;d++)x(j[d],e,b);return b}if(a.type==="Feature"){g=a.geometry;d=a.properties}if(g.type===
-"Polygon")v=[g.coordinates];if(g.type==="MultiPolygon")v=g.coordinates;if(v){e=d.height;j=E.parse(d.color||d.style.fillColor);d=0;for(a=v.length;d<a;d++){s=v[d][0];g=[];c=k=0;for(f=s.length;c<f;c++){g.push(s[c][p],s[c][r]);k+=e||s[c][2]||0}if(k){c=[];c[I]=~~(k/s.length);s=H;k=void 0;f=void 0;var t=void 0,M=void 0,C=0,z=void 0,ga=void 0;z=0;for(ga=g.length-3;z<ga;z+=2){k=g[z];f=g[z+1];t=g[z+2];M=g[z+3];C+=k*M-t*f}if((C/2>0?"CW":"CCW")==="CW")g=g;else{k=[];for(f=g.length-2;f>=0;f-=2)k.push(g[f],g[f+
-1]);g=k}c[s]=g;if(j)c[J]=[j,j.adjustLightness(0.2)];b.push(c)}}}return b}function A(a,e){if(a){$=x(a,e);Z=0;fa(y);u={n:90,w:-180,s:-90,e:180,x:0,y:0,z:y};o=n($,true);Aa()}else{$=null;G()}}function X(a,e){K=a;B=e;Q=~~(K/2);oa=~~(B/2);aa=Q;ba=B;q.width=K;q.height=B}function F(a,e){P=a;R=e}function fa(a){y=a;Y=Ga<<y;N=1-(y-Z)*0.3/(pa-Z)}function Ba(){qa=true;G()}function Aa(){ca=0;clearInterval(ra);ra=setInterval(function(){ca+=0.1;if(ca>1){clearInterval(ra);ca=1;for(var a=0,e=o.length;a<e;a++)o[a][da]=
-0}G()},33)}function G(){h.clearRect(0,0,K,B);if(u&&o)if(!(y<Z||qa)){var a,e,b,d,c,f,j,g,v=P-u.x,s=R-u.y,k,p,r,t,M,C,z,ga=ha.adjustAlpha(N),Ma=Ca.adjustAlpha(N);if(ia)h.strokeStyle=Da.adjustAlpha(N)+"";a=0;for(e=o.length;a<e;a++){c=o[a];p=false;f=c[H];k=[];b=0;for(d=f.length-1;b<d;b+=2){k[b]=j=f[b]-v;k[b+1]=g=f[b+1]-s;p||(p=j>0&&j<K&&g>0&&g<B)}if(p){h.fillStyle=(c[J]?c[J][0].adjustAlpha(N):ga)+"";b=c[da]?c[I]*ca:c[I];f=S/(S-b);j=[];g=[];b=0;for(d=k.length-3;b<d;b+=2){p=k[b];r=k[b+1];t=k[b+2];M=k[b+
-3];C=sa(p,r,f);z=sa(t,M,f);if((t-p)*(C.y-r)>(C.x-p)*(M-r)){if(!g.length){g.unshift(r);g.unshift(p);g.push(C.x,C.y)}g.unshift(M);g.unshift(t);g.push(z.x,z.y)}else{ta(g);g=[]}j[b]=C.x;j[b+1]=C.y}ta(g);h.fillStyle=(c[J]?c[J][1].adjustAlpha(N):Ma)+"";ta(j,ia);h.fillStyle="rgba(240,0,0,0.25)";h.strokeStyle=Da.adjustAlpha(N)+"";c=[(j[0]+j[2]+j[4]+j[6])/4,(j[1]+j[3]+j[5]+j[7])/4];k=sa(c[0],c[1],S/(S-10));b=c[0];d=c[1];f=32.5*0.5522848;j=32.5*0.5522848;g=b+32.5;p=d+32.5;r=b;t=d;b-=32.5;d-=32.5;h.beginPath();
-h.moveTo(b,t);h.bezierCurveTo(b,t-j,r-f,d,r,d);h.bezierCurveTo(r+f,d,g,t-j,g,t);h.bezierCurveTo(g,t+j,r+f,p,r,p);h.bezierCurveTo(r-f,p,b,t+j,b,t);h.closePath();h.fill();h.stroke();b=k.x;d=k.y;h.fillStyle="#ffcc00";h.beginPath();h.arc(b,d,3,0,O*2,true);h.closePath();h.fill();b=c[0]-32.5;d=c[0]+32.5;f=c[1]-32.5;j=c[1]+32.5;h.beginPath();h.moveTo(b,c[1]);h.bezierCurveTo((k.x+b)/2.05,c[1]+(k.y-c[1])*1.5,(k.x+d)/1.95,c[1]+(k.y-c[1])*1.5,d,c[1]);h.stroke();h.beginPath();h.moveTo(c[0],f);h.bezierCurveTo(c[0]+
-(k.x-c[0])*1.5,(k.y+f)/2.05,c[0]+(k.x-c[0])*1.5,(k.y+j)/1.95,c[0],j);h.stroke()}}}}function ta(a,e){if(a.length){h.beginPath();h.moveTo(a[0],a[1]);for(var b=2,d=a.length;b<d;b+=2)h.lineTo(a[b],a[b+1]);h.closePath();e&&h.stroke();h.fill()}}function sa(a,e,b){return{x:~~((a-aa)*b+aa),y:~~((e-ba)*b+ba)}}var K=0,B=0,Q=0,oa=0,P=0,R=0,y,Y,ea,q,h,na,ia,ha=new E(200,190,180),Ca=ha.adjustLightness(0.2),Da=new E(145,140,135),$,u,o,N=1,ca=1,ra,Z=ka,pa=20,aa,ba,qa=false;this.VERSION="0.1.5a";this.render=function(){G();
-return this};this.setStyle=function(a){a=(a=a)||{};ia=a.strokeRoofs!==undefined?a.strokeRoofs:ia;if(a.fillColor){ha=E.parse(a.fillColor);Ca=ha.adjustLightness(0.2)}G();return this};this.setData=function(a,e){console.warn("OSMBuildings.loadData() is deprecated and will be removed soon.\nUse OSMBuildings.loadData({url|object}, isLatLon?) instead.");A(a,e);return this};this.loadData=function(a){na=a;l();return this};this.geoJSON=function(a,e){w(a,e);return this};var ua,va,wa;this.VERSION+="-leaflet";
-this.addTo=function(a){a.addLayer(this);return this};this.onAdd=function(a){this.map=a;V(a._panes.overlayPane);pa=a._layersMaxZoom;X(a._size.x,a._size.y);var e=a.getPixelOrigin();F(e.x,e.y);fa(a._zoom);var b=0,d=0;ua=function(){var c=L.DomUtil.getPosition(a._mapPane);aa=Q-(c.x-b);ba=B-(c.y-d);G()};va=function(){var c=L.DomUtil.getPosition(a._mapPane);b=c.x;d=c.y;q.style.left=-c.x+"px";q.style.top=-c.y+"px";aa=Q;ba=B;X(a._size.x,a._size.y);var f=a.getPixelOrigin();F(f.x-c.x,f.y-c.y);c=D(P,R);f=D(P+
-K,R+B);if(u&&(c[T]>u.n||c[U]<u.w||f[T]<u.s||f[U]>u.e))l();G()};wa=function(){var c={zoom:a._zoom};qa=false;fa(c.zoom);if($){o=n($);G()}else l()};a.on({move:ua,moveend:va,zoomstart:Ba,zoomend:wa});if(a.options.zoomAnimation)q.className="leaflet-zoom-animated";a.attributionControl.addAttribution('Buildings &copy; <a href="http://osmbuildings.org">OSM Buildings</a>');G()};this.onRemove=function(a){a.attributionControl.removeAttribution('Buildings &copy; <a href="http://osmbuildings.org">OSM Buildings</a>');
-a.off({move:ua,moveend:va,zoomstart:Ba,zoomend:wa});q.parentNode.removeChild(q);this.map=null};arguments.length&&this.addTo(arguments[0])}}(this);
-=======
-var OSMBuildings=function(ia){var U=Math.PI,za=U/2,Ea=U/4,Fa=180/U,Ga=256,ja=14,ka=400,Aa=ka-50,V="latitude",W="longitude",I=0,H=1,y=2,ea=3,Ba=Ba||Array,Ha=Math.exp,Ia=Math.log,Ja=Math.tan,Ka=Math.atan,la=Math.min,La=Math.max,ma=ia.document,v=function(){function X(g,h,k){if(k<0)k+=1;if(k>1)k-=1;if(k<1/6)return g+(h-g)*6*k;if(k<0.5)return h;if(k<2/3)return g+(h-g)*(2/3-k)*6;return g}function D(g,h,k,l){this.r=g;this.g=h;this.b=k;this.a=arguments.length<4?1:l}var Y=D.prototype;Y.toString=function(){return"rgba("+
-[this.r,this.g,this.b,this.a.toFixed(2)].join(",")+")"};Y.adjustLightness=function(g){var h=v.toHSLA(this);h.l*=g;h.l=Math.min(1,Math.max(0,h.l));var k,l;if(h.s===0)g=k=l=h.l;else{l=h.l<0.5?h.l*(1+h.s):h.l+h.s-h.l*h.s;var u=2*h.l-l;g=X(u,l,h.h+1/3);k=X(u,l,h.h);l=X(u,l,h.h-1/3)}return new v(~~(g*255),~~(k*255),~~(l*255),h.a)};Y.adjustAlpha=function(g){return new v(this.r,this.g,this.b,this.a*g)};D.parse=function(g){if(~g.indexOf("#")){g=g.match(/^#?(\w{2})(\w{2})(\w{2})(\w{2})?$/);return new v(parseInt(g[1],
-16),parseInt(g[2],16),parseInt(g[3],16),g[4]?parseInt(g[4],16)/255:1)}if(g=g.match(/rgba?\((\d+)\D+(\d+)\D+(\d+)(\D+([\d.]+))?\)/))return new v(parseInt(g[1],10),parseInt(g[2],10),parseInt(g[3],10),g[4]?parseFloat(g[5],10):1)};D.toHSLA=function(g){var h=g.r/255,k=g.g/255,l=g.b/255,u=Math.max(h,k,l),w=Math.min(h,k,l),z,Z=(u+w)/2,A;if(u===w)z=w=0;else{A=u-w;w=Z>0.5?A/(2-u-w):A/(u+w);switch(u){case h:z=(k-l)/A+(k<l?6:0);break;case k:z=(l-h)/A+2;break;case l:z=(h-k)/A+4;break}z/=6}return{h:z,s:w,l:Z,
-a:g.a}};return D}();return function(){function X(a){p=ma.createElement("canvas");p.style.webkitTransform="translate3d(0,0,0)";p.style.position="absolute";p.style.pointerEvents="none";p.style.left=0;p.style.top=0;p.style.imageRendering="optimizeSpeed";a.appendChild(p);r=p.getContext("2d");r.lineCap="round";r.lineJoin="round";r.lineWidth=1;try{r.mozImageSmoothingEnabled=false}catch(e){}}function D(a,e){var b={};a/=$;e/=$;b[V]=e<=0?90:e>=1?-90:Fa*(2*Ka(Ha(U*(1-2*e)))-za);b[W]=(a===1?1:(a%1+1)%1)*360-
-180;return b}function Y(a,e){return a.replace(/\{ *([\w_]+) *\}/g,function(b,d){return e[d]||""})}function g(a,e){var b=new XMLHttpRequest;b.onreadystatechange=function(){if(b.readyState===4)!b.status||b.status<200||b.status>299||b.responseText&&e(JSON.parse(b.responseText))};b.open("GET",a);b.send(null);return b}function h(){if(!(!na||x<ja)){var a=D(P-Q,R-oa),e=D(P+J+Q,R+B+oa);fa&&fa.abort();fa=g(Y(na,{w:a[W],n:a[V],e:e[W],s:e[V],z:x}),k)}}function k(a){var e,b,d,c=[],f=0,i=0;aa=ja;ga(x);fa=null;
-if(!(!a||a.meta.z!==x)){d=a.meta;b=a.data;if(t&&m&&t.z===d.z){f=t.x-d.x;i=t.y-d.y;a=0;for(e=m.length;a<e;a++)c[a]=m[a][H][0]+f+","+(m[a][H][1]+i)}t=d;m=[];a=0;for(e=b.length;a<e;a++){m[a]=b[a];m[a][I]=la(m[a][I],Aa);d=m[a][H][0]+","+m[a][H][1];m[a][ea]=!(c&&~c.indexOf(d))}Ca()}}function l(a,e){var b=[],d,c,f,i,j,q,o,n,s=pa-x;d=0;for(c=a.length;d<c;d++){j=a[d];q=j[H];o=new Ba(q.length);f=0;for(i=q.length-1;f<i;f+=2){n=q[f+1];var E=la(1,La(0,0.5-Ia(Ja(Ea+za*q[f]/180))/U/2));n={x:~~((n/360+0.5)*$),y:~~(E*
-$)};o[f]=n.x;o[f+1]=n.y}b[d]=[];b[d][I]=la(j[I]>>s,Aa);b[d][H]=o;b[d][y]=j[y];b[d][ea]=e}return b}function u(a,e){if(typeof a==="object")z(a,!e);else{var b=ma.documentElement,d=ma.createElement("script");ia.jsonpCallback=function(c){delete ia.jsonpCallback;b.removeChild(d);z(c,!e)};b.insertBefore(d,b.lastChild).src=a.replace(/\{callback\}/,"jsonpCallback")}}function w(a,e,b){if(b===undefined)b=[];var d,c,f,i=a[0]?a:a.features,j,q,o,n,s,E=e?1:0,S=e?0:1;if(i){d=0;for(a=i.length;d<a;d++)w(i[d],e,b);
-return b}if(a.type==="Feature"){c=a.geometry;d=a.properties}if(c.type==="Polygon")j=[c.coordinates];if(c.type==="MultiPolygon")j=c.coordinates;if(j){e=d.height;if(d.color||d.wallColor)n=v.parse(d.color||d.wallColor);if(d.roofColor)s=v.parse(d.roofColor);d=0;for(a=j.length;d<a;d++){q=j[d][0];i=[];c=o=0;for(f=q.length;c<f;c++){i.push(q[c][E],q[c][S]);o+=e||q[c][2]||0}if(o){c=[];c[I]=~~(o/q.length);q=H;o=void 0;f=void 0;var K=void 0,C=void 0,T=0,F=void 0,ba=void 0;F=0;for(ba=i.length-3;F<ba;F+=2){o=
-i[F];f=i[F+1];K=i[F+2];C=i[F+3];T+=o*C-K*f}if((T/2>0?"CW":"CCW")==="CW")i=i;else{o=[];for(f=i.length-2;f>=0;f-=2)o.push(i[f],i[f+1]);i=o}c[q]=i;if(n||s)c[y]=[n,s];b.push(c)}}}return b}function z(a,e){if(a){ca=w(a,e);aa=0;ga(x);t={n:90,w:-180,s:-90,e:180,x:0,y:0,z:x};m=l(ca,true);Ca()}else{ca=null;G()}}function Z(a,e){J=a;B=e;Q=~~(J/2);oa=~~(B/2);M=Q;N=B;p.width=J;p.height=B}function A(a,e){P=a;R=e}function ga(a){x=a;$=Ga<<x;O=1-(x-aa)*0.3/(pa-aa)}function Da(){qa=true;G()}function Ca(){da=0;clearInterval(ra);
-ra=setInterval(function(){da+=0.1;if(da>1){clearInterval(ra);da=1;for(var a=0,e=m.length;a<e;a++)m[a][ea]=0}G()},33)}function G(){r.clearRect(0,0,J,B);if(t&&m)if(!(x<aa||qa)){var a,e,b,d,c,f,i,j,q=P-t.x,o=R-t.y,n,s,E,S,K,C,T,F=sa.adjustAlpha(O)+"",ba=(ta||sa.adjustLightness(1.2)).adjustAlpha(O)+"";if(ha)r.strokeStyle=Ma.adjustAlpha(O)+"";a=0;for(e=m.length;a<e;a++){c=m[a];s=false;f=c[H];n=[];b=0;for(d=f.length-1;b<d;b+=2){n[b]=i=f[b]-q;n[b+1]=j=f[b+1]-o;s||(s=i>0&&i<J&&j>0&&j<B)}if(s){r.fillStyle=
-c[y]&&c[y][0]?c[y][0].adjustAlpha(O)+"":F;b=c[ea]?c[I]*da:c[I];f=ka/(ka-b);i=[];j=[];b=0;for(d=n.length-3;b<d;b+=2){s=n[b];E=n[b+1];S=n[b+2];K=n[b+3];C={x:~~((s-M)*f+M),y:~~((E-N)*f+N)};T={x:~~((S-M)*f+M),y:~~((K-N)*f+N)};if((S-s)*(C.y-E)>(C.x-s)*(K-E)){if(!j.length){j.unshift(E);j.unshift(s);j.push(C.x,C.y)}j.unshift(K);j.unshift(S);j.push(T.x,T.y)}else{ua(j);j=[]}i[b]=C.x;i[b+1]=C.y}ua(j);r.fillStyle=!c[y]?ba:c[y][1]?c[y][1].adjustAlpha(O)+"":ta?ba:c[y][0].adjustLightness(1.2).adjustAlpha(O)+"";
-ua(i,ha)}}}}function ua(a,e){if(a.length){r.beginPath();r.moveTo(a[0],a[1]);for(var b=2,d=a.length;b<d;b+=2)r.lineTo(a[b],a[b+1]);r.closePath();e&&r.stroke();r.fill()}}var J=0,B=0,Q=0,oa=0,P=0,R=0,x,$,fa,p,r,na,ha,sa=new v(200,190,180),ta=null,Ma=new v(145,140,135),ca,t,m,O=1,da=1,ra,aa=ja,pa=20,M,N,qa=false;this.VERSION="0.1.6a";this.render=function(){G();return this};this.setStyle=function(a){a=(a=a)||{};ha=a.strokeRoofs!==undefined?a.strokeRoofs:ha;if(a.color||a.wallColor)sa=v.parse(a.color||a.wallColor);
-if(a.roofColor)ta=v.parse(a.roofColor);G();return this};this.setData=function(a,e){console.warn("OSMBuildings.loadData() is deprecated and will be removed soon.\nUse OSMBuildings.loadData({url|object}, isLatLon?) instead.");z(a,e);return this};this.loadData=function(a){na=a;h();return this};this.geoJSON=function(a,e){u(a,e);return this};var va,wa,xa,ya;this.VERSION+="-leaflet";this.addTo=function(a){a.addLayer(this);return this};this.onAdd=function(a){this.map=a;X(a._panes.overlayPane);pa=a._layersMaxZoom;
-Z(a._size.x,a._size.y);var e=a.getPixelOrigin();A(e.x,e.y);ga(a._zoom);var b=0,d=0;va=function(){var c=L.DomUtil.getPosition(a._mapPane);M=Q-(c.x-b);N=B-(c.y-d);G()};wa=function(){if(ya)ya=false;else{var c=L.DomUtil.getPosition(a._mapPane),f=a.getPixelOrigin();b=c.x;d=c.y;p.style.left=-c.x+"px";p.style.top=-c.y+"px";M=Q;N=B;Z(a._size.x,a._size.y);A(f.x-c.x,f.y-c.y);c=D(P,R);f=D(P+J,R+B);if(t&&(c[V]>t.n||c[W]<t.w||f[V]<t.s||f[W]>t.e))h();G()}};xa=function(){var c=L.DomUtil.getPosition(a._mapPane),
-f=a.getPixelOrigin();A(f.x-c.x,f.y-c.y);c={zoom:a._zoom};qa=false;ga(c.zoom);if(ca){m=l(ca);G()}else h();ya=true};a.on({move:va,moveend:wa,zoomstart:Da,zoomend:xa});if(a.options.zoomAnimation)p.className="leaflet-zoom-animated";a.attributionControl.addAttribution('Buildings &copy; <a href="http://osmbuildings.org">OSM Buildings</a>');G()};this.onRemove=function(a){a.attributionControl.removeAttribution('Buildings &copy; <a href="http://osmbuildings.org">OSM Buildings</a>');a.off({move:va,moveend:wa,
-zoomstart:Da,zoomend:xa});p.parentNode.removeChild(p);this.map=null};arguments.length&&this.addTo(arguments[0])}}(this);
->>>>>>> master
+/**
+ * Copyright (C) 2012 OSM Buildings, Jan Marsch
+ * A leightweight JavaScript library for visualizing 3D building geometry on interactive maps.
+ * @osmbuildings, http://osmbuildings.org
+ */
+//****** file: prefix.js ******
+
+/*jshint bitwise:false */
+
+(function (global) {
+    'use strict';
+
+
+//****** file: shortcuts.js ******
+
+    // object access shortcuts
+    var
+        Int32Array = Int32Array || Array,
+        exp = Math.exp,
+        log = Math.log,
+        tan = Math.tan,
+        atan = Math.atan,
+        min = Math.min,
+        max = Math.max,
+        doc = global.document
+    ;
+
+
+//****** file: Color.js ******
+
+
+var Color = (function () {
+
+    function hsla2rgb(hsla) {
+        var r, g, b;
+
+        if (hsla.s === 0) {
+            r = g = b = hsla.l; // achromatic
+        } else {
+            var
+                q = hsla.l < 0.5 ? hsla.l * (1 + hsla.s) : hsla.l + hsla.s - hsla.l * hsla.s,
+                p = 2 * hsla.l - q
+            ;
+            r = hue2rgb(p, q, hsla.h + 1 / 3);
+            g = hue2rgb(p, q, hsla.h);
+            b = hue2rgb(p, q, hsla.h - 1 / 3);
+        }
+        return new Color(
+            ~~(r * 255),
+            ~~(g * 255),
+            ~~(b * 255),
+            hsla.a
+        );
+    }
+
+    function hue2rgb(p, q, t) {
+        if (t < 0) {
+            t += 1;
+        }
+        if (t > 1) {
+            t -= 1;
+        }
+        if (t < 1 / 6) {
+            return p + (q - p) * 6 * t;
+        }
+        if (t < 1 / 2) {
+            return q;
+        }
+        if (t < 2 / 3) {
+            return p + (q - p) * (2 / 3 - t) * 6;
+        }
+        return p;
+    }
+
+    function C(r, g, b, a) {
+        this.r = r;
+        this.g = g;
+        this.b = b;
+        this.a = arguments.length < 4 ? 1 : a;
+    }
+
+    var proto = C.prototype;
+
+    proto.toString = function () {
+        return 'rgba(' + [this.r, this.g, this.b, this.a.toFixed(2)].join(',') + ')';
+    };
+
+    proto.adjustLightness = function (l) {
+        var hsla = Color.toHSLA(this);
+        hsla.l *= l;
+        hsla.l = Math.min(1, Math.max(0, hsla.l));
+        return hsla2rgb(hsla);
+    };
+
+    proto.adjustAlpha = function (a) {
+        return new Color(this.r, this.g, this.b, this.a * a);
+    };
+
+    C.parse = function (str) {
+        var m;
+        str += '';
+        if (~str.indexOf('#')) {
+            m = str.match(/^#?(\w{2})(\w{2})(\w{2})(\w{2})?$/);
+            return new Color(
+                parseInt(m[1], 16),
+                parseInt(m[2], 16),
+                parseInt(m[3], 16),
+                m[4] ? parseInt(m[4], 16) / 255 : 1
+            );
+        }
+
+        m = str.match(/rgba?\((\d+)\D+(\d+)\D+(\d+)(\D+([\d.]+))?\)/);
+        if (m) {
+             return new Color(
+                parseInt(m[1], 10),
+                parseInt(m[2], 10),
+                parseInt(m[3], 10),
+                m[4] ? parseFloat(m[5], 10) : 1
+            );
+        }
+    };
+
+    C.toHSLA = function (rgba) {
+        var
+            r = rgba.r / 255,
+            g = rgba.g / 255,
+            b = rgba.b / 255,
+            max = Math.max(r, g, b), min = Math.min(r, g, b),
+            h, s, l = (max + min) / 2,
+            d
+        ;
+
+        if (max === min) {
+            h = s = 0; // achromatic
+        } else {
+            d = max - min;
+            s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+            switch (max) {
+                case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+                case g: h = (b - r) / d + 2; break;
+                case b: h = (r - g) / d + 4; break;
+            }
+            h /= 6;
+        }
+
+        return { h: h, s: s, l: l, a: rgba.a };
+    };
+
+    return C;
+
+}());
+
+
+//****** file: constants.js ******
+
+    // constants, shared to all instances
+    var
+        VERSION = '0.1.6a',
+        ATTRIBUTION = '&copy; <a href="http://osmbuildings.org">OSM Buildings</a>',
+
+        PI = Math.PI,
+        HALF_PI = PI / 2,
+        QUARTER_PI = PI / 4,
+        RAD = 180 / PI,
+
+        TILE_SIZE = 256,
+        MIN_ZOOM = 14, // for buildings data only, GeoJSON should not be affected
+
+        CAM_Z = 400,
+        MAX_HEIGHT = CAM_Z - 50,
+
+        LAT = 'latitude', LON = 'longitude',
+        HEIGHT = 0, FOOTPRINT = 1, COLOR = 2, IS_NEW = 3
+    ;
+
+
+//****** file: prefix.class.js ******
+
+    global.OSMBuildings = function (u) {
+        url = u;
+
+
+//****** file: variables.js ******
+
+        // private variables, specific to an instance
+        var
+            width = 0, height = 0,
+            halfWidth = 0, halfHeight = 0,
+            originX = 0, originY = 0,
+            zoom, size,
+
+            req,
+
+            canvas, context,
+
+            url,
+            strokeRoofs,
+            wallColor = new Color(200,190,180),
+            roofColor,
+            strokeColor = new Color(145,140,135),
+
+            rawData,
+            meta, data,
+
+            zoomAlpha = 1,
+            fadeFactor = 1,
+            fadeTimer,
+
+            minZoom = MIN_ZOOM,
+            maxZoom = 20,
+            camX, camY,
+
+            isZooming
+        ;
+
+
+//****** file: functions.js ******
+
+        function createCanvas (parentNode) {
+            canvas = doc.createElement('canvas');
+            canvas.style.webkitTransform = 'translate3d(0,0,0)'; // turn on hw acceleration
+            canvas.style.imageRendering = 'optimizeSpeed';
+            canvas.style.position = 'absolute';
+            canvas.style.pointerEvents = 'none';
+            canvas.style.left = 0;
+            canvas.style.top = 0;
+            parentNode.appendChild(canvas);
+
+            context = canvas.getContext('2d');
+            context.lineCap = 'round';
+            context.lineJoin = 'round';
+            context.lineWidth = 1;
+
+            try {
+                context.mozImageSmoothingEnabled = false;
+            } catch(err) {
+            }
+
+            return canvas;
+        }
+
+        function destroyCanvas () {
+            canvas.parentNode.removeChild(canvas);
+        }
+
+        function pixelToGeo(x, y) {
+            var res = {};
+            x /= size;
+            y /= size;
+            res[LAT] = y <= 0  ? 90 : y >= 1 ? -90 : RAD * (2 * atan(exp(PI * (1 - 2 * y))) - HALF_PI),
+            res[LON] = (x === 1 ?  1 : (x % 1 + 1) % 1) * 360 - 180;
+            return res;
+        }
+
+        function geoToPixel(lat, lon) {
+            var
+                latitude = min(1, max(0, 0.5 - (log(tan(QUARTER_PI + HALF_PI * lat / 180)) / PI) / 2)),
+                longitude = lon / 360 + 0.5
+            ;
+            return {
+                x: ~~(longitude * size),
+                y: ~~(latitude  * size)
+            };
+        }
+
+        function template(str, data) {
+            return str.replace(/\{ *([\w_]+) *\}/g, function(x, key) {
+                return data[key];
+            });
+        }
+
+
+//****** file: data.js ******
+
+        function xhr(url, callback) {
+            var x = new XMLHttpRequest();
+            x.onreadystatechange = function () {
+                if (x.readyState !== 4) {
+                    return;
+                }
+                if (!x.status || x.status < 200 || x.status > 299) {
+                    return;
+                }
+                if (x.responseText) {
+                    callback(JSON.parse(x.responseText));
+                }
+            };
+            x.open('GET', url);
+            x.send(null);
+            return x;
+        }
+
+        function loadData() {
+            if (!url || zoom < MIN_ZOOM) {
+                return;
+            }
+            var
+                // create bounding box of double viewport size
+                nw = pixelToGeo(originX         - halfWidth, originY          - halfHeight),
+                se = pixelToGeo(originX + width + halfWidth, originY + height + halfHeight)
+            ;
+            if (req) {
+                req.abort();
+            }
+            req = xhr(template(url, {
+                w: nw[LON],
+                n: nw[LAT],
+                e: se[LON],
+                s: se[LAT],
+                z: zoom
+            }), onDataLoaded);
+        }
+
+        function onDataLoaded(res) {
+            var
+                i, il,
+                resData, resMeta,
+                keyList = [], k,
+                offX = 0, offY = 0
+            ;
+
+            minZoom = MIN_ZOOM;
+            setZoom(zoom); // recalculating all zoom related variables
+            req = null;
+
+            // no response or response not matching current zoom (= too old response)
+            if (!res || res.meta.z !== zoom) {
+                return;
+            }
+
+            resMeta = res.meta;
+            resData = res.data;
+
+            // offset between old and new data set
+            if (meta && data && meta.z === resMeta.z) {
+                offX = meta.x - resMeta.x;
+                offY = meta.y - resMeta.y;
+
+                // identify already present buildings to fade in new ones
+                for (i = 0, il = data.length; i < il; i++) {
+                    // id key: x,y of first point - good enough
+                    keyList[i] = (data[i][FOOTPRINT][0] + offX) + ',' + (data[i][FOOTPRINT][1] + offY);
+                }
+            }
+
+            meta = resMeta;
+            data = [];
+
+            for (i = 0, il = resData.length; i < il; i++) {
+                data[i] = resData[i];
+                data[i][HEIGHT] = min(data[i][HEIGHT], MAX_HEIGHT);
+                k = data[i][FOOTPRINT][0] + ',' + data[i][FOOTPRINT][1];
+                data[i][IS_NEW] = !(keyList && ~keyList.indexOf(k));
+            }
+
+            resMeta = resData = keyList = null; // gc
+
+            fadeIn();
+        }
+
+        // detect polygon winding direction: clockwise or counter clockwise
+        function getPolygonWinding(points) {
+            var
+                x1, y1, x2, y2,
+                a = 0,
+                i, il
+            ;
+            for (i = 0, il = points.length - 3; i < il; i += 2) {
+                x1 = points[i    ];
+                y1 = points[i + 1];
+                x2 = points[i + 2];
+                y2 = points[i + 3];
+                a += x1 * y2 - x2 * y1;
+            }
+            return (a / 2) > 0 ? 'CW' : 'CCW';
+        }
+
+        // make polygon winding clockwise. This is needed for proper backface culling on client side.
+        function makeClockwiseWinding(points) {
+            var winding = getPolygonWinding(points);
+            if (winding === 'CW') {
+                return points;
+            }
+            var revPoints = [];
+            for (var i = points.length - 2; i >= 0; i -= 2) {
+                revPoints.push(points[i], points[i + 1]);
+            }
+            return revPoints;
+        }
+
+        function scaleData(data, isNew) {
+            var
+                res = [],
+                i, il, j, jl,
+                item,
+                coords, footprint,
+                p,
+                z = maxZoom - zoom
+            ;
+
+            for (i = 0, il = data.length; i < il; i++) {
+                item = data[i];
+                coords = item[FOOTPRINT];
+                footprint = new Int32Array(coords.length);
+                for (j = 0, jl = coords.length - 1; j < jl; j += 2) {
+                    p = geoToPixel(coords[j], coords[j + 1]);
+                    footprint[j]     = p.x;
+                    footprint[j + 1] = p.y;
+                }
+                res[i] = [];
+                res[i][HEIGHT]    = min(item[HEIGHT] >> z, MAX_HEIGHT);
+                res[i][FOOTPRINT] = footprint;
+                res[i][COLOR]     = item[COLOR];
+                res[i][IS_NEW]    = isNew;
+            }
+
+            return res;
+        }
+
+        function geoJSON(url, isLatLon) {
+            if (typeof url === 'object') {
+                setData(url, !isLatLon);
+                return;
+            }
+            var
+                el = doc.documentElement,
+                callback = 'jsonpCallback',
+                script = doc.createElement('script')
+            ;
+            global[callback] = function (res) {
+                delete global[callback];
+                el.removeChild(script);
+                setData(res, !isLatLon);
+            };
+            el.insertBefore(script, el.lastChild).src = url.replace(/\{callback\}/, callback);
+        }
+
+        function parseGeoJSON(json, isLonLat, res) {
+            if (res === undefined) {
+                res = [];
+            }
+
+            var
+                i, il,
+                j, jl,
+                features = json[0] ? json : json.features,
+                geometry, polygons, coords, properties,
+                footprint, heightSum,
+                propHeight, propWallColor, propRoofColor,
+                lat = isLonLat ? 1 : 0,
+                lon = isLonLat ? 0 : 1,
+                alt = 2,
+                item
+            ;
+
+            if (features) {
+                for (i = 0, il = features.length; i < il; i++) {
+                    parseGeoJSON(features[i], isLonLat, res);
+                }
+                return res;
+            }
+
+            if (json.type === 'Feature') {
+                geometry = json.geometry;
+                properties = json.properties;
+            }
+        //      else geometry = json
+
+            if (geometry.type === 'Polygon') {
+                polygons = [geometry.coordinates];
+            }
+            if (geometry.type === 'MultiPolygon') {
+                polygons = geometry.coordinates;
+            }
+
+            if (polygons) {
+                propHeight = properties.height;
+                if (properties.color || properties.wallColor) {
+                    propWallColor = Color.parse(properties.color || properties.wallColor);
+                }
+                if (properties.roofColor) {
+                    propRoofColor = Color.parse(properties.roofColor);
+                }
+
+                for (i = 0, il = polygons.length; i < il; i++) {
+                    coords = polygons[i][0];
+                    footprint = [];
+                    heightSum = 0;
+                    for (j = 0, jl = coords.length; j < jl; j++) {
+                        footprint.push(coords[j][lat], coords[j][lon]);
+                        heightSum += propHeight || coords[j][alt] || 0;
+                    }
+
+                    if (heightSum) {
+                        item = [];
+                        item[HEIGHT] = ~~(heightSum/coords.length);
+                        item[FOOTPRINT] = makeClockwiseWinding(footprint);
+                        if (propWallColor || propRoofColor) {
+                            item[COLOR] = [propWallColor, propRoofColor];
+                        }
+                        res.push(item);
+                    }
+                }
+            }
+
+            return res;
+        }
+
+        function setData(json, isLonLat) {
+            if (!json) {
+                rawData = null;
+                render(); // effectively clears
+                return;
+            }
+
+            rawData = parseGeoJSON(json, isLonLat);
+            minZoom = 0;
+            setZoom(zoom); // recalculating all zoom related variables
+
+            meta = {
+                n: 90,
+                w: -180,
+                s: -90,
+                e: 180,
+                x: 0,
+                y: 0,
+                z: zoom
+            };
+            data = scaleData(rawData, true);
+
+            fadeIn();
+        }
+
+//****** file: properties.js ******
+
+        function setSize(w, h) {
+            width  = w;
+            height = h;
+            halfWidth  = ~~(width / 2);
+            halfHeight = ~~(height / 2);
+            camX = halfWidth;
+            camY = height;
+            canvas.width = width;
+            canvas.height = height;
+        }
+
+        function setOrigin(x, y) {
+            originX = x;
+            originY = y;
+        }
+
+        function setZoom(z) {
+            zoom = z;
+            size = TILE_SIZE << zoom;
+            zoomAlpha = 1 - (zoom - minZoom) * 0.3 / (maxZoom - minZoom);
+        }
+
+        function setCam(x, y) {
+            camX = x;
+            camY = y;
+        }
+
+        function setStyle(style) {
+            style = style || {};
+            strokeRoofs = style.strokeRoofs !== undefined ? style.strokeRoofs : strokeRoofs;
+            if (style.color || style.wallColor) {
+                wallColor = Color.parse(style.color || style.wallColor);
+            }
+            if (style.roofColor !== undefined) { // allow explicit falsy values in order to remove roof color
+                roofColor = Color.parse(style.roofColor);
+            }
+            render();
+        }
+
+
+//****** file: events.js ******
+
+        function onResize(e) {
+            setSize(e.width, e.height);
+            render();
+            loadData();
+        }
+
+        function onMove(e) {
+            setOrigin(e.x, e.y);
+            render();
+        }
+
+        function onMoveEnd(e) {
+            var
+                nw = pixelToGeo(originX,         originY),
+                se = pixelToGeo(originX + width, originY + height)
+            ;
+            // check, whether viewport is still within loaded data bounding box
+            if (meta && (nw[LAT] > meta.n || nw[LON] < meta.w || se[LAT] < meta.s || se[LON] > meta.e)) {
+                loadData();
+            }
+        }
+
+        function onZoomStart(e) {
+            isZooming = true;
+            render(); // effectively clears
+        }
+
+        function onZoomEnd(e) {
+            isZooming = false;
+            setZoom(e.zoom);
+            if (!rawData) {
+                loadData();
+                return;
+            }
+            data = scaleData(rawData);
+            render();
+        }
+
+
+//****** file: render.js ******
+
+        function fadeIn() {
+            fadeFactor = 0;
+            clearInterval(fadeTimer);
+            fadeTimer = setInterval(function () {
+                fadeFactor += 0.5 * 0.2; // amount * easing
+                if (fadeFactor > 1) {
+                    clearInterval(fadeTimer);
+                    fadeFactor = 1;
+                    // unset 'already present' marker
+                    for (var i = 0, il = data.length; i < il; i++) {
+                        data[i][IS_NEW] = 0;
+                    }
+                }
+                render();
+            }, 33);
+        }
+
+        function render() {
+            context.clearRect(0, 0, width, height);
+
+            // data needed for rendering
+            if (!meta || !data) {
+                return;
+            }
+
+            // show buildings in high zoom levels only
+            // avoid rendering during zoom
+            if (zoom < minZoom || isZooming) {
+                return;
+            }
+
+            var
+                i, il, j, jl,
+                item,
+                f, h, m,
+                x, y,
+                offX = originX - meta.x,
+                offY = originY - meta.y,
+                footprint, roof, walls,
+                isVisible,
+                ax, ay, bx, by, _a, _b,
+                wallColorAlpha = wallColor.adjustAlpha(zoomAlpha) + '',
+                roofColorAlpha = (roofColor || wallColor.adjustLightness(1.2)).adjustAlpha(zoomAlpha) + ''
+            ;
+
+            if (strokeRoofs) {
+                context.strokeStyle = strokeColor.adjustAlpha(zoomAlpha) + '';
+            }
+
+            for (i = 0, il = data.length; i < il; i++) {
+                item = data[i];
+
+                isVisible = false;
+                f = item[FOOTPRINT];
+                footprint = []; // typed array would be created each pass and is way too slow
+                for (j = 0, jl = f.length - 1; j < jl; j += 2) {
+                    footprint[j]     = x = (f[j]     - offX);
+                    footprint[j + 1] = y = (f[j + 1] - offY);
+
+                    // checking footprint is sufficient for visibility
+                    if (!isVisible) {
+                        isVisible = (x > 0 && x < width && y > 0 && y < height);
+                    }
+                }
+
+                if (!isVisible) {
+                    continue;
+                }
+
+                context.fillStyle = item[COLOR] && item[COLOR][0] ? item[COLOR][0].adjustAlpha(zoomAlpha) + '' : wallColorAlpha;
+
+                // when fading in, use a dynamic height
+                h = item[IS_NEW] ? item[HEIGHT] * fadeFactor : item[HEIGHT];
+
+                // precalculating projection height scale
+                m = CAM_Z / (CAM_Z - h);
+
+                roof = []; // typed array would be created each pass and is way too slow
+                walls = [];
+
+                for (j = 0, jl = footprint.length - 3; j < jl; j += 2) {
+                    ax = footprint[j];
+                    ay = footprint[j + 1];
+                    bx = footprint[j + 2];
+                    by = footprint[j + 3];
+
+                    // project 3d to 2d on extruded footprint
+                    _a = project(ax, ay, m);
+                    _b = project(bx, by, m);
+
+                    // backface culling check. could this be precalculated partially?
+                    if ((bx - ax) * (_a.y - ay) > (_a.x - ax) * (by - ay)) {
+                        // face combining
+                        if (!walls.length) {
+                            walls.unshift(ay + 0.5);
+                            walls.unshift(ax + 0.5);
+                            walls.push(_a.x, _a.y);
+                        }
+                        walls.unshift(by + 0.5);
+                        walls.unshift(bx + 0.5);
+                        walls.push(_b.x, _b.y);
+                    } else {
+                        drawShape(walls);
+                        walls = [];
+                    }
+                    roof[j]     = _a.x;
+                    roof[j + 1] = _a.y;
+                }
+
+                drawShape(walls);
+
+                // TODO refactor this to a lookup table
+                // fill roof and optionally stroke it
+                context.fillStyle = !item[COLOR] ? roofColorAlpha : // no item color => use default roof color (which is in worst case build from default wall color)
+                    item[COLOR][1] ? item[COLOR][1].adjustAlpha(zoomAlpha) + '' : // item roof color exists => adapt & use it
+                    roofColor ? roofColorAlpha : // default roof color exists => use it
+                    item[COLOR][0].adjustLightness(1.2).adjustAlpha(zoomAlpha) + '' // item wall color exists => adapt & use it
+                ;
+
+                drawShape(roof, strokeRoofs);
+                drawRoof(roof);
+            }
+        }
+
+
+
+
+
+function circle(x, y, diameter, stroke) {
+    ellipse(x, y, diameter, diameter, stroke);
+}
+
+function ellipse(x, y, w, h, stroke) {
+    var
+        w2 = w / 2, h2 = h / 2,
+        hB = w2 * 0.5522848,
+        vB = h2 * 0.5522848,
+        eX = x + w2, eY = y + h2,
+        mX = x, mY = y
+    ;
+
+    x -= w2;
+    y -= h2;
+
+    context.beginPath();
+    context.moveTo(x, mY);
+    context.bezierCurveTo( x,      mY - vB, mX - hB,  y,      mX, y);
+    context.bezierCurveTo(mX + hB,       y, eX,      mY - vB, eX, mY);
+    context.bezierCurveTo(eX,      mY + vB, mX + hB, eY,      mX, eY);
+    context.bezierCurveTo(mX - hB,      eY,  x,      mY + vB,  x, mY);
+    context.closePath();
+    context.fill();
+    if (stroke) {
+        context.stroke();
+    }
+}
+
+function drawRoof2(points) {
+    context.fillStyle = 'rgba(240,0,0,0.25)';
+    context.strokeStyle = strokeColor.adjustAlpha(zoomAlpha) + '';
+
+    var
+        h = 20,
+        center = [
+            (points[0] + points[2] + points[4] + points[6]) / 4,
+            (points[1] + points[3] + points[5] + points[7]) / 4
+        ],
+        apex = project(center[0], center[1], CAM_Z / (CAM_Z - h))
+    ;
+
+    var d = 65;
+    circle(center[0], center[1], d, d, true);
+
+    context.beginPath();
+    context.moveTo(center[0] - d / 2, center[1]);
+    context.lineTo(apex.x, apex.y);
+    context.lineTo(center[0] + d / 2, center[1]);
+    context.stroke();
+
+    context.beginPath();
+    context.moveTo(center[0], center[1] - d / 2);
+    context.lineTo(apex.x, apex.y);
+    context.lineTo(center[0], center[1] + d / 2);
+    context.stroke();
+}
+
+
+function drawRoof(points) {
+    context.fillStyle = 'rgba(240,0,0,0.25)';
+    context.strokeStyle = strokeColor.adjustAlpha(zoomAlpha) + '';
+
+    var
+        h = 10,
+        center = [
+            (points[0] + points[2] + points[4] + points[6]) / 4,
+            (points[1] + points[3] + points[5] + points[7]) / 4
+        ],
+        apex = project(center[0], center[1], CAM_Z / (CAM_Z - h))
+    ;
+
+    var d = 65;
+    circle(center[0], center[1], d, d, true);
+    debugMarker(apex.x, apex.y);
+
+    var d2 = d / 2;
+    var w = center[0] - d2;
+    var e = center[0] + d2;
+    var n = center[1] - d2;
+    var s = center[1] + d2;
+
+    context.beginPath();
+    context.moveTo(w, center[1]);
+    context.bezierCurveTo((apex.x + w) / 2.05, center[1] + (apex.y - center[1]) * 1.5, (apex.x + e) / 1.95, center[1] + (apex.y - center[1]) * 1.5, e, center[1]);
+    context.stroke();
+
+    context.beginPath();
+    context.moveTo(center[0], n);
+    context.bezierCurveTo(center[0] + (apex.x - center[0]) * 1.5, (apex.y + n) / 2.05, center[0] + (apex.x - center[0]) * 1.5, (apex.y + s) / 1.95, center[0], s);
+    context.stroke();
+}
+
+function drawRoof1(points) {
+    context.fillStyle = 'rgba(240,0,0,0.25)';
+    var
+        h = 20 + 10,
+        center = [
+            (points[0] + points[2] + points[4] + points[6]) / 4,
+            (points[1] + points[3] + points[5] + points[7]) / 4
+        ],
+        apex = project(center[0], center[1], CAM_Z / (CAM_Z - h))
+    ;
+    drawShape([
+        points[0], points[1],
+        points[2], points[3],
+        apex.x, apex.y
+    ], true);
+    drawShape([
+        points[2], points[3],
+        points[4], points[5],
+        apex.x, apex.y
+    ], true);
+    drawShape([
+        points[4], points[5],
+        points[6], points[7],
+        apex.x, apex.y
+    ], true);
+    drawShape([
+        points[6], points[7],
+        points[0], points[1],
+        apex.x, apex.y
+    ], true);
+}
+
+
+
+
+
+
+        function debugMarker(x, y, color, size) {
+            context.fillStyle = color || '#ffcc00';
+            context.beginPath();
+            context.arc(x, y, size || 3, 0, PI*2, true);
+            context.closePath();
+            context.fill();
+        }
+
+        function drawShape(points, stroke) {
+            if (!points.length) {
+                return;
+            }
+
+            context.beginPath();
+            context.moveTo(points[0], points[1]);
+            for (var i = 2, il = points.length; i < il; i += 2) {
+                context.lineTo(points[i], points[i + 1]);
+            }
+            context.closePath();
+            if (stroke) {
+                context.stroke();
+            }
+            context.fill();
+        }
+
+        function project(x, y, m) {
+            return {
+                x: ~~((x - camX) * m + camX) + 0.5, // + 0.5: disabling(!) anti alias
+                y: ~~((y - camY) * m + camY) + 0.5  // + 0.5: disabling(!) anti alias
+            };
+        }
+
+
+//****** file: public.js ******
+
+        this.setStyle = function (style) {
+            setStyle(style);
+            return this;
+        };
+
+        this.geoJSON = function (url, isLatLon) {
+            geoJSON(url, isLatLon);
+            return this;
+        };
+
+        this.setCamOffset = function(x, y) {
+            camX = halfWidth + x;
+            camY = height    + y;
+        };
+
+        this.setMaxZoom = function (z) {
+            maxZoom = z;
+        };
+
+        this.createCanvas = createCanvas;
+        this.destroyCanvas = destroyCanvas;
+        this.loadData    = loadData;
+        this.onMoveEnd   = onMoveEnd;
+        this.onZoomEnd   = onZoomEnd;
+        this.onZoomStart = onZoomStart;
+        this.render      = render;
+        this.setOrigin   = setOrigin;
+        this.setSize     = setSize;
+        this.setZoom     = setZoom;
+
+// OPENLAYERS
+//        this.geoToPixel()
+//        this.data
+//        this.rawData
+//        this.scaleData()
+
+
+//****** file: suffix.class.js ******
+
+    };
+
+    global.OSMBuildings.VERSION = VERSION;
+    global.OSMBuildings.ATTRIBUTION = ATTRIBUTION;
+
+
+//****** file: suffix.js ******
+
+}(this));
+
+/*jshint bitwise:true */
+

@@ -1,4 +1,3 @@
-
         function xhr(url, callback) {
             var x = new XMLHttpRequest();
             x.onreadystatechange = function () {
@@ -191,7 +190,7 @@
                 geometry = json.geometry;
                 properties = json.properties;
             }
-    //      else geometry = json
+        //      else geometry = json
 
             if (geometry.type === 'Polygon') {
                 polygons = [geometry.coordinates];

@@ -58,7 +58,7 @@
         feature.properties.height = feature.properties.density * 4000; // scale height a bit to make it more visible
     }
 
-    new OSMBuildings(map).geoJSON(censusData).setStyle({ strokeRoofs: true });
+    new L-BuildingsLAyer().addTo(map).geoJSON(censusData).setStyle({ strokeRoofs: true });
     </script>
 
     <script>

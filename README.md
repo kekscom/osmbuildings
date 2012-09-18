@@ -61,13 +61,13 @@ var mapboxTiles = new L.TileLayer(
 // to point to the sample location Berlin, lets start there:
 map.setView(new L.LatLng(52.52111, 13.40988), 17).addLayer(mapboxTiles);
 
-// now create the buildings layer and attach it to the map:
-new OSMBuildings(map);
+// now create the OSM Buildings layer and attach it to the map:
+new L.BuildingsLayer().addTo(map);
 
 // if you like to load the server based Berlin or Frankfurt samples, start loading use loadData()
 // as soon as you do, it starts loading data from your PHP/MySQL combo
 // you will need to have this on the same server, otherwise there are cross origin issues
-new OSMBuildings(map).loadData('server/?w={w}&n={n}&e={e}&s={s}&z={z}');
+new L.BuildingsLayer('server/?w={w}&n={n}&e={e}&s={s}&z={z}').addTo(map);
 
 // or you like to put cutom objects on the map, use <a href="http://www.geojson.org/geojson-spec.html">GeoJSON</a>
 // the second parameter indicates, whether your coordinates are ordered as lat/lon (default) or lon/lat
@@ -96,7 +96,7 @@ var myGeoJSON = {
     ]
 };
 
-new OSMBuildings(map).geoJSON(myGeoJSON[, isLatLon?]);
+new L.BuildingsLayer.addTo(map).geoJSON(myGeoJSON[, isLatLon?]);
 ```
 
 
