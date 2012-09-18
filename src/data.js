@@ -1,4 +1,3 @@
-
         function xhr(url, callback) {
             var x = new XMLHttpRequest();
             x.onreadystatechange = function () {

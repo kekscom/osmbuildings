@@ -14,7 +14,8 @@
     <link rel="stylesheet" href="js/highlight/github.css">
     <script src="js/highlight/highlight.pack.js"></script>
 
-    <script src="../dist/buildings.js"></script>
+    <script src="../dist/osmbuildings.js"></script>
+    <script src="../src/engines/Leaflet.js"></script>
 </head>
 
 <body>
@@ -144,7 +145,7 @@
         }]
     };
 
-    new OSMBuildings(map).geoJSON(geoJSONData);
+    new L.BuildingsLayer().addTo(map).geoJSON(geoJSONData);
     </script>
 
     <script>

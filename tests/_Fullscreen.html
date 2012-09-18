@@ -28,7 +28,8 @@
     }
    </style>
 
-    <script src="js/buildings.js"></script>
+    <script src="js/osmbuildings.js"></script>
+    <script src="../src/engines/Leaflet.js"></script>
 </head>
 
 <body>
@@ -42,7 +43,7 @@
         { attribution: 'Map tiles &copy; <a href="http://mapbox.com">MapBox</a>', maxZoom: 17 }
     ).addTo(map);
 
-    new OSMBuildings(map).loadData('../server/?w={w}&n={n}&e={e}&s={s}&z={z}');
+    new L.BuildingsLayer('../server/?w={w}&n={n}&e={e}&s={s}&z={z}').addTo(map);
     </script>
 </body>
 </html>

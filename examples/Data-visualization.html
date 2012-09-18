@@ -14,7 +14,9 @@
     <link rel="stylesheet" href="js/highlight/github.css">
     <script src="js/highlight/highlight.pack.js"></script>
 
-    <script src="../dist/buildings.js"></script>
+    <script src="../dist/osmbuildings.js"></script>
+    <script src="../src/engines/Leaflet.js"></script>
+
     <script src="js/censusData.js"></script>
 </head>
 
@@ -58,7 +60,7 @@
         feature.properties.height = feature.properties.density * 4000; // scale height a bit to make it more visible
     }
 
-    new OSMBuildings(map).geoJSON(censusData).setStyle({ strokeRoofs: true });
+    new L.BuildingsLayer().addTo(map).geoJSON(censusData).setStyle({ strokeRoofs: true });
     </script>
 
     <script>
