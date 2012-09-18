@@ -1,3 +1,5 @@
+alert('Old version of OSM Buildings!');
+
 /**
  * Copyright (C) 2012 OSM Buildings, Jan Marsch
  * A leightweight JavaScript library for visualizing 3D building geometry on interactive maps.

@@ -26,18 +26,6 @@ exports.srcFiles = [
         srcPath + '/suffix.class.js',
     srcPath + '/suffix.js'
 ];
-exports.dstFile      = dstPath + '/buildings.js';
-exports.dstFileDebug = dstPath + '/buildings-debug.js';
 
-
-//exports.dstFile = {
-//    default: dstPath + '/buildings.js',
-//    leaflet: dstPath + '/buildings-leaflet.js',
-//    openlayers: dstPath + '/buildings-openlayers.js'
-//};
-//
-//exports.dstFileDebug = {
-//    default: dstPath + '/buildings-debug.js',
-//    leaflet: exports.dstFileDebug = dstPath + '/buildings-leaflet-debug.js',
-//    openlayers: dstPath + '/buildings-openlayers-debug.js'
-//};
+exports.dstFile      = dstPath + '/osmbuildings.js';
+exports.dstFileDebug = dstPath + '/osmbuildings-debug.js';
