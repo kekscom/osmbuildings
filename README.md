@@ -37,7 +37,7 @@ Then in header section, add:
 <head>
     :
     :
-  <script src="dist/osmbuildings.js"></script>
+  <script src="dist/buildings.js"></script>
 </head>
 ```
 
@@ -62,7 +62,7 @@ var mapboxTiles = new L.TileLayer(
 map.setView(new L.LatLng(52.52111, 13.40988), 17).addLayer(mapboxTiles);
 
 // now create the OSM Buildings layer and attach it to the map:
-new OSMBuildings(map);
+new L.BuildingsLayer().addTo(map);
 
 // if you like to load the server based Berlin or Frankfurt samples, start loading use loadData()
 // as soon as you do, it starts loading data from your PHP/MySQL combo
@@ -96,7 +96,7 @@ var myGeoJSON = {
     ]
 };
 
-new OSMBuildings(map).geoJSON(myGeoJSON[, isLatLon?]);
+new L.BuildingsLayer.addTo(map).geoJSON(myGeoJSON[, isLatLon?]);
 ```
 
 

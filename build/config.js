@@ -27,5 +27,5 @@ exports.srcFiles = [
     srcPath + '/suffix.js'
 ];
 
-exports.dstFile      = dstPath + '/osmbuildings.js';
-exports.dstFileDebug = dstPath + '/osmbuildings-debug.js';
+exports.dstFile      = dstPath + '/buildings.js';
+exports.dstFileDebug = dstPath + '/buildings-debug.js';
