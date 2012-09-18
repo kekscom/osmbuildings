@@ -6,88 +6,88 @@
 // });
 // map.addLayer(...);
 
+// this.layer = new OpenLayers.Layer.Buildings( 'OSMBuildings', this );
+// map.addLayer( this.layer );
 
-        OpenLayers.Layer.Buildings = OpenLayers.Class(OpenLayers.Layer, {
-            CLASS_NAME: 'OpenLayers.Layer.Buildings',
-            isBaseLayer: false,
-            alwaysInRange: true,
-            attribution: 'Buildings &copy; <a href="http://osmbuildings.org">OSM Buildings</a>',
 
-            initialize: function(name, options) {
-                OpenLayers.Layer.prototype.initialize.apply( this, [name, options] );
-            },
+OpenLayers.Layer.Buildings = OpenLayers.Class(OpenLayers.Layer, {
 
-            updateOrigin: function() {
-                var origin = this.map.getLonLatFromPixel( new OpenLayers.Pixel( 0, 0 ))
-                    .transform( this.map.getProjectionObject(), new OpenLayers.Projection( "EPSG:4326" ) );
-                var originPx = geoToPixel( origin.lat, origin.lon );
-                setOrigin( originPx.x, originPx.y );
-            },
+    CLASS_NAME: 'OpenLayers.Layer.Buildings',
 
-            setMap: function(map) {
-                if( !this.map ) {
-                    OpenLayers.Layer.prototype.setMap.apply( this, arguments );
-                    createCanvas( this.div );
-                    var newSize = this.map.getSize();
-                    setSize( newSize.w, newSize.h );
-                    setZoom( this.map.getZoom() );
-                    this.updateOrigin();
-                    loadData();
-                }
-            },
+    isBaseLayer: false,
 
-            removeMap: function(map) {
-                canvas.parentNode.removeChild( canvas );
-                OpenLayers.Layer.prototype.removeMap.apply( this, arguments );
-            },
+    alwaysInRange: true,
 
-            onMapResize: function() {
-                OpenLayers.Layer.prototype.onMapResize.apply( this, arguments );
-                var newSize = this.map.getSize();
-                setSize( newSize.w, newSize.h );
-                render();
-            },
+    attribution: OSMBuildings.ATTRIBUTION,
 
-            moveTo: function(bounds, zoomChanged, dragging) {
-                var result = OpenLayers.Layer.prototype.moveTo.apply( this, arguments );
-                if(!dragging) {
-                    var offsetLeft = parseInt( this.map.layerContainerDiv.style.left, 10 );
-                    offsetLeft = -Math.round( offsetLeft );
-                    var offsetTop = parseInt( this.map.layerContainerDiv.style.top, 10 );
-                    offsetTop = -Math.round( offsetTop );
+    initialize: function (name, options) {
+        OpenLayers.Layer.prototype.initialize(name, options);
+        this.osmb = new OSMBuildings(options.url);
+    },
 
-                    this.div.style.left = offsetLeft + 'px';
-                    this.div.style.top = offsetTop + 'px';
-                }
+    updateOrigin: function () {
+        var origin = this.map.getLonLatFromPixel(
+            new OpenLayers.Pixel(0, 0)
+        ).transform(
+            this.map.getProjectionObject(),
+            new OpenLayers.Projection('EPSG:4326')
+        );
 
-                if (zoomChanged){
-                    setZoom( this.map.getZoom() );
-                    if (rawData) {
-                        data = scaleData( rawData );
-                    }
-                }
+        var originPx = this.osmb.geoToPixel(origin.lat, origin.lon);
+        this.osmb.setOrigin(originPx.x, originPx.y);
+    },
 
-                this.updateOrigin();
-                camX = halfWidth;
-                camY = height;
-                render();
-                onMoveEnd( {} );
-                return result;
-            },
+    setMap: function (map) {
+        if (!this.map) {
+            OpenLayers.Layer.prototype.setMap(map);
+            this.osmb.createCanvas(this.div);
+            var newSize = this.map.getSize();
+            this.osmb.setSize(newSize.w, newSize.h);
+            this.osmb.setZoom(this.map.getZoom());
+            this.updateOrigin();
+            this.osmb.loadData();
+        }
+    },
 
-            moveByPx: function(dx, dy) {
-                var result = OpenLayers.Layer.prototype.moveByPx.apply( this, arguments );
-                camX += dx;
-                camY += dy;
-                render();
-                return result;
-            }
-        });
+    removeMap: function (map) {
+        this.osmb.destroyCanvas();
+        OpenLayers.Layer.prototype.removeMap(map);
+    },
 
-        osmb.VERSION += '-openlayers';
+    onMapResize: function () {
+        OpenLayers.Layer.prototype.onMapResize();
+        var newSize = this.map.getSize();
+        this.osmb.setSize(newSize.w, newSize.h);
+        this.osmb.render();
+    },
 
-        osmb.addTo = function( map ) {
-            this.layer = new OpenLayers.Layer.Buildings( 'OSMBuildings', this );
-            map.addLayer( this.layer );
-            return this;
-        };
+    moveTo: function (bounds, zoomChanged, dragging) {
+        var result = OpenLayers.Layer.prototype.moveTo(bounds, zoomChanged, dragging);
+        if (!dragging) {
+            var offsetLeft = parseInt(this.map.layerContainerDiv.style.left, 10);
+            var offsetTop = parseInt(this.map.layerContainerDiv.style.top, 10);
+            this.div.style.left = -offsetLeft + 'px';
+            this.div.style.top = -offsetTop + 'px';
+        }
+
+        if (zoomChanged){
+            this.osmb.setZoom(this.map.getZoom());
+//            if (this.osmb.rawData) {
+//                this.osmb.data = this.osmb.scaleData(osmb.rawData);
+//            }
+        }
+
+        this.updateOrigin();
+        this.osmb.setCamOffset(0, 0);
+        this.osmb.render();
+        this.osmb.onMoveEnd({});
+        return result;
+    },
+
+    moveByPx: function (dx, dy) {
+        var result = OpenLayers.Layer.prototype.moveByPx(dx, dy);
+        this.osmb.setCamOffset(dx, dy);
+        this.osmb.render();
+        return result;
+    }
+});

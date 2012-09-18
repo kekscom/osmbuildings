@@ -13,14 +13,12 @@
             camY = height    + y;
         };
 
-        this.createCanvas = createCanvas;
-
-        this.destroyCanvas = destroyCanvas;
-
         this.setMaxZoom = function (z) {
             maxZoom = z;
         };
 
+        this.createCanvas = createCanvas;
+        this.destroyCanvas = destroyCanvas;
         this.loadData    = loadData;
         this.onMoveEnd   = onMoveEnd;
         this.onZoomEnd   = onZoomEnd;
@@ -29,3 +27,9 @@
         this.setOrigin   = setOrigin;
         this.setSize     = setSize;
         this.setZoom     = setZoom;
+
+// OPENLAYERRS
+//        this.data
+//        this.geoToPixel()
+//        this.rawData
+//        this.scaleData()
