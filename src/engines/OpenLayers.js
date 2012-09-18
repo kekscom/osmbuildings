@@ -1,15 +1,3 @@
-// new OpenLayers.Layer.Buildings('name?', layerOptions);
-// new OpenLayers.Layer.Google('Google Physical', { type: G_PHYSICAL_MAP });
-// new OpenLayers.Layer.GML("GeoJSON", "geo.json", {
-//     projection: new OpenLayers.Projection("EPSG:4326"),
-//     format: OpenLayers.Format.GeoJSON
-// });
-// map.addLayer(...);
-
-// this.layer = new OpenLayers.Layer.Buildings( 'OSMBuildings', this );
-// map.addLayer( this.layer );
-
-
 OpenLayers.Layer.Buildings = OpenLayers.Class(OpenLayers.Layer, {
 
     CLASS_NAME: 'OpenLayers.Layer.Buildings',
@@ -32,8 +20,9 @@ OpenLayers.Layer.Buildings = OpenLayers.Class(OpenLayers.Layer, {
             this.map.getProjectionObject(),
             new OpenLayers.Projection('EPSG:4326')
         );
-
-        var originPx = this.osmb.geoToPixel(origin.lat, origin.lon);
+//        var originPx = this.osmb.geoToPixel(origin.lat, origin.lon);
+//        this.osmb.setOrigin(originPx.x, originPx.y);
+        var originPx = this.map.getPixelFromLonLat(origin.lon, origin.lat);
         this.osmb.setOrigin(originPx.x, originPx.y);
     },
 
@@ -71,10 +60,11 @@ OpenLayers.Layer.Buildings = OpenLayers.Class(OpenLayers.Layer, {
         }
 
         if (zoomChanged){
-            this.osmb.setZoom(this.map.getZoom());
+//            this.osmb.setZoom(this.map.getZoom());
 //            if (this.osmb.rawData) {
 //                this.osmb.data = this.osmb.scaleData(osmb.rawData);
 //            }
+            this.osmb.onZoomEnd({ zoom: this.map.getZoom() });
         }
 
         this.updateOrigin();

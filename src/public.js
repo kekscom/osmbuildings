@@ -28,8 +28,8 @@
         this.setSize     = setSize;
         this.setZoom     = setZoom;
 
-// OPENLAYERRS
-//        this.data
+// OPENLAYERS
 //        this.geoToPixel()
+//        this.data
 //        this.rawData
 //        this.scaleData()
