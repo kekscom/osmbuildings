@@ -42,7 +42,7 @@
     var osmb = new L.BuildingsLayer('../server/?w={w}&n={n}&e={e}&s={s}&z={z}').addTo(map);
     L.control.layers({}, { Buildings: osmb }).addTo(map);
 
-//    var osmb = new OSMBuildings(map).loadData('../server/?w={w}&n={n}&e={e}&s={s}&z={z}');
+//    var osmb = new L.BuildingsLayer('../server/?w={w}&n={n}&e={e}&s={s}&z={z}').addTo(map);
 //    L.control.layers({}, { Buildings: osmb }).addTo(map);
 //
 //    function setStyle(el) {

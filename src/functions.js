@@ -1,4 +1,3 @@
-
         function createCanvas (parentNode) {
             canvas = doc.createElement('canvas');
             canvas.style.webkitTransform = 'translate3d(0,0,0)'; // turn on hw acceleration

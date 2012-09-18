@@ -1,4 +1,3 @@
-
         function setSize(w, h) {
             width  = w;
             height = h;
