@@ -1,4 +1,3 @@
-
         function onResize(e) {
             setSize(e.width, e.height);
             render();

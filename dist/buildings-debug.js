@@ -8,13 +8,24 @@
 /*jshint bitwise:false */
 
 (function (global) {
-
     'use strict';
 
-    global.OSMBuildings = function () {
+
+//****** file: shortcuts.js ******
+
+    // object access shortcuts
+    var
+        Int32Array = Int32Array || Array,
+        exp = Math.exp,
+        log = Math.log,
+        tan = Math.tan,
+        atan = Math.atan,
+        min = Math.min,
+        max = Math.max,
+        doc = global.document
+    ;
 
 
-<<<<<<< HEAD
     // private constants, general to all instances
     var
         VERSION = '0.1.6a',
@@ -52,9 +63,6 @@
 
 
 //****** file: lib/Color.js ******
-=======
-//****** file: Color.js ******
->>>>>>> master
 
 
 var Color = (function () {
@@ -124,7 +132,7 @@ var Color = (function () {
         return new Color(this.r, this.g, this.b, this.a * a);
     };
 
-    C.parse = function(str) {
+    C.parse = function (str) {
         var m;
         str += '';
         if (~str.indexOf('#')) {
@@ -178,24 +186,13 @@ var Color = (function () {
 
 }());
 
-//****** file: variables.js ******
 
+//****** file: constants.js ******
 
-    // object access shortcuts
-    var
-        Int32Array = Int32Array || Array,
-        exp = Math.exp,
-        log = Math.log,
-        tan = Math.tan,
-        atan = Math.atan,
-        min = Math.min,
-        max = Math.max,
-        doc = global.document
-    ;
-
-    // private constants, shared to all instances
+    // constants, shared to all instances
     var
         VERSION = '0.1.6a',
+        ATTRIBUTION = '&copy; <a href="http://osmbuildings.org">OSM Buildings</a>',
 
         PI = Math.PI,
         HALF_PI = PI / 2,
@@ -212,51 +209,57 @@ var Color = (function () {
         HEIGHT = 0, FOOTPRINT = 1, COLOR = 2, IS_NEW = 3
     ;
 
-    // private variables, specific to an instance
-    var
-        osmb = this,
 
-        width = 0, height = 0,
-        halfWidth = 0, halfHeight = 0,
-        originX = 0, originY = 0,
-        zoom, size,
+//****** file: prefix.class.js ******
 
-        req,
+    global.OSMBuildings = function (u) {
+        url = u;
 
-        canvas, context,
 
-        url,
-        strokeRoofs,
-        wallColor = new Color(200,190,180),
-        roofColor = null,
-        strokeColor = new Color(145,140,135),
+//****** file: variables.js ******
 
-        rawData,
-        meta, data,
+        // private variables, specific to an instance
+        var
+            width = 0, height = 0,
+            halfWidth = 0, halfHeight = 0,
+            originX = 0, originY = 0,
+            zoom, size,
 
-        zoomAlpha = 1,
-        fadeFactor = 1,
-        fadeTimer,
+            req,
 
-        minZoom = MIN_ZOOM,
-        maxZoom = 20,
-        camX, camY,
+            canvas, context,
 
-        isZooming = false
-    ;
+            url,
+            strokeRoofs,
+            wallColor = new Color(200,190,180),
+            roofColor,
+            strokeColor = new Color(145,140,135),
+
+            rawData,
+            meta, data,
+
+            zoomAlpha = 1,
+            fadeFactor = 1,
+            fadeTimer,
+
+            minZoom = MIN_ZOOM,
+            maxZoom = 20,
+            camX, camY,
+
+            isZooming
+        ;
 
 
 //****** file: functions.js ******
 
-
-        function createCanvas(parentNode) {
+        function createCanvas (parentNode) {
             canvas = doc.createElement('canvas');
-            canvas.style.webkitTransform = 'translate3d(0,0,0)';
+            canvas.style.webkitTransform = 'translate3d(0,0,0)'; // turn on hw acceleration
+            canvas.style.imageRendering = 'optimizeSpeed';
             canvas.style.position = 'absolute';
             canvas.style.pointerEvents = 'none';
             canvas.style.left = 0;
             canvas.style.top = 0;
-            canvas.style.imageRendering = 'optimizeSpeed';
             parentNode.appendChild(canvas);
 
             context = canvas.getContext('2d');
@@ -264,7 +267,16 @@ var Color = (function () {
             context.lineJoin = 'round';
             context.lineWidth = 1;
 
-            try { context.mozImageSmoothingEnabled = false; } catch(err) {}
+            try {
+                context.mozImageSmoothingEnabled = false;
+            } catch(err) {
+            }
+
+            return canvas;
+        }
+
+        function destroyCanvas () {
+            canvas.parentNode.removeChild(canvas);
         }
 
         function pixelToGeo(x, y) {
@@ -580,6 +592,11 @@ var Color = (function () {
             zoomAlpha = 1 - (zoom - minZoom) * 0.3 / (maxZoom - minZoom);
         }
 
+        function setCam(x, y) {
+            camX = x;
+            camY = y;
+        }
+
         function setStyle(style) {
             style = style || {};
             strokeRoofs = style.strokeRoofs !== undefined ? style.strokeRoofs : strokeRoofs;
@@ -594,7 +611,6 @@ var Color = (function () {
 
 
 //****** file: events.js ******
-
 
         function onResize(e) {
             setSize(e.width, e.height);
@@ -764,13 +780,13 @@ var Color = (function () {
             }
         }
 
-//        function debugMarker(x, y, color, size) {
-//            context.fillStyle = color || '#ffcc00';
-//            context.beginPath();
-//            context.arc(x, y, size || 3, 0, PI*2, true);
-//            context.closePath();
-//            context.fill();
-//        }
+        function debugMarker(x, y, color, size) {
+            context.fillStyle = color || '#ffcc00';
+            context.beginPath();
+            context.arc(x, y, size || 3, 0, PI*2, true);
+            context.closePath();
+            context.fill();
+        }
 
         function drawShape(points, stroke) {
             if (!points.length) {
@@ -791,8 +807,8 @@ var Color = (function () {
 
         function project(x, y, m) {
             return {
-                x: ~~((x - camX) * m + camX) + 0.5,
-                y: ~~((y - camY) * m + camY) + 0.5
+                x: ~~((x - camX) * m + camX) + 0.5, // + 0.5: disabling(!) anti alias
+                y: ~~((y - camY) * m + camY) + 0.5  // + 0.5: disabling(!) anti alias
             };
         }
 
@@ -800,7 +816,6 @@ var Color = (function () {
 //****** file: public.js ******
 
 
-<<<<<<< HEAD
         this.render = function () {
                 render();
             return this;
@@ -820,13 +835,6 @@ var Color = (function () {
         osmb.setStyle = function (style) {
             setStyle(style);
             return osmb;
->>>>>>> master
-        };
-
-        osmb.setData = function (data, isLonLat) {
-            // DEPRECATED
-            console.warn('OSMBuildings.loadData() is deprecated and will be removed soon.\nUse OSMBuildings.loadData({url|object}, isLatLon?) instead.');
-<<<<<<< HEAD
                 setData(data, isLonLat);
             return this;
         };
@@ -835,152 +843,9 @@ var Color = (function () {
                 url = u;
                 loadData();
             return this;
-=======
-            setData(data, isLonLat);
-            return osmb;
+        this.setStyle = function (style) {
+            setStyle(style);
+            return this;
         };
 
-        osmb.loadData = function (u) {
-            url = u;
-            loadData();
-            return osmb;
->>>>>>> master
-        };
-
-        osmb.geoJSON = function (url, isLatLon) {
-            geoJSON(url, isLatLon);
-            return osmb;
-        };
-
-
-//****** file: Leaflet.js ******
-
-// new L.BuildingsLayer()
-// layer.addTo(map)
-
-        var
-            attribution = 'Buildings &copy; <a href="http://osmbuildings.org">OSM Buildings</a>',
-            mapOnMove, mapOnMoveEnd, mapOnZoomEnd,
-            blockMoveEvent // needed as Leaflet fires moveend and zoomend together
-        ;
-
-        osmb.VERSION += '-leaflet';
-
-        osmb.addTo = function (map) {
-            map.addLayer(osmb);
-            return osmb;
-        };
-
-        osmb.onAdd = function (map) {
-            osmb.map = map;
-
-            createCanvas(map._panes.overlayPane);
-            maxZoom = map._layersMaxZoom;
-
-            setSize(map._size.x, map._size.y);
-            var po = map.getPixelOrigin(); // changes on zoom only!
-            setOrigin(po.x, po.y);
-            setZoom(map._zoom);
-
-            var lastX = 0, lastY = 0;
-
-            mapOnMove = function () {
-                var mp = L.DomUtil.getPosition(map._mapPane);
-                camX = halfWidth - (mp.x - lastX);
-                camY = height    - (mp.y - lastY);
-                render();
-            };
-
-            mapOnMoveEnd = function () {
-                if (blockMoveEvent) {
-                    blockMoveEvent = false;
-                    return;
-                }
-
-                var
-                    mp = L.DomUtil.getPosition(map._mapPane),
-                    po = map.getPixelOrigin()
-                ;
-
-                lastX = mp.x;
-                lastY = mp.y;
-                canvas.style.left = -mp.x + 'px';
-                canvas.style.top  = -mp.y + 'px';
-
-                camX = halfWidth;
-                camY = height;
-
-                setSize(map._size.x, map._size.y); // in case this is triggered by resize
-                setOrigin(po.x - mp.x, po.y - mp.y);
-                onMoveEnd();
-                render();
-            };
-
-            mapOnZoomEnd = function () {
-                var
-                    mp = L.DomUtil.getPosition(map._mapPane),
-                    po = map.getPixelOrigin()
-                ;
-                setOrigin(po.x - mp.x, po.y - mp.y);
-                onZoomEnd({ zoom: map._zoom });
-                blockMoveEvent = true;
-            };
-
-            map.on({
-                move: mapOnMove,
-                moveend: mapOnMoveEnd,
-                zoomstart: onZoomStart,
-                zoomend: mapOnZoomEnd
-            });
-
-    //        var onZoom = function (opt) {
-    //            var
-    //                scale = map.getZoomScale(opt.zoom),
-    //                offset = map._getCenterOffset(opt.center).divideBy(1 - 1 / scale),
-    //                viewportPos = map.containerPointToLayerPoint(map.getSize().multiplyBy(-1)),
-    //                origin = viewportPos.add(offset).round()
-    //            ;
-    //
-    //            canvas.style[L.DomUtil.TRANSFORM] = L.DomUtil.getTranslateString((origin.multiplyBy(-1).add(L.DomUtil.getPosition(map._mapPane).multiplyBy(-1)).multiplyBy(scale).add(origin))) + ' scale(' + scale + ') ';
-    //            canvas.style.border = "3px solid red";
-    //            isZooming = true;
-    //        };
-
-            if (map.options.zoomAnimation) {
-                 canvas.className = 'leaflet-zoom-animated';
-    //             map.on('zoomanim', onZoom);
-            }
-
-            map.attributionControl.addAttribution(attribution);
-
-            render(); // in case of for re-adding this layer
-        };
-
-        osmb.onRemove = function (map) {
-            map.attributionControl.removeAttribution(attribution);
-
-            map.off({
-                move: mapOnMove,
-                moveend: mapOnMoveEnd,
-                zoomstart: onZoomStart,
-                zoomend: mapOnZoomEnd
-            });
-
-            canvas.parentNode.removeChild(canvas);
-            osmb.map = null;
-        };
-
-        // in case it has been passed as parameter, initialize map directly
-        if (arguments.length) {
-            osmb.addTo(arguments[0]);
-        }
-
-
-//****** file: suffix.js ******
-
-    };
-
-}(this));
-
-/*jshint bitwise:true */
-
+        this.geoJSON = function (url, isLatLon) {

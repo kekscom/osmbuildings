@@ -15,6 +15,7 @@
     <script src="js/highlight/highlight.pack.js"></script>
 
     <script src="../dist/buildings.js"></script>
+    <script src="../src/engines/Leaflet.js"></script>
 </head>
 
 <body>
@@ -64,7 +65,7 @@
         feature.properties.height = 10000 / 10 * (feature.properties.quad.length - 7); // scale height a bit to make it more visible
     }
 
-    new OSMBuildings(map).setStyle({ strokeRoofs: true }).geoJSON(geoJSONData);
+    new L.BuildingsLayer().addTo(map).setStyle({ strokeRoofs: true }).geoJSON(geoJSONData);
 
     </script>
 </body>

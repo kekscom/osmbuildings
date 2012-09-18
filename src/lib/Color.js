@@ -66,7 +66,7 @@ var Color = (function () {
         return new Color(this.r, this.g, this.b, this.a * a);
     };
 
-    C.parse = function(str) {
+    C.parse = function (str) {
         var m;
         str += '';
         if (~str.indexOf('#')) {

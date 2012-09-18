@@ -1,93 +1,83 @@
-// new OpenLayers.Layer.Buildings('name?', layerOptions);
-// new OpenLayers.Layer.Google('Google Physical', { type: G_PHYSICAL_MAP });
-// new OpenLayers.Layer.GML("GeoJSON", "geo.json", {
-//     projection: new OpenLayers.Projection("EPSG:4326"),
-//     format: OpenLayers.Format.GeoJSON
-// });
-// map.addLayer(...);
+OpenLayers.Layer.Buildings = OpenLayers.Class(OpenLayers.Layer, {
 
+    CLASS_NAME: 'OpenLayers.Layer.Buildings',
 
-        OpenLayers.Layer.Buildings = OpenLayers.Class(OpenLayers.Layer, {
-            CLASS_NAME: 'OpenLayers.Layer.Buildings',
-            isBaseLayer: false,
-            alwaysInRange: true,
-            attribution: 'Buildings &copy; <a href="http://osmbuildings.org">OSM Buildings</a>',
+    isBaseLayer: false,
 
-            initialize: function(name, options) {
-                OpenLayers.Layer.prototype.initialize.apply( this, [name, options] );
-            },
+    alwaysInRange: true,
 
-            updateOrigin: function() {
-                var origin = this.map.getLonLatFromPixel( new OpenLayers.Pixel( 0, 0 ))
-                    .transform( this.map.getProjectionObject(), new OpenLayers.Projection( "EPSG:4326" ) );
-                var originPx = geoToPixel( origin.lat, origin.lon );
-                setOrigin( originPx.x, originPx.y );
-            },
+    attribution: OSMBuildings.ATTRIBUTION,
 
-            setMap: function(map) {
-                if( !this.map ) {
-                    OpenLayers.Layer.prototype.setMap.apply( this, arguments );
-                    createCanvas( this.div );
-                    var newSize = this.map.getSize();
-                    setSize( newSize.w, newSize.h );
-                    setZoom( this.map.getZoom() );
-                    this.updateOrigin();
-                    loadData();
-                }
-            },
+    initialize: function (name, options) {
+        OpenLayers.Layer.prototype.initialize(name, options);
+        this.osmb = new OSMBuildings(options.url);
+    },
 
-            removeMap: function(map) {
-                canvas.parentNode.removeChild( canvas );
-                OpenLayers.Layer.prototype.removeMap.apply( this, arguments );
-            },
+    updateOrigin: function () {
+        var origin = this.map.getLonLatFromPixel(
+            new OpenLayers.Pixel(0, 0)
+        ).transform(
+            this.map.getProjectionObject(),
+            new OpenLayers.Projection('EPSG:4326')
+        );
+//        var originPx = this.osmb.geoToPixel(origin.lat, origin.lon);
+//        this.osmb.setOrigin(originPx.x, originPx.y);
+        var originPx = this.map.getPixelFromLonLat(origin.lon, origin.lat);
+        this.osmb.setOrigin(originPx.x, originPx.y);
+    },
 
-            onMapResize: function() {
-                OpenLayers.Layer.prototype.onMapResize.apply( this, arguments );
-                var newSize = this.map.getSize();
-                setSize( newSize.w, newSize.h );
-                render();
-            },
+    setMap: function (map) {
+        if (!this.map) {
+            OpenLayers.Layer.prototype.setMap(map);
+            this.osmb.createCanvas(this.div);
+            var newSize = this.map.getSize();
+            this.osmb.setSize(newSize.w, newSize.h);
+            this.osmb.setZoom(this.map.getZoom());
+            this.updateOrigin();
+            this.osmb.loadData();
+        }
+    },
 
-            moveTo: function(bounds, zoomChanged, dragging) {
-                var result = OpenLayers.Layer.prototype.moveTo.apply( this, arguments );
-                if(!dragging) {
-                    var offsetLeft = parseInt( this.map.layerContainerDiv.style.left, 10 );
-                    offsetLeft = -Math.round( offsetLeft );
-                    var offsetTop = parseInt( this.map.layerContainerDiv.style.top, 10 );
-                    offsetTop = -Math.round( offsetTop );
+    removeMap: function (map) {
+        this.osmb.destroyCanvas();
+        OpenLayers.Layer.prototype.removeMap(map);
+    },
 
-                    this.div.style.left = offsetLeft + 'px';
-                    this.div.style.top = offsetTop + 'px';
-                }
+    onMapResize: function () {
+        OpenLayers.Layer.prototype.onMapResize();
+        var newSize = this.map.getSize();
+        this.osmb.setSize(newSize.w, newSize.h);
+        this.osmb.render();
+    },
 
-                if (zoomChanged){
-                    setZoom( this.map.getZoom() );
-                    if (rawData) {
-                        data = scaleData( rawData );
-                    }
-                }
+    moveTo: function (bounds, zoomChanged, dragging) {
+        var result = OpenLayers.Layer.prototype.moveTo(bounds, zoomChanged, dragging);
+        if (!dragging) {
+            var offsetLeft = parseInt(this.map.layerContainerDiv.style.left, 10);
+            var offsetTop = parseInt(this.map.layerContainerDiv.style.top, 10);
+            this.div.style.left = -offsetLeft + 'px';
+            this.div.style.top = -offsetTop + 'px';
+        }
 
-                this.updateOrigin();
-                camX = halfWidth;
-                camY = height;
-                render();
-                onMoveEnd( {} );
-                return result;
-            },
+        if (zoomChanged){
+//            this.osmb.setZoom(this.map.getZoom());
+//            if (this.osmb.rawData) {
+//                this.osmb.data = this.osmb.scaleData(osmb.rawData);
+//            }
+            this.osmb.onZoomEnd({ zoom: this.map.getZoom() });
+        }
 
-            moveByPx: function(dx, dy) {
-                var result = OpenLayers.Layer.prototype.moveByPx.apply( this, arguments );
-                camX += dx;
-                camY += dy;
-                render();
-                return result;
-            }
-        });
+        this.updateOrigin();
+        this.osmb.setCamOffset(0, 0);
+        this.osmb.render();
+        this.osmb.onMoveEnd({});
+        return result;
+    },
 
-        osmb.VERSION += '-openlayers';
-
-        osmb.addTo = function( map ) {
-            this.layer = new OpenLayers.Layer.Buildings( 'OSMBuildings', this );
-            map.addLayer( this.layer );
-            return this;
-        };
+    moveByPx: function (dx, dy) {
+        var result = OpenLayers.Layer.prototype.moveByPx(dx, dy);
+        this.osmb.setCamOffset(dx, dy);
+        this.osmb.render();
+        return result;
+    }
+});

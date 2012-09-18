@@ -18,6 +18,7 @@
     <script src="js/highlight/highlight.pack.js"></script>
 
     <script src="../dist/buildings.js"></script>
+    <script src="../src/engines/Leaflet.js"></script>
 </head>
 
 <body>
@@ -69,8 +70,8 @@
     var height = 50;
     var color = '#ffcc00';
 
-    // we're not adding any buildings upfront
-    var osmb = new OSMBuildings(map);
+    // we're not adding any osmbuildings upfront
+    var osmb = new L.BuildingsLayer().addTo(map);
 
     map.on('draw:poly-created', function (e) {
         // hack: get coordinates from event object

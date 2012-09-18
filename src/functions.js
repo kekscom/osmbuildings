@@ -1,12 +1,11 @@
-
-        function createCanvas(parentNode) {
+        function createCanvas (parentNode) {
             canvas = doc.createElement('canvas');
-            canvas.style.webkitTransform = 'translate3d(0,0,0)';
+            canvas.style.webkitTransform = 'translate3d(0,0,0)'; // turn on hw acceleration
+            canvas.style.imageRendering = 'optimizeSpeed';
             canvas.style.position = 'absolute';
             canvas.style.pointerEvents = 'none';
             canvas.style.left = 0;
             canvas.style.top = 0;
-            canvas.style.imageRendering = 'optimizeSpeed';
             parentNode.appendChild(canvas);
 
             context = canvas.getContext('2d');
@@ -14,7 +13,16 @@
             context.lineJoin = 'round';
             context.lineWidth = 1;
 
-            try { context.mozImageSmoothingEnabled = false; } catch(err) {}
+            try {
+                context.mozImageSmoothingEnabled = false;
+            } catch(err) {
+            }
+
+            return canvas;
+        }
+
+        function destroyCanvas () {
+            canvas.parentNode.removeChild(canvas);
         }
 
         function pixelToGeo(x, y) {
@@ -39,7 +47,7 @@
 
         function template(str, data) {
             return str.replace(/\{ *([\w_]+) *\}/g, function(x, key) {
-                return data[key] || '';
+                return data[key];
             });
         }
 
