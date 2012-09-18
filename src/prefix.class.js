@@ -1,2 +1,2 @@
-    function constructor(u) {
+    global.OSMBuildings = function (u) {
         url = u;

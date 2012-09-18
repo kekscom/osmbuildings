@@ -22,6 +22,10 @@
             return canvas;
         }
 
+        function destroyCanvas () {
+            canvas.parentNode.removeChild(canvas);
+        }
+
         function pixelToGeo(x, y) {
             var res = {};
             x /= size;
@@ -46,12 +50,4 @@
             return str.replace(/\{ *([\w_]+) *\}/g, function(x, key) {
                 return data[key];
             });
-        }
-
-        function setMaxZoom(z) {
-            maxZoom = z;
-        }
-
-        function setMinZoom(z) {
-            minZoom = z;
         }

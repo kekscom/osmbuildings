@@ -23,15 +23,9 @@ exports.srcFiles = [
         srcPath + '/events.js',
         srcPath + '/render.js',
         srcPath + '/public.js',
-        srcPath + '/engines/Leaflet.js',
-    //    {
-    //        leaflet: srcPath + '/engines/Leaflet.js',
-    //        openlayers: srcPath + '/engines/OpenLayers.js'
-    //    },
         srcPath + '/suffix.class.js',
     srcPath + '/suffix.js'
 ];
-
 exports.dstFile      = dstPath + '/buildings.js';
 exports.dstFileDebug = dstPath + '/buildings-debug.js';
 

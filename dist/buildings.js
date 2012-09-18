@@ -7,11 +7,7 @@
 
 /*jshint bitwise:false */
 
-if (!L) {
-    throw 'Leaflet is not available.';
-}
-
-L.BuildingsLayer = (function (global) {
+(function (global) {
     'use strict';
 
 
@@ -180,7 +176,7 @@ var Color = (function () {
 
 //****** file: prefix.class.js ******
 
-    function constructor(u) {
+    global.OSMBuildings = function (u) {
         url = u;
 
 
@@ -244,6 +240,10 @@ var Color = (function () {
             return canvas;
         }
 
+        function destroyCanvas () {
+            canvas.parentNode.removeChild(canvas);
+        }
+
         function pixelToGeo(x, y) {
             var res = {};
             x /= size;
@@ -268,14 +268,6 @@ var Color = (function () {
             return str.replace(/\{ *([\w_]+) *\}/g, function(x, key) {
                 return data[key];
             });
-        }
-
-        function setMaxZoom(z) {
-            maxZoom = z;
-        }
-
-        function setMinZoom(z) {
-            minZoom = z;
         }
 
 
@@ -545,6 +537,7 @@ var Color = (function () {
 
 
         function setSize(w, h) {
+            debugger
             width  = w;
             height = h;
             halfWidth  = ~~(width / 2);
@@ -797,132 +790,45 @@ var Color = (function () {
             return this;
         };
 
-
-
-//****** file: Leaflet.js ******
-
-        var
-            mapOnMove, mapOnMoveEnd, mapOnZoomEnd,
-            blockMoveEvent // needed as Leaflet fires moveend and zoomend together
-        ;
-
-        this.addTo = function (map) {
-            map.addLayer(this);
-            return this;
+        this.setCam = function(x, y) {
+            camX = x;
+            camY = y;
         };
 
-        this.onAdd = function (map) {
-            this.map = map;
+        this.createCanvas = createCanvas;
 
-            createCanvas(map._panes.overlayPane);
-            maxZoom = map._layersMaxZoom;
+        this.destroyCanvas = destroyCanvas;
 
-            setSize(map._size.x, map._size.y);
-            var po = map.getPixelOrigin(); // changes on zoom only!
-            setOrigin(po.x, po.y);
-            setZoom(map._zoom);
-
-            var lastX = 0, lastY = 0;
-
-            mapOnMove = function () {
-                var mp = L.DomUtil.getPosition(map._mapPane);
-                camX = halfWidth - (mp.x - lastX);
-                camY = height    - (mp.y - lastY);
-                render();
-            };
-
-            mapOnMoveEnd = function () {
-                if (blockMoveEvent) {
-                    blockMoveEvent = false;
-                    return;
-                }
-
-                var
-                    mp = L.DomUtil.getPosition(map._mapPane),
-                    po = map.getPixelOrigin()
-                ;
-
-                lastX = mp.x;
-                lastY = mp.y;
-                canvas.style.left = -mp.x + 'px';
-                canvas.style.top  = -mp.y + 'px';
-
-                camX = halfWidth;
-                camY = height;
-
-                setSize(map._size.x, map._size.y); // in case this is triggered by resize
-                setOrigin(po.x - mp.x, po.y - mp.y);
-                onMoveEnd();
-                render();
-            };
-
-            mapOnZoomEnd = function () {
-                var
-                    mp = L.DomUtil.getPosition(map._mapPane),
-                    po = map.getPixelOrigin()
-                ;
-                setOrigin(po.x - mp.x, po.y - mp.y);
-                onZoomEnd({ zoom: map._zoom });
-                blockMoveEvent = true;
-            };
-
-            map.on({
-                move: mapOnMove,
-                moveend: mapOnMoveEnd,
-                zoomstart: onZoomStart,
-                zoomend: mapOnZoomEnd
-            });
-
-    //        var onZoom = function (opt) {
-    //            var
-    //                scale = map.getZoomScale(opt.zoom),
-    //                offset = map._getCenterOffset(opt.center).divideBy(1 - 1 / scale),
-    //                viewportPos = map.containerPointToLayerPoint(map.getSize().multiplyBy(-1)),
-    //                origin = viewportPos.add(offset).round()
-    //            ;
-    //
-    //            canvas.style[L.DomUtil.TRANSFORM] = L.DomUtil.getTranslateString((origin.multiplyBy(-1).add(L.DomUtil.getPosition(map._mapPane).multiplyBy(-1)).multiplyBy(scale).add(origin))) + ' scale(' + scale + ') ';
-    //            canvas.style.border = "3px solid red";
-    //            isZooming = true;
-    //        };
-
-            if (map.options.zoomAnimation) {
-                 canvas.className = 'leaflet-zoom-animated';
-    //             map.on('zoomanim', onZoom);
-            }
-
-            map.attributionControl.addAttribution(ATTRIBUTION);
-            loadData(); // TODO: usually on instantiation. other reasons? check!
-            render(); // in case of for re-adding this layer
+        this.setMaxZoom = function (z) {
+            maxZoom = z;
         };
 
-        this.onRemove = function (map) {
-            map.attributionControl.removeAttribution(ATTRIBUTION);
+        this.loadData    = loadData;
+        this.onMoveEnd   = onMoveEnd;
+        this.onZoomEnd   = onZoomEnd;
+        this.onZoomStart = onZoomStart;
+        this.render      = render;
+        this.setOrigin   = setOrigin;
+        this.setSize     = setSize;
+        this.setZoom     = setZoom;
 
-            map.off({
-                move: mapOnMove,
-                moveend: mapOnMoveEnd,
-                zoomstart: onZoomStart,
-                zoomend: mapOnZoomEnd
-            });
-
-            canvas.parentNode.removeChild(canvas);
-            this.map = null;
+        this.getHalfWidth = function () {
+            return halfWidth;
+        };
+        this.getHeight = function () {
+            return height;
         };
 
 
 //****** file: suffix.class.js ******
 
+    };
+
+    global.OSMBuildings.VERSION = VERSION;
+    global.OSMBuildings.ATTRIBUTION = ATTRIBUTION;
 
 
 //****** file: suffix.js ******
-
-    };
-
-    constructor.VERSION = VERSION;
-    constructor.ATTRIBUTION = ATTRIBUTION;
-
-    return constructor;
 
 }(this));
 
