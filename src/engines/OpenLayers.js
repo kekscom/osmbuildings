@@ -20,9 +20,10 @@ OpenLayers.Layer.Buildings = OpenLayers.Class(OpenLayers.Layer, {
             this.map.getProjectionObject(),
             new OpenLayers.Projection('EPSG:4326')
         );
-//        var originPx = this.osmb.geoToPixel(origin.lat, origin.lon);
-//        this.osmb.setOrigin(originPx.x, originPx.y);
-        var originPx = this.map.getPixelFromLonLat(origin.lon, origin.lat);
+
+        var originPx = this.osmb.geoToPixel(origin.lat, origin.lon);
+//      var originPx = this.map.getPixelFromLonLat(origin);
+
         this.osmb.setOrigin(originPx.x, originPx.y);
     },
 

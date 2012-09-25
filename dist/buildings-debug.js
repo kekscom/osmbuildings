@@ -793,22 +793,22 @@ var Color = (function () {
             maxZoom = z;
         };
 
-        this.createCanvas = createCanvas;
+        this.createCanvas  = createCanvas;
         this.destroyCanvas = destroyCanvas;
-        this.loadData    = loadData;
-        this.onMoveEnd   = onMoveEnd;
-        this.onZoomEnd   = onZoomEnd;
-        this.onZoomStart = onZoomStart;
-        this.render      = render;
-        this.setOrigin   = setOrigin;
-        this.setSize     = setSize;
-        this.setZoom     = setZoom;
+        this.loadData      = loadData;
+        this.onMoveEnd     = onMoveEnd;
+        this.onZoomEnd     = onZoomEnd;
+        this.onZoomStart   = onZoomStart;
+        this.render        = render;
+        this.setOrigin     = setOrigin;
+        this.setSize       = setSize;
+        this.setZoom       = setZoom;
 
-// OPENLAYERS
-//        this.geoToPixel()
-//        this.data
-//        this.rawData
-//        this.scaleData()
+// OPENLAYERS, try to get rid of specific solutions
+        this.geoToPixel = geoToPixel;
+        this.data = data;
+        this.rawData = rawData;
+        this.scaleData = scaleData;
 
 
 //****** file: suffix.class.js ******
