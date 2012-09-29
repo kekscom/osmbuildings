@@ -8,6 +8,9 @@ OpenLayers.Layer.Buildings = OpenLayers.Class(OpenLayers.Layer, {
     isBaseLayer: false,
     alwaysInRange: true,
 
+    dxSum: 0, // for cumulative cam offset during moveBy
+    dySum: 0, // for cumulative cam offset during moveBy
+
     initialize: function (options) {
         options.projection = 'EPSG:900913';
         OpenLayers.Layer.prototype.initialize(this.name, options);
@@ -58,31 +61,23 @@ OpenLayers.Layer.Buildings = OpenLayers.Class(OpenLayers.Layer, {
         }
 
         if (zoomChanged){
-//            this.osmb.setZoom(this.map.getZoom());
-//            if (this.osmb.rawData) {
-//                this.osmb.data = this.osmb.scaleData(osmb.rawData);
-//            }
             this.osmb.onZoomEnd({ zoom: this.map.getZoom() });
         }
 
         this.updateOrigin();
-        DX = 0;
-        DY = 0;
-        this.osmb.setCamOffset(DX, DY);
+        this.dxSum = 0;
+        this.dySum = 0;
+        this.osmb.setCamOffset(this.dxSum, this.dySum);
         this.osmb.render();
         this.osmb.onMoveEnd({});
         return result;
     },
 
-    DX: 0,
-    DY: 0,
-
-// rel values. make them abs
     moveByPx: function (dx, dy) {
-        DX += dx;
-        DY += dy;
+        this.dxSum += dx;
+        this.dySum += dy;
         var result = OpenLayers.Layer.prototype.moveByPx(dx, dy);
-        this.osmb.setCamOffset(DX, DY);
+        this.osmb.setCamOffset(this.dxSum, this.dySum);
         this.osmb.render();
         return result;
     }
