@@ -793,6 +793,7 @@ var Color = (function () {
             maxZoom = z;
         };
 
+<<<<<<< HEAD
         this.createCanvas  = createCanvas;
         this.destroyCanvas = destroyCanvas;
         this.loadData      = loadData;
@@ -803,6 +804,24 @@ var Color = (function () {
         this.setOrigin     = setOrigin;
         this.setSize       = setSize;
         this.setZoom       = setZoom;
+=======
+        this.createCanvas = createCanvas;
+        this.destroyCanvas = destroyCanvas;
+        this.loadData    = loadData;
+        this.onMoveEnd   = onMoveEnd;
+        this.onZoomEnd   = onZoomEnd;
+        this.onZoomStart = onZoomStart;
+        this.render      = render;
+        this.setOrigin   = setOrigin;
+        this.setSize     = setSize;
+        this.setZoom     = setZoom;
+>>>>>>> master
+
+// OPENLAYERS
+//        this.geoToPixel()
+//        this.data
+//        this.rawData
+//        this.scaleData()
 
 
 //****** file: suffix.class.js ******
