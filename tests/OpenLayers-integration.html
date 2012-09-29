@@ -36,14 +36,17 @@
     var osm = new OpenLayers.Layer.OSM();
     map.addLayer(osm);
 
-    var proj = new OpenLayers.Projection("EPSG:4326");
+    map.setCenter(
+        new OpenLayers.LonLat(13.33522, 52.50440)
+            .transform(
+                new OpenLayers.Projection("EPSG:4326"),
+                map.getProjectionObject()
+            ),
+        17
+    );
 
-    map.setCenter(new OpenLayers.LonLat(13.33522, 52.50440).transform(proj, map.getProjectionObject()), 17);
-
-    var osmb = new OpenLayers.Layer.Buildings('OSMBuildings', { url: '../server/?w={w}&n={n}&e={e}&s={s}&z={z}' });
+    var osmb = new OpenLayers.Layer.Buildings({ url: '../server/?w={w}&n={n}&e={e}&s={s}&z={z}' });
     map.addLayer(osmb);
-
     </script>
-
 </body>
 </html>

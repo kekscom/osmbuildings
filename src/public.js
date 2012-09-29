@@ -27,9 +27,3 @@
         this.setOrigin     = setOrigin;
         this.setSize       = setSize;
         this.setZoom       = setZoom;
-
-// OPENLAYERS, try to get rid of specific solutions
-        this.geoToPixel = geoToPixel;
-        this.data = data;
-        this.rawData = rawData;
-        this.scaleData = scaleData;

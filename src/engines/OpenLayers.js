@@ -2,29 +2,26 @@ OpenLayers.Layer.Buildings = OpenLayers.Class(OpenLayers.Layer, {
 
     CLASS_NAME: 'OpenLayers.Layer.Buildings',
 
-    isBaseLayer: false,
-
-    alwaysInRange: true,
-
+    name: 'OSM Buildings',
     attribution: OSMBuildings.ATTRIBUTION,
 
-    initialize: function (name, options) {
-        OpenLayers.Layer.prototype.initialize(name, options);
+    isBaseLayer: false,
+    alwaysInRange: true,
+
+    initialize: function (options) {
+        options.projection = 'EPSG:900913';
+        OpenLayers.Layer.prototype.initialize(this.name, options);
         this.osmb = new OSMBuildings(options.url);
     },
 
     updateOrigin: function () {
-        var origin = this.map.getLonLatFromPixel(
-            new OpenLayers.Pixel(0, 0)
-        ).transform(
-            this.map.getProjectionObject(),
-            new OpenLayers.Projection('EPSG:4326')
-        );
-
-        var originPx = this.osmb.geoToPixel(origin.lat, origin.lon);
-//      var originPx = this.map.getPixelFromLonLat(origin);
-
-        this.osmb.setOrigin(originPx.x, originPx.y);
+        var
+            origin = this.map.getLonLatFromPixel(new OpenLayers.Pixel(0, 0)),
+            res = this.map.getResolution(),
+            x = ~~((origin.lon - this.maxExtent.left) / res),
+            y = ~~((this.maxExtent.top - origin.lat) / res)
+        ;
+        this.osmb.setOrigin(x, y);
     },
 
     setMap: function (map) {
@@ -69,15 +66,23 @@ OpenLayers.Layer.Buildings = OpenLayers.Class(OpenLayers.Layer, {
         }
 
         this.updateOrigin();
-        this.osmb.setCamOffset(0, 0);
+        DX = 0;
+        DY = 0;
+        this.osmb.setCamOffset(DX, DY);
         this.osmb.render();
         this.osmb.onMoveEnd({});
         return result;
     },
 
+    DX: 0,
+    DY: 0,
+
+// rel values. make them abs
     moveByPx: function (dx, dy) {
+        DX += dx;
+        DY += dy;
         var result = OpenLayers.Layer.prototype.moveByPx(dx, dy);
-        this.osmb.setCamOffset(dx, dy);
+        this.osmb.setCamOffset(DX, DY);
         this.osmb.render();
         return result;
     }
