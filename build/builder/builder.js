@@ -92,7 +92,6 @@ exports.combine = function (files) {
 	;
     console.log('combining..');
 	for (var i = 0, il = files.length; i < il; i++) {
-        console.log('  ' + path.basename(files[i]));
 		str = this.read(files[i]);
 		res += '//****** file: ' + path.basename(files[i]) + ' ******\n\n';
 		res += str + '\n\n';

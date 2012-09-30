@@ -17,19 +17,13 @@
             maxZoom = z;
         };
 
-        this.createCanvas = createCanvas;
+        this.createCanvas  = createCanvas;
         this.destroyCanvas = destroyCanvas;
-        this.loadData    = loadData;
-        this.onMoveEnd   = onMoveEnd;
-        this.onZoomEnd   = onZoomEnd;
-        this.onZoomStart = onZoomStart;
-        this.render      = render;
-        this.setOrigin   = setOrigin;
-        this.setSize     = setSize;
-        this.setZoom     = setZoom;
-
-// OPENLAYERS
-//        this.geoToPixel()
-//        this.data
-//        this.rawData
-//        this.scaleData()
+        this.loadData      = loadData;
+        this.onMoveEnd     = onMoveEnd;
+        this.onZoomEnd     = onZoomEnd;
+        this.onZoomStart   = onZoomStart;
+        this.render        = render;
+        this.setOrigin     = setOrigin;
+        this.setSize       = setSize;
+        this.setZoom       = setZoom;
