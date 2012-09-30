@@ -1,8 +1,5 @@
 
-// TODO: sizes, size comparison, duration
-// TODO: beautify code for other engines
-// TODO: build for multiple engines
-
+// TODO: resulting sizes, size comparison, duration
 var builder = require('./builder/builder.js');
 var config  = require('./config.js');
 
@@ -14,70 +11,123 @@ process.argv.splice(2).forEach(function (item) {
 
 //*****************************************************************************
 
-var
-    jsCombined,
-    jsMinified,
-    jsGzipSize = 0
-;
+var Tasks = {
 
-function taskStart() {
+    items: {},
+
+    timer: null,
+
+    start: function (item) {
+        clearTimeout(this.timer);
+        this.items[item] = (this.items[item] || 0) + 1;
+    },
+
+    end: function (item) {
+        this.items[item] = (this.items[item] || 1) - 1;
+        if (this.items[item] === 0) {
+            delete this.items[item];
+        }
+
+        if (this.isEmpty()) {
+            this.timer = setTimeout(this.onEmpty, 10);
+        }
+    },
+
+    isEmpty: function () {
+        clearTimeout(this.timer);
+
+        for (var item in this.items) {
+            if (this.items.hasOwnProperty(item)) {
+                return false;
+            }
+        }
+        return true;
+    },
+
+    onEmpty: function () {}
+};
+
+//*****************************************************************************
+
+function start() {
     console.clear();
-    console.log(new Date().toISOString().replace(/T/, ' ').substring(0, 16) +
-        (options.debug ? ' *** DEBUG ***' : '')
-    );
+    console.log(new Date().toISOString().replace(/T/, ' ').substring(0, 16));
+    if (options.debug) {
+        console.log('*** DEBUG MODE ***')
+    }
 
-    jsCombined = builder.setVars(
-        config.COPYRIGHT + builder.combine(config.srcFiles),
-        { version: config.VERSION }
-    );
+    var js = buildCore();
+
+    for (var engine in config.engines) {
+        buildEngine(engine, js);
+    }
+}
+
+function buildCore() {
+    console.log('* building core *');
+
+    var js;
+    js = config.COPYRIGHT + builder.combine(config.srcFiles);
+    js = builder.setVars(js, { version: config.VERSION });
+
+//    if (!builder.jshint(js, options.debug)) {
+//        abort('core');
+//    }
+
+    return js;
+}
+
+function buildEngine(engine, js) {
+    Tasks.start(engine);
+    console.log('* building engine ' + engine + ' *');
+
+    var configEngine = config.engines[engine];
+
+    js += builder.combine([configEngine.srcFile]);
+
+    builder.write(js, configEngine.dstFile + '-debug.js');
 
     if (options.debug) {
-        taskEnd();
+        // mock minified file by using debug version
+        builder.write(js, configEngine.dstFile + '.js');
+        finish(engine);
         return;
     }
 
-    if (!builder.jshint(jsCombined, options.debug)) {
-        taskAbort();
-        return;
-    }
+//    if (!builder.jshint(js, options.debug)) {
+//        abort(engine);
+//    }
 
-    builder.minify(jsCombined, function (err, res) {
-        jsMinified = config.COPYRIGHT + res;
-        builder.gzip(jsMinified, function (err, res) {
-            jsGzipSize = res.length;
-            taskEnd();
+    builder.minify(js, function (err, jsMin) {
+        builder.write(jsMin, configEngine.dstFile + '.js');
+
+        builder.gzip(jsMin, function (err, jsGZip) {
+            console.log('gzipped size: ' + (jsGZip.length / 1024).toFixed(1) + 'k');
+            finish(engine);
         });
     });
 }
 
-function taskAbort() {
-    console.log('aborted');
-    if (!options.watch) {
-        process.exit();
-    }
+function abort(component) {
+    console.log(component + ' aborted');
+    Tasks.end(component);
 }
 
-function taskEnd() {
-    if (!options.debug) {
-		builder.write(jsCombined, config.dstFileDebug);
-        builder.write(jsMinified, config.dstFile);
-    } else {
-		builder.write(jsCombined, config.dstFileDebug);
-        builder.write(jsCombined, config.dstFile); // mock minified file by using debug version
-	}
-
-    console.log('done');
-
-    if (!options.watch) {
-        process.exit();
-    }
+function finish(component) {
+    console.log(component + ' done');
+    Tasks.end(component);
 }
 
 //*****************************************************************************
 
+Tasks.onEmpty = function () {
+    process.exit();
+};
+
 if (options.watch) {
     options.debug = true;
-    builder.watch(config.srcFiles, taskStart);
+    Tasks.start('watch') = 1;
+    builder.watch(config.srcFiles, start);
 } else {
-    taskStart();
+    start();
 }

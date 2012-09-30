@@ -27,5 +27,13 @@ exports.srcFiles = [
     srcPath + '/suffix.js'
 ];
 
-exports.dstFile      = dstPath + '/buildings.js';
-exports.dstFileDebug = dstPath + '/buildings-debug.js';
+exports.engines = {
+    Leaflet: {
+        srcFile: srcPath + '/engines/Leaflet.js',
+        dstFile: dstPath + '/L.BuildingsLayer'
+    },
+    OpenLayers: {
+        srcFile: srcPath + '/engines/OpenLayers.js',
+        dstFile: dstPath + '/OpenLayers.Layer.Buildings'
+    }
+};
