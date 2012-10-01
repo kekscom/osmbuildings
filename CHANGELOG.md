@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.1.7b @ 2012-10-01
+
+- adding OpenLayers support
+- alinging Layer naming convention to engines
+- fixing some edge cases where layer got removed
+- switching to beta status
+
+
 ## v0.1.6a @ 2012-09-04
 
 - GeoJSON: min zoom removed

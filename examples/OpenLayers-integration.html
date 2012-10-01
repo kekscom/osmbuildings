@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>OSM Buildings &raquo; Examples &raquo; OpenLayers integration</title>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <link rel="stylesheet" href="assets/styles.css">
+
+    <script src="http://www.openlayers.org/api/OpenLayers.js"></script>
+
+    <link rel="stylesheet" href="js/highlight/github.css">
+    <script src="js/highlight/highlight.pack.js"></script>
+    <script src="../dist/Openlayers.Layer.Buildings.js"></script>
+</head>
+
+<body>
+    <div id="header"></div>
+
+    <div id="map"></div>
+
+    <div id="description">
+        <h1>Examples &raquo; OpenLayers integration</h1>
+
+        <p>Integrating with OpenLayers layer switch. Your server needs to be running for this example.</p>
+    </div>
+
+    <pre id="code" class="javascript"></pre>
+
+    <script id="src">
+    var map = new OpenLayers.Map('map');
+    map.addControl(new OpenLayers.Control.LayerSwitcher());
+
+    var osm = new OpenLayers.Layer.OSM();
+    map.addLayer(osm);
+
+    map.setCenter(
+        new OpenLayers.LonLat(13.33522, 52.50440)
+            .transform(
+                new OpenLayers.Projection("EPSG:4326"),
+                map.getProjectionObject()
+            ),
+        17
+    );
+    var osmb = new OpenLayers.Layer.Buildings({ url: '../server/?w={w}&n={n}&e={e}&s={s}&z={z}' });
+    map.addLayer(osmb);
+    </script>
+
+    <script>
+    var code = document.querySelector('#code');
+    var src = document.querySelector('#src');
+    code.innerText = src.innerText;
+    hljs.highlightBlock(code);
+
+    code.onclick = function (e) {
+        this.className += ' large';
+        e.cancelBubble = true;
+    }
+
+    document.onclick = function () {
+        code.className = code.className.replace(/ large/g, '');
+    };
+    </script>
+</body>
+</html>

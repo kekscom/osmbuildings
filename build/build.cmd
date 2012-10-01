@@ -1,2 +1,2 @@
-node build.js --debug
+node build.js
 PAUSE

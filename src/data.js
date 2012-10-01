@@ -92,7 +92,7 @@
                 i, il
             ;
             for (i = 0, il = points.length - 3; i < il; i += 2) {
-                x1 = points[i    ];
+                x1 = points[i];
                 y1 = points[i + 1];
                 x2 = points[i + 2];
                 y2 = points[i + 3];
@@ -219,7 +219,7 @@
 
                     if (heightSum) {
                         item = [];
-                        item[HEIGHT] = ~~(heightSum/coords.length);
+                        item[HEIGHT] = ~~(heightSum / coords.length);
                         item[FOOTPRINT] = makeClockwiseWinding(footprint);
                         if (propWallColor || propRoofColor) {
                             item[COLOR] = [propWallColor, propRoofColor];

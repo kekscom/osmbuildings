@@ -1,3 +1,4 @@
+/*jshint white:false */
 
 var Color = (function () {
 
@@ -119,3 +120,5 @@ var Color = (function () {
     return C;
 
 }());
+
+/*jshint white:true */

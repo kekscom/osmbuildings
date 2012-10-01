@@ -6,7 +6,7 @@ var path = require('path');
 var jshintOptions = {
 	"browser": true,
 	"node": true,
-	"predef": ["L"],
+	"predef": ["OSMBuildings", "L", "OpenLayers"],
 
 	"debug": false,
 	"devel": false,

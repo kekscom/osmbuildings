@@ -28,6 +28,7 @@
 
 //****** file: Color.js ******
 
+/*jshint white:false */
 
 var Color = (function () {
 
@@ -150,6 +151,7 @@ var Color = (function () {
 
 }());
 
+/*jshint white:true */
 
 //****** file: constants.js ******
 
@@ -177,7 +179,6 @@ var Color = (function () {
 //****** file: prefix.class.js ******
 
     global.OSMBuildings = function (u) {
-        url = u;
 
 
 //****** file: variables.js ******
@@ -195,9 +196,9 @@ var Color = (function () {
 
             url,
             strokeRoofs,
-            wallColor = new Color(200,190,180),
+            wallColor = new Color(200, 190, 180),
             roofColor,
-            strokeColor = new Color(145,140,135),
+            strokeColor = new Color(145, 140, 135),
 
             rawData,
             meta, data,
@@ -216,7 +217,7 @@ var Color = (function () {
 
 //****** file: functions.js ******
 
-        function createCanvas (parentNode) {
+        function createCanvas(parentNode) {
             canvas = doc.createElement('canvas');
             canvas.style.webkitTransform = 'translate3d(0,0,0)'; // turn on hw acceleration
             canvas.style.imageRendering = 'optimizeSpeed';
@@ -233,13 +234,13 @@ var Color = (function () {
 
             try {
                 context.mozImageSmoothingEnabled = false;
-            } catch(err) {
+            } catch (err) {
             }
 
             return canvas;
         }
 
-        function destroyCanvas () {
+        function destroyCanvas() {
             canvas.parentNode.removeChild(canvas);
         }
 
@@ -264,7 +265,7 @@ var Color = (function () {
         }
 
         function template(str, data) {
-            return str.replace(/\{ *([\w_]+) *\}/g, function(x, key) {
+            return str.replace(/\{ *([\w_]+) *\}/g, function (x, key) {
                 return data[key];
             });
         }
@@ -366,7 +367,7 @@ var Color = (function () {
                 i, il
             ;
             for (i = 0, il = points.length - 3; i < il; i += 2) {
-                x1 = points[i    ];
+                x1 = points[i];
                 y1 = points[i + 1];
                 x2 = points[i + 2];
                 y2 = points[i + 3];
@@ -493,7 +494,7 @@ var Color = (function () {
 
                     if (heightSum) {
                         item = [];
-                        item[HEIGHT] = ~~(heightSum/coords.length);
+                        item[HEIGHT] = ~~(heightSum / coords.length);
                         item[FOOTPRINT] = makeClockwiseWinding(footprint);
                         if (propWallColor || propRoofColor) {
                             item[COLOR] = [propWallColor, propRoofColor];
@@ -591,6 +592,7 @@ var Color = (function () {
                 nw = pixelToGeo(originX,         originY),
                 se = pixelToGeo(originX + width, originY + height)
             ;
+            render();
             // check, whether viewport is still within loaded data bounding box
             if (meta && (nw[LAT] > meta.n || nw[LON] < meta.w || se[LAT] < meta.s || se[LON] > meta.e)) {
                 loadData();
@@ -599,18 +601,20 @@ var Color = (function () {
 
         function onZoomStart(e) {
             isZooming = true;
-            render(); // effectively clears
+            render(); // effectively clears because of isZooming flag
         }
 
         function onZoomEnd(e) {
             isZooming = false;
             setZoom(e.zoom);
-            if (!rawData) {
+
+            if (rawData) {
+                data = scaleData(rawData);
+                render();
+            } else {
+                render();
                 loadData();
-                return;
             }
-            data = scaleData(rawData);
-            render();
         }
 
 
@@ -742,7 +746,7 @@ var Color = (function () {
         function debugMarker(x, y, color, size) {
             context.fillStyle = color || '#ffcc00';
             context.beginPath();
-            context.arc(x, y, size || 3, 0, PI*2, true);
+            context.arc(x, y, size || 3, 0, PI * 2, true);
             context.closePath();
             context.fill();
         }
@@ -784,7 +788,7 @@ var Color = (function () {
             return this;
         };
 
-        this.setCamOffset = function(x, y) {
+        this.setCamOffset = function (x, y) {
             camX = halfWidth + x;
             camY = height    + y;
         };
@@ -807,6 +811,7 @@ var Color = (function () {
 
 //****** file: suffix.class.js ******
 
+        url = u;
     };
 
     global.OSMBuildings.VERSION = VERSION;
@@ -835,17 +840,18 @@ OpenLayers.Layer.Buildings = OpenLayers.Class(OpenLayers.Layer, {
     dySum: 0, // for cumulative cam offset during moveBy
 
     initialize: function (options) {
+        options = options || {};
         options.projection = 'EPSG:900913';
         OpenLayers.Layer.prototype.initialize(this.name, options);
-        this.osmb = new OSMBuildings(options.url);
     },
 
-    updateOrigin: function () {
+    setOrigin: function () {
         var
             origin = this.map.getLonLatFromPixel(new OpenLayers.Pixel(0, 0)),
-            res = this.map.getResolution(),
-            x = ~~((origin.lon - this.maxExtent.left) / res),
-            y = ~~((this.maxExtent.top - origin.lat) / res)
+            res = this.map.resolution,
+            ext = this.maxExtent,
+            x = Math.round((origin.lon - ext.left) / res),
+            y = Math.round((ext.top - origin.lat) / res)
         ;
         this.osmb.setOrigin(x, y);
     },
@@ -853,46 +859,48 @@ OpenLayers.Layer.Buildings = OpenLayers.Class(OpenLayers.Layer, {
     setMap: function (map) {
         if (!this.map) {
             OpenLayers.Layer.prototype.setMap(map);
+            this.osmb = new OSMBuildings(this.options.url);
             this.osmb.createCanvas(this.div);
-            var newSize = this.map.getSize();
-            this.osmb.setSize(newSize.w, newSize.h);
-            this.osmb.setZoom(this.map.getZoom());
-            this.updateOrigin();
+            this.osmb.setSize(this.map.size.w, this.map.size.h);
+            this.osmb.setZoom(this.map.zoom);
+            this.setOrigin();
             this.osmb.loadData();
         }
     },
 
     removeMap: function (map) {
         this.osmb.destroyCanvas();
+        this.osmb = null;
         OpenLayers.Layer.prototype.removeMap(map);
     },
 
     onMapResize: function () {
         OpenLayers.Layer.prototype.onMapResize();
-        var newSize = this.map.getSize();
-        this.osmb.setSize(newSize.w, newSize.h);
-        this.osmb.render();
+        this.osmb.onResize({ width: this.map.size.w, height: this.map.size.h });
     },
 
     moveTo: function (bounds, zoomChanged, dragging) {
         var result = OpenLayers.Layer.prototype.moveTo(bounds, zoomChanged, dragging);
         if (!dragging) {
-            var offsetLeft = parseInt(this.map.layerContainerDiv.style.left, 10);
-            var offsetTop = parseInt(this.map.layerContainerDiv.style.top, 10);
+            var
+                offsetLeft = parseInt(this.map.layerContainerDiv.style.left, 10),
+                offsetTop  = parseInt(this.map.layerContainerDiv.style.top, 10)
+            ;
             this.div.style.left = -offsetLeft + 'px';
-            this.div.style.top = -offsetTop + 'px';
+            this.div.style.top  = -offsetTop  + 'px';
         }
 
-        if (zoomChanged){
-            this.osmb.onZoomEnd({ zoom: this.map.getZoom() });
-        }
-
-        this.updateOrigin();
+        this.setOrigin();
         this.dxSum = 0;
         this.dySum = 0;
         this.osmb.setCamOffset(this.dxSum, this.dySum);
-        this.osmb.render();
-        this.osmb.onMoveEnd({});
+
+        if (zoomChanged) {
+            this.osmb.onZoomEnd({ zoom: this.map.zoom });
+        } else {
+            this.osmb.onMoveEnd();
+        }
+
         return result;
     },
 
@@ -903,6 +911,14 @@ OpenLayers.Layer.Buildings = OpenLayers.Class(OpenLayers.Layer, {
         this.osmb.setCamOffset(this.dxSum, this.dySum);
         this.osmb.render();
         return result;
+    },
+
+    geoJSON: function (url, isLatLon) {
+        return this.osmb.geoJSON(url, isLatLon);
+    },
+
+    setStyle: function (style)  {
+        return this.osmb.setStyle(style);
     }
 });
 
