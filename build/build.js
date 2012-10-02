@@ -70,9 +70,11 @@ function buildCore() {
     js = config.COPYRIGHT + builder.combine(config.srcFiles);
     js = builder.setVars(js, { version: config.VERSION });
 
-//    if (!builder.jshint(js, options.debug)) {
-//        abort('core');
-//    }
+    if (!options.debug) {
+        if (!builder.jshint(js, options.debug)) {
+            abort();
+        }
+    }
 
     return js;
 }
@@ -94,23 +96,23 @@ function buildEngine(engine, js) {
         return;
     }
 
-//    if (!builder.jshint(js, options.debug)) {
-//        abort(engine);
-//    }
+    if (!builder.jshint(js, options.debug)) {
+        abort();
+    }
 
     builder.minify(js, function (err, jsMin) {
         builder.write(jsMin, configEngine.dstFile + '.js');
 
         builder.gzip(jsMin, function (err, jsGZip) {
-            console.log('gzipped size: ' + (jsGZip.length / 1024).toFixed(1) + 'k');
+            console.log('gzipped size: ' + (jsGZip.length / 1024).toFixed(2) + 'k');
             finish(engine);
         });
     });
 }
 
-function abort(component) {
-    console.log(component + ' aborted');
-    Tasks.end(component);
+function abort() {
+    console.log('aborted');
+    process.exit();
 }
 
 function finish(component) {

@@ -28,8 +28,7 @@
     }
    </style>
 
-    <script src="../dist/buildings.js"></script>
-    <script src="../src/engines/Leaflet.js"></script>
+    <script src="../dist/L.BuildingsLayer.js"></script>
 </head>
 
 <body>
@@ -43,7 +42,7 @@
         { attribution: 'Map tiles &copy; <a href="http://mapbox.com">MapBox</a>', maxZoom: 17 }
     ).addTo(map);
 
-    new L.BuildingsLayer('../server/?w={w}&n={n}&e={e}&s={s}&z={z}').addTo(map);
+    new L.BuildingsLayer({ url: '../server/?w={w}&n={n}&e={e}&s={s}&z={z}' }).addTo(map);
     </script>
 </body>
 </html>

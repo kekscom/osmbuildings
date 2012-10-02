@@ -11,9 +11,9 @@
 
             url,
             strokeRoofs,
-            wallColor = new Color(200,190,180),
+            wallColor = new Color(200, 190, 180),
             roofColor,
-            strokeColor = new Color(145,140,135),
+            strokeColor = new Color(145, 140, 135),
 
             rawData,
             meta, data,

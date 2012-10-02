@@ -12,17 +12,18 @@ OpenLayers.Layer.Buildings = OpenLayers.Class(OpenLayers.Layer, {
     dySum: 0, // for cumulative cam offset during moveBy
 
     initialize: function (options) {
+        options = options || {};
         options.projection = 'EPSG:900913';
         OpenLayers.Layer.prototype.initialize(this.name, options);
-        this.osmb = new OSMBuildings(options.url);
     },
 
-    updateOrigin: function () {
+    setOrigin: function () {
         var
             origin = this.map.getLonLatFromPixel(new OpenLayers.Pixel(0, 0)),
-            res = this.map.getResolution(),
-            x = ~~((origin.lon - this.maxExtent.left) / res),
-            y = ~~((this.maxExtent.top - origin.lat) / res)
+            res = this.map.resolution,
+            ext = this.maxExtent,
+            x = Math.round((origin.lon - ext.left) / res),
+            y = Math.round((ext.top - origin.lat) / res)
         ;
         this.osmb.setOrigin(x, y);
     },
@@ -30,46 +31,48 @@ OpenLayers.Layer.Buildings = OpenLayers.Class(OpenLayers.Layer, {
     setMap: function (map) {
         if (!this.map) {
             OpenLayers.Layer.prototype.setMap(map);
+            this.osmb = new OSMBuildings(this.options.url);
             this.osmb.createCanvas(this.div);
-            var newSize = this.map.getSize();
-            this.osmb.setSize(newSize.w, newSize.h);
-            this.osmb.setZoom(this.map.getZoom());
-            this.updateOrigin();
+            this.osmb.setSize(this.map.size.w, this.map.size.h);
+            this.osmb.setZoom(this.map.zoom);
+            this.setOrigin();
             this.osmb.loadData();
         }
     },
 
     removeMap: function (map) {
         this.osmb.destroyCanvas();
+        this.osmb = null;
         OpenLayers.Layer.prototype.removeMap(map);
     },
 
     onMapResize: function () {
         OpenLayers.Layer.prototype.onMapResize();
-        var newSize = this.map.getSize();
-        this.osmb.setSize(newSize.w, newSize.h);
-        this.osmb.render();
+        this.osmb.onResize({ width: this.map.size.w, height: this.map.size.h });
     },
 
     moveTo: function (bounds, zoomChanged, dragging) {
         var result = OpenLayers.Layer.prototype.moveTo(bounds, zoomChanged, dragging);
         if (!dragging) {
-            var offsetLeft = parseInt(this.map.layerContainerDiv.style.left, 10);
-            var offsetTop = parseInt(this.map.layerContainerDiv.style.top, 10);
+            var
+                offsetLeft = parseInt(this.map.layerContainerDiv.style.left, 10),
+                offsetTop  = parseInt(this.map.layerContainerDiv.style.top, 10)
+            ;
             this.div.style.left = -offsetLeft + 'px';
-            this.div.style.top = -offsetTop + 'px';
+            this.div.style.top  = -offsetTop  + 'px';
         }
 
-        if (zoomChanged){
-            this.osmb.onZoomEnd({ zoom: this.map.getZoom() });
-        }
-
-        this.updateOrigin();
+        this.setOrigin();
         this.dxSum = 0;
         this.dySum = 0;
         this.osmb.setCamOffset(this.dxSum, this.dySum);
-        this.osmb.render();
-        this.osmb.onMoveEnd({});
+
+        if (zoomChanged) {
+            this.osmb.onZoomEnd({ zoom: this.map.zoom });
+        } else {
+            this.osmb.onMoveEnd();
+        }
+
         return result;
     },
 
@@ -80,5 +83,13 @@ OpenLayers.Layer.Buildings = OpenLayers.Class(OpenLayers.Layer, {
         this.osmb.setCamOffset(this.dxSum, this.dySum);
         this.osmb.render();
         return result;
+    },
+
+    geoJSON: function (url, isLatLon) {
+        return this.osmb.geoJSON(url, isLatLon);
+    },
+
+    setStyle: function (style)  {
+        return this.osmb.setStyle(style);
     }
 });

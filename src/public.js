@@ -8,7 +8,7 @@
             return this;
         };
 
-        this.setCamOffset = function(x, y) {
+        this.setCamOffset = function (x, y) {
             camX = halfWidth + x;
             camY = height    + y;
         };
