@@ -1,20 +1,30 @@
 L.BuildingsLayer = L.Class.extend({
 
-    _lastX: 0,
-    _lastY: 0,
+    map: null,
+    osmb: null,
+    canvas: null,
 
-    _onMove: function () {
+    blockMoveEvent: null, // needed as Leaflet fires moveend and zoomend together
+
+    lastX: 0,
+    lastY: 0,
+
+    initialize: function (options) {
+        options = L.Util.setOptions(this, options);
+    },
+
+    onMove: function () {
         var mp = L.DomUtil.getPosition(this.map._mapPane);
         this.osmb.setCamOffset(
-            this._lastX - mp.x,
-            this._lastY - mp.y
+            this.lastX - mp.x,
+            this.lastY - mp.y
         );
         this.osmb.render();
     },
 
-    _onMoveEnd: function () {
-        if (this._blockMoveEvent) {
-            this._blockMoveEvent = false;
+    onMoveEnd: function () {
+        if (this.blockMoveEvent) {
+            this.blockMoveEvent = false;
             return;
         }
 
@@ -23,8 +33,8 @@ L.BuildingsLayer = L.Class.extend({
             po = this.map.getPixelOrigin()
         ;
 
-        this._lastX = mp.x;
-        this._lastY = mp.y;
+        this.lastX = mp.x;
+        this.lastY = mp.y;
         this.canvas.style.left = -mp.x + 'px';
         this.canvas.style.top  = -mp.y + 'px';
         this.osmb.setCamOffset(0, 0);
@@ -32,31 +42,20 @@ L.BuildingsLayer = L.Class.extend({
         this.osmb.setSize(this.map._size.x, this.map._size.y); // in case this is triggered by resize
         this.osmb.setOrigin(po.x - mp.x, po.y - mp.y);
         this.osmb.onMoveEnd();
-        this.osmb.render();
     },
 
-    _onZoomStart: function () {
+    onZoomStart: function () {
         this.osmb.onZoomStart();
     },
 
-    _onZoomEnd: function () {
+    onZoomEnd: function () {
         var
             mp = L.DomUtil.getPosition(this.map._mapPane),
             po = this.map.getPixelOrigin()
         ;
         this.osmb.setOrigin(po.x - mp.x, po.y - mp.y);
         this.osmb.onZoomEnd({ zoom: this.map._zoom });
-        this._blockMoveEvent = true;
-    },
-
-    _blockMoveEvent: null, // needed as Leaflet fires moveend and zoomend together
-
-    map: null,
-    osmb: null,
-    canvas: null,
-
-    initialize: function (url) {
-        this.osmb = new OSMBuildings(url);
+        this.blockMoveEvent = true;
     },
 
     addTo: function (map) {
@@ -66,20 +65,28 @@ L.BuildingsLayer = L.Class.extend({
 
     onAdd: function (map) {
         this.map = map;
+        this.osmb = new OSMBuildings(this.options.url);
 
         this.canvas = this.osmb.createCanvas(this.map._panes.overlayPane);
         this.osmb.maxZoom = this.map._layersMaxZoom;
 
+        var
+            mp = L.DomUtil.getPosition(this.map._mapPane),
+            po = this.map.getPixelOrigin()
+        ;
+
         this.osmb.setSize(this.map._size.x, this.map._size.y);
-        var po = this.map.getPixelOrigin(); // changes on zoom only!
-        this.osmb.setOrigin(po.x, po.y);
+        this.osmb.setOrigin(po.x - mp.x, po.y - mp.y);
         this.osmb.setZoom(this.map._zoom);
 
+        this.canvas.style.left = -mp.x + 'px';
+        this.canvas.style.top  = -mp.y + 'px';
+
         this.map.on({
-            move: this._onMove,
-            moveend: this._onMoveEnd,
-            zoomstart: this._onZoomStart,
-            zoomend: this._onZoomEnd
+            move: this.onMove,
+            moveend: this.onMoveEnd,
+            zoomstart: this.onZoomStart,
+            zoomend: this.onZoomEnd
         }, this);
 
 //        var onZoom = function (opt) {
@@ -96,12 +103,13 @@ L.BuildingsLayer = L.Class.extend({
 //        };
 
         if (this.map.options.zoomAnimation) {
-             this.canvas.className = 'leaflet-zoom-animated';
-//           this.map.on('zoomanim', onZoom);
+            this.canvas.className = 'leaflet-zoom-animated';
+//          this.map.on('zoomanim', onZoom);
         }
 
         this.map.attributionControl.addAttribution(OSMBuildings.ATTRIBUTION);
-        this.osmb.loadData(); // TODO: usually on instantiation. other reasons? check!
+
+        this.osmb.loadData();
         this.osmb.render(); // in case of for re-adding this layer
     },
 
@@ -109,13 +117,22 @@ L.BuildingsLayer = L.Class.extend({
         map.attributionControl.removeAttribution(OSMBuildings.ATTRIBUTION);
 
         map.off({
-            move: this._onMove,
-            moveend: this._onMoveEnd,
-            zoomstart: this._onZoomStart,
-            zoomend: this._onZoomEnd
+            move: this.onMove,
+            moveend: this.onMoveEnd,
+            zoomstart: this.onZoomStart,
+            zoomend: this.onZoomEnd
         }, this);
 
         this.canvas = this.osmb.destroyCanvas();
         this.map = null;
+        this.osmb = null;
+    },
+
+    geoJSON: function (url, isLatLon) {
+        return this.osmb.geoJSON(url, isLatLon);
+    },
+
+    setStyle: function (style)  {
+        return this.osmb.setStyle(style);
     }
 });

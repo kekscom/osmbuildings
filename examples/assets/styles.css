@@ -23,7 +23,7 @@ h1 {
 #map {
     width: 700px;
     height: 400px;
-    margin: 0 auto;
+    margin: 0 auto !important;
     border: 1px solid #ccc;
 }
 

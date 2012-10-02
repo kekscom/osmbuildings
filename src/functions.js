@@ -1,4 +1,4 @@
-        function createCanvas (parentNode) {
+        function createCanvas(parentNode) {
             canvas = doc.createElement('canvas');
             canvas.style.webkitTransform = 'translate3d(0,0,0)'; // turn on hw acceleration
             canvas.style.imageRendering = 'optimizeSpeed';
@@ -15,13 +15,13 @@
 
             try {
                 context.mozImageSmoothingEnabled = false;
-            } catch(err) {
+            } catch (err) {
             }
 
             return canvas;
         }
 
-        function destroyCanvas () {
+        function destroyCanvas() {
             canvas.parentNode.removeChild(canvas);
         }
 
@@ -46,7 +46,7 @@
         }
 
         function template(str, data) {
-            return str.replace(/\{ *([\w_]+) *\}/g, function(x, key) {
+            return str.replace(/\{ *([\w_]+) *\}/g, function (x, key) {
                 return data[key];
             });
         }

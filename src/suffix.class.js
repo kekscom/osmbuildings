@@ -1,3 +1,4 @@
+        url = u;
     };
 
     global.OSMBuildings.VERSION = VERSION;
