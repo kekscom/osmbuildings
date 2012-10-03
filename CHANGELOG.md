@@ -1,10 +1,10 @@
 # Changelog
 
-## v0.1.7b @ 2012-10-01
+## v0.1.7a @ 2012-10-01
 
 - adding OpenLayers support
 - alinging Layer naming convention to engines
-- fixing some edge cases where layer got removed
+- fixing some rare cases where layer got removed
 - switching to beta status
 
 

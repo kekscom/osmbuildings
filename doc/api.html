@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>OSM Buildings &raquo; Documentation &raquo; API</title>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <link rel="stylesheet" href="../assets/styles.css">
+
+    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.4.4/leaflet.css">
+    <!--[if lte IE 8]><link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.4.4/leaflet.ie.css" /><![endif]-->
+    <script src="http://cdn.leafletjs.com/leaflet-0.4.4/leaflet.js"></script>
+
+    <link rel="stylesheet" href="js/highlight/github.css">
+    <script src="js/highlight/highlight.pack.js"></script>
+    <script src="../dist/L.BuildingsLayer.js"></script>
+</head>
+
+<body>
+    <div id="header"><a href="http://osmbuildings.org/"><img src="../assets/logo.png" width="150" height="77" border="0"></a></div>
+
+    <div id="map"></div>
+
+    <div id="description">
+
+
+
+    </div>
+
+    <script id="src">
+    </script>
+</body>
+</html>
+
+
+
+
+<h2>Constructor</h2>
+
+<dl>
+    <dt>OSMBuildings(&lt;Object&gt; Leaflet map instance?)</dt>
+    <dd>Initialize the buildings layer with <code>var B = new OSMBuildings();</code><br>
+    The map parameter is optional and would just save you from a subsequent call of <code>addTo(map);</code></dd>
+</dl>
+
+<h2>Constants</h2>
+
+<dl>
+    <dt>&lt;String&gt VERSION</dt>
+    <dd>Contains the current version info.</dd>
+</dl>
+
+<h2>Methods</h2>
+
+<dl>
+    <dt>addTo(&lt;Object&gt; Leaflet map instance)</dt>
+    <dd>Add the buildings layer to the map, like <code>B.addTo(map);</code><br>
+    Returns the current instance for easy method chaining</dd>
+
+    <dt>setStyle(&lt;Object&gt; style)</dt>
+    <dd>Set default building color and whether roof edges are stroked (outlined) or not,<br>
+    like <code>B.setStyle({ wallColor: 'rgba(255,200,200,0.9)', strokeRoofs: true });</code><br>
+    A render cycle is triggered automatically after calling this method.<br>
+    Returns the current instance for easy method chaining</dd>
+
+    <dt>render()</dt>
+    <dd>Triggers a render cycle. Usually this is not necessary to call unless you do very special custom things.<br>
+    Returns the current instance for easy method chaining</dd>
+
+    <dt>setData(&lt;Object&gt; GeoJSON, &lt;Boolean&gt; isLonLat?)</dt>
+    <dd>Pass a <a href="http://www.geojson.org/geojson-spec.html">GeoJSON</a> object as buildings data. It doesn't need to be real buildings as long there is at least one Polygon.<br>
+    Ensure it's coordinates are set as latitude,longitude,altitude(!). The second parameter isLonLat allows you to have latitude/longitude swapped. GeoJSON example:<br>
+
+<code>var myGeoJSON = {
+    "type": "FeatureCollection",
+    "features": [{
+        "type": "Feature",
+        "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+                [[13.38913,52.51670,50], [13.38919,52.51626,50],
+                 [13.39047,52.51634,50], [13.39045,52.51644,50],
+                 [13.39031,52.51643,50], [13.39028,52.51664,50],
+                 [13.39041,52.51664,50], [13.39040,52.51678,50],
+                 [13.38913,52.51670,50], [13.38913,52.51670,50]]
+            ]
+        },
+        "properties": { "color": "rgba(200,255,200,0.9)" }
+    }]
+};</code><br>
+
+    Returns the current instance for easy method chaining<br>
+    </dd>
+
+    <dt>loadData(&lt;String&gt; url)</dt>
+    <dd>Set a service url pointing to your data service. The package contains some PHP backend files as well as database information.<br>
+    To avoid cross origin issues, it needs to reside on the same host where your frontend is running. I.e. <code>B.loadData('server/?w={w}&n={n}&e={e}&s={s}&z={z}');</code><br>
+    The url schema defines a bounding box pattern {n,e,s,w} as well as a zoom level {z}.<br>
+    Returns the current instance for easy method chaining<br>
+    </dd>
+</dl>
+
+<?php pageFooter()?>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<img src="https://raw.github.com/kekscom/osmbuildings/master/doc/logo.png"/>
+
+OSM Buildings is a JavaScript library for visualizing 3D OSM building data on interactive maps.
+
+## Important
+
+The whole library consists of client JavaScript files, a server side PHP script and a MySQL or PostGis database.
+Everything should be seen as alpha state, all components are likely to change extensively.
+
+Bottleneck at the moment is data availability. I can't process and host a whole OSM planet file.
+Actually I'm looking for a partner to provide a data service to you.
+
+
+## Prerequisites
+
+1. You will need MySQL as data storage. Version 5.0.16 or better has the required [Spatial Extensions](http://dev.mysql.com/doc/refman/5.0/en/spatial-extensions.html) enabled.
+Everything can be done in different Geo enabled databases too. For now we just go MySQL.
+For those who have trouble importing the data into MySQL or running a different server, [Diego Guidi](https://twitter.com/D_Guidi) did a great job creating a Shapefile.
+
+* See Data conversion below *
+
+2. You will need to create your database table using the dump file /server/data/mysql-CREATE_TABLE.sql .
+Then import building data, i.e. from /server/data/mysql-berlin.zip . Either upload this directly in PhpMyAdmin or unpack and import as you like.
+
+3. Make sure PHP is running and create a /server/config.php file for your setting s and database credentials.
+Or just adapt and rename /server/config.sample.php for your needs.
+
+
+## Integration
+
+I assume, Leaflet is already integrated in your html page. If not, head over to its [documentation](http://leaflet.cloudmade.com/reference.html).
+Important: version 0.4 of Leaflet.js is required.
+
+Then in header section, add:
+
+```html
+<head>
+    :
+    :
+  <script src="dist/buildings.js"></script>
+</head>
+```
+
+after Leaflet initialization add:
+
+```javascript
+var map = new L.Map('map');
+  :
+  :
+// You may stay with any maptiles you are already using. these are just my favourites.
+// Remember to obtain an API key from MapBox.
+// And keep the attribution part for proper copyright notice.
+var mapboxTiles = new L.TileLayer(
+    'http://{s}.tiles.mapbox.com/v3/mapbox.mapbox-streets/{z}/{x}/{y}.png',
+    {
+        attribution: 'Map tiles &copy; <a href="http://mapbox.com">MapBox</a>',
+        maxZoom: 17
+    }
+);
+
+// to point to the sample location Berlin, lets start there:
+map.setView(new L.LatLng(52.52111, 13.40988), 17).addLayer(mapboxTiles);
+
+// now create the OSM Buildings layer and attach it to the map:
+new L.BuildingsLayer().addTo(map);
+
+// if you like to load the server based Berlin or Frankfurt samples, start loading use loadData()
+// as soon as you do, it starts loading data from your PHP/MySQL combo
+// you will need to have this on the same server, otherwise there are cross origin issues
+new L.BuildingsLayer('server/?w={w}&n={n}&e={e}&s={s}&z={z}').addTo(map);
+
+// or you like to put cutom objects on the map, use <a href="http://www.geojson.org/geojson-spec.html">GeoJSON</a>
+// the second parameter indicates, whether your coordinates are ordered as lat/lon (default) or lon/lat
+// - you need to pass geocordinates incl. altitude in the respective coordinates properties.
+// - only type Polygon is supported
+// example:
+
+var myGeoJSON = {
+    "type": "FeatureCollection",
+    "features": [
+        {
+            "type": "Feature",
+            "geometry": {
+                "type": "Polygon",
+                "coordinates": [
+                    [[13.38913,52.51670,50], [13.38919,52.51626,50], [13.39047,52.51634,50],
+                     [13.39045,52.51644,50], [13.39031,52.51643,50], [13.39028,52.51664,50],
+                     [13.39041,52.51664,50], [13.39040,52.51678,50], [13.38913,52.51670,50],
+                     [13.38913,52.51670,50]]
+                ]
+            },
+            "properties": {
+                "color": "rgba(200,255,200,0.9)"
+            }
+        }
+    ]
+};
+
+new L.BuildingsLayer.addTo(map).geoJSON(myGeoJSON[, isLatLon?]);
+```
+
+
+done.
+
+## Data Conversion
+
+As PostGIS seems to be much more popular for handling geometry and MySQL being much more popular for commercial web hosting, there is now a data conversion script in using Node.js.
+Requirements are: a working Node.js installation (I tested successfully 0.6 on Windows) and the node-postgres module. Install the module with <code>npm install pg</code>.
+Then have a look into /server/data/convert.js and change database, table, output settings.
+Run the conversion with <code>node convert.js</code>.
+
+What it does:
+
+- reads height and footprint polygons from PostGIS
+- turns height into a number if needed
+- swaps lat/lon of polygons if needed
+- creates a mysql dump file
+
+For any further information visit [http://osmbuildings.org](http://osmbuildings.org), follow [@osmbuildings](https://twitter.com/osmbuildings) on Twitter or report issues here on Github.
+
+
+
+
+
+
+
+
+
+<h2>Constructor</h2>
+
+<dl>
+    <dt>OSMBuildings(&lt;Object&gt; Leaflet map instance?)</dt>
+    <dd>Initialize the buildings layer with <code>var osmb = new OSMBuildings();</code><br>
+    The map parameter is optional and would just save you from a subsequent call of <code>addTo(map);</code></dd>
+</dl>
+
+<h2>Constants</h2>
+
+<dl>
+    <dt>&lt;String&gt VERSION</dt>
+    <dd>Contains the current version info.</dd>
+</dl>
+
+<h2>Methods</h2>
+
+<dl>
+    <dt>addTo(&lt;Object&gt; Leaflet map instance)</dt>
+    <dd>Add the buildings layer to the map, like <code>osmb.addTo(map);</code><br>
+    Returns the current instance for easy method chaining</dd>
+
+    <dt>setStyle(&lt;Object&gt; style)</dt>
+    <dd>Set default building color and whether roof edges are stroked (outlined) or not, like<br>
+    <code>osmb.setStyle({
+        wallColor: 'rgba(255,200,200,0.9)',
+        roofColor: 'rgba(240,210,210,0.8)',
+        strokeRoofs: true
+    });</code><br>
+    <b>Usage of fillColor is not supported anymore</b>, use wallColor instead.<br>
+    You can now specify a separate roof color.<br><br>
+
+    Color rule set:<br><br>
+
+    <ol>
+    <li>object walls: if no color is set, default color rgb(200,190,180) will be used
+    <li>if color or wallColor is set: it will be applied
+    </ol>
+
+    <ol>
+    <li>object roofs: if there is no color at all for an object, default roof color will be set
+    <li>if there is no default roof color, it will be derieved from default wall color)
+    <li>if there is an object roofColor: it will be applied
+    <li>otherwise if there is a default roofColor: this will be applied instead
+    <li>at last the objects wall color will be adapted
+    </ol>
+
+    A render cycle is triggered automatically after calling this method.<br>
+    Returns the current instance for easy method chaining</dd>
+
+    <dt>render()</dt>
+    <dd>Triggers a render cycle. Usually this is not necessary to call unless you do very special custom things.<br>
+    Returns the current instance for easy method chaining</dd>
+
+    <dt>setData(&lt;Object&gt; GeoJSON, &lt;Boolean&gt; isLonLat?)</dt>
+    <dd><em>deprecated, use geoJSON() instead</em></dd>
+
+    <dt>geoJSON(&lt;Object|String&gt; GeoJSON, &lt;Boolean&gt; isLatLon?)</dt>
+    <dd>
+    <em>Differences to deprecated setData</em>: the function now takes either a JSON object or a string which is handled as JSONP URL for retrieving GeoJSON data from there.
+    The second parameter has swapped its meaning as Lon/Lat order seems to be default for GeoJSON.<br>
+
+    Pass a <a href="http://www.geojson.org/geojson-spec.html">GeoJSON</a> object as buildings data. It doesn't need to be real buildings as long there is at least one Polygon/Multipolygon.<br>
+    Ensure it's coordinates are set as latitude,longitude[,altitude]. GeoJSON example:<br>
+
+<code>var myGeoJSON = {
+    "type": "FeatureCollection",
+    "features": [{
+        "type": "Feature",
+        "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+                [[13.38913,52.51670,50], [13.38919,52.51626],
+                 [13.39047,52.51634,50], [13.39045,52.51644],
+                 [13.39031,52.51643,50], [13.39028,52.51664],
+                 [13.39041,52.51664,50], [13.39040,52.51678],
+                 [13.38913,52.51670,50], [13.38913,52.51670]]
+            ]
+        },
+        "properties": { "wallColor": "rgba(200,255,200,0.9)", "height": 50 }
+    }]
+};</code><br>
+
+    Returns the current instance for easy method chaining<br>
+    </dd>
+
+    <dt>loadData(&lt;String&gt; url)</dt>
+    <dd>Set a service url pointing to your data service. The package contains some PHP backend files as well as database information.<br>
+    To avoid cross origin issues, it needs to reside on the same host where your frontend is running. I.e. <code>osmb.loadData('server/?w={w}&n={n}&e={e}&s={s}&z={z}');</code><br>
+    The url schema defines a bounding box pattern {n,e,s,w} as well as a zoom level {z}.<br>
+    Returns the current instance for easy method chaining<br>
+    </dd>
+</dl>

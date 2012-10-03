@@ -5,7 +5,7 @@
     <meta http-equiv="content-type" content="text/html; charset=utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <link rel="stylesheet" href="assets/styles.css">
+    <link rel="stylesheet" href="../assets/styles.css">
 
     <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.4.4/leaflet.css">
     <!--[if lte IE 8]><link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.4.4/leaflet.ie.css" /><![endif]-->
@@ -20,7 +20,7 @@
 </head>
 
 <body>
-    <div id="header"></div>
+    <div id="header"><a href="http://osmbuildings.org/"><img src="../assets/logo.png" width="150" height="77" border="0"></a></div>
 
     <div id="map"></div>
 
@@ -40,7 +40,7 @@
         </p>
     </div>
 
-    <pre id="code" class="javascript"></pre>
+    <pre id="code" class="code"></pre>
 
     <script id="src">
     var map = new L.Map('map').setView([52.49480, 13.42857], 17);
@@ -100,10 +100,6 @@
     var code = document.querySelector('#code');
     var src = document.querySelector('#src');
 
-    code.style.overflow = 'auto';
-    code.style.height = '180px';
-    code.style.backgroundColor = '#eeeeee';
-
     code.innerText = src.innerText;
     hljs.highlightBlock(code);
 
@@ -120,12 +116,15 @@
     function setHeight(el) {
         height = parseInt(el.value) || 50;
     }
+
+    code.onclick = function (e) {
+        this.className += ' large';
+        e.cancelBubble = true;
+    }
+
+    document.onclick = function () {
+        code.className = code.className.replace(/ large/g, '');
+    };
     </script>
 </body>
 </html>
-
-
-
-
-
-
