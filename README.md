@@ -21,7 +21,7 @@ http://osmbuildings.org/examples/
 ## Files
 
 Release version 0.1.7a https://github.com/kekscom/osmbuildings/tree/v0.1.7a<br>
-Latest development https://github.com/kekscom/osmbuildings/master
+Latest development https://github.com/kekscom/osmbuildings
 
 
 For any further information visit [http://osmbuildings.org](http://osmbuildings.org), follow [@osmbuildings](https://twitter.com/osmbuildings) on Twitter or report issues here on Github.
