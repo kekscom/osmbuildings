@@ -826,6 +826,10 @@ var Color = (function () {
 
 //****** file: OpenLayers.js ******
 
+/**
+ * basing on a pull request from Jérémy Judéaux (https://github.com/Volune)
+ */
+
 OpenLayers.Layer.Buildings = OpenLayers.Class(OpenLayers.Layer, {
 
     CLASS_NAME: 'OpenLayers.Layer.Buildings',
