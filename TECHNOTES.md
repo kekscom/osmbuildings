@@ -1,6 +1,6 @@
 # Tech Notes
 
-Whats done & why in terms of performance.
+What's done & why in terms of performance.
 
 
 ## Projection cache
