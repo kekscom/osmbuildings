@@ -1,30 +1,24 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>OSM Buildings &raquo; Documentation &raquo; Integration</title>
+    <title>OSM Buildings &raquo; Documentation &raquo; Integration with Leaflet</title>
     <meta http-equiv="content-type" content="text/html; charset=utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <link rel="stylesheet" href="../assets/styles.css">
 
-    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.4.4/leaflet.css">
-    <!--[if lte IE 8]><link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.4.4/leaflet.ie.css" /><![endif]-->
-    <script src="http://cdn.leafletjs.com/leaflet-0.4.4/leaflet.js"></script>
-
     <link rel="stylesheet" href="../examples/js/highlight/github.css">
     <script src="../examples/js/highlight/highlight.pack.js"></script>
-    <script src="../dist/L.BuildingsLayer.js"></script>
 </head>
 
 <body>
     <div id="header"><a href="http://osmbuildings.org/"><img src="../assets/logo.png" width="150" height="77" border="0"></a></div>
 
     <div id="description">
-        <h1>Integration</h1>
 
-        <p>This refers to <a href="http://leaflet.cloudmade.com">Leaflet</a>, as it is very simple to integrate and therefore the recommended map engine.</p>
+        <h1>Integration with Leaflet</h1>
 
-        <h2>1. Add Leaflet and the OSM Buildings layer</h2>
+        <h2>1. Link Leaflet and OSM Buildings files</h2>
 
         <p>Your HTML head section should look like this.</p>
 
@@ -33,8 +27,7 @@
 	&lt;link rel=&quot;stylesheet&quot; href=&quot;http://cdn.leafletjs.com/leaflet-0.4.4/leaflet.css&quot;&gt;
 	&lt;!--[if lte IE 8]&gt;&lt;link rel=&quot;stylesheet&quot; href=&quot;http://cdn.leafletjs.com/leaflet-0.4.4/leaflet.ie.css&quot; /&gt;&lt;![endif]--&gt;
 	&lt;script src=&quot;http://cdn.leafletjs.com/leaflet-0.4.4/leaflet.js&quot;&gt;&lt;/script&gt;
-
-	&lt;script src=&quot;L.BuildingsLayer.js&quot;&gt;&lt;/script&gt;
+	&lt;script src=&quot;dist/L.BuildingsLayer.js&quot;&gt;&lt;/script&gt;
 &lt;/head&gt;
         </pre>
 
@@ -44,10 +37,10 @@
         I'm using MapBox tiles here.</p>
 
         <pre class="code">
-var map = new L.Map(\'map\').setView([52.52020, 13.37570], 17);
+var map = new L.Map('map').setView([52.52020, 13.37570], 17);
 new L.TileLayer(
-    \'http://{s}.tiles.mapbox.com/v3/mapbox.mapbox-streets/{z}/{x}/{y}.png\',
-    { attribution: \'Map tiles &copy; <a href="http://mapbox.com">MapBox</a>\', maxZoom: 17 }
+    'http://{s}.tiles.mapbox.com/v3/mapbox.mapbox-streets/{z}/{x}/{y}.png',
+    { attribution: 'Map tiles &copy; <a href="http://mapbox.com">MapBox</a>', maxZoom: 17 }
 ).addTo(map);
         </pre>
 

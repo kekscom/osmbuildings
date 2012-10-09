@@ -1,4 +1,4 @@
-<img src="https://raw.github.com/kekscom/osmbuildings/master/doc/logo.png"/>
+<img src="http://osmbuildings.org/assets/logo.png"/>
 
 OSM Buildings is a JavaScript library for visualizing 3D OSM building data on interactive maps.
 
@@ -10,18 +10,18 @@ Bottleneck at the moment is data availability. I can't process and host a whole 
 
 ## Documentation
 
-[http://osmbuildings.org/documentation/]
+http://osmbuildings.org/documentation/
 
 
 ## Examples
 
-[http://osmbuildings.org/examples/]
+http://osmbuildings.org/examples/
 
 
 ## Files
 
-[https://github.com/kekscom/osmbuildings/tree/v0.1.7a](Version 0.1.7a)
-[https://github.com/kekscom/osmbuildings/master](latest, could be unstable)
+Release version 0.1.7a https://github.com/kekscom/osmbuildings/tree/v0.1.7a<br>
+Latest development https://github.com/kekscom/osmbuildings/master
 
 
 For any further information visit [http://osmbuildings.org](http://osmbuildings.org), follow [@osmbuildings](https://twitter.com/osmbuildings) on Twitter or report issues here on Github.

@@ -64,3 +64,49 @@ button.color {
     border: 1px solid #666;
     width: 50px;
 }
+
+dl {
+    line-height: 150%;
+}
+
+dt {
+}
+
+dd {
+    margin-bottom: 20px;
+}
+
+li {
+    line-height: 150%;
+}
+
+table {
+	border-collapse: collapse;
+    width: 100%;
+	empty-cells: show;
+	border: 0;
+    margin: 10px 0 20px 0;
+}
+
+th {
+	text-align: left;
+	vertical-align: top;
+	background-color: #eeeeee;
+	border: 1px solid #cccccc;
+	font-size: 10pt;
+	font-weight: normal;
+	padding: 4px 8px;
+    line-height: 150%;
+}
+
+td {
+	vertical-align: top;
+	border: 1px solid #cccccc;
+	font-size: 10pt;
+	padding: 4px 8px;
+    line-height: 150%;
+}
+
+.api-code {
+    white-space: pre;
+}
