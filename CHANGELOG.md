@@ -5,7 +5,6 @@
 - adding OpenLayers support, credits to Jérémy Judéaux (https://github.com/Volune)
 - aligning Layer naming convention to engines
 - fixing some rare cases where layer got removed
-- switching to beta status
 
 
 ## v0.1.6a @ 2012-09-04
