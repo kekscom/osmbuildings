@@ -38,7 +38,7 @@ exec('node build.js', function (err) {
 
 //*****************************************************************************
 
-console.log('copying server functions & sources..');
+console.log('copying server functions..');
 builder.copy(osmbDir + '/server/functions.php', websiteDir + '/server/functions.php');
 builder.copy(osmbDir + '/server/index.php', websiteDir + '/server/index.php');
 if (!fs.existsSync(websiteDir + '/server/source')) {
@@ -48,13 +48,26 @@ builder.copy(osmbDir + '/server/source/', websiteDir + '/server/source/');
 
 //*****************************************************************************
 
-console.log('copying & adapting examples..');
+console.log('copying examples..');
 builder.eachFile(osmbDir + '/examples/', function (file) {
     var content = builder.read(osmbDir + '/examples/' + file);
-//    content = content.replace(/(<(link|script)[^>]+(href|src)=")js\//g, '$1../js/');
+    content = content.replace(/"..\/assets\//g, '"assets/');
     content = content.replace(/(<script[^>]+src=")..\/dist\//g, '$1../js/');
     content = content.replace(/<\/body>/, '\t<script src="../js/piwik.js"></script>\n</body>');
     builder.write(content, websiteDir + '/examples/' + file);
 });
 
+builder.copy(osmbDir + '/assets/', websiteDir + '/examples/assets/');
+
 //*****************************************************************************
+
+console.log('copying documentation..');
+builder.eachFile(osmbDir + '/doc/', function (file) {
+    var content = builder.read(osmbDir + '/doc/' + file);
+    content = content.replace(/"..\/assets\//g, '"assets/');
+//    content = content.replace(/(<script[^>]+src=")..\/dist\//g, '$1../js/');
+    content = content.replace(/<\/body>/, '\t<script src="../js/piwik.js"></script>\n</body>');
+    builder.write(content, websiteDir + '/documentation/' + file);
+});
+
+builder.copy(osmbDir + '/assets/', websiteDir + '/documentation/assets/');
