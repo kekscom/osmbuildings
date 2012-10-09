@@ -15,7 +15,7 @@ http://osmbuildings.org/documentation/
 
 ## Examples
 
-http://osmbuildings.org/examples/
+http://osmbuildings.org/examples.php
 
 
 ## Files
