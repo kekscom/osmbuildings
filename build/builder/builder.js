@@ -150,7 +150,23 @@ exports.gzip = function (str, callback) {
 };
 
 exports.copy = function (srcFile, dstFile) {
+    if (/\/$/.test(srcFile)) {
+        this.eachFile(srcFile, function (file) {
+            this.copy(srcFile + file, dstFile + file);
+        }.bind(this));
+        return;
+    }
     fs.writeFileSync(dstFile, fs.readFileSync(srcFile));
+};
+
+exports.eachFile = function (path, callback) {
+    var files = fs.readdirSync(path);
+    files.forEach(function (file) {
+        var stat = fs.lstatSync(path + file);
+        if (stat.isFile()) {
+            callback(file);
+        }
+    }.bind(this));
 };
 
 exports.setVars = function (str, data) {

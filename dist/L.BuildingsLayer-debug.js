@@ -157,7 +157,7 @@ var Color = (function () {
 
     // constants, shared to all instances
     var
-        VERSION = '0.1.6a',
+        VERSION = '0.1.7a',
         ATTRIBUTION = '&copy; <a href="http://osmbuildings.org">OSM Buildings</a>',
 
         PI = Math.PI,

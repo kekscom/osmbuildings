@@ -5,17 +5,17 @@
     <meta http-equiv="content-type" content="text/html; charset=utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <link rel="stylesheet" href="assets/styles.css">
+    <link rel="stylesheet" href="../assets/styles.css">
 
     <script src="http://www.openlayers.org/api/OpenLayers.js"></script>
 
     <link rel="stylesheet" href="js/highlight/github.css">
     <script src="js/highlight/highlight.pack.js"></script>
-    <script src="../dist/Openlayers.Layer.Buildings.js"></script>
+    <script src="../dist/OpenLayers.Layer.Buildings.js"></script>
 </head>
 
 <body>
-    <div id="header"></div>
+    <div id="header"><a href="http://osmbuildings.org/"><img src="../assets/logo.png" width="150" height="77" border="0"></a></div>
 
     <div id="map"></div>
 
@@ -25,7 +25,7 @@
         <p>Integrating with OpenLayers layer switch. Your server needs to be running for this example.</p>
     </div>
 
-    <pre id="code" class="javascript"></pre>
+    <pre id="code" class="code"></pre>
 
     <script id="src">
     var map = new OpenLayers.Map('map');
@@ -37,7 +37,7 @@
     map.setCenter(
         new OpenLayers.LonLat(13.33522, 52.50440)
             .transform(
-                new OpenLayers.Projection("EPSG:4326"),
+                new OpenLayers.Projection('EPSG:4326'),
                 map.getProjectionObject()
             ),
         17
