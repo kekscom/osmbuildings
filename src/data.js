@@ -1,19 +1,15 @@
-        function xhr(url, callback) {
-            var x = new XMLHttpRequest();
-            x.onreadystatechange = function () {
-                if (x.readyState !== 4) {
-                    return;
-                }
-                if (!x.status || x.status < 200 || x.status > 299) {
-                    return;
-                }
-                if (x.responseText) {
-                    callback(JSON.parse(x.responseText));
-                }
+        function request(url, callbackFn) {
+            var
+                el = doc.documentElement,
+                callbackName = 'jsonpCallback',
+                script = doc.createElement('script')
+            ;
+            global[callbackName] = function (res) {
+                delete global[callbackName];
+                el.removeChild(script);
+                callbackFn(res);
             };
-            x.open('GET', url);
-            x.send(null);
-            return x;
+            el.insertBefore(script, el.lastChild).src = url.replace(/\{callback\}/, callbackName);
         }
 
         function loadData() {
@@ -25,15 +21,12 @@
                 nw = pixelToGeo(originX         - halfWidth, originY          - halfHeight),
                 se = pixelToGeo(originX + width + halfWidth, originY + height + halfHeight)
             ;
-            if (req) {
-                req.abort();
-            }
-            req = xhr(template(url, {
+
+            request(template(url, {
                 w: nw[LON],
                 n: nw[LAT],
                 e: se[LON],
-                s: se[LAT],
-                z: zoom
+                s: se[LAT]
             }), onDataLoaded);
         }
 
@@ -148,17 +141,9 @@
                 setData(url, !isLatLon);
                 return;
             }
-            var
-                el = doc.documentElement,
-                callback = 'jsonpCallback',
-                script = doc.createElement('script')
-            ;
-            global[callback] = function (res) {
-                delete global[callback];
-                el.removeChild(script);
+            request(url, function (res) {
                 setData(res, !isLatLon);
-            };
-            el.insertBefore(script, el.lastChild).src = url.replace(/\{callback\}/, callback);
+            });
         }
 
         function parseGeoJSON(json, isLonLat, res) {

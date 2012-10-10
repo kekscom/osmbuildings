@@ -2,10 +2,9 @@
 
 require_once dirname(__FILE__) . '/Abstract.php';
 
-class Source_Mapnik extends Source_Abstract
-{
-    public function init()
-    {
+class Source_Mapnik extends Source_Abstract {
+
+    public function init() {
         extract($this->_options);
         if (!isset($port)) { // default port
             $port = 5432;
@@ -16,8 +15,7 @@ class Source_Mapnik extends Source_Abstract
         }
     }
 
-    public function query($bbox)
-    {
+    public function query($bbox) {
         $query = "
             SELECT
                 height,
@@ -43,16 +41,14 @@ class Source_Mapnik extends Source_Abstract
         return $this;
     }
 
-    public function count()
-    {
+    public function count() {
         if($this->_collection){
             return pg_num_rows($this->_collection);
         }
         return null;
     }
 
-    public function fetch()
-    {
+    public function fetch() {
         return pg_fetch_object($this->_collection);
     }
 }

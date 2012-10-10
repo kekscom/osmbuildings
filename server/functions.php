@@ -1,13 +1,5 @@
 <?php
 
-function geoToPixel($lat, $lon, $zoomLevel) {
-    global $tileSize;
-    $mapSize = $tileSize << $zoomLevel;
-    $latitude  = min(1, max(0, .5-( log( tan( M_PI/4 + M_PI/2 * $lat/180)) / M_PI) / 2) );
-    $longitude = $lon/360 + .5;
-    return array('x'=>intval($longitude*$mapSize), 'y'=>intval($latitude*$mapSize));
-}
-
 // parse from geometry text, swap llon/lat order
 function strToPoly($str) {
     global $coordsOrder;
@@ -27,7 +19,7 @@ function strToPoly($str) {
     return $res;
 }
 
-// creates the bounding box accoriding to expected lat/lon order
+// creates the bounding box according to expected lat/lon order
 function createBBox($n, $w, $s, $e) {
     global $coordsOrder;
     if ($coordsOrder === 'lat,lon') {

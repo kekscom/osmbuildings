@@ -1,19 +1,952 @@
-(function(g){var v=v||Array,xa=Math.exp,ya=Math.log,za=Math.tan,Aa=Math.atan,ja=Math.min,Ba=Math.max,ka=g.document,x=function(){function W(e,h,l){if(l<0)l+=1;if(l>1)l-=1;if(l<1/6)return e+(h-e)*6*l;if(l<0.5)return h;if(l<2/3)return e+(h-e)*(2/3-l)*6;return e}function C(e,h,l,m){this.r=e;this.g=h;this.b=l;this.a=arguments.length<4?1:m}var X=C.prototype;X.toString=function(){return"rgba("+[this.r,this.g,this.b,this.a.toFixed(2)].join(",")+")"};X.adjustLightness=function(e){var h=x.toHSLA(this);h.l*=
-e;h.l=Math.min(1,Math.max(0,h.l));var l,m;if(h.s===0)e=l=m=h.l;else{m=h.l<0.5?h.l*(1+h.s):h.l+h.s-h.l*h.s;var w=2*h.l-m;e=W(w,m,h.h+1/3);l=W(w,m,h.h);m=W(w,m,h.h-1/3)}return new x(~~(e*255),~~(l*255),~~(m*255),h.a)};X.adjustAlpha=function(e){return new x(this.r,this.g,this.b,this.a*e)};C.parse=function(e){e+="";if(~e.indexOf("#")){e=e.match(/^#?(\w{2})(\w{2})(\w{2})(\w{2})?$/);return new x(parseInt(e[1],16),parseInt(e[2],16),parseInt(e[3],16),e[4]?parseInt(e[4],16)/255:1)}if(e=e.match(/rgba?\((\d+)\D+(\d+)\D+(\d+)(\D+([\d.]+))?\)/))return new x(parseInt(e[1],
-10),parseInt(e[2],10),parseInt(e[3],10),e[4]?parseFloat(e[5],10):1)};C.toHSLA=function(e){var h=e.r/255,l=e.g/255,m=e.b/255,w=Math.max(h,l,m),y=Math.min(h,l,m),D,K=(w+y)/2,E;if(w===y)D=y=0;else{E=w-y;y=K>0.5?E/(2-w-y):E/(w+y);switch(w){case h:D=(l-m)/E+(l<m?6:0);break;case l:D=(m-h)/E+2;break;case m:D=(h-l)/E+4;break}D/=6}return{h:D,s:y,l:K,a:e.a}};return C}(),Y=Math.PI,va=Y/2,Ca=Y/4,Da=180/Y,Ea=256,la=14,ma=400,wa=ma-50,Z="latitude",$="longitude",M=0,I=1,A=2,ga=3;g.OSMBuildings=function(W){function C(a,
-c){var b={};a/=aa;c/=aa;b[Z]=c<=0?90:c>=1?-90:Da*(2*Aa(xa(Y*(1-2*c)))-va);b[$]=(a===1?1:(a%1+1)%1)*360-180;return b}function X(a,c){return a.replace(/\{ *([\w_]+) *\}/g,function(b,d){return c[d]})}function e(a,c){var b=new XMLHttpRequest;b.onreadystatechange=function(){if(b.readyState===4)!b.status||b.status<200||b.status>299||b.responseText&&c(JSON.parse(b.responseText))};b.open("GET",a);b.send(null);return b}function h(){if(!(!na||z<la)){var a=C(Q-ba,R-oa),c=C(Q+N+ba,R+F+oa);ha&&ha.abort();ha=e(X(na,
-{w:a[$],n:a[Z],e:c[$],s:c[Z],z:z}),l)}}function l(a){var c,b,d,f=[],i=0,j=0;ca=la;K(z);ha=null;if(!(!a||a.meta.z!==z)){d=a.meta;b=a.data;if(t&&n&&t.z===d.z){i=t.x-d.x;j=t.y-d.y;a=0;for(c=n.length;a<c;a++)f[a]=n[a][I][0]+i+","+(n[a][I][1]+j)}t=d;n=[];a=0;for(c=b.length;a<c;a++){n[a]=b[a];n[a][M]=ja(n[a][M],wa);d=n[a][I][0]+","+n[a][I][1];n[a][ga]=!(f&&~f.indexOf(d))}E()}}function m(a,c){var b=[],d,f,i,j,k,q,p,o,r=pa-z;d=0;for(f=a.length;d<f;d++){k=a[d];q=k[I];p=new v(q.length);i=0;for(j=q.length-1;i<
-j;i+=2){o=q[i+1];var G=ja(1,Ba(0,0.5-ya(za(Ca+va*q[i]/180))/Y/2));o={x:~~((o/360+0.5)*aa),y:~~(G*aa)};p[i]=o.x;p[i+1]=o.y}b[d]=[];b[d][M]=ja(k[M]>>r,wa);b[d][I]=p;b[d][A]=k[A];b[d][ga]=c}return b}function w(a,c){if(typeof a==="object")D(a,!c);else{var b=ka.documentElement,d=ka.createElement("script");g.jsonpCallback=function(f){delete g.jsonpCallback;b.removeChild(d);D(f,!c)};b.insertBefore(d,b.lastChild).src=a.replace(/\{callback\}/,"jsonpCallback")}}function y(a,c,b){if(b===undefined)b=[];var d,
-f,i,j=a[0]?a:a.features,k,q,p,o,r,G=c?1:0,S=c?0:1;if(j){d=0;for(a=j.length;d<a;d++)y(j[d],c,b);return b}if(a.type==="Feature"){f=a.geometry;d=a.properties}if(f.type==="Polygon")k=[f.coordinates];if(f.type==="MultiPolygon")k=f.coordinates;if(k){c=d.height;if(d.color||d.wallColor)o=x.parse(d.color||d.wallColor);if(d.roofColor)r=x.parse(d.roofColor);d=0;for(a=k.length;d<a;d++){q=k[d][0];j=[];f=p=0;for(i=q.length;f<i;f++){j.push(q[f][G],q[f][S]);p+=c||q[f][2]||0}if(p){f=[];f[M]=~~(p/q.length);q=I;p=void 0;
-i=void 0;var O=void 0,B=void 0,T=0,H=void 0,da=void 0;H=0;for(da=j.length-3;H<da;H+=2){p=j[H];i=j[H+1];O=j[H+2];B=j[H+3];T+=p*B-O*i}if((T/2>0?"CW":"CCW")==="CW")j=j;else{p=[];for(i=j.length-2;i>=0;i-=2)p.push(j[i],j[i+1]);j=p}f[q]=j;if(o||r)f[A]=[o,r];b.push(f)}}}return b}function D(a,c){if(a){ea=y(a,c);ca=0;K(z);t={n:90,w:-180,s:-90,e:180,x:0,y:0,z:z};n=m(ea,true);E()}else{ea=null;J()}}function K(a){z=a;aa=Ea<<z;P=1-(z-ca)*0.3/(pa-ca)}function E(){fa=0;clearInterval(qa);qa=setInterval(function(){fa+=
-0.1;if(fa>1){clearInterval(qa);fa=1;for(var a=0,c=n.length;a<c;a++)n[a][ga]=0}J()},33)}function J(){s.clearRect(0,0,N,F);if(t&&n)if(!(z<ca||ra)){var a,c,b,d,f,i,j,k,q=Q-t.x,p=R-t.y,o,r,G,S,O,B,T,H=sa.adjustAlpha(P)+"",da=(ta||sa.adjustLightness(1.2)).adjustAlpha(P)+"";if(ia)s.strokeStyle=Fa.adjustAlpha(P)+"";a=0;for(c=n.length;a<c;a++){f=n[a];r=false;i=f[I];o=[];b=0;for(d=i.length-1;b<d;b+=2){o[b]=j=i[b]-q;o[b+1]=k=i[b+1]-p;r||(r=j>0&&j<N&&k>0&&k<F)}if(r){s.fillStyle=f[A]&&f[A][0]?f[A][0].adjustAlpha(P)+
-"":H;b=f[ga]?f[M]*fa:f[M];i=ma/(ma-b);j=[];k=[];b=0;for(d=o.length-3;b<d;b+=2){r=o[b];G=o[b+1];S=o[b+2];O=o[b+3];B={x:~~((r-U)*i+U)+0.5,y:~~((G-V)*i+V)+0.5};T={x:~~((S-U)*i+U)+0.5,y:~~((O-V)*i+V)+0.5};if((S-r)*(B.y-G)>(B.x-r)*(O-G)){if(!k.length){k.unshift(G+0.5);k.unshift(r+0.5);k.push(B.x,B.y)}k.unshift(O+0.5);k.unshift(S+0.5);k.push(T.x,T.y)}else{ua(k);k=[]}j[b]=B.x;j[b+1]=B.y}ua(k);s.fillStyle=!f[A]?da:f[A][1]?f[A][1].adjustAlpha(P)+"":ta?da:f[A][0].adjustLightness(1.2).adjustAlpha(P)+"";ua(j,
-ia)}}}}function ua(a,c){if(a.length){s.beginPath();s.moveTo(a[0],a[1]);for(var b=2,d=a.length;b<d;b+=2)s.lineTo(a[b],a[b+1]);s.closePath();c&&s.stroke();s.fill()}}var N=0,F=0,ba=0,oa=0,Q=0,R=0,z,aa,ha,u,s,na,ia,sa=new x(200,190,180),ta,Fa=new x(145,140,135),ea,t,n,P=1,fa=1,qa,ca=la,pa=20,U,V,ra;this.setStyle=function(a){a=(a=a)||{};ia=a.strokeRoofs!==undefined?a.strokeRoofs:ia;if(a.color||a.wallColor)sa=x.parse(a.color||a.wallColor);if(a.roofColor!==undefined)ta=x.parse(a.roofColor);J();return this};
-this.geoJSON=function(a,c){w(a,c);return this};this.setCamOffset=function(a,c){U=ba+a;V=F+c};this.setMaxZoom=function(a){pa=a};this.createCanvas=function(a){u=ka.createElement("canvas");u.style.webkitTransform="translate3d(0,0,0)";u.style.imageRendering="optimizeSpeed";u.style.position="absolute";u.style.pointerEvents="none";u.style.left=0;u.style.top=0;a.appendChild(u);s=u.getContext("2d");s.lineCap="round";s.lineJoin="round";s.lineWidth=1;try{s.mozImageSmoothingEnabled=false}catch(c){}return u};
-this.destroyCanvas=function(){u.parentNode.removeChild(u)};this.loadData=h;this.onMoveEnd=function(){var a=C(Q,R),c=C(Q+N,R+F);J();if(t&&(a[Z]>t.n||a[$]<t.w||c[Z]<t.s||c[$]>t.e))h()};this.onZoomEnd=function(a){ra=false;K(a.zoom);if(ea){n=m(ea);J()}else{J();h()}};this.onZoomStart=function(){ra=true;J()};this.render=J;this.setOrigin=function(a,c){Q=a;R=c};this.setSize=function(a,c){N=a;F=c;ba=~~(N/2);oa=~~(F/2);U=ba;V=F;u.width=N;u.height=F};this.setZoom=K;na=W};g.OSMBuildings.VERSION="0.1.7a";g.OSMBuildings.ATTRIBUTION=
-'&copy; <a href="http://osmbuildings.org">OSM Buildings</a>'})(this);
-L.BuildingsLayer=L.Class.extend({map:null,osmb:null,canvas:null,blockMoveEvent:null,lastX:0,lastY:0,initialize:function(g){L.Util.setOptions(this,g)},onMove:function(){var g=L.DomUtil.getPosition(this.map._mapPane);this.osmb.setCamOffset(this.lastX-g.x,this.lastY-g.y);this.osmb.render()},onMoveEnd:function(){if(this.blockMoveEvent)this.blockMoveEvent=false;else{var g=L.DomUtil.getPosition(this.map._mapPane),v=this.map.getPixelOrigin();this.lastX=g.x;this.lastY=g.y;this.canvas.style.left=-g.x+"px";
-this.canvas.style.top=-g.y+"px";this.osmb.setCamOffset(0,0);this.osmb.setSize(this.map._size.x,this.map._size.y);this.osmb.setOrigin(v.x-g.x,v.y-g.y);this.osmb.onMoveEnd()}},onZoomStart:function(){this.osmb.onZoomStart()},onZoomEnd:function(){var g=L.DomUtil.getPosition(this.map._mapPane),v=this.map.getPixelOrigin();this.osmb.setOrigin(v.x-g.x,v.y-g.y);this.osmb.onZoomEnd({zoom:this.map._zoom});this.blockMoveEvent=true},addTo:function(g){g.addLayer(this);return this},onAdd:function(g){this.map=g;
-this.osmb=new OSMBuildings(this.options.url);this.canvas=this.osmb.createCanvas(this.map._panes.overlayPane);this.osmb.maxZoom=this.map._layersMaxZoom;g=L.DomUtil.getPosition(this.map._mapPane);var v=this.map.getPixelOrigin();this.osmb.setSize(this.map._size.x,this.map._size.y);this.osmb.setOrigin(v.x-g.x,v.y-g.y);this.osmb.setZoom(this.map._zoom);this.canvas.style.left=-g.x+"px";this.canvas.style.top=-g.y+"px";this.map.on({move:this.onMove,moveend:this.onMoveEnd,zoomstart:this.onZoomStart,zoomend:this.onZoomEnd},
-this);if(this.map.options.zoomAnimation)this.canvas.className="leaflet-zoom-animated";this.map.attributionControl.addAttribution(OSMBuildings.ATTRIBUTION);this.osmb.loadData();this.osmb.render()},onRemove:function(g){g.attributionControl.removeAttribution(OSMBuildings.ATTRIBUTION);g.off({move:this.onMove,moveend:this.onMoveEnd,zoomstart:this.onZoomStart,zoomend:this.onZoomEnd},this);this.canvas=this.osmb.destroyCanvas();this.osmb=this.map=null},geoJSON:function(g,v){return this.osmb.geoJSON(g,v)},
-setStyle:function(g){return this.osmb.setStyle(g)}});
+/**
+ * Copyright (C) 2012 OSM Buildings, Jan Marsch
+ * A leightweight JavaScript library for visualizing 3D building geometry on interactive maps.
+ * @osmbuildings, http://osmbuildings.org
+ */
+//****** file: prefix.js ******
+
+/*jshint bitwise:false */
+
+(function (global) {
+    'use strict';
+
+
+//****** file: shortcuts.js ******
+
+    // object access shortcuts
+    var
+        Int32Array = Int32Array || Array,
+        exp = Math.exp,
+        log = Math.log,
+        tan = Math.tan,
+        atan = Math.atan,
+        min = Math.min,
+        max = Math.max,
+        doc = global.document
+    ;
+
+
+//****** file: Color.js ******
+
+/*jshint white:false */
+
+var Color = (function () {
+
+    function hsla2rgb(hsla) {
+        var r, g, b;
+
+        if (hsla.s === 0) {
+            r = g = b = hsla.l; // achromatic
+        } else {
+            var
+                q = hsla.l < 0.5 ? hsla.l * (1 + hsla.s) : hsla.l + hsla.s - hsla.l * hsla.s,
+                p = 2 * hsla.l - q
+            ;
+            r = hue2rgb(p, q, hsla.h + 1 / 3);
+            g = hue2rgb(p, q, hsla.h);
+            b = hue2rgb(p, q, hsla.h - 1 / 3);
+        }
+        return new Color(
+            ~~(r * 255),
+            ~~(g * 255),
+            ~~(b * 255),
+            hsla.a
+        );
+    }
+
+    function hue2rgb(p, q, t) {
+        if (t < 0) {
+            t += 1;
+        }
+        if (t > 1) {
+            t -= 1;
+        }
+        if (t < 1 / 6) {
+            return p + (q - p) * 6 * t;
+        }
+        if (t < 1 / 2) {
+            return q;
+        }
+        if (t < 2 / 3) {
+            return p + (q - p) * (2 / 3 - t) * 6;
+        }
+        return p;
+    }
+
+    function C(r, g, b, a) {
+        this.r = r;
+        this.g = g;
+        this.b = b;
+        this.a = arguments.length < 4 ? 1 : a;
+    }
+
+    var proto = C.prototype;
+
+    proto.toString = function () {
+        return 'rgba(' + [this.r, this.g, this.b, this.a.toFixed(2)].join(',') + ')';
+    };
+
+    proto.adjustLightness = function (l) {
+        var hsla = Color.toHSLA(this);
+        hsla.l *= l;
+        hsla.l = Math.min(1, Math.max(0, hsla.l));
+        return hsla2rgb(hsla);
+    };
+
+    proto.adjustAlpha = function (a) {
+        return new Color(this.r, this.g, this.b, this.a * a);
+    };
+
+    C.parse = function (str) {
+        var m;
+        str += '';
+        if (~str.indexOf('#')) {
+            m = str.match(/^#?(\w{2})(\w{2})(\w{2})(\w{2})?$/);
+            return new Color(
+                parseInt(m[1], 16),
+                parseInt(m[2], 16),
+                parseInt(m[3], 16),
+                m[4] ? parseInt(m[4], 16) / 255 : 1
+            );
+        }
+
+        m = str.match(/rgba?\((\d+)\D+(\d+)\D+(\d+)(\D+([\d.]+))?\)/);
+        if (m) {
+             return new Color(
+                parseInt(m[1], 10),
+                parseInt(m[2], 10),
+                parseInt(m[3], 10),
+                m[4] ? parseFloat(m[5], 10) : 1
+            );
+        }
+    };
+
+    C.toHSLA = function (rgba) {
+        var
+            r = rgba.r / 255,
+            g = rgba.g / 255,
+            b = rgba.b / 255,
+            max = Math.max(r, g, b), min = Math.min(r, g, b),
+            h, s, l = (max + min) / 2,
+            d
+        ;
+
+        if (max === min) {
+            h = s = 0; // achromatic
+        } else {
+            d = max - min;
+            s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+            switch (max) {
+                case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+                case g: h = (b - r) / d + 2; break;
+                case b: h = (r - g) / d + 4; break;
+            }
+            h /= 6;
+        }
+
+        return { h: h, s: s, l: l, a: rgba.a };
+    };
+
+    return C;
+
+}());
+
+/*jshint white:true */
+
+//****** file: constants.js ******
+
+    // constants, shared to all instances
+    var
+        VERSION = '0.1.7a',
+        ATTRIBUTION = '&copy; <a href="http://osmbuildings.org">OSM Buildings</a>',
+
+        PI = Math.PI,
+        HALF_PI = PI / 2,
+        QUARTER_PI = PI / 4,
+        RAD = 180 / PI,
+
+        TILE_SIZE = 256,
+        MIN_ZOOM = 14, // for buildings data only, GeoJSON should not be affected
+
+        CAM_Z = 400,
+        MAX_HEIGHT = CAM_Z - 50,
+
+        LAT = 'latitude', LON = 'longitude',
+        HEIGHT = 0, FOOTPRINT = 1, COLOR = 2, IS_NEW = 3
+    ;
+
+
+//****** file: prefix.class.js ******
+
+    global.OSMBuildings = function (u) {
+
+
+//****** file: variables.js ******
+
+        // private variables, specific to an instance
+        var
+            width = 0, height = 0,
+            halfWidth = 0, halfHeight = 0,
+            originX = 0, originY = 0,
+            zoom, size,
+
+            req,
+
+            canvas, context,
+
+            url,
+            strokeRoofs,
+            wallColor = new Color(200, 190, 180),
+            roofColor,
+            strokeColor = new Color(145, 140, 135),
+
+            rawData,
+            meta, data,
+
+            zoomAlpha = 1,
+            fadeFactor = 1,
+            fadeTimer,
+
+            minZoom = MIN_ZOOM,
+            maxZoom = 20,
+            camX, camY,
+
+            isZooming
+        ;
+
+
+//****** file: functions.js ******
+
+        function createCanvas(parentNode) {
+            canvas = doc.createElement('canvas');
+            canvas.style.webkitTransform = 'translate3d(0,0,0)'; // turn on hw acceleration
+            canvas.style.imageRendering = 'optimizeSpeed';
+            canvas.style.position = 'absolute';
+            canvas.style.pointerEvents = 'none';
+            canvas.style.left = 0;
+            canvas.style.top = 0;
+            parentNode.appendChild(canvas);
+
+            context = canvas.getContext('2d');
+            context.lineCap = 'round';
+            context.lineJoin = 'round';
+            context.lineWidth = 1;
+
+            try {
+                context.mozImageSmoothingEnabled = false;
+            } catch (err) {
+            }
+
+            return canvas;
+        }
+
+        function destroyCanvas() {
+            canvas.parentNode.removeChild(canvas);
+        }
+
+        function pixelToGeo(x, y) {
+            var res = {};
+            x /= size;
+            y /= size;
+            res[LAT] = y <= 0  ? 90 : y >= 1 ? -90 : RAD * (2 * atan(exp(PI * (1 - 2 * y))) - HALF_PI),
+            res[LON] = (x === 1 ?  1 : (x % 1 + 1) % 1) * 360 - 180;
+            return res;
+        }
+
+        function geoToPixel(lat, lon) {
+            var
+                latitude = min(1, max(0, 0.5 - (log(tan(QUARTER_PI + HALF_PI * lat / 180)) / PI) / 2)),
+                longitude = lon / 360 + 0.5
+            ;
+            return {
+                x: ~~(longitude * size),
+                y: ~~(latitude  * size)
+            };
+        }
+
+        function template(str, data) {
+            return str.replace(/\{ *([\w_]+) *\}/g, function (x, key) {
+                return data[key];
+            });
+        }
+
+
+//****** file: data.js ******
+
+        function request(url, callbackFn) {
+            var
+                el = doc.documentElement,
+                callbackName = 'jsonpCallback',
+                script = doc.createElement('script')
+            ;
+            global[callbackName] = function (res) {
+                delete global[callbackName];
+                el.removeChild(script);
+                callbackFn(res);
+            };
+            el.insertBefore(script, el.lastChild).src = url.replace(/\{callback\}/, callbackName);
+        }
+
+        function loadData() {
+            if (!url || zoom < MIN_ZOOM) {
+                return;
+            }
+            var
+                // create bounding box of double viewport size
+                nw = pixelToGeo(originX         - halfWidth, originY          - halfHeight),
+                se = pixelToGeo(originX + width + halfWidth, originY + height + halfHeight)
+            ;
+
+            request(template(url, {
+                w: nw[LON],
+                n: nw[LAT],
+                e: se[LON],
+                s: se[LAT]
+            }), onDataLoaded);
+        }
+
+        function onDataLoaded(res) {
+            var
+                i, il,
+                resData, resMeta,
+                keyList = [], k,
+                offX = 0, offY = 0
+            ;
+
+            minZoom = MIN_ZOOM;
+            setZoom(zoom); // recalculating all zoom related variables
+            req = null;
+
+            // no response or response not matching current zoom (= too old response)
+            if (!res || res.meta.z !== zoom) {
+                return;
+            }
+
+            resMeta = res.meta;
+            resData = res.data;
+
+            // offset between old and new data set
+            if (meta && data && meta.z === resMeta.z) {
+                offX = meta.x - resMeta.x;
+                offY = meta.y - resMeta.y;
+
+                // identify already present buildings to fade in new ones
+                for (i = 0, il = data.length; i < il; i++) {
+                    // id key: x,y of first point - good enough
+                    keyList[i] = (data[i][FOOTPRINT][0] + offX) + ',' + (data[i][FOOTPRINT][1] + offY);
+                }
+            }
+
+            meta = resMeta;
+            data = [];
+
+            for (i = 0, il = resData.length; i < il; i++) {
+                data[i] = resData[i];
+                data[i][HEIGHT] = min(data[i][HEIGHT], MAX_HEIGHT);
+                k = data[i][FOOTPRINT][0] + ',' + data[i][FOOTPRINT][1];
+                data[i][IS_NEW] = !(keyList && ~keyList.indexOf(k));
+            }
+
+            resMeta = resData = keyList = null; // gc
+
+            fadeIn();
+        }
+
+        // detect polygon winding direction: clockwise or counter clockwise
+        function getPolygonWinding(points) {
+            var
+                x1, y1, x2, y2,
+                a = 0,
+                i, il
+            ;
+            for (i = 0, il = points.length - 3; i < il; i += 2) {
+                x1 = points[i];
+                y1 = points[i + 1];
+                x2 = points[i + 2];
+                y2 = points[i + 3];
+                a += x1 * y2 - x2 * y1;
+            }
+            return (a / 2) > 0 ? 'CW' : 'CCW';
+        }
+
+        // make polygon winding clockwise. This is needed for proper backface culling on client side.
+        function makeClockwiseWinding(points) {
+            var winding = getPolygonWinding(points);
+            if (winding === 'CW') {
+                return points;
+            }
+            var revPoints = [];
+            for (var i = points.length - 2; i >= 0; i -= 2) {
+                revPoints.push(points[i], points[i + 1]);
+            }
+            return revPoints;
+        }
+
+        function scaleData(data, isNew) {
+            var
+                res = [],
+                i, il, j, jl,
+                item,
+                coords, footprint,
+                p,
+                z = maxZoom - zoom
+            ;
+
+            for (i = 0, il = data.length; i < il; i++) {
+                item = data[i];
+                coords = item[FOOTPRINT];
+                footprint = new Int32Array(coords.length);
+                for (j = 0, jl = coords.length - 1; j < jl; j += 2) {
+                    p = geoToPixel(coords[j], coords[j + 1]);
+                    footprint[j]     = p.x;
+                    footprint[j + 1] = p.y;
+                }
+                res[i] = [];
+                res[i][HEIGHT]    = min(item[HEIGHT] >> z, MAX_HEIGHT);
+                res[i][FOOTPRINT] = footprint;
+                res[i][COLOR]     = item[COLOR];
+                res[i][IS_NEW]    = isNew;
+            }
+
+            return res;
+        }
+
+        function geoJSON(url, isLatLon) {
+            if (typeof url === 'object') {
+                setData(url, !isLatLon);
+                return;
+            }
+            request(url, function (res) {
+                setData(res, !isLatLon);
+            });
+        }
+
+        function parseGeoJSON(json, isLonLat, res) {
+            if (res === undefined) {
+                res = [];
+            }
+
+            var
+                i, il,
+                j, jl,
+                features = json[0] ? json : json.features,
+                geometry, polygons, coords, properties,
+                footprint, heightSum,
+                propHeight, propWallColor, propRoofColor,
+                lat = isLonLat ? 1 : 0,
+                lon = isLonLat ? 0 : 1,
+                alt = 2,
+                item
+            ;
+
+            if (features) {
+                for (i = 0, il = features.length; i < il; i++) {
+                    parseGeoJSON(features[i], isLonLat, res);
+                }
+                return res;
+            }
+
+            if (json.type === 'Feature') {
+                geometry = json.geometry;
+                properties = json.properties;
+            }
+        //      else geometry = json
+
+            if (geometry.type === 'Polygon') {
+                polygons = [geometry.coordinates];
+            }
+            if (geometry.type === 'MultiPolygon') {
+                polygons = geometry.coordinates;
+            }
+
+            if (polygons) {
+                propHeight = properties.height;
+                if (properties.color || properties.wallColor) {
+                    propWallColor = Color.parse(properties.color || properties.wallColor);
+                }
+                if (properties.roofColor) {
+                    propRoofColor = Color.parse(properties.roofColor);
+                }
+
+                for (i = 0, il = polygons.length; i < il; i++) {
+                    coords = polygons[i][0];
+                    footprint = [];
+                    heightSum = 0;
+                    for (j = 0, jl = coords.length; j < jl; j++) {
+                        footprint.push(coords[j][lat], coords[j][lon]);
+                        heightSum += propHeight || coords[j][alt] || 0;
+                    }
+
+                    if (heightSum) {
+                        item = [];
+                        item[HEIGHT] = ~~(heightSum / coords.length);
+                        item[FOOTPRINT] = makeClockwiseWinding(footprint);
+                        if (propWallColor || propRoofColor) {
+                            item[COLOR] = [propWallColor, propRoofColor];
+                        }
+                        res.push(item);
+                    }
+                }
+            }
+
+            return res;
+        }
+
+        function setData(json, isLonLat) {
+            if (!json) {
+                rawData = null;
+                render(); // effectively clears
+                return;
+            }
+
+            rawData = parseGeoJSON(json, isLonLat);
+            minZoom = 0;
+            setZoom(zoom); // recalculating all zoom related variables
+
+            meta = {
+                n: 90,
+                w: -180,
+                s: -90,
+                e: 180,
+                x: 0,
+                y: 0,
+                z: zoom
+            };
+            data = scaleData(rawData, true);
+
+            fadeIn();
+        }
+
+//****** file: properties.js ******
+
+        function setSize(w, h) {
+            width  = w;
+            height = h;
+            halfWidth  = ~~(width / 2);
+            halfHeight = ~~(height / 2);
+            camX = halfWidth;
+            camY = height;
+            canvas.width = width;
+            canvas.height = height;
+        }
+
+        function setOrigin(x, y) {
+            originX = x;
+            originY = y;
+        }
+
+        function setZoom(z) {
+            zoom = z;
+            size = TILE_SIZE << zoom;
+            zoomAlpha = 1 - (zoom - minZoom) * 0.3 / (maxZoom - minZoom);
+        }
+
+        function setCam(x, y) {
+            camX = x;
+            camY = y;
+        }
+
+        function setStyle(style) {
+            style = style || {};
+            strokeRoofs = style.strokeRoofs !== undefined ? style.strokeRoofs : strokeRoofs;
+            if (style.color || style.wallColor) {
+                wallColor = Color.parse(style.color || style.wallColor);
+            }
+            if (style.roofColor !== undefined) { // allow explicit falsy values in order to remove roof color
+                roofColor = Color.parse(style.roofColor);
+            }
+            render();
+        }
+
+
+//****** file: events.js ******
+
+        function onResize(e) {
+            setSize(e.width, e.height);
+            render();
+            loadData();
+        }
+
+        function onMove(e) {
+            setOrigin(e.x, e.y);
+            render();
+        }
+
+        function onMoveEnd(e) {
+            var
+                nw = pixelToGeo(originX,         originY),
+                se = pixelToGeo(originX + width, originY + height)
+            ;
+            render();
+            // check, whether viewport is still within loaded data bounding box
+            if (meta && (nw[LAT] > meta.n || nw[LON] < meta.w || se[LAT] < meta.s || se[LON] > meta.e)) {
+                loadData();
+            }
+        }
+
+        function onZoomStart(e) {
+            isZooming = true;
+            render(); // effectively clears because of isZooming flag
+        }
+
+        function onZoomEnd(e) {
+            isZooming = false;
+            setZoom(e.zoom);
+
+            if (rawData) {
+                data = scaleData(rawData);
+                render();
+            } else {
+                render();
+                loadData();
+            }
+        }
+
+
+//****** file: render.js ******
+
+        function fadeIn() {
+            fadeFactor = 0;
+            clearInterval(fadeTimer);
+            fadeTimer = setInterval(function () {
+                fadeFactor += 0.5 * 0.2; // amount * easing
+                if (fadeFactor > 1) {
+                    clearInterval(fadeTimer);
+                    fadeFactor = 1;
+                    // unset 'already present' marker
+                    for (var i = 0, il = data.length; i < il; i++) {
+                        data[i][IS_NEW] = 0;
+                    }
+                }
+                render();
+            }, 33);
+        }
+
+        function render() {
+            context.clearRect(0, 0, width, height);
+
+            // data needed for rendering
+            if (!meta || !data) {
+                return;
+            }
+
+            // show buildings in high zoom levels only
+            // avoid rendering during zoom
+            if (zoom < minZoom || isZooming) {
+                return;
+            }
+
+            var
+                i, il, j, jl,
+                item,
+                f, h, m,
+                x, y,
+                offX = originX - meta.x,
+                offY = originY - meta.y,
+                footprint, roof, walls,
+                isVisible,
+                ax, ay, bx, by, _a, _b,
+                wallColorAlpha = wallColor.adjustAlpha(zoomAlpha) + '',
+                roofColorAlpha = (roofColor || wallColor.adjustLightness(1.2)).adjustAlpha(zoomAlpha) + ''
+            ;
+
+            if (strokeRoofs) {
+                context.strokeStyle = strokeColor.adjustAlpha(zoomAlpha) + '';
+            }
+
+            for (i = 0, il = data.length; i < il; i++) {
+                item = data[i];
+
+                isVisible = false;
+                f = item[FOOTPRINT];
+                footprint = []; // typed array would be created each pass and is way too slow
+                for (j = 0, jl = f.length - 1; j < jl; j += 2) {
+                    footprint[j]     = x = (f[j]     - offX);
+                    footprint[j + 1] = y = (f[j + 1] - offY);
+
+                    // checking footprint is sufficient for visibility
+                    if (!isVisible) {
+                        isVisible = (x > 0 && x < width && y > 0 && y < height);
+                    }
+                }
+
+                if (!isVisible) {
+                    continue;
+                }
+
+                context.fillStyle = item[COLOR] && item[COLOR][0] ? item[COLOR][0].adjustAlpha(zoomAlpha) + '' : wallColorAlpha;
+
+                // when fading in, use a dynamic height
+                h = item[IS_NEW] ? item[HEIGHT] * fadeFactor : item[HEIGHT];
+
+                // precalculating projection height scale
+                m = CAM_Z / (CAM_Z - h);
+
+                roof = []; // typed array would be created each pass and is way too slow
+                walls = [];
+
+                for (j = 0, jl = footprint.length - 3; j < jl; j += 2) {
+                    ax = footprint[j];
+                    ay = footprint[j + 1];
+                    bx = footprint[j + 2];
+                    by = footprint[j + 3];
+
+                    // project 3d to 2d on extruded footprint
+                    _a = project(ax, ay, m);
+                    _b = project(bx, by, m);
+
+                    // backface culling check. could this be precalculated partially?
+                    if ((bx - ax) * (_a.y - ay) > (_a.x - ax) * (by - ay)) {
+                        // face combining
+                        if (!walls.length) {
+                            walls.unshift(ay + 0.5);
+                            walls.unshift(ax + 0.5);
+                            walls.push(_a.x, _a.y);
+                        }
+                        walls.unshift(by + 0.5);
+                        walls.unshift(bx + 0.5);
+                        walls.push(_b.x, _b.y);
+                    } else {
+                        drawShape(walls);
+                        walls = [];
+                    }
+                    roof[j]     = _a.x;
+                    roof[j + 1] = _a.y;
+                }
+
+                drawShape(walls);
+
+                // TODO refactor this to a lookup table
+                // fill roof and optionally stroke it
+                context.fillStyle = !item[COLOR] ? roofColorAlpha : // no item color => use default roof color (which is in worst case build from default wall color)
+                    item[COLOR][1] ? item[COLOR][1].adjustAlpha(zoomAlpha) + '' : // item roof color exists => adapt & use it
+                    roofColor ? roofColorAlpha : // default roof color exists => use it
+                    item[COLOR][0].adjustLightness(1.2).adjustAlpha(zoomAlpha) + '' // item wall color exists => adapt & use it
+                ;
+
+                drawShape(roof, strokeRoofs);
+            }
+        }
+
+        function debugMarker(x, y, color, size) {
+            context.fillStyle = color || '#ffcc00';
+            context.beginPath();
+            context.arc(x, y, size || 3, 0, PI * 2, true);
+            context.closePath();
+            context.fill();
+        }
+
+        function drawShape(points, stroke) {
+            if (!points.length) {
+                return;
+            }
+
+            context.beginPath();
+            context.moveTo(points[0], points[1]);
+            for (var i = 2, il = points.length; i < il; i += 2) {
+                context.lineTo(points[i], points[i + 1]);
+            }
+            context.closePath();
+            if (stroke) {
+                context.stroke();
+            }
+            context.fill();
+        }
+
+        function project(x, y, m) {
+            return {
+                x: ~~((x - camX) * m + camX) + 0.5, // + 0.5: disabling(!) anti alias
+                y: ~~((y - camY) * m + camY) + 0.5  // + 0.5: disabling(!) anti alias
+            };
+        }
+
+
+//****** file: public.js ******
+
+        this.setStyle = function (style) {
+            setStyle(style);
+            return this;
+        };
+
+        this.geoJSON = function (url, isLatLon) {
+            geoJSON(url, isLatLon);
+            return this;
+        };
+
+        this.setCamOffset = function (x, y) {
+            camX = halfWidth + x;
+            camY = height    + y;
+        };
+
+        this.setMaxZoom = function (z) {
+            maxZoom = z;
+        };
+
+        this.createCanvas  = createCanvas;
+        this.destroyCanvas = destroyCanvas;
+        this.loadData      = loadData;
+        this.onMoveEnd     = onMoveEnd;
+        this.onZoomEnd     = onZoomEnd;
+        this.onZoomStart   = onZoomStart;
+        this.render        = render;
+        this.setOrigin     = setOrigin;
+        this.setSize       = setSize;
+        this.setZoom       = setZoom;
+
+
+//****** file: suffix.class.js ******
+
+        url = u;
+    };
+
+    global.OSMBuildings.VERSION = VERSION;
+    global.OSMBuildings.ATTRIBUTION = ATTRIBUTION;
+
+
+//****** file: suffix.js ******
+
+}(this));
+
+/*jshint bitwise:true */
+
+//****** file: Leaflet.js ******
+
+L.BuildingsLayer = L.Class.extend({
+
+    map: null,
+    osmb: null,
+    canvas: null,
+
+    blockMoveEvent: null, // needed as Leaflet fires moveend and zoomend together
+
+    lastX: 0,
+    lastY: 0,
+
+    initialize: function (options) {
+        options = L.Util.setOptions(this, options);
+    },
+
+    onMove: function () {
+        var mp = L.DomUtil.getPosition(this.map._mapPane);
+        this.osmb.setCamOffset(
+            this.lastX - mp.x,
+            this.lastY - mp.y
+        );
+        this.osmb.render();
+    },
+
+    onMoveEnd: function () {
+        if (this.blockMoveEvent) {
+            this.blockMoveEvent = false;
+            return;
+        }
+
+        var
+            mp = L.DomUtil.getPosition(this.map._mapPane),
+            po = this.map.getPixelOrigin()
+        ;
+
+        this.lastX = mp.x;
+        this.lastY = mp.y;
+        this.canvas.style.left = -mp.x + 'px';
+        this.canvas.style.top  = -mp.y + 'px';
+        this.osmb.setCamOffset(0, 0);
+
+        this.osmb.setSize(this.map._size.x, this.map._size.y); // in case this is triggered by resize
+        this.osmb.setOrigin(po.x - mp.x, po.y - mp.y);
+        this.osmb.onMoveEnd();
+    },
+
+    onZoomStart: function () {
+        this.osmb.onZoomStart();
+    },
+
+    onZoomEnd: function () {
+        var
+            mp = L.DomUtil.getPosition(this.map._mapPane),
+            po = this.map.getPixelOrigin()
+        ;
+        this.osmb.setOrigin(po.x - mp.x, po.y - mp.y);
+        this.osmb.onZoomEnd({ zoom: this.map._zoom });
+        this.blockMoveEvent = true;
+    },
+
+    addTo: function (map) {
+        map.addLayer(this);
+        return this;
+    },
+
+    onAdd: function (map) {
+        this.map = map;
+        this.osmb = new OSMBuildings(this.options.url);
+
+        this.canvas = this.osmb.createCanvas(this.map._panes.overlayPane);
+        this.osmb.maxZoom = this.map._layersMaxZoom;
+
+        var
+            mp = L.DomUtil.getPosition(this.map._mapPane),
+            po = this.map.getPixelOrigin()
+        ;
+
+        this.osmb.setSize(this.map._size.x, this.map._size.y);
+        this.osmb.setOrigin(po.x - mp.x, po.y - mp.y);
+        this.osmb.setZoom(this.map._zoom);
+
+        this.canvas.style.left = -mp.x + 'px';
+        this.canvas.style.top  = -mp.y + 'px';
+
+        this.map.on({
+            move: this.onMove,
+            moveend: this.onMoveEnd,
+            zoomstart: this.onZoomStart,
+            zoomend: this.onZoomEnd
+        }, this);
+
+//        var onZoom = function (opt) {
+//            var
+//                scale = this.map.getZoomScale(opt.zoom),
+//                offset = this.map._getCenterOffset(opt.center).divideBy(1 - 1 / scale),
+//                viewportPos = this.map.containerPointToLayerPoint(this.map.getSize().multiplyBy(-1)),
+//                origin = viewportPos.add(offset).round()
+//            ;
+//
+//            this.canvas.style[L.DomUtil.TRANSFORM] = L.DomUtil.getTranslateString((origin.multiplyBy(-1).add(L.DomUtil.getPosition(this.map._mapPane).multiplyBy(-1)).multiplyBy(scale).add(origin))) + ' scale(' + scale + ') ';
+//            this.canvas.style.border = "3px solid red";
+//            isZooming = true;
+//        };
+
+        if (this.map.options.zoomAnimation) {
+            this.canvas.className = 'leaflet-zoom-animated';
+//          this.map.on('zoomanim', onZoom);
+        }
+
+        this.map.attributionControl.addAttribution(OSMBuildings.ATTRIBUTION);
+
+        this.osmb.loadData();
+        this.osmb.render(); // in case of for re-adding this layer
+    },
+
+    onRemove: function (map) {
+        map.attributionControl.removeAttribution(OSMBuildings.ATTRIBUTION);
+
+        map.off({
+            move: this.onMove,
+            moveend: this.onMoveEnd,
+            zoomstart: this.onZoomStart,
+            zoomend: this.onZoomEnd
+        }, this);
+
+        this.canvas = this.osmb.destroyCanvas();
+        this.map = null;
+        this.osmb = null;
+    },
+
+    geoJSON: function (url, isLatLon) {
+        return this.osmb.geoJSON(url, isLatLon);
+    },
+
+    setStyle: function (style)  {
+        return this.osmb.setStyle(style);
+    }
+});
+

@@ -14,21 +14,10 @@ if (!isset($_GET['n']) || !isset($_GET['w']) || !isset($_GET['s']) || !isset($_G
     exit;
 }
 
-if (!isset($_GET['z'])) {
-    header('HTTP/1.0 400 Bad Request');
-    echo 'Zoom level missing.';
-    exit;
-}
-
 $n = $_GET['n'];
 $w = $_GET['w'];
 $s = $_GET['s'];
 $e = $_GET['e'];
-
-$Z = (int)$_GET['z'];
-$z = $maxZoom - $Z;
-
-$XY = geoToPixel($n, $w, $Z);
 
 //*****************************************************************************
 
@@ -52,10 +41,7 @@ $json = array(
         'n' => crop($_GET['n']),
         'w' => crop($_GET['w']),
         's' => crop($_GET['s']),
-        'e' => crop($_GET['e']),
-        'x' => $XY['x'],
-        'y' => $XY['y'],
-        'z' => $Z
+        'e' => crop($_GET['e'])
     ),
     'data' => array(),
 );
@@ -65,19 +51,15 @@ $json = array(
 header('Content-Type: application/json; charset=utf-8');
 
 while ($row = $source->fetch()) {
-    $h = ($row->height ? $row->height : 5)*$heightScale >> $z;
+    // $h = ($row->height ? $row->height : 5)*$heightScale >> $z;
 
-    if ($h <= 1) {
-        continue;
-    }
-
+    $h = $row->height * 1;
     $f = strToPoly($row->footprint);
 
     $fp = array();
-    for ($i = 0; $i < count($f)-1; $i+=2) {
-        $px = geoToPixel($f[$i], $f[$i+1], $Z);
-        $fp[$i]   = $px['x'] - $XY['x'] + $offsetX;
-        $fp[$i+1] = $px['y'] - $XY['y'] + $offsetY;
+    for ($i = 0; $i < count($f) - 1; $i += 2) {
+        $fp[$i]     = crop($f[$i + 1]);
+        $fp[$i + 1] = crop($f[$i]);
     }
 
     // Make polygon winding clockwise. This is needed for proper backface culling on client side.
@@ -87,4 +69,10 @@ while ($row = $source->fetch()) {
     $json['data'][] = array($h, $fp);
 }
 
-echo json_encode($json);
+if ($_GET['callback']) {
+    header('Content-Type: application/javascript; charset=utf-8');
+    echo $_GET['callback'].'('.json_encode($json).');';
+} else {
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode($json);
+}

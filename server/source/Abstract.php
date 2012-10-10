@@ -8,8 +8,7 @@ abstract class Source_Abstract
     protected $_table;
     private static $validSources = array("Mysql", "Mapnik");
 
-    public function __construct(array $options = array())
-    {
+    public function __construct(array $options = array()) {
         $this->_options = $options;
         $this->init();
     }
