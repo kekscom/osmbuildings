@@ -5,8 +5,6 @@
             originX = 0, originY = 0,
             zoom, size,
 
-            req,
-
             canvas, context,
 
             url,
@@ -16,7 +14,7 @@
             strokeColor = new Color(145, 140, 135),
 
             rawData,
-            meta, data,
+            meta, data, renderData,
 
             zoomAlpha = 1,
             fadeFactor = 1,

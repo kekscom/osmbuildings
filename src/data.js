@@ -26,53 +26,38 @@
                 w: nw[LON],
                 n: nw[LAT],
                 e: se[LON],
-                s: se[LAT]
-            }), onDataLoaded);
+                s: se[LAT],
+                callback: '{callback}' // doing this in order to keep the callback tag
+            }), setData2);
         }
 
-        function onDataLoaded(res) {
+        function setData2(res) {
             var
                 i, il,
-                resData, resMeta,
-                keyList = [], k,
-                offX = 0, offY = 0
+                keyList = [], k
             ;
 
-            minZoom = MIN_ZOOM;
-            setZoom(zoom); // recalculating all zoom related variables
-            req = null;
-
-            // no response or response not matching current zoom (= too old response)
-            if (!res || res.meta.z !== zoom) {
-                return;
-            }
-
-            resMeta = res.meta;
-            resData = res.data;
-
-            // offset between old and new data set
-            if (meta && data && meta.z === resMeta.z) {
-                offX = meta.x - resMeta.x;
-                offY = meta.y - resMeta.y;
-
-                // identify already present buildings to fade in new ones
+            if (meta && data) {
+                // identify present buildings in order to fade in new ones
                 for (i = 0, il = data.length; i < il; i++) {
-                    // id key: x,y of first point - good enough
-                    keyList[i] = (data[i][FOOTPRINT][0] + offX) + ',' + (data[i][FOOTPRINT][1] + offY);
+                    // key: x,y of first point - good enough
+                    keyList[i] = (data[i][FOOTPRINT][0]) + ',' + (data[i][FOOTPRINT][1]);
                 }
             }
 
-            meta = resMeta;
+            meta = res.meta;
             data = [];
-
-            for (i = 0, il = resData.length; i < il; i++) {
-                data[i] = resData[i];
+            for (i = 0, il = res.data.length; i < il; i++) {
+                data[i] = res.data[i];
                 data[i][HEIGHT] = min(data[i][HEIGHT], MAX_HEIGHT);
                 k = data[i][FOOTPRINT][0] + ',' + data[i][FOOTPRINT][1];
                 data[i][IS_NEW] = !(keyList && ~keyList.indexOf(k));
             }
 
-            resMeta = resData = keyList = null; // gc
+            keyList = null; // gc
+// ZOOM, scale data
+//            minZoom = MIN_ZOOM;
+//            setZoom(zoom); // recalculating all zoom related variables
 
             fadeIn();
         }
