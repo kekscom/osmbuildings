@@ -42,7 +42,11 @@
                 i, il,
                 resData, resMeta,
                 keyList = [], k,
-                offX = 0, offY = 0
+                offX = 0, offY = 0,
+                item,
+                // TODO generalize zoomFactor
+                zoomFactor = (zoom - minZoom) / (maxZoom - zoom),
+                zoomSimplify = 1 + ~~(zoomFactor * 6)
             ;
 
             minZoom = MIN_ZOOM;
@@ -73,10 +77,19 @@
             data = [];
 
             for (i = 0, il = resData.length; i < il; i++) {
-                data[i] = resData[i];
-                data[i][HEIGHT] = min(data[i][HEIGHT], MAX_HEIGHT);
-                k = data[i][FOOTPRINT][0] + ',' + data[i][FOOTPRINT][1];
-                data[i][IS_NEW] = !(keyList && ~keyList.indexOf(k));
+                item = {};
+                item[FOOTPRINT] = simplify(resData[i][FOOTPRINT], zoomSimplify);
+
+                if (!item[FOOTPRINT]) {
+                    continue;
+                }
+
+                item[HEIGHT] = min(resData[i][HEIGHT], MAX_HEIGHT);
+
+                k = resData[i][FOOTPRINT][0] + ',' + resData[i][FOOTPRINT][1];
+                item[IS_NEW] = !(keyList && ~keyList.indexOf(k));
+
+                data.push(item);
             }
 
             resMeta = resData = keyList = null; // gc

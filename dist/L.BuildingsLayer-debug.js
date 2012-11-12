@@ -153,6 +153,50 @@ var Color = (function () {
 
 /*jshint white:true */
 
+//****** file: simplify.js ******
+
+/*jshint white:false */
+
+/**
+ * inspired by Vladimir Agafonkin's code, see mourner.github.com/simplify-js
+ */
+
+function getDistance(p1, p2) {
+    var dx = p1[0] - p2[0],
+        dy = p1[1] - p2[1]
+    ;
+    return dx * dx + dy * dy;
+}
+
+function simplify(points, tolerance) {
+    if (points.length <= 8) {
+        return points;
+    }
+
+    var sqTolerance = tolerance * tolerance,
+        p,
+        prevPoint = [points[0], points[1]],
+        newPoints = [points[0], points[1]]
+    ;
+
+    for (var i = 2, il = points.length; i < il; i += 2) {
+        p = [points[i], points[i + 1]];
+
+        if (getDistance(p, prevPoint) > sqTolerance) {
+            newPoints.push(p[0], p[1]);
+            prevPoint = p;
+        }
+    }
+    if (prevPoint !== p) {
+        newPoints.push(p[0], p[1]);
+    }
+
+    return points.length > 2 ? newPoints : false;
+}
+
+/*jshint white:true */
+
+
 //****** file: constants.js ******
 
     // constants, shared to all instances
@@ -317,7 +361,11 @@ var Color = (function () {
                 i, il,
                 resData, resMeta,
                 keyList = [], k,
-                offX = 0, offY = 0
+                offX = 0, offY = 0,
+                item,
+                // TODO generalize zoomFactor
+                zoomFactor = (zoom - minZoom) / (maxZoom - zoom),
+                zoomSimplify = 1 + ~~(zoomFactor * 6)
             ;
 
             minZoom = MIN_ZOOM;
@@ -348,10 +396,19 @@ var Color = (function () {
             data = [];
 
             for (i = 0, il = resData.length; i < il; i++) {
-                data[i] = resData[i];
-                data[i][HEIGHT] = min(data[i][HEIGHT], MAX_HEIGHT);
-                k = data[i][FOOTPRINT][0] + ',' + data[i][FOOTPRINT][1];
-                data[i][IS_NEW] = !(keyList && ~keyList.indexOf(k));
+                item = {};
+                item[FOOTPRINT] = simplify(resData[i][FOOTPRINT], zoomSimplify);
+
+                if (!item[FOOTPRINT]) {
+                    continue;
+                }
+
+                item[HEIGHT] = min(resData[i][HEIGHT], MAX_HEIGHT);
+
+                k = resData[i][FOOTPRINT][0] + ',' + resData[i][FOOTPRINT][1];
+                item[IS_NEW] = !(keyList && ~keyList.indexOf(k));
+
+                data.push(item);
             }
 
             resMeta = resData = keyList = null; // gc
@@ -738,6 +795,10 @@ var Color = (function () {
                     roofColor ? roofColorAlpha : // default roof color exists => use it
                     item[COLOR][0].adjustLightness(1.2).adjustAlpha(zoomAlpha) + '' // item wall color exists => adapt & use it
                 ;
+
+if (roof.length <= 12) context.fillStyle = '#ff0000';
+if (roof.length <= 10) context.fillStyle = '#ff6666';
+if (roof.length <= 8) context.fillStyle = '#ffcccc';
 
                 drawShape(roof, strokeRoofs);
                 drawRoof(roof);

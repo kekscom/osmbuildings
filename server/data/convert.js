@@ -5,22 +5,21 @@ var
     pgHost = 'localhost:5432', // your postgres host and optionally port
     pgDatabase = 'postgis20', // your postgres database name
     pgTable = 'buildings_ffm', // your postgres table name
-    pgHeightField = 'COALESCE(height, \"building:height\")', // the field containing height info, usually just 'height' but you can also use COALESCE() statements here
+    pgHeightField = 'COALESCE(height, "building:height")', // the field containing height info, usually just 'height' but you can also use COALESCE() statements here
     pgFootprintField = 'the_geom', // the field containing geometry info
     pgCoords = 'lon, lat', // the coordinate order of your data
     pgBBox = null, // { n: .., w: .., s: .., e: .. } optional info to convert a certain segment of data (not tested yet)
 
     myTable = 'buildings', // the table name in mysql
     myFile = 'dump.sql', // the file name for dumping the data into
-    myCountry = 'de', // optional info to update just parts of the data
-    myCity = 'frankfurt' // optional info to update just parts of the data
+    myRegion = 'frankfurt' // optional info to update just parts of the data
 ;
 
 //*****************************************************************************
 
 var
     fs = require('fs'),
-    pg = require('pg');
+    pg = require('pg')
 ;
 
 //*****************************************************************************
@@ -82,23 +81,19 @@ var BulkInsert = function(handle, query, limit, callback) {
 //*****************************************************************************
 
 var writeStream = fs.createWriteStream(myFile);
-writeStream.write("DELETE FROM "+ myTable +" WHERE country='" + myCountry + "' AND city='" + myCity + "';\n");
+writeStream.write('DELETE FROM ' + myTable + ' WHERE region="' + myRegion + '";\n');
 
-var myInserter = new BulkInsert(writeStream, "INSERT INTO " + myTable + " (height, footprint, country, city) VALUES {values};\n", 5000);
+var inserter = new BulkInsert(writeStream, 'INSERT INTO ' + myTable + ' (height, footprint, region) VALUES {values};\n', 5000);
 
 var sql = new pg.Client('postgres://' + pgUsername + ':' + pgPassword + '@' + pgHost + '/' + pgDatabase);
 sql.connect();
 
-var query = "\
-    SELECT\
-        " + pgHeightField + " AS height,\
-        ST_AsText(ST_ExteriorRing(" + pgFootprintField + ")) AS footprint\
-    FROM\
-        " + pgTable + "\
-     WHERE " + filterByBBox(bbox) + "\
-    ORDER BY\
-        height DESC\
-";
+var query =
+    'SELECT ' + pgHeightField + ' AS height, ST_AsText(ST_ExteriorRing(' + pgFootprintField + ')) AS footprint ' +
+    'FROM ' + pgTable +
+    'WHERE ' + filterByBBox(bbox) +
+    'ORDER BY height DESC '
+;
 
 sql.query(query, function(err, res) {
     sql.end();
@@ -106,14 +101,13 @@ sql.query(query, function(err, res) {
     for (var i = 0, il = res.rows.length; i < il; i++) {
         var row = res.rows[i];
         var height = row.height ? row.height.replace(/\D/g, '') : null;
-        myInserter.add([
+        inserter.add([
             height || 'NULL',
-            'GEOMFROMTEXT(\'' + setLatLonOrder(row.footprint) + '\')',
-            '\'' + myCountry + '\'',
-            '\'' + myCity + '\''
+            'GEOMFROMTEXT("' + setLatLonOrder(row.footprint) + '")',
+            '"' + myRegion + '"'
         ]);
     }
 
-    myInserter.flush();
+    inserter.flush();
     writeStream.end();
 });
