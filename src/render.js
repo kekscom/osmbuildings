@@ -118,7 +118,7 @@
                 ;
 
                 drawShape(roof, strokeRoofs);
-                drawRoof(roof);
+                drawRoof(roof, h);
             }
         }
 
@@ -185,7 +185,7 @@ function drawRoof2(points) {
 }
 
 
-function drawRoof(points) {
+function drawRoof3(points) {
     context.fillStyle = 'rgba(240,0,0,0.25)';
     context.strokeStyle = strokeColor.adjustAlpha(zoomAlpha) + '';
 
@@ -219,29 +219,35 @@ function drawRoof(points) {
     context.stroke();
 }
 
-function drawRoof1(points) {
-    context.fillStyle = 'rgba(240,0,0,0.25)';
+function drawRoof(points, height) {
+    if (points.length !== 8 || height > 20) return;
+
     var
-        h = 20 + 10,
+        h = height * 1.2,
         center = [
             (points[0] + points[2] + points[4] + points[6]) / 4,
             (points[1] + points[3] + points[5] + points[7]) / 4
         ],
         apex = project(center[0], center[1], CAM_Z / (CAM_Z - h))
     ;
+    if (isNaN(center[0])) console.log(center, points);
+
+    context.fillStyle = 'rgba(250,0,0,0.25)';
     drawShape([
         points[0], points[1],
         points[2], points[3],
         apex.x, apex.y
     ], true);
     drawShape([
-        points[2], points[3],
-        points[4], points[5],
-        apex.x, apex.y
-    ], true);
-    drawShape([
         points[4], points[5],
         points[6], points[7],
+        apex.x, apex.y
+    ], true);
+
+    context.fillStyle = 'rgba(200,0,0,0.25)';
+    drawShape([
+        points[2], points[3],
+        points[4], points[5],
         apex.x, apex.y
     ], true);
     drawShape([
