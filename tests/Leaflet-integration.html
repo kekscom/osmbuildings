@@ -13,8 +13,8 @@
     }
     </style>
 
-    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.4.4/leaflet.css">
-    <script src="http://cdn.leafletjs.com/leaflet-0.4.4/leaflet.js"></script>
+    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.4.5/leaflet.css">
+    <script src="http://cdn.leafletjs.com/leaflet-0.4.5/leaflet.js"></script>
     <script src="../dist/L.BuildingsLayer-debug.js"></script>
 </head>
 
@@ -29,7 +29,7 @@
         { attribution: 'Map tiles &copy; <a href="http://mapbox.com">MapBox</a>', maxZoom: 17 }
     ).addTo(map);
 
-    var osmb = new L.BuildingsLayer({ url: '../server/?w={w}&n={n}&e={e}&s={s}&z={z}' }).addTo(map);
+    var osmb = new L.BuildingsLayer({ url: '../server/?w={w}&n={n}&e={e}&s={s}&z={z}' }).addTo(map).setStyle({ strokeRoofs: true });
     L.control.layers({}, { Buildings: osmb }).addTo(map);
     </script>
 </body>
