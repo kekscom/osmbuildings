@@ -117,8 +117,7 @@
                     item[COLOR][0].adjustLightness(1.2).adjustAlpha(zoomAlpha) + '' // item wall color exists => adapt & use it
                 ;
 
-                drawShape(roof, strokeRoofs);
-                drawRoof(roof, h);
+                drawRoof(roof, h, strokeRoofs);
             }
         }
 
@@ -219,46 +218,66 @@ function drawRoof3(points) {
     context.stroke();
 }
 
-function drawRoof(points, height) {
-    if (points.length !== 8 || height > 20) return;
+function drawRoof(points, height, strokeRoofs) {
+    if (height <= 20) {
+        context.fillStyle = 'rgba(250,0,0,0.25)';
+    }
+
+    if (points.length > 8 || height > 20) {
+        drawShape(points, strokeRoofs);
+        return;
+    }
 
     var
-        h = height * 1.2,
-        center = [
-            (points[0] + points[2] + points[4] + points[6]) / 4,
-            (points[1] + points[3] + points[5] + points[7]) / 4
-        ],
-        apex = project(center[0], center[1], CAM_Z / (CAM_Z - h))
+        h = height * 1.3,
+        cx = 0, cy = 0,
+        num = points.length / 2,
+        apex
     ;
-    if (isNaN(center[0])) console.log(center, points);
 
-    context.fillStyle = 'rgba(250,0,0,0.25)';
-    drawShape([
-        points[0], points[1],
-        points[2], points[3],
-        apex.x, apex.y
-    ], true);
-    drawShape([
-        points[4], points[5],
-        points[6], points[7],
-        apex.x, apex.y
-    ], true);
+    for (var i = 0, il = points.length - 1; i < il; i += 2) {
+        cx += points[i];
+        cy += points[i + 1];
+    }
 
-    context.fillStyle = 'rgba(200,0,0,0.25)';
+    apex = project(cx / num, cy / num, CAM_Z / (CAM_Z - h))
+
+    for (var i = 0, il = points.length - 3; i < il; i += 2) {
+        var ax = points[i];
+        var bx = points[i + 2];
+        var ay = points[i + 1];
+        var by = points[i + 3];
+
+        if ((ax - bx) > (ay - by)) {
+            context.fillStyle = 'rgba(250,0,0,0.25)';
+        } else {
+            context.fillStyle = 'rgba(250,100,100,0.25)';
+        }
+
+        drawShape([
+            points[i],     points[i + 1],
+            points[i + 2], points[i + 3],
+            apex.x, apex.y
+        ], true);
+    }
+
+    var ax = points[i];
+    var bx = points[0];
+    var ay = points[i + 1];
+    var by = points[1];
+
+    if ((ax - bx) > (ay - by)) {
+        context.fillStyle = 'rgba(250,0,0,0.25)';
+    } else {
+        context.fillStyle = 'rgba(250,100,100,0.25)';
+    }
+
     drawShape([
-        points[2], points[3],
-        points[4], points[5],
-        apex.x, apex.y
-    ], true);
-    drawShape([
-        points[6], points[7],
+        points[i], points[i + 1],
         points[0], points[1],
         apex.x, apex.y
     ], true);
 }
-
-
-
 
 
 
