@@ -176,6 +176,38 @@ var Color = (function () {
     ;
 
 
+//****** file: simplify.js ******
+
+    function getDistance(p1, p2) {
+        var dx = p1[0] - p2[0],
+            dy = p1[1] - p2[1]
+        ;
+        return dx * dx + dy * dy;
+    }
+
+    function simplify(points, tolerance) {
+        var sqTolerance = tolerance * tolerance,
+            p,
+            prevPoint = [points[0], points[1]],
+            newPoints = [points[0], points[1]]
+        ;
+
+        for (var i = 2, il = points.length - 3; i < il; i += 2) {
+            p = [points[i], points[i + 1]];
+            if (getDistance(p, prevPoint) > sqTolerance) {
+                newPoints.push(p[0], p[1]);
+                prevPoint = p;
+            }
+        }
+
+        if (p[0] !== points[0] || p[1] !== points[1]) {
+            newPoints.push(points[0], points[1]);
+        }
+
+        return newPoints;
+    }
+
+
 //****** file: prefix.class.js ******
 
     global.OSMBuildings = function (u) {
@@ -317,7 +349,9 @@ var Color = (function () {
                 i, il,
                 resData, resMeta,
                 keyList = [], k,
-                offX = 0, offY = 0
+                offX = 0, offY = 0,
+                item,
+                zoomSimplify = max(1, (zoom - minZoom) * 2)
             ;
 
             minZoom = MIN_ZOOM;
@@ -346,12 +380,21 @@ var Color = (function () {
 
             meta = resMeta;
             data = [];
-
             for (i = 0, il = resData.length; i < il; i++) {
-                data[i] = resData[i];
-                data[i][HEIGHT] = min(data[i][HEIGHT], MAX_HEIGHT);
-                k = data[i][FOOTPRINT][0] + ',' + data[i][FOOTPRINT][1];
-                data[i][IS_NEW] = !(keyList && ~keyList.indexOf(k));
+                item = {};
+
+                item[FOOTPRINT] = simplify(resData[i][FOOTPRINT], zoomSimplify);
+
+                if (item[FOOTPRINT].length < 8) { // 3 points & end = start (x2)
+                    continue;
+                }
+
+                item[HEIGHT] = min(resData[i][HEIGHT], MAX_HEIGHT);
+
+                k = resData[i][FOOTPRINT][0] + ',' + resData[i][FOOTPRINT][1];
+                item[IS_NEW] = !(keyList && ~keyList.indexOf(k));
+
+                data.push(item);
             }
 
             resMeta = resData = keyList = null; // gc
@@ -710,9 +753,9 @@ var Color = (function () {
                     _a = project(ax, ay, m);
                     _b = project(bx, by, m);
 
-                    // backface culling check. could this be precalculated partially?
+                    // backface culling check
                     if ((bx - ax) * (_a.y - ay) > (_a.x - ax) * (by - ay)) {
-                        // face combining
+/* face combining
                         if (!walls.length) {
                             walls.unshift(ay + 0.5);
                             walls.unshift(ax + 0.5);
@@ -724,12 +767,29 @@ var Color = (function () {
                     } else {
                         drawShape(walls);
                         walls = [];
+*/
+
+                        walls = [
+                            bx + 0.5, by + 0.5,
+                            ax + 0.5, ay + 0.5,
+                            _a.x, _a.y,
+                            _b.x, _b.y
+                        ];
+
+                        if ((ax < bx && ay < by) || (ax > bx && ay > by)) {
+                            context.fillStyle = wallColor.adjustAlpha(zoomAlpha).adjustLightness(0.8) + '';
+                        } else {
+                            context.fillStyle = item[COLOR] && item[COLOR][0] ? item[COLOR][0].adjustAlpha(zoomAlpha) + '' : wallColorAlpha;
+                        }
+
+                        drawShape(walls);
                     }
+
                     roof[j]     = _a.x;
                     roof[j + 1] = _a.y;
                 }
 
-                drawShape(walls);
+//                drawShape(walls);
 
                 // TODO refactor this to a lookup table
                 // fill roof and optionally stroke it

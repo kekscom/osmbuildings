@@ -92,9 +92,9 @@
                     _a = project(ax, ay, m);
                     _b = project(bx, by, m);
 
-                    // backface culling check. could this be precalculated partially?
+                    // backface culling check
                     if ((bx - ax) * (_a.y - ay) > (_a.x - ax) * (by - ay)) {
-                        // face combining
+/* face combining
                         if (!walls.length) {
                             walls.unshift(ay + 0.5);
                             walls.unshift(ax + 0.5);
@@ -106,12 +106,29 @@
                     } else {
                         drawShape(walls);
                         walls = [];
+*/
+
+                        walls = [
+                            bx + 0.5, by + 0.5,
+                            ax + 0.5, ay + 0.5,
+                            _a.x, _a.y,
+                            _b.x, _b.y
+                        ];
+
+                        if ((ax < bx && ay < by) || (ax > bx && ay > by)) {
+                            context.fillStyle = wallColor.adjustAlpha(zoomAlpha).adjustLightness(0.8) + '';
+                        } else {
+                            context.fillStyle = item[COLOR] && item[COLOR][0] ? item[COLOR][0].adjustAlpha(zoomAlpha) + '' : wallColorAlpha;
+                        }
+
+                        drawShape(walls);
                     }
+
                     roof[j]     = _a.x;
                     roof[j + 1] = _a.y;
                 }
 
-                drawShape(walls);
+//                drawShape(walls);
 
                 // TODO refactor this to a lookup table
                 // fill roof and optionally stroke it
