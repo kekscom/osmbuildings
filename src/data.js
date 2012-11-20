@@ -83,8 +83,10 @@
                 }
 
                 item[HEIGHT] = min(resData[i][HEIGHT], MAX_HEIGHT);
+                item[CENTER] = center(item[FOOTPRINT]);
+                item[BBOX]   = bbox(item[FOOTPRINT]);
 
-                k = resData[i][FOOTPRINT][0] + ',' + resData[i][FOOTPRINT][1];
+                k = item[FOOTPRINT][0] + ',' + item[FOOTPRINT][1];
                 item[IS_NEW] = !(keyList && ~keyList.indexOf(k));
 
                 data.push(item);

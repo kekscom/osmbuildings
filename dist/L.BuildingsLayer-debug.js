@@ -22,6 +22,7 @@
         atan = Math.atan,
         min = Math.min,
         max = Math.max,
+        abs = Math.abs,
         doc = global.document
     ;
 
@@ -172,18 +173,11 @@ var Color = (function () {
         MAX_HEIGHT = CAM_Z - 50,
 
         LAT = 'latitude', LON = 'longitude',
-        HEIGHT = 0, FOOTPRINT = 1, COLOR = 2, IS_NEW = 3
+        HEIGHT = 0, FOOTPRINT = 1, COLOR = 2, CENTER = 3, BBOX = 4, IS_NEW = 5
     ;
 
 
-//****** file: simplify.js ******
-
-    function getDistance(p1, p2) {
-        var dx = p1[0] - p2[0],
-            dy = p1[1] - p2[1]
-        ;
-        return dx * dx + dy * dy;
-    }
+//****** file: geometry.js ******
 
     function simplify(points, tolerance) {
         var sqTolerance = tolerance * tolerance,
@@ -194,7 +188,7 @@ var Color = (function () {
 
         for (var i = 2, il = points.length - 3; i < il; i += 2) {
             p = [points[i], points[i + 1]];
-            if (getDistance(p, prevPoint) > sqTolerance) {
+            if (distance(p, prevPoint) > sqTolerance) {
                 newPoints.push(p[0], p[1]);
                 prevPoint = p;
             }
@@ -207,6 +201,43 @@ var Color = (function () {
         return newPoints;
     }
 
+    function distance(p1, p2) {
+        var dx = p1[0] - p2[0],
+            dy = p1[1] - p2[1]
+        ;
+        return dx * dx + dy * dy;
+    }
+
+    function center(points) {
+        var
+            i, il,
+            len = points.length - 2,
+            x = 0, y = 0
+        ;
+        for (i = 0, il = len - 1; i < il; i += 2) {
+            x += points[i];
+            y += points[i + 1];
+        }
+
+        return [~~(x / len * 2), ~~(y / len * 2)];
+    }
+
+    function bbox(points) {
+        var
+            i, il,
+            len = points.length - 2,
+            minX = Infinity, maxX = -Infinity,
+            minY = Infinity, maxY = -Infinity
+        ;
+        for (i = 0, il = len - 1; i < il; i += 2) {
+            minX = Math.min(minX, points[i]);
+            maxX = Math.max(maxX, points[i]);
+            minY = Math.min(minY, points[i + 1]);
+            maxY = Math.max(maxY, points[i + 1]);
+        }
+
+        return [minX, minY, maxX, maxY];
+    }
 
 //****** file: prefix.class.js ******
 
@@ -390,12 +421,36 @@ var Color = (function () {
                 }
 
                 item[HEIGHT] = min(resData[i][HEIGHT], MAX_HEIGHT);
+                item[CENTER] = center(item[FOOTPRINT]);
+                item[BBOX]   = bbox(item[FOOTPRINT]);
 
-                k = resData[i][FOOTPRINT][0] + ',' + resData[i][FOOTPRINT][1];
+                k = item[FOOTPRINT][0] + ',' + item[FOOTPRINT][1];
                 item[IS_NEW] = !(keyList && ~keyList.indexOf(k));
 
                 data.push(item);
             }
+/*
+            data.sort(function (a, b) {
+                return a[CENTER][1]*a[HEIGHT] - b[CENTER][1]*b[HEIGHT];
+                var ax = ~~((a[CENTER][0] - camX) / 10);
+                var bx = ~~((b[CENTER][0] - camX) / 10);
+
+                if (ax === bx) {
+                    var ay = ~~(a[CENTER][1] / 10);
+                    var by = ~~(b[CENTER][1] / 10);
+                    return by - ay;
+                }
+
+                return ax - bx;
+
+//                if (a[CENTER][0] === b[CENTER][0]) {
+//                    return Math.abs(a[CENTER][1]) - Math.abs(b[CENTER][1]);
+//                }
+//                return b[CENTER][0] - a[CENTER][0];
+
+                return distance(b[CENTER], [camX, camY]) - distance(a[CENTER], [camX, camY]);
+            });
+*/
 
             resMeta = resData = keyList = null; // gc
 
@@ -627,7 +682,7 @@ var Color = (function () {
 
         function onMove(e) {
             setOrigin(e.x, e.y);
-            render();
+            //render();
         }
 
         function onMoveEnd(e) {
@@ -711,6 +766,55 @@ var Color = (function () {
             if (strokeRoofs) {
                 context.strokeStyle = strokeColor.adjustAlpha(zoomAlpha) + '';
             }
+
+data.sort(function(a, b) {
+    var dx = Math.abs(a[CENTER][0] - b[CENTER][0]);
+    var dy = Math.abs(a[CENTER][1] - b[CENTER][1]);
+    var d = dx * dx + dy * dy;
+
+    if (
+        (a[CENTER][0] > b[BBOX][0] && a[CENTER][0] < b[BBOX][2] &&  a[CENTER][1] > b[BBOX][1] && a[CENTER][1] < b[BBOX][3])
+    &&  (b[CENTER][0] > a[BBOX][0] && b[CENTER][0] < a[BBOX][2] &&  b[CENTER][1] > a[BBOX][1] && b[CENTER][1] < a[BBOX][3])
+    ) {
+        if ((a[HEIGHT] - b[HEIGHT])) {
+              return a[HEIGHT] - b[HEIGHT];
+        }
+    }
+
+//    if (d < 500 && (a[HEIGHT] - b[HEIGHT])) {
+//        return a[HEIGHT] - b[HEIGHT];
+//    }
+
+    if (dy > dx) {
+
+
+        return a[CENTER][1] - b[CENTER][1];
+    }
+        if ((a[HEIGHT] - b[HEIGHT])) {
+              return a[HEIGHT] - b[HEIGHT];
+        }
+
+    var res = a[CENTER][0] - b[CENTER][0];
+    return (a[CENTER][0] - offX) < camX && (b[CENTER][0] - offX) < camX ? res : -res;
+
+
+
+/*
+    // 3 REGELN: nebeneinander, Ã¼bereinander, ineinander
+
+
+    // wenn hoch INNERHALB niedrig, dann prio hoch
+
+// Y ORDER FEHLT NOCH
+// HOCH vs HOCH fehlt noch
+
+
+// WENN IN GLEICHER "ZEILE" => a.center.y in b.bbox.y && b.center.y in a.bbox.y
+    // works for x - order, but destroys y
+    var res = a[CENTER][0] - b[CENTER][0];
+    return (a[CENTER][0] - offX) < camX && (b[CENTER][0] - offX) < camX ? res : -res;
+*/
+});
 
             for (i = 0, il = data.length; i < il; i++) {
                 item = data[i];
@@ -800,7 +904,11 @@ var Color = (function () {
                 ;
 
                 drawShape(roof, strokeRoofs);
+
+//                debugMarker(item[CENTER][0] - offX, item[CENTER][1] - offY, '#000000');
+//                debugMarker(item[CENTER][0] - offX, item[CENTER][2] - offY, '#666666');
             }
+            debugMarker(camX, camY, '#ff0000', 5);
         }
 
         function debugMarker(x, y, color, size) {
