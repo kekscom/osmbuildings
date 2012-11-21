@@ -17,9 +17,9 @@ var Color = (function () {
             b = hue2rgb(p, q, hsla.h - 1 / 3);
         }
         return new Color(
-            ~~(r * 255),
-            ~~(g * 255),
-            ~~(b * 255),
+            r * 255 << 0,
+            g * 255 << 0,
+            b * 255 << 0,
             hsla.a
         );
     }

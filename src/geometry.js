@@ -38,7 +38,7 @@
             y += points[i + 1];
         }
 
-        return [~~(x / len * 2), ~~(y / len * 2)];
+        return [x / len * 2 << 0, y / len * 2 << 0];
     }
 
     function bbox(points) {

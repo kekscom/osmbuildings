@@ -218,7 +218,7 @@ data.sort(function(a, b) {
 
         function project(x, y, m) {
             return {
-                x: ~~((x - camX) * m + camX) + 0.5, // + 0.5: disabling(!) anti alias
-                y: ~~((y - camY) * m + camY) + 0.5  // + 0.5: disabling(!) anti alias
+                x: ((x - camX) * m + camX << 0) + 0.5, // + 0.5: disabling(!) anti alias
+                y: ((y - camY) * m + camY << 0) + 0.5  // + 0.5: disabling(!) anti alias
             };
         }
