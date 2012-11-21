@@ -230,7 +230,7 @@
 
                     if (heightSum) {
                         item = [];
-                        item[HEIGHT] = ~~(heightSum / coords.length);
+                        item[HEIGHT] = heightSum / coords.length << 0;
                         item[FOOTPRINT] = makeClockwiseWinding(footprint);
                         if (propWallColor || propRoofColor) {
                             item[COLOR] = [propWallColor, propRoofColor];

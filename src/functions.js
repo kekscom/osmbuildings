@@ -40,8 +40,8 @@
                 longitude = lon / 360 + 0.5
             ;
             return {
-                x: ~~(longitude * size),
-                y: ~~(latitude  * size)
+                x: longitude * size << 0,
+                y: latitude  * size << 0
             };
         }
 

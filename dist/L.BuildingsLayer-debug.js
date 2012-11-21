@@ -47,9 +47,9 @@ var Color = (function () {
             b = hue2rgb(p, q, hsla.h - 1 / 3);
         }
         return new Color(
-            ~~(r * 255),
-            ~~(g * 255),
-            ~~(b * 255),
+            r * 255 << 0,
+            g * 255 << 0,
+            b * 255 << 0,
             hsla.a
         );
     }
@@ -291,8 +291,8 @@ var Color = (function () {
                 longitude = lon / 360 + 0.5
             ;
             return {
-                x: ~~(longitude * size),
-                y: ~~(latitude  * size)
+                x: longitude * size << 0,
+                y: latitude  * size << 0
             };
         }
 
@@ -537,7 +537,7 @@ var Color = (function () {
 
                     if (heightSum) {
                         item = [];
-                        item[HEIGHT] = ~~(heightSum / coords.length);
+                        item[HEIGHT] = heightSum / coords.length << 0;
                         item[FOOTPRINT] = makeClockwiseWinding(footprint);
                         if (propWallColor || propRoofColor) {
                             item[COLOR] = [propWallColor, propRoofColor];
@@ -580,8 +580,8 @@ var Color = (function () {
         function setSize(w, h) {
             width  = w;
             height = h;
-            halfWidth  = ~~(width / 2);
-            halfHeight = ~~(height / 2);
+            halfWidth  = width / 2 << 0;
+            halfHeight = height / 2 << 0;
             camX = halfWidth;
             camY = height;
             canvas.width = width;
@@ -830,8 +830,8 @@ var Color = (function () {
 
         function project(x, y, m) {
             return {
-                x: ~~((x - camX) * m + camX) + 0.5, // + 0.5: disabling(!) anti alias
-                y: ~~((y - camY) * m + camY) + 0.5  // + 0.5: disabling(!) anti alias
+                x: ((x - camX) * m + camX << 0) + 0.5, // + 0.5: disabling(!) anti alias
+                y: ((y - camY) * m + camY << 0) + 0.5  // + 0.5: disabling(!) anti alias
             };
         }
 
