@@ -1,8 +1,8 @@
         function setSize(w, h) {
             width  = w;
             height = h;
-            halfWidth  = ~~(width / 2);
-            halfHeight = ~~(height / 2);
+            halfWidth  = width / 2 << 0;
+            halfHeight = height / 2 << 0;
             camX = halfWidth;
             camY = height;
             canvas.width = width;

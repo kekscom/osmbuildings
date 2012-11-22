@@ -34,11 +34,31 @@
         function setData2(res) {
             var
                 i, il,
-                keyList = [], k
+                resData, resMeta,
+                keyList = [], k,
+                offX = 0, offY = 0,
+                item,
+                zoomSimplify = max(1, (zoom - minZoom) * 2)
             ;
 
-            if (meta && data) {
-                // identify present buildings in order to fade in new ones
+            minZoom = MIN_ZOOM;
+            setZoom(zoom); // recalculating all zoom related variables
+            req = null;
+
+            // no response or response not matching current zoom (too old response)
+            if (!res || res.meta.z !== zoom) {
+                return;
+            }
+
+            resMeta = res.meta;
+            resData = res.data;
+
+            // offset between old and new data set
+            if (meta && data && meta.z === resMeta.z) {
+                offX = meta.x - resMeta.x;
+                offY = meta.y - resMeta.y;
+
+                // identify already present buildings to fade in new ones
                 for (i = 0, il = data.length; i < il; i++) {
                     // key: x,y of first point - good enough
                     keyList[i] = (data[i][FOOTPRINT][0]) + ',' + (data[i][FOOTPRINT][1]);
@@ -47,11 +67,23 @@
 
             meta = res.meta;
             data = [];
-            for (i = 0, il = res.data.length; i < il; i++) {
-                data[i] = res.data[i];
-                data[i][HEIGHT] = min(data[i][HEIGHT], MAX_HEIGHT);
-                k = data[i][FOOTPRINT][0] + ',' + data[i][FOOTPRINT][1];
-                data[i][IS_NEW] = !(keyList && ~keyList.indexOf(k));
+
+            for (i = 0, il = resData.length; i < il; i++) {
+                item = {};
+
+                item[FOOTPRINT] = simplify(resData[i][FOOTPRINT], zoomSimplify);
+
+                if (item[FOOTPRINT].length < 8) { // 3 points & end = start (x2)
+                    continue;
+                }
+
+                item[HEIGHT] = min(resData[i][HEIGHT], MAX_HEIGHT);
+                item[CENTER] = center(item[FOOTPRINT]);
+
+                k = item[FOOTPRINT][0] + ',' + item[FOOTPRINT][1];
+                item[IS_NEW] = !(keyList && ~keyList.indexOf(k));
+
+                data.push(item);
             }
 
             keyList = null; // gc
@@ -189,7 +221,7 @@
 
                     if (heightSum) {
                         item = [];
-                        item[HEIGHT] = ~~(heightSum / coords.length);
+                        item[HEIGHT] = heightSum / coords.length << 0;
                         item[FOOTPRINT] = makeClockwiseWinding(footprint);
                         if (propWallColor || propRoofColor) {
                             item[COLOR] = [propWallColor, propRoofColor];

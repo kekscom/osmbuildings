@@ -19,7 +19,7 @@ Loss expected but turned out to be a slight gain.
 
 ## Combined 2d faces
 
-iPhone 4, iOS5: seperate faces are 56% slower
+iPhone4, iOS5: seperate faces are 56% slower
 MBA 2010, Chrome: combined faces are 68% slower
 Staying with combined so far, probably add system detection.
 (http://jsperf.com/canvas-polygon-combiner)
@@ -35,7 +35,15 @@ Especially when these are created on each rendering pass.
 ## Canvas anti alias
 
 While looking slick, it eats performance.
-Not so on iPhone 4, iOS5: it doesn't matter
+Not so on iPhone4, iOS5: it doesn't matter
 MBA 2010, Chrome: anti alias is 24% slower
 Node: for *any* test, stroking lines eats ~60% performance
 (http://jsperf.com/canvas-anti-alias)
+
+
+## Math round
+
+Using ~~ for a while, it turns out, bit shift << 0 is even faster.
+iPad4, iOS6: 12% faster
+MBA 2010, Chrome: 25% faster
+(http://jsperf.com/math-round-vs-hack/3)
