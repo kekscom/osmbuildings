@@ -1,37 +1,37 @@
 
 var
     arguments = process.argv.splice(2),
-    argument_key = '',
+    argumentKey = '',
     config = [];
 
 for (var i in arguments) {
     if (arguments[i].substr(0, 2) === '--') {
-        argument_key = arguments[i].substr(2);
+        argumentKey = arguments[i].substr(2);
         continue;
     }
-    if (argument_key !== '') {
-        config[argument_key] = arguments[i];
+    if (argumentKey !== '') {
+        config[argumentKey] = arguments[i];
     }
-    argument_key = '';
+    argumentKey = '';
 }
 
 //*****************************************************************************
 
 var
-    pgUsername = config['pg-username'] || 'postgres', // your postgres user name
-    pgPassword = config['pg-password'] || '', // your postgres user password
-    pgHost = config['pg-host'] || 'localhost:5432', // your postgres host and optionally port
-    pgDatabase = config['pg-database'] || 'postgis20', // your postgres database name
-    pgTable = config['pg-table'] || 'buildings_ffm', // your postgres table name
-    pgHeightField = config['pg-height-field'] || 'COALESCE(height, "building:height")', // the field containing height info, usually just 'height' but you can also use COALESCE() statements here
-    pgFootprintField = config['pg-footprint-field'] || 'the_geom', // the field containing geometry info
-    pgCoords = config['pg-coords'] || 'lon, lat', // the coordinate order of your data
-    pgBBox = config['pg-bbox'] || null, // { n: .., w: .., s: .., e: .. } optional info to convert a certain segment of data (not tested yet)
-    pgFilter = config['pg-filter'] || '1=1', // optional WHERE condition
+    pgUsername       = config['pg-username']        || 'postgres',       // your postgres user name
+    pgPassword       = config['pg-password']        || '',               // your postgres user password
+    pgHost           = config['pg-host']            || 'localhost:5432', // your postgres host and optionally port
+    pgDatabase       = config['pg-database']        || 'postgis20',      // your postgres database name
+    pgTable          = config['pg-table']           || 'buildings',      // your postgres table name
+    pgHeightField    = config['pg-height-field']    || 'COALESCE(height, "building:height")', // the field containing height info, usually just 'height' but you can also use COALESCE() statements here
+    pgFootprintField = config['pg-footprint-field'] || 'the_geom',       // the field containing geometry info
+    pgCoords         = config['pg-coords']          || 'lon, lat',       // the coordinate order of your data
+    pgBBox           = config['pg-bbox']            || null,             // { n: .., w: .., s: .., e: .. } optional info to convert a certain segment of data (not tested yet)
+    pgFilter         = config['pg-filter']          || '1=1',            // optional WHERE condition
 
-    myTable = config['my-table'] || 'buildings', // the table name in mysql
-    myRegion = config['my-region'] || 'frankfurt', // optional info to update just parts of the data
-    myFile = config['my-file'] || myRegion + '.sql' // the file name for dumping the data into
+    myTable  = config['my-table']  || 'buildings',      // the table name in mysql
+    myRegion = config['my-region'] || 'frankfurt',      // optional info to update just parts of the data
+    myFile   = config['my-file']   || myRegion + '.sql' // the file name for dumping the data into
 ;
 
 //*****************************************************************************
