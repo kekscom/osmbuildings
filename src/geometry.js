@@ -40,20 +40,3 @@
 
         return [x / len * 2 << 0, y / len * 2 << 0];
     }
-
-    function bbox(points) {
-        var
-            i, il,
-            len = points.length - 2,
-            minX = Infinity, maxX = -Infinity,
-            minY = Infinity, maxY = -Infinity
-        ;
-        for (i = 0, il = len - 1; i < il; i += 2) {
-            minX = Math.min(minX, points[i]);
-            maxX = Math.max(maxX, points[i]);
-            minY = Math.min(minY, points[i + 1]);
-            maxY = Math.max(maxY, points[i + 1]);
-        }
-
-        return [minX, minY, maxX, maxY];
-    }

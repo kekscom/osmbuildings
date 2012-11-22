@@ -36,6 +36,7 @@
                 x, y,
                 offX = originX - meta.x,
                 offY = originY - meta.y,
+                sortCam = [camX + offX, camY + offY],
                 footprint, roof, walls,
                 isVisible,
                 ax, ay, bx, by, _a, _b,
@@ -46,55 +47,10 @@
             if (strokeRoofs) {
                 context.strokeStyle = strokeColor.adjustAlpha(zoomAlpha) + '';
             }
-// TODO try a face  render pipline
-data.sort(function(a, b) {
-    var dx = Math.abs(a[CENTER][0] - b[CENTER][0]);
-    var dy = Math.abs(a[CENTER][1] - b[CENTER][1]);
-    var d = dx * dx + dy * dy;
 
-    if (
-        (a[CENTER][0] > b[BBOX][0] && a[CENTER][0] < b[BBOX][2] &&  a[CENTER][1] > b[BBOX][1] && a[CENTER][1] < b[BBOX][3])
-    &&  (b[CENTER][0] > a[BBOX][0] && b[CENTER][0] < a[BBOX][2] &&  b[CENTER][1] > a[BBOX][1] && b[CENTER][1] < a[BBOX][3])
-    ) {
-        if ((a[HEIGHT] - b[HEIGHT])) {
-              return a[HEIGHT] - b[HEIGHT];
-        }
-    }
-
-//    if (d < 500 && (a[HEIGHT] - b[HEIGHT])) {
-//        return a[HEIGHT] - b[HEIGHT];
-//    }
-
-    if (dy > dx) {
-
-
-        return a[CENTER][1] - b[CENTER][1];
-    }
-        if ((a[HEIGHT] - b[HEIGHT])) {
-              return a[HEIGHT] - b[HEIGHT];
-        }
-
-    var res = a[CENTER][0] - b[CENTER][0];
-    return (a[CENTER][0] - offX) < camX && (b[CENTER][0] - offX) < camX ? res : -res;
-
-
-
-/*
-    // 3 REGELN: nebeneinander, Ã¼bereinander, ineinander
-
-
-    // wenn hoch INNERHALB niedrig, dann prio hoch
-
-// Y ORDER FEHLT NOCH
-// HOCH vs HOCH fehlt noch
-
-
-// WENN IN GLEICHER "ZEILE" => a.center.y in b.bbox.y && b.center.y in a.bbox.y
-    // works for x - order, but destroys y
-    var res = a[CENTER][0] - b[CENTER][0];
-    return (a[CENTER][0] - offX) < camX && (b[CENTER][0] - offX) < camX ? res : -res;
-*/
-});
+            data.sort(function (a, b) {
+                return distance(b[CENTER], sortCam) / b[HEIGHT] - distance(a[CENTER], sortCam) / a[HEIGHT];
+            });
 
             for (i = 0, il = data.length; i < il; i++) {
                 item = data[i];
@@ -139,20 +95,6 @@ data.sort(function(a, b) {
 
                     // backface culling check
                     if ((bx - ax) * (_a.y - ay) > (_a.x - ax) * (by - ay)) {
-/* face combining
-                        if (!walls.length) {
-                            walls.unshift(ay + 0.5);
-                            walls.unshift(ax + 0.5);
-                            walls.push(_a.x, _a.y);
-                        }
-                        walls.unshift(by + 0.5);
-                        walls.unshift(bx + 0.5);
-                        walls.push(_b.x, _b.y);
-                    } else {
-                        drawShape(walls);
-                        walls = [];
-*/
-
                         walls = [
                             bx + 0.5, by + 0.5,
                             ax + 0.5, ay + 0.5,
@@ -173,8 +115,6 @@ data.sort(function(a, b) {
                     roof[j + 1] = _a.y;
                 }
 
-//                drawShape(walls);
-
                 // TODO refactor this to a lookup table
                 // fill roof and optionally stroke it
                 context.fillStyle = !item[COLOR] ? roofColorAlpha : // no item color => use default roof color (which is in worst case build from default wall color)
@@ -184,11 +124,7 @@ data.sort(function(a, b) {
                 ;
 
                 drawShape(roof, strokeRoofs);
-
-//                debugMarker(item[CENTER][0] - offX, item[CENTER][1] - offY, '#000000');
-//                debugMarker(item[CENTER][0] - offX, item[CENTER][2] - offY, '#666666');
             }
-            debugMarker(camX, camY, '#ff0000', 5);
         }
 
         function debugMarker(x, y, color, size) {
