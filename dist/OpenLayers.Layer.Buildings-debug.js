@@ -22,6 +22,7 @@
         atan = Math.atan,
         min = Math.min,
         max = Math.max,
+        abs = Math.abs,
         doc = global.document
     ;
 
@@ -47,9 +48,9 @@ var Color = (function () {
             b = hue2rgb(p, q, hsla.h - 1 / 3);
         }
         return new Color(
-            ~~(r * 255),
-            ~~(g * 255),
-            ~~(b * 255),
+            r * 255 << 0,
+            g * 255 << 0,
+            b * 255 << 0,
             hsla.a
         );
     }
@@ -216,8 +217,54 @@ function simplify(points, tolerance) {
         MAX_HEIGHT = CAM_Z - 50,
 
         LAT = 'latitude', LON = 'longitude',
-        HEIGHT = 0, FOOTPRINT = 1, COLOR = 2, IS_NEW = 3
+        HEIGHT = 0, FOOTPRINT = 1, COLOR = 2, CENTER = 3, IS_NEW = 4
     ;
+
+
+//****** file: geometry.js ******
+
+    function simplify(points, tolerance) {
+        var sqTolerance = tolerance * tolerance,
+            p,
+            prevPoint = [points[0], points[1]],
+            newPoints = [points[0], points[1]]
+        ;
+
+        for (var i = 2, il = points.length - 3; i < il; i += 2) {
+            p = [points[i], points[i + 1]];
+            if (distance(p, prevPoint) > sqTolerance) {
+                newPoints.push(p[0], p[1]);
+                prevPoint = p;
+            }
+        }
+
+        if (p[0] !== points[0] || p[1] !== points[1]) {
+            newPoints.push(points[0], points[1]);
+        }
+
+        return newPoints;
+    }
+
+    function distance(p1, p2) {
+        var dx = p1[0] - p2[0],
+            dy = p1[1] - p2[1]
+        ;
+        return dx * dx + dy * dy;
+    }
+
+    function center(points) {
+        var
+            i, il,
+            len = points.length - 2,
+            x = 0, y = 0
+        ;
+        for (i = 0, il = len - 1; i < il; i += 2) {
+            x += points[i];
+            y += points[i + 1];
+        }
+
+        return [x / len * 2 << 0, y / len * 2 << 0];
+    }
 
 
 //****** file: prefix.class.js ******
@@ -303,8 +350,8 @@ function simplify(points, tolerance) {
                 longitude = lon / 360 + 0.5
             ;
             return {
-                x: ~~(longitude * size),
-                y: ~~(latitude  * size)
+                x: longitude * size << 0,
+                y: latitude  * size << 0
             };
         }
 
@@ -363,16 +410,20 @@ function simplify(points, tolerance) {
                 keyList = [], k,
                 offX = 0, offY = 0,
                 item,
+<<<<<<< HEAD
                 // TODO generalize zoomFactor
                 zoomFactor = (zoom - minZoom) / (maxZoom - zoom),
                 zoomSimplify = 1 + ~~(zoomFactor * 6)
+=======
+                zoomSimplify = max(1, (zoom - minZoom) * 2)
+>>>>>>> master
             ;
 
             minZoom = MIN_ZOOM;
             setZoom(zoom); // recalculating all zoom related variables
             req = null;
 
-            // no response or response not matching current zoom (= too old response)
+            // no response or response not matching current zoom (too old response)
             if (!res || res.meta.z !== zoom) {
                 return;
             }
@@ -394,18 +445,30 @@ function simplify(points, tolerance) {
 
             meta = resMeta;
             data = [];
-
             for (i = 0, il = resData.length; i < il; i++) {
                 item = {};
+<<<<<<< HEAD
                 item[FOOTPRINT] = simplify(resData[i][FOOTPRINT], zoomSimplify);
 
                 if (!item[FOOTPRINT]) {
+=======
+
+                item[FOOTPRINT] = simplify(resData[i][FOOTPRINT], zoomSimplify);
+
+                if (item[FOOTPRINT].length < 8) { // 3 points & end = start (x2)
+>>>>>>> master
                     continue;
                 }
 
                 item[HEIGHT] = min(resData[i][HEIGHT], MAX_HEIGHT);
+<<<<<<< HEAD
 
                 k = resData[i][FOOTPRINT][0] + ',' + resData[i][FOOTPRINT][1];
+=======
+                item[CENTER] = center(item[FOOTPRINT]);
+
+                k = item[FOOTPRINT][0] + ',' + item[FOOTPRINT][1];
+>>>>>>> master
                 item[IS_NEW] = !(keyList && ~keyList.indexOf(k));
 
                 data.push(item);
@@ -551,7 +614,7 @@ function simplify(points, tolerance) {
 
                     if (heightSum) {
                         item = [];
-                        item[HEIGHT] = ~~(heightSum / coords.length);
+                        item[HEIGHT] = heightSum / coords.length << 0;
                         item[FOOTPRINT] = makeClockwiseWinding(footprint);
                         if (propWallColor || propRoofColor) {
                             item[COLOR] = [propWallColor, propRoofColor];
@@ -594,8 +657,8 @@ function simplify(points, tolerance) {
         function setSize(w, h) {
             width  = w;
             height = h;
-            halfWidth  = ~~(width / 2);
-            halfHeight = ~~(height / 2);
+            halfWidth  = width / 2 << 0;
+            halfHeight = height / 2 << 0;
             camX = halfWidth;
             camY = height;
             canvas.width = width;
@@ -715,6 +778,7 @@ function simplify(points, tolerance) {
                 x, y,
                 offX = originX - meta.x,
                 offY = originY - meta.y,
+                sortCam = [camX + offX, camY + offY],
                 footprint, roof, walls,
                 isVisible,
                 ax, ay, bx, by, _a, _b,
@@ -725,6 +789,10 @@ function simplify(points, tolerance) {
             if (strokeRoofs) {
                 context.strokeStyle = strokeColor.adjustAlpha(zoomAlpha) + '';
             }
+
+            data.sort(function (a, b) {
+                return distance(b[CENTER], sortCam) / b[HEIGHT] - distance(a[CENTER], sortCam) / a[HEIGHT];
+            });
 
             for (i = 0, il = data.length; i < il; i++) {
                 item = data[i];
@@ -767,26 +835,27 @@ function simplify(points, tolerance) {
                     _a = project(ax, ay, m);
                     _b = project(bx, by, m);
 
-                    // backface culling check. could this be precalculated partially?
+                    // backface culling check
                     if ((bx - ax) * (_a.y - ay) > (_a.x - ax) * (by - ay)) {
-                        // face combining
-                        if (!walls.length) {
-                            walls.unshift(ay + 0.5);
-                            walls.unshift(ax + 0.5);
-                            walls.push(_a.x, _a.y);
+                        walls = [
+                            bx + 0.5, by + 0.5,
+                            ax + 0.5, ay + 0.5,
+                            _a.x, _a.y,
+                            _b.x, _b.y
+                        ];
+
+                        if ((ax < bx && ay < by) || (ax > bx && ay > by)) {
+                            context.fillStyle = wallColor.adjustAlpha(zoomAlpha).adjustLightness(0.8) + '';
+                        } else {
+                            context.fillStyle = item[COLOR] && item[COLOR][0] ? item[COLOR][0].adjustAlpha(zoomAlpha) + '' : wallColorAlpha;
                         }
-                        walls.unshift(by + 0.5);
-                        walls.unshift(bx + 0.5);
-                        walls.push(_b.x, _b.y);
-                    } else {
+
                         drawShape(walls);
-                        walls = [];
                     }
+
                     roof[j]     = _a.x;
                     roof[j + 1] = _a.y;
                 }
-
-                drawShape(walls);
 
                 // TODO refactor this to a lookup table
                 // fill roof and optionally stroke it
@@ -966,8 +1035,8 @@ function drawRoof1(points) {
 
         function project(x, y, m) {
             return {
-                x: ~~((x - camX) * m + camX) + 0.5, // + 0.5: disabling(!) anti alias
-                y: ~~((y - camY) * m + camY) + 0.5  // + 0.5: disabling(!) anti alias
+                x: ((x - camX) * m + camX << 0) + 0.5, // + 0.5: disabling(!) anti alias
+                y: ((y - camY) * m + camY << 0) + 0.5  // + 0.5: disabling(!) anti alias
             };
         }
 

@@ -16,6 +16,7 @@ exports.srcFiles = [
     srcPath + '/lib/Color.js',
     srcPath + '/simplify.js',
     srcPath + '/constants.js',
+    srcPath + '/geometry.js',
         srcPath + '/prefix.class.js',
         srcPath + '/variables.js',
         srcPath + '/functions.js',

@@ -44,16 +44,14 @@
                 keyList = [], k,
                 offX = 0, offY = 0,
                 item,
-                // TODO generalize zoomFactor
-                zoomFactor = (zoom - minZoom) / (maxZoom - zoom),
-                zoomSimplify = 1 + ~~(zoomFactor * 6)
+                zoomSimplify = max(1, (zoom - minZoom) * 2)
             ;
 
             minZoom = MIN_ZOOM;
             setZoom(zoom); // recalculating all zoom related variables
             req = null;
 
-            // no response or response not matching current zoom (= too old response)
+            // no response or response not matching current zoom (too old response)
             if (!res || res.meta.z !== zoom) {
                 return;
             }
@@ -75,18 +73,17 @@
 
             meta = resMeta;
             data = [];
-
             for (i = 0, il = resData.length; i < il; i++) {
                 item = {};
                 item[FOOTPRINT] = simplify(resData[i][FOOTPRINT], zoomSimplify);
-
-                if (!item[FOOTPRINT]) {
+                if (item[FOOTPRINT].length < 8) { // 3 points & end = start (x2)
                     continue;
                 }
 
                 item[HEIGHT] = min(resData[i][HEIGHT], MAX_HEIGHT);
+                item[CENTER] = center(item[FOOTPRINT]);
 
-                k = resData[i][FOOTPRINT][0] + ',' + resData[i][FOOTPRINT][1];
+                k = item[FOOTPRINT][0] + ',' + item[FOOTPRINT][1];
                 item[IS_NEW] = !(keyList && ~keyList.indexOf(k));
 
                 data.push(item);
@@ -232,7 +229,7 @@
 
                     if (heightSum) {
                         item = [];
-                        item[HEIGHT] = ~~(heightSum / coords.length);
+                        item[HEIGHT] = heightSum / coords.length << 0;
                         item[FOOTPRINT] = makeClockwiseWinding(footprint);
                         if (propWallColor || propRoofColor) {
                             item[COLOR] = [propWallColor, propRoofColor];

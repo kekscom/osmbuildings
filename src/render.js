@@ -36,6 +36,7 @@
                 x, y,
                 offX = originX - meta.x,
                 offY = originY - meta.y,
+                sortCam = [camX + offX, camY + offY],
                 footprint, roof, walls,
                 isVisible,
                 ax, ay, bx, by, _a, _b,
@@ -46,6 +47,10 @@
             if (strokeRoofs) {
                 context.strokeStyle = strokeColor.adjustAlpha(zoomAlpha) + '';
             }
+
+            data.sort(function (a, b) {
+                return distance(b[CENTER], sortCam) / b[HEIGHT] - distance(a[CENTER], sortCam) / a[HEIGHT];
+            });
 
             for (i = 0, il = data.length; i < il; i++) {
                 item = data[i];
@@ -88,26 +93,27 @@
                     _a = project(ax, ay, m);
                     _b = project(bx, by, m);
 
-                    // backface culling check. could this be precalculated partially?
+                    // backface culling check
                     if ((bx - ax) * (_a.y - ay) > (_a.x - ax) * (by - ay)) {
-                        // face combining
-                        if (!walls.length) {
-                            walls.unshift(ay + 0.5);
-                            walls.unshift(ax + 0.5);
-                            walls.push(_a.x, _a.y);
+                        walls = [
+                            bx + 0.5, by + 0.5,
+                            ax + 0.5, ay + 0.5,
+                            _a.x, _a.y,
+                            _b.x, _b.y
+                        ];
+
+                        if ((ax < bx && ay < by) || (ax > bx && ay > by)) {
+                            context.fillStyle = wallColor.adjustAlpha(zoomAlpha).adjustLightness(0.8) + '';
+                        } else {
+                            context.fillStyle = item[COLOR] && item[COLOR][0] ? item[COLOR][0].adjustAlpha(zoomAlpha) + '' : wallColorAlpha;
                         }
-                        walls.unshift(by + 0.5);
-                        walls.unshift(bx + 0.5);
-                        walls.push(_b.x, _b.y);
-                    } else {
+
                         drawShape(walls);
-                        walls = [];
                     }
+
                     roof[j]     = _a.x;
                     roof[j + 1] = _a.y;
                 }
-
-                drawShape(walls);
 
                 // TODO refactor this to a lookup table
                 // fill roof and optionally stroke it
@@ -308,7 +314,7 @@ function drawRoof(points, height, strokeRoofs) {
 
         function project(x, y, m) {
             return {
-                x: ~~((x - camX) * m + camX) + 0.5, // + 0.5: disabling(!) anti alias
-                y: ~~((y - camY) * m + camY) + 0.5  // + 0.5: disabling(!) anti alias
+                x: ((x - camX) * m + camX << 0) + 0.5, // + 0.5: disabling(!) anti alias
+                y: ((y - camY) * m + camY << 0) + 0.5  // + 0.5: disabling(!) anti alias
             };
         }
