@@ -7,5 +7,6 @@
         atan = Math.atan,
         min = Math.min,
         max = Math.max,
+        abs = Math.abs,
         doc = global.document
     ;

@@ -36,6 +36,7 @@
                 x, y,
                 offX = originX - meta.x,
                 offY = originY - meta.y,
+                sortCam = [camX + offX, camY + offY],
                 footprint, roof, walls,
                 isVisible,
                 ax, ay, bx, by, _a, _b,
@@ -46,6 +47,10 @@
             if (strokeRoofs) {
                 context.strokeStyle = strokeColor.adjustAlpha(zoomAlpha) + '';
             }
+
+            data.sort(function (a, b) {
+                return distance(b[CENTER], sortCam) / b[HEIGHT] - distance(a[CENTER], sortCam) / a[HEIGHT];
+            });
 
             for (i = 0, il = data.length; i < il; i++) {
                 item = data[i];
@@ -90,20 +95,6 @@
 
                     // backface culling check
                     if ((bx - ax) * (_a.y - ay) > (_a.x - ax) * (by - ay)) {
-/* face combining
-                        if (!walls.length) {
-                            walls.unshift(ay + 0.5);
-                            walls.unshift(ax + 0.5);
-                            walls.push(_a.x, _a.y);
-                        }
-                        walls.unshift(by + 0.5);
-                        walls.unshift(bx + 0.5);
-                        walls.push(_b.x, _b.y);
-                    } else {
-                        drawShape(walls);
-                        walls = [];
-*/
-
                         walls = [
                             bx + 0.5, by + 0.5,
                             ax + 0.5, ay + 0.5,
@@ -123,8 +114,6 @@
                     roof[j]     = _a.x;
                     roof[j + 1] = _a.y;
                 }
-
-//                drawShape(walls);
 
                 // TODO refactor this to a lookup table
                 // fill roof and optionally stroke it

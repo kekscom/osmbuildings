@@ -51,7 +51,7 @@
             setZoom(zoom); // recalculating all zoom related variables
             req = null;
 
-            // no response or response not matching current zoom (= too old response)
+            // no response or response not matching current zoom (too old response)
             if (!res || res.meta.z !== zoom) {
                 return;
             }
@@ -83,8 +83,9 @@
                 }
 
                 item[HEIGHT] = min(resData[i][HEIGHT], MAX_HEIGHT);
+                item[CENTER] = center(item[FOOTPRINT]);
 
-                k = resData[i][FOOTPRINT][0] + ',' + resData[i][FOOTPRINT][1];
+                k = item[FOOTPRINT][0] + ',' + item[FOOTPRINT][1];
                 item[IS_NEW] = !(keyList && ~keyList.indexOf(k));
 
                 data.push(item);

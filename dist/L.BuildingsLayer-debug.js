@@ -22,6 +22,7 @@
         atan = Math.atan,
         min = Math.min,
         max = Math.max,
+        abs = Math.abs,
         doc = global.document
     ;
 
@@ -172,18 +173,11 @@ var Color = (function () {
         MAX_HEIGHT = CAM_Z - 50,
 
         LAT = 'latitude', LON = 'longitude',
-        HEIGHT = 0, FOOTPRINT = 1, COLOR = 2, IS_NEW = 3
+        HEIGHT = 0, FOOTPRINT = 1, COLOR = 2, CENTER = 3, IS_NEW = 4
     ;
 
 
-//****** file: simplify.js ******
-
-    function getDistance(p1, p2) {
-        var dx = p1[0] - p2[0],
-            dy = p1[1] - p2[1]
-        ;
-        return dx * dx + dy * dy;
-    }
+//****** file: geometry.js ******
 
     function simplify(points, tolerance) {
         var sqTolerance = tolerance * tolerance,
@@ -194,7 +188,7 @@ var Color = (function () {
 
         for (var i = 2, il = points.length - 3; i < il; i += 2) {
             p = [points[i], points[i + 1]];
-            if (getDistance(p, prevPoint) > sqTolerance) {
+            if (distance(p, prevPoint) > sqTolerance) {
                 newPoints.push(p[0], p[1]);
                 prevPoint = p;
             }
@@ -205,6 +199,27 @@ var Color = (function () {
         }
 
         return newPoints;
+    }
+
+    function distance(p1, p2) {
+        var dx = p1[0] - p2[0],
+            dy = p1[1] - p2[1]
+        ;
+        return dx * dx + dy * dy;
+    }
+
+    function center(points) {
+        var
+            i, il,
+            len = points.length - 2,
+            x = 0, y = 0
+        ;
+        for (i = 0, il = len - 1; i < il; i += 2) {
+            x += points[i];
+            y += points[i + 1];
+        }
+
+        return [x / len * 2 << 0, y / len * 2 << 0];
     }
 
 
@@ -358,7 +373,7 @@ var Color = (function () {
             setZoom(zoom); // recalculating all zoom related variables
             req = null;
 
-            // no response or response not matching current zoom (= too old response)
+            // no response or response not matching current zoom (too old response)
             if (!res || res.meta.z !== zoom) {
                 return;
             }
@@ -390,8 +405,9 @@ var Color = (function () {
                 }
 
                 item[HEIGHT] = min(resData[i][HEIGHT], MAX_HEIGHT);
+                item[CENTER] = center(item[FOOTPRINT]);
 
-                k = resData[i][FOOTPRINT][0] + ',' + resData[i][FOOTPRINT][1];
+                k = item[FOOTPRINT][0] + ',' + item[FOOTPRINT][1];
                 item[IS_NEW] = !(keyList && ~keyList.indexOf(k));
 
                 data.push(item);
@@ -701,6 +717,7 @@ var Color = (function () {
                 x, y,
                 offX = originX - meta.x,
                 offY = originY - meta.y,
+                sortCam = [camX + offX, camY + offY],
                 footprint, roof, walls,
                 isVisible,
                 ax, ay, bx, by, _a, _b,
@@ -711,6 +728,10 @@ var Color = (function () {
             if (strokeRoofs) {
                 context.strokeStyle = strokeColor.adjustAlpha(zoomAlpha) + '';
             }
+
+            data.sort(function (a, b) {
+                return distance(b[CENTER], sortCam) / b[HEIGHT] - distance(a[CENTER], sortCam) / a[HEIGHT];
+            });
 
             for (i = 0, il = data.length; i < il; i++) {
                 item = data[i];
@@ -755,20 +776,6 @@ var Color = (function () {
 
                     // backface culling check
                     if ((bx - ax) * (_a.y - ay) > (_a.x - ax) * (by - ay)) {
-/* face combining
-                        if (!walls.length) {
-                            walls.unshift(ay + 0.5);
-                            walls.unshift(ax + 0.5);
-                            walls.push(_a.x, _a.y);
-                        }
-                        walls.unshift(by + 0.5);
-                        walls.unshift(bx + 0.5);
-                        walls.push(_b.x, _b.y);
-                    } else {
-                        drawShape(walls);
-                        walls = [];
-*/
-
                         walls = [
                             bx + 0.5, by + 0.5,
                             ax + 0.5, ay + 0.5,
@@ -788,8 +795,6 @@ var Color = (function () {
                     roof[j]     = _a.x;
                     roof[j + 1] = _a.y;
                 }
-
-//                drawShape(walls);
 
                 // TODO refactor this to a lookup table
                 // fill roof and optionally stroke it
