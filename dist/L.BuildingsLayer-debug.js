@@ -207,20 +207,6 @@ var Color = (function () {
         return dx * dx + dy * dy;
     }
 
-    function center(points) {
-        var
-            i, il,
-            len = points.length - 2,
-            x = 0, y = 0
-        ;
-        for (i = 0, il = len - 1; i < il; i += 2) {
-            x += points[i];
-            y += points[i + 1];
-        }
-
-        return [x / len * 2 << 0, y / len * 2 << 0];
-    }
-
 
 //****** file: prefix.class.js ******
 
@@ -249,9 +235,8 @@ var Color = (function () {
             rawData,
             meta, data,
 
-            zoomAlpha = 1,
-            fadeFactor = 1,
-            fadeTimer,
+            zoomAlpha = 1, zoomSimplify = 0,
+            fadeFactor = 1, fadeTimer,
 
             minZoom = MIN_ZOOM,
             maxZoom = 20,
@@ -364,8 +349,7 @@ var Color = (function () {
                 resData, resMeta,
                 keyList = [], k,
                 offX = 0, offY = 0,
-                item,
-                zoomSimplify = max(1, (zoom - minZoom) * 2) + 1 // lower zoom level = less tolerance
+                item
             ;
 
             minZoom = MIN_ZOOM;
@@ -395,17 +379,11 @@ var Color = (function () {
             meta = resMeta;
             data = [];
             for (i = 0, il = resData.length; i < il; i++) {
-                item = {};
-
-                item[FOOTPRINT] = simplify(resData[i][FOOTPRINT], zoomSimplify);
-
-                if (item[FOOTPRINT].length < 8) { // 3 points & end = start (x2)
+                item = parsePolygon(resData[i][FOOTPRINT], zoomSimplify);
+                if (!item) {
                     continue;
                 }
-
                 item[HEIGHT] = min(resData[i][HEIGHT], MAX_HEIGHT);
-                item[CENTER] = center(item[FOOTPRINT]);
-
                 k = item[FOOTPRINT][0] + ',' + item[FOOTPRINT][1];
                 item[IS_NEW] = !(keyList && ~keyList.indexOf(k));
 
@@ -413,8 +391,37 @@ var Color = (function () {
             }
 
             resMeta = resData = keyList = null; // gc
-
             fadeIn();
+        }
+
+        function parsePolygon(points, tolerance) {
+            var item = [],
+                len,
+                x, y,
+                cx = 0, cy = 0
+            ;
+
+            points = simplify(points, tolerance);
+            if (points.length < 8) { // 3 points & end = start (x2)
+                return;
+            }
+
+            // makeClockwiseWinding
+
+			// get center
+            for (var i = 0, il = points.length - 3; i < il; i += 2) {
+                x = points[i];
+                y = points[i + 1];
+                cx += x;
+                cy += y;
+            }
+
+            len = (points.length - 2) * 2,
+
+            item[FOOTPRINT] = points;
+            item[CENTER]    = [cx / len << 0, cy / len << 0];
+
+            return item;
         }
 
         // detect polygon winding direction: clockwise or counter clockwise
@@ -612,6 +619,7 @@ var Color = (function () {
             zoom = z;
             size = TILE_SIZE << zoom;
             zoomAlpha = 1 - (zoom - minZoom) * 0.3 / (maxZoom - minZoom);
+            zoomSimplify = max(1, (zoom - minZoom) * 2) + 1;
         }
 
         function setCam(x, y) {
