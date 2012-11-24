@@ -226,7 +226,7 @@
 
         function drawRoof(points, height, strokeRoofs) {
             if (height <= 20) {
-                context.fillStyle = 'rgba(250,0,0,0.25)';
+                context.fillStyle = 'rgba(225,175,175,0.5)';
             }
 
             if (points.length > 8 || height > 20) {
@@ -254,17 +254,18 @@
                 var ay = points[i + 1];
                 var by = points[i + 3];
 
-                if ((ax - bx) > (ay - by)) {
-                    context.fillStyle = 'rgba(250,0,0,0.25)';
+                //if ((ax - bx) > (ay - by)) {
+                if ((ax < bx && ay < by) || (ax > bx && ay > by)) {
+                    context.fillStyle = 'rgba(200,100,100,0.25)';
                 } else {
-                    context.fillStyle = 'rgba(250,100,100,0.25)';
+                    context.fillStyle = 'rgba(200,175,175,0.25)';
                 }
 
                 drawShape([
                     points[i],     points[i + 1],
                     points[i + 2], points[i + 3],
                     apex.x, apex.y
-                ], true);
+                ], strokeRoofs);
             }
 
             var ax = points[i];
@@ -282,7 +283,7 @@
                 points[i], points[i + 1],
                 points[0], points[1],
                 apex.x, apex.y
-            ], true);
+            ], strokeRoofs);
         }
 
 

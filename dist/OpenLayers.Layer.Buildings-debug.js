@@ -153,50 +153,6 @@ var Color = (function () {
 
 /*jshint white:true */
 
-//****** file: simplify.js ******
-
-/*jshint white:false */
-
-/**
- * inspired by Vladimir Agafonkin's code, see mourner.github.com/simplify-js
- */
-
-function getDistance(p1, p2) {
-    var dx = p1[0] - p2[0],
-        dy = p1[1] - p2[1]
-    ;
-    return dx * dx + dy * dy;
-}
-
-function simplify(points, tolerance) {
-    if (points.length <= 8) {
-        return points;
-    }
-
-    var sqTolerance = tolerance * tolerance,
-        p,
-        prevPoint = [points[0], points[1]],
-        newPoints = [points[0], points[1]]
-    ;
-
-    for (var i = 2, il = points.length; i < il; i += 2) {
-        p = [points[i], points[i + 1]];
-
-        if (getDistance(p, prevPoint) > sqTolerance) {
-            newPoints.push(p[0], p[1]);
-            prevPoint = p;
-        }
-    }
-    if (prevPoint !== p) {
-        newPoints.push(p[0], p[1]);
-    }
-
-    return points.length > 2 ? newPoints : false;
-}
-
-/*jshint white:true */
-
-
 //****** file: constants.js ******
 
     // constants, shared to all instances
@@ -393,18 +349,7 @@ function simplify(points, tolerance) {
                 resData, resMeta,
                 keyList = [], k,
                 offX = 0, offY = 0,
-<<<<<<< HEAD
-                item,
-<<<<<<< HEAD
-                // TODO generalize zoomFactor
-                zoomFactor = (zoom - minZoom) / (maxZoom - zoom),
-                zoomSimplify = 1 + ~~(zoomFactor * 6)
-=======
-                zoomSimplify = max(1, (zoom - minZoom) * 2)
->>>>>>> master
-=======
                 item
->>>>>>> master
             ;
 
             minZoom = MIN_ZOOM;
@@ -434,36 +379,12 @@ function simplify(points, tolerance) {
             meta = resMeta;
             data = [];
             for (i = 0, il = resData.length; i < il; i++) {
-<<<<<<< HEAD
-                item = {};
-<<<<<<< HEAD
-                item[FOOTPRINT] = simplify(resData[i][FOOTPRINT], zoomSimplify);
-
-                if (!item[FOOTPRINT]) {
-=======
-
-                item[FOOTPRINT] = simplify(resData[i][FOOTPRINT], zoomSimplify);
-
-                if (item[FOOTPRINT].length < 8) { // 3 points & end = start (x2)
->>>>>>> master
-=======
                 item = parsePolygon(resData[i][FOOTPRINT], zoomSimplify);
                 if (!item) {
->>>>>>> master
                     continue;
                 }
                 item[HEIGHT] = min(resData[i][HEIGHT], MAX_HEIGHT);
-<<<<<<< HEAD
-<<<<<<< HEAD
-
-                k = resData[i][FOOTPRINT][0] + ',' + resData[i][FOOTPRINT][1];
-=======
-                item[CENTER] = center(item[FOOTPRINT]);
-
-=======
->>>>>>> master
                 k = item[FOOTPRINT][0] + ',' + item[FOOTPRINT][1];
->>>>>>> master
                 item[IS_NEW] = !(keyList && ~keyList.indexOf(k));
 
                 data.push(item);
@@ -890,12 +811,7 @@ function simplify(points, tolerance) {
                     item[COLOR][0].adjustLightness(1.2).adjustAlpha(zoomAlpha) + '' // item wall color exists => adapt & use it
                 ;
 
-if (roof.length <= 12) context.fillStyle = '#ff0000';
-if (roof.length <= 10) context.fillStyle = '#ff6666';
-if (roof.length <= 8) context.fillStyle = '#ffcccc';
-
-                drawShape(roof, strokeRoofs);
-                drawRoof(roof);
+                drawRoof(roof, h, strokeRoofs);
             }
         }
 
@@ -903,133 +819,160 @@ if (roof.length <= 8) context.fillStyle = '#ffcccc';
 
 
 
-function circle(x, y, diameter, stroke) {
-    ellipse(x, y, diameter, diameter, stroke);
-}
+        function circle(x, y, diameter, stroke) {
+            ellipse(x, y, diameter, diameter, stroke);
+        }
 
-function ellipse(x, y, w, h, stroke) {
-    var
-        w2 = w / 2, h2 = h / 2,
-        hB = w2 * 0.5522848,
-        vB = h2 * 0.5522848,
-        eX = x + w2, eY = y + h2,
-        mX = x, mY = y
-    ;
+        function ellipse(x, y, w, h, stroke) {
+            var
+                w2 = w / 2, h2 = h / 2,
+                hB = w2 * 0.5522848,
+                vB = h2 * 0.5522848,
+                eX = x + w2, eY = y + h2,
+                mX = x, mY = y
+            ;
 
-    x -= w2;
-    y -= h2;
+            x -= w2;
+            y -= h2;
 
-    context.beginPath();
-    context.moveTo(x, mY);
-    context.bezierCurveTo( x,      mY - vB, mX - hB,  y,      mX, y);
-    context.bezierCurveTo(mX + hB,       y, eX,      mY - vB, eX, mY);
-    context.bezierCurveTo(eX,      mY + vB, mX + hB, eY,      mX, eY);
-    context.bezierCurveTo(mX - hB,      eY,  x,      mY + vB,  x, mY);
-    context.closePath();
-    context.fill();
-    if (stroke) {
-        context.stroke();
-    }
-}
+            context.beginPath();
+            context.moveTo(x, mY);
+            context.bezierCurveTo( x,      mY - vB, mX - hB,  y,      mX, y);
+            context.bezierCurveTo(mX + hB,       y, eX,      mY - vB, eX, mY);
+            context.bezierCurveTo(eX,      mY + vB, mX + hB, eY,      mX, eY);
+            context.bezierCurveTo(mX - hB,      eY,  x,      mY + vB,  x, mY);
+            context.closePath();
+            context.fill();
+            if (stroke) {
+                context.stroke();
+            }
+        }
 
-function drawRoof2(points) {
-    context.fillStyle = 'rgba(240,0,0,0.25)';
-    context.strokeStyle = strokeColor.adjustAlpha(zoomAlpha) + '';
+        function drawRoof2(points) {
+            context.fillStyle = 'rgba(240,0,0,0.25)';
+            context.strokeStyle = strokeColor.adjustAlpha(zoomAlpha) + '';
 
-    var
-        h = 20,
-        center = [
-            (points[0] + points[2] + points[4] + points[6]) / 4,
-            (points[1] + points[3] + points[5] + points[7]) / 4
-        ],
-        apex = project(center[0], center[1], CAM_Z / (CAM_Z - h))
-    ;
+            var
+                h = 20,
+                center = [
+                    (points[0] + points[2] + points[4] + points[6]) / 4,
+                    (points[1] + points[3] + points[5] + points[7]) / 4
+                ],
+                apex = project(center[0], center[1], CAM_Z / (CAM_Z - h))
+            ;
 
-    var d = 65;
-    circle(center[0], center[1], d, d, true);
+            var d = 65;
+            circle(center[0], center[1], d, d, true);
 
-    context.beginPath();
-    context.moveTo(center[0] - d / 2, center[1]);
-    context.lineTo(apex.x, apex.y);
-    context.lineTo(center[0] + d / 2, center[1]);
-    context.stroke();
+            context.beginPath();
+            context.moveTo(center[0] - d / 2, center[1]);
+            context.lineTo(apex.x, apex.y);
+            context.lineTo(center[0] + d / 2, center[1]);
+            context.stroke();
 
-    context.beginPath();
-    context.moveTo(center[0], center[1] - d / 2);
-    context.lineTo(apex.x, apex.y);
-    context.lineTo(center[0], center[1] + d / 2);
-    context.stroke();
-}
-
-
-function drawRoof(points) {
-    context.fillStyle = 'rgba(240,0,0,0.25)';
-    context.strokeStyle = strokeColor.adjustAlpha(zoomAlpha) + '';
-
-    var
-        h = 10,
-        center = [
-            (points[0] + points[2] + points[4] + points[6]) / 4,
-            (points[1] + points[3] + points[5] + points[7]) / 4
-        ],
-        apex = project(center[0], center[1], CAM_Z / (CAM_Z - h))
-    ;
-
-    var d = 65;
-    circle(center[0], center[1], d, d, true);
-    debugMarker(apex.x, apex.y);
-
-    var d2 = d / 2;
-    var w = center[0] - d2;
-    var e = center[0] + d2;
-    var n = center[1] - d2;
-    var s = center[1] + d2;
-
-    context.beginPath();
-    context.moveTo(w, center[1]);
-    context.bezierCurveTo((apex.x + w) / 2.05, center[1] + (apex.y - center[1]) * 1.5, (apex.x + e) / 1.95, center[1] + (apex.y - center[1]) * 1.5, e, center[1]);
-    context.stroke();
-
-    context.beginPath();
-    context.moveTo(center[0], n);
-    context.bezierCurveTo(center[0] + (apex.x - center[0]) * 1.5, (apex.y + n) / 2.05, center[0] + (apex.x - center[0]) * 1.5, (apex.y + s) / 1.95, center[0], s);
-    context.stroke();
-}
-
-function drawRoof1(points) {
-    context.fillStyle = 'rgba(240,0,0,0.25)';
-    var
-        h = 20 + 10,
-        center = [
-            (points[0] + points[2] + points[4] + points[6]) / 4,
-            (points[1] + points[3] + points[5] + points[7]) / 4
-        ],
-        apex = project(center[0], center[1], CAM_Z / (CAM_Z - h))
-    ;
-    drawShape([
-        points[0], points[1],
-        points[2], points[3],
-        apex.x, apex.y
-    ], true);
-    drawShape([
-        points[2], points[3],
-        points[4], points[5],
-        apex.x, apex.y
-    ], true);
-    drawShape([
-        points[4], points[5],
-        points[6], points[7],
-        apex.x, apex.y
-    ], true);
-    drawShape([
-        points[6], points[7],
-        points[0], points[1],
-        apex.x, apex.y
-    ], true);
-}
+            context.beginPath();
+            context.moveTo(center[0], center[1] - d / 2);
+            context.lineTo(apex.x, apex.y);
+            context.lineTo(center[0], center[1] + d / 2);
+            context.stroke();
+        }
 
 
+        function drawRoof3(points) {
+            context.fillStyle = 'rgba(240,0,0,0.25)';
+            context.strokeStyle = strokeColor.adjustAlpha(zoomAlpha) + '';
 
+            var
+                h = 10,
+                center = [
+                    (points[0] + points[2] + points[4] + points[6]) / 4,
+                    (points[1] + points[3] + points[5] + points[7]) / 4
+                ],
+                apex = project(center[0], center[1], CAM_Z / (CAM_Z - h))
+            ;
+
+            var d = 65;
+            circle(center[0], center[1], d, d, true);
+            debugMarker(apex.x, apex.y);
+
+            var d2 = d / 2;
+            var w = center[0] - d2;
+            var e = center[0] + d2;
+            var n = center[1] - d2;
+            var s = center[1] + d2;
+
+            context.beginPath();
+            context.moveTo(w, center[1]);
+            context.bezierCurveTo((apex.x + w) / 2.05, center[1] + (apex.y - center[1]) * 1.5, (apex.x + e) / 1.95, center[1] + (apex.y - center[1]) * 1.5, e, center[1]);
+            context.stroke();
+
+            context.beginPath();
+            context.moveTo(center[0], n);
+            context.bezierCurveTo(center[0] + (apex.x - center[0]) * 1.5, (apex.y + n) / 2.05, center[0] + (apex.x - center[0]) * 1.5, (apex.y + s) / 1.95, center[0], s);
+            context.stroke();
+        }
+
+        function drawRoof(points, height, strokeRoofs) {
+            if (height <= 20) {
+                context.fillStyle = 'rgba(225,175,175,0.5)';
+            }
+
+            if (points.length > 8 || height > 20) {
+                drawShape(points, strokeRoofs);
+                return;
+            }
+
+            var
+                h = height * 1.3,
+                cx = 0, cy = 0,
+                num = points.length / 2,
+                apex
+            ;
+
+            for (var i = 0, il = points.length - 1; i < il; i += 2) {
+                cx += points[i];
+                cy += points[i + 1];
+            }
+
+            apex = project(cx / num, cy / num, CAM_Z / (CAM_Z - h));
+
+            for (var i = 0, il = points.length - 3; i < il; i += 2) {
+                var ax = points[i];
+                var bx = points[i + 2];
+                var ay = points[i + 1];
+                var by = points[i + 3];
+
+                //if ((ax - bx) > (ay - by)) {
+                if ((ax < bx && ay < by) || (ax > bx && ay > by)) {
+                    context.fillStyle = 'rgba(200,100,100,0.25)';
+                } else {
+                    context.fillStyle = 'rgba(200,175,175,0.25)';
+                }
+
+                drawShape([
+                    points[i],     points[i + 1],
+                    points[i + 2], points[i + 3],
+                    apex.x, apex.y
+                ], strokeRoofs);
+            }
+
+            var ax = points[i];
+            var bx = points[0];
+            var ay = points[i + 1];
+            var by = points[1];
+
+            if ((ax - bx) > (ay - by)) {
+                context.fillStyle = 'rgba(250,0,0,0.25)';
+            } else {
+                context.fillStyle = 'rgba(250,100,100,0.25)';
+            }
+
+            drawShape([
+                points[i], points[i + 1],
+                points[0], points[1],
+                apex.x, apex.y
+            ], strokeRoofs);
+        }
 
 
 
