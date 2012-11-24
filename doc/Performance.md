@@ -1,4 +1,4 @@
-# Tech Notes
+# Performance
 
 What's done & why in terms of performance.
 

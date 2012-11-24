@@ -44,7 +44,7 @@
                 keyList = [], k,
                 offX = 0, offY = 0,
                 item,
-                zoomSimplify = max(1, (zoom - minZoom) * 2)
+                zoomSimplify = max(1, (zoom - minZoom) * 2) + 1 // lower zoom level = less tolerance
             ;
 
             minZoom = MIN_ZOOM;
