@@ -22,7 +22,6 @@
         atan = Math.atan,
         min = Math.min,
         max = Math.max,
-        abs = Math.abs,
         doc = global.document
     ;
 
@@ -252,20 +251,6 @@ function simplify(points, tolerance) {
         return dx * dx + dy * dy;
     }
 
-    function center(points) {
-        var
-            i, il,
-            len = points.length - 2,
-            x = 0, y = 0
-        ;
-        for (i = 0, il = len - 1; i < il; i += 2) {
-            x += points[i];
-            y += points[i + 1];
-        }
-
-        return [x / len * 2 << 0, y / len * 2 << 0];
-    }
-
 
 //****** file: prefix.class.js ******
 
@@ -294,9 +279,8 @@ function simplify(points, tolerance) {
             rawData,
             meta, data,
 
-            zoomAlpha = 1,
-            fadeFactor = 1,
-            fadeTimer,
+            zoomAlpha = 1, zoomSimplify = 0,
+            fadeFactor = 1, fadeTimer,
 
             minZoom = MIN_ZOOM,
             maxZoom = 20,
@@ -409,6 +393,7 @@ function simplify(points, tolerance) {
                 resData, resMeta,
                 keyList = [], k,
                 offX = 0, offY = 0,
+<<<<<<< HEAD
                 item,
 <<<<<<< HEAD
                 // TODO generalize zoomFactor
@@ -416,6 +401,9 @@ function simplify(points, tolerance) {
                 zoomSimplify = 1 + ~~(zoomFactor * 6)
 =======
                 zoomSimplify = max(1, (zoom - minZoom) * 2)
+>>>>>>> master
+=======
+                item
 >>>>>>> master
             ;
 
@@ -446,6 +434,7 @@ function simplify(points, tolerance) {
             meta = resMeta;
             data = [];
             for (i = 0, il = resData.length; i < il; i++) {
+<<<<<<< HEAD
                 item = {};
 <<<<<<< HEAD
                 item[FOOTPRINT] = simplify(resData[i][FOOTPRINT], zoomSimplify);
@@ -457,16 +446,22 @@ function simplify(points, tolerance) {
 
                 if (item[FOOTPRINT].length < 8) { // 3 points & end = start (x2)
 >>>>>>> master
+=======
+                item = parsePolygon(resData[i][FOOTPRINT], zoomSimplify);
+                if (!item) {
+>>>>>>> master
                     continue;
                 }
-
                 item[HEIGHT] = min(resData[i][HEIGHT], MAX_HEIGHT);
+<<<<<<< HEAD
 <<<<<<< HEAD
 
                 k = resData[i][FOOTPRINT][0] + ',' + resData[i][FOOTPRINT][1];
 =======
                 item[CENTER] = center(item[FOOTPRINT]);
 
+=======
+>>>>>>> master
                 k = item[FOOTPRINT][0] + ',' + item[FOOTPRINT][1];
 >>>>>>> master
                 item[IS_NEW] = !(keyList && ~keyList.indexOf(k));
@@ -475,8 +470,37 @@ function simplify(points, tolerance) {
             }
 
             resMeta = resData = keyList = null; // gc
-
             fadeIn();
+        }
+
+        function parsePolygon(points, tolerance) {
+            var item = [],
+                len,
+                x, y,
+                cx = 0, cy = 0
+            ;
+
+            points = simplify(points, tolerance);
+            if (points.length < 8) { // 3 points & end = start (x2)
+                return;
+            }
+
+            // makeClockwiseWinding
+
+			// get center
+            for (var i = 0, il = points.length - 3; i < il; i += 2) {
+                x = points[i];
+                y = points[i + 1];
+                cx += x;
+                cy += y;
+            }
+
+            len = (points.length - 2) * 2,
+
+            item[FOOTPRINT] = points;
+            item[CENTER]    = [cx / len << 0, cy / len << 0];
+
+            return item;
         }
 
         // detect polygon winding direction: clockwise or counter clockwise
@@ -674,6 +698,7 @@ function simplify(points, tolerance) {
             zoom = z;
             size = TILE_SIZE << zoom;
             zoomAlpha = 1 - (zoom - minZoom) * 0.3 / (maxZoom - minZoom);
+            zoomSimplify = max(1, (zoom - minZoom) * 2) + 1;
         }
 
         function setCam(x, y) {

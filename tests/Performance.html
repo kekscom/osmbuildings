@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Tests: Performance</title>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <style>
+    #map {
+        width: 800px;
+        height: 600px;
+        border: 1px solid #ccc;
+    }
+
+	#console {
+		font-family: monospace;
+		height: 100px;
+		border: 1px solid #ccc;
+	}
+    </style>
+
+    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.4.5/leaflet.css">
+    <script src="http://cdn.leafletjs.com/leaflet-0.4.5/leaflet.js"></script>
+    <script src="../dist/L.BuildingsLayer-debug.js"></script>
+</head>
+
+<body>
+    <div id="map"></div>
+    <div id="console"></div>
+
+    <script>
+    var map = new L.Map('map').setView([52.50440, 13.33522], 17);
+
+    new L.TileLayer(
+        'http://{s}.tiles.mapbox.com/v3/mapbox.mapbox-streets/{z}/{x}/{y}.png',
+        { attribution: 'Map tiles &copy; <a href="http://mapbox.com">MapBox</a>', maxZoom: 17 }
+    ).addTo(map);
+
+    var osmb = new L.BuildingsLayer({ url: '../server/?w={w}&n={n}&e={e}&s={s}&z={z}' }).addTo(map).setStyle({ strokeRoofs: false });
+    L.control.layers({}, { Buildings: osmb }).addTo(map);
+
+	var log = function (txt) {
+		document.getElementById('console').innerHTML += '<br>' + txt;
+	}
+
+    var
+        osmbRender = osmb.render,
+        time = 0, iterations = 0;
+
+    osmb.render = function () {
+        var start = performance.now();
+        osmbRender();
+        time += (performance.now() - start);
+        iterations++;
+    };
+
+    function Perf() {
+        this.tests = [];
+        window.performance = window.performance || {};
+        performance.now = (function() {
+          return performance.now       ||
+                 performance.mozNow    ||
+                 performance.msNow     ||
+                 performance.oNow      ||
+                 performance.webkitNow ||
+                 function() { return new Date().getTime(); };
+        })();
+    }
+
+    Perf.prototype.add = function(name, func, iterations, delay) {
+        this.tests.push({ name: name, func: func, iterations: iterations, delay: delay });
+    };
+
+    Perf.prototype.run = function() {
+        if (!this.tests.length) {
+            return;
+        }
+        var test = this.tests.shift();
+        var i = 0;
+        var step = function () {
+            i++;
+            test.func(i);
+            if (i < test.iterations) {
+                setTimeout(step, test.delay);
+            } else {
+                log(test.name + ': ' + iterations + ' iterations, ' + (time / iterations).toFixed(2) + 'ms');
+                this.run();
+            }
+        }.bind(this);
+
+        time = 0;
+        iterations = 0;
+        setTimeout(step, 500);
+    };
+
+    var perf = new Perf();
+
+    perf.add('move test 1', function (pos) {
+        var off = pos / 10000;
+        map.setView([52.50440 + off, 13.33522 + off], 17);
+    }, 10, 500);
+
+    perf.add('move test 2', function (pos) {
+        var off = pos / 5000;
+        map.setView([52.50440 + off, 13.33522 + off], 16);
+    }, 10, 1000);
+
+    perf.run();
+    </script>
+</body>
+</html>

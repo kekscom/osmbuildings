@@ -43,8 +43,7 @@
                 resData, resMeta,
                 keyList = [], k,
                 offX = 0, offY = 0,
-                item,
-                zoomSimplify = max(1, (zoom - minZoom) * 2)
+                item
             ;
 
             minZoom = MIN_ZOOM;
@@ -74,15 +73,11 @@
             meta = resMeta;
             data = [];
             for (i = 0, il = resData.length; i < il; i++) {
-                item = {};
-                item[FOOTPRINT] = simplify(resData[i][FOOTPRINT], zoomSimplify);
-                if (item[FOOTPRINT].length < 8) { // 3 points & end = start (x2)
+                item = parsePolygon(resData[i][FOOTPRINT], zoomSimplify);
+                if (!item) {
                     continue;
                 }
-
                 item[HEIGHT] = min(resData[i][HEIGHT], MAX_HEIGHT);
-                item[CENTER] = center(item[FOOTPRINT]);
-
                 k = item[FOOTPRINT][0] + ',' + item[FOOTPRINT][1];
                 item[IS_NEW] = !(keyList && ~keyList.indexOf(k));
 
@@ -90,8 +85,37 @@
             }
 
             resMeta = resData = keyList = null; // gc
-
             fadeIn();
+        }
+
+        function parsePolygon(points, tolerance) {
+            var item = [],
+                len,
+                x, y,
+                cx = 0, cy = 0
+            ;
+
+            points = simplify(points, tolerance);
+            if (points.length < 8) { // 3 points & end = start (x2)
+                return;
+            }
+
+            // makeClockwiseWinding
+
+			// get center
+            for (var i = 0, il = points.length - 3; i < il; i += 2) {
+                x = points[i];
+                y = points[i + 1];
+                cx += x;
+                cy += y;
+            }
+
+            len = (points.length - 2) * 2,
+
+            item[FOOTPRINT] = points;
+            item[CENTER]    = [cx / len << 0, cy / len << 0];
+
+            return item;
         }
 
         // detect polygon winding direction: clockwise or counter clockwise

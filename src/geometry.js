@@ -26,17 +26,3 @@
         ;
         return dx * dx + dy * dy;
     }
-
-    function center(points) {
-        var
-            i, il,
-            len = points.length - 2,
-            x = 0, y = 0
-        ;
-        for (i = 0, il = len - 1; i < il; i += 2) {
-            x += points[i];
-            y += points[i + 1];
-        }
-
-        return [x / len * 2 << 0, y / len * 2 << 0];
-    }
