@@ -178,26 +178,34 @@ var Color = (function () {
 
 //****** file: geometry.js ******
 
-    function simplify(points, tolerance) {
-        var sqTolerance = tolerance * tolerance,
-            p,
-            prevPoint = [points[0], points[1]],
+    function simplify(points) {
+        var cost,
+            curr, prev = [points[0], points[1]], next,
             newPoints = [points[0], points[1]]
         ;
 
+        // TODO this is not iterative yet
         for (var i = 2, il = points.length - 3; i < il; i += 2) {
-            p = [points[i], points[i + 1]];
-            if (distance(p, prevPoint) > sqTolerance) {
-                newPoints.push(p[0], p[1]);
-                prevPoint = p;
+            curr = [points[i], points[i + 1]];
+            next = [points[i + 2] || points[0], points[i + 3] || points[1]];
+            cost = collapseCost(prev, curr, next);
+            if (cost > 750) {
+                newPoints.push(curr[0], curr[1]);
+                prev = curr;
             }
         }
 
-        if (p[0] !== points[0] || p[1] !== points[1]) {
+        if (curr[0] !== points[0] || curr[1] !== points[1]) {
             newPoints.push(points[0], points[1]);
         }
 
         return newPoints;
+    }
+
+    function collapseCost(a, b, c) {
+        var dist = segmentDistance(b, a, c) * 2; // * 2: put more weight in angle
+        var length = distance(a, c);
+        return dist * length;
     }
 
     function distance(p1, p2) {
@@ -205,6 +213,26 @@ var Color = (function () {
             dy = p1[1] - p2[1]
         ;
         return dx * dx + dy * dy;
+    }
+
+    function segmentDistance(p, p1, p2) { // square distance from a point to a segment
+        var x = p1[0],
+            y = p1[1],
+            dx = p2[0] - x,
+            dy = p2[1] - y,
+            t
+        ;
+        if (dx !== 0 || dy !== 0) {
+            t = ((p[0] - x) * dx + (p[1] - y) * dy) / (dx * dx + dy * dy);
+            if (t > 1) {
+                x = p2[0];
+                y = p2[1];
+            } else if (t > 0) {
+                x += dx * t;
+                y += dy * t;
+            }
+        }
+        return distance(p, [x, y]);
     }
 
 
@@ -235,7 +263,7 @@ var Color = (function () {
             rawData,
             meta, data,
 
-            zoomAlpha = 1, zoomSimplify = 0,
+            zoomAlpha = 1,
             fadeFactor = 1, fadeTimer,
 
             minZoom = MIN_ZOOM,
@@ -379,7 +407,7 @@ var Color = (function () {
             meta = resMeta;
             data = [];
             for (i = 0, il = resData.length; i < il; i++) {
-                item = parsePolygon(resData[i][FOOTPRINT], zoomSimplify);
+                item = parsePolygon(resData[i][FOOTPRINT]);
                 if (!item) {
                     continue;
                 }
@@ -389,19 +417,18 @@ var Color = (function () {
 
                 data.push(item);
             }
-
             resMeta = resData = keyList = null; // gc
             fadeIn();
         }
 
-        function parsePolygon(points, tolerance) {
+        function parsePolygon(points) {
             var item = [],
                 len,
                 x, y,
                 cx = 0, cy = 0
             ;
 
-            points = simplify(points, tolerance);
+            points = simplify(points);
             if (points.length < 8) { // 3 points & end = start (x2)
                 return;
             }
@@ -619,7 +646,6 @@ var Color = (function () {
             zoom = z;
             size = TILE_SIZE << zoom;
             zoomAlpha = 1 - (zoom - minZoom) * 0.3 / (maxZoom - minZoom);
-            zoomSimplify = max(1, (zoom - minZoom) * 2) + 1;
         }
 
         function setCam(x, y) {

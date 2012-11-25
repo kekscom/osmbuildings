@@ -18,7 +18,7 @@
             rawData,
             meta, data,
 
-            zoomAlpha = 1, zoomSimplify = 0,
+            zoomAlpha = 1,
             fadeFactor = 1, fadeTimer,
 
             minZoom = MIN_ZOOM,

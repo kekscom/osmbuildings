@@ -73,7 +73,7 @@
             meta = resMeta;
             data = [];
             for (i = 0, il = resData.length; i < il; i++) {
-                item = parsePolygon(resData[i][FOOTPRINT], zoomSimplify);
+                item = parsePolygon(resData[i][FOOTPRINT]);
                 if (!item) {
                     continue;
                 }
@@ -83,19 +83,18 @@
 
                 data.push(item);
             }
-
             resMeta = resData = keyList = null; // gc
             fadeIn();
         }
 
-        function parsePolygon(points, tolerance) {
+        function parsePolygon(points) {
             var item = [],
                 len,
                 x, y,
                 cx = 0, cy = 0
             ;
 
-            points = simplify(points, tolerance);
+            points = simplify(points);
             if (points.length < 8) { // 3 points & end = start (x2)
                 return;
             }

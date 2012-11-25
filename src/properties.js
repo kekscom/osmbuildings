@@ -18,7 +18,6 @@
             zoom = z;
             size = TILE_SIZE << zoom;
             zoomAlpha = 1 - (zoom - minZoom) * 0.3 / (maxZoom - minZoom);
-            zoomSimplify = max(1, (zoom - minZoom) * 2) + 1;
         }
 
         function setCam(x, y) {
