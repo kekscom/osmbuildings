@@ -15,9 +15,31 @@
         }
 
         function setZoom(z) {
+            var i, il, j,
+                alpha,
+                item
+            ;
+
             zoom = z;
             size = TILE_SIZE << zoom;
-            zoomAlpha = 1 - (zoom - minZoom) * 0.3 / (maxZoom - minZoom);
+
+            alpha = 1 - (zoom - minZoom) * 0.3 / (maxZoom - minZoom);
+
+            wallColorAlpha = wallColor.adjustAlpha(alpha) + '';
+            altColorAlpha  = altColor.adjustAlpha(alpha) + '';
+            roofColorAlpha = roofColor.adjustAlpha(alpha) + '';
+
+            if (data) {
+                for (i = 0, il = data.length; i < il; i++) {
+                    item = data[i];
+                    item[RENDERCOLOR] = [];
+                    for (j = 0; j < 3; j++) {
+                        if (item[COLOR][j]) {
+                            item[RENDERCOLOR][j] = item[COLOR][j].adjustAlpha(alpha) + '';
+                        }
+                    }
+                }
+            }
         }
 
         function setCam(x, y) {
@@ -30,8 +52,10 @@
             strokeRoofs = style.strokeRoofs !== undefined ? style.strokeRoofs : strokeRoofs;
             if (style.color || style.wallColor) {
                 wallColor = Color.parse(style.color || style.wallColor);
+                altColor = wallColor.adjustLightness(0.8);
+                roofColor = wallColor.adjustLightness(1.2);
             }
-            if (style.roofColor !== undefined) { // allow explicit falsy values in order to remove roof color
+            if (style.roofColor) {
                 roofColor = Color.parse(style.roofColor);
             }
             render();

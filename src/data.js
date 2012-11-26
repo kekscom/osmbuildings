@@ -81,6 +81,9 @@
                 k = item[FOOTPRINT][0] + ',' + item[FOOTPRINT][1];
                 item[IS_NEW] = !(keyList && ~keyList.indexOf(k));
 
+                item[COLOR] = [];
+                item[RENDERCOLOR] = [];
+
                 data.push(item);
             }
             resMeta = resData = keyList = null; // gc
@@ -101,7 +104,7 @@
 
             // makeClockwiseWinding
 
-			// get center
+            // get center
             for (var i = 0, il = points.length - 3; i < il; i += 2) {
                 x = points[i];
                 y = points[i + 1];
@@ -254,9 +257,12 @@
                         item = [];
                         item[HEIGHT] = heightSum / coords.length << 0;
                         item[FOOTPRINT] = makeClockwiseWinding(footprint);
-                        if (propWallColor || propRoofColor) {
-                            item[COLOR] = [propWallColor, propRoofColor];
-                        }
+                        item[COLOR] = [
+                            propWallColor || null,
+                            propWallColor ? propWallColor.adjustLightness(0.8) : null,
+                            propRoofColor ? propRoofColor : propWallColor ? propWallColor.adjustLightness(1.2) : null
+                        ];
+                        item[RENDERCOLOR] = [];
                         res.push(item);
                     }
                 }

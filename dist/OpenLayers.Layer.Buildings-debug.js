@@ -172,7 +172,7 @@ var Color = (function () {
         MAX_HEIGHT = CAM_Z - 50,
 
         LAT = 'latitude', LON = 'longitude',
-        HEIGHT = 0, FOOTPRINT = 1, COLOR = 2, CENTER = 3, IS_NEW = 4
+        HEIGHT = 0, FOOTPRINT = 1, COLOR = 2, CENTER = 3, IS_NEW = 4, RENDERCOLOR = 5
     ;
 
 
@@ -256,14 +256,18 @@ var Color = (function () {
 
             url,
             strokeRoofs,
+
             wallColor = new Color(200, 190, 180),
-            roofColor,
-            strokeColor = new Color(145, 140, 135),
+            altColor = wallColor.adjustLightness(0.8),
+            roofColor = wallColor.adjustLightness(1.2),
+
+            wallColorAlpha = wallColor + '',
+            altColorAlpha  = altColor + '',
+            roofColorAlpha = roofColor + '',
 
             rawData,
             meta, data,
 
-            zoomAlpha = 1,
             fadeFactor = 1, fadeTimer,
 
             minZoom = MIN_ZOOM,
@@ -415,6 +419,9 @@ var Color = (function () {
                 k = item[FOOTPRINT][0] + ',' + item[FOOTPRINT][1];
                 item[IS_NEW] = !(keyList && ~keyList.indexOf(k));
 
+                item[COLOR] = [];
+                item[RENDERCOLOR] = [];
+
                 data.push(item);
             }
             resMeta = resData = keyList = null; // gc
@@ -435,7 +442,7 @@ var Color = (function () {
 
             // makeClockwiseWinding
 
-			// get center
+            // get center
             for (var i = 0, il = points.length - 3; i < il; i += 2) {
                 x = points[i];
                 y = points[i + 1];
@@ -588,9 +595,12 @@ var Color = (function () {
                         item = [];
                         item[HEIGHT] = heightSum / coords.length << 0;
                         item[FOOTPRINT] = makeClockwiseWinding(footprint);
-                        if (propWallColor || propRoofColor) {
-                            item[COLOR] = [propWallColor, propRoofColor];
-                        }
+                        item[COLOR] = [
+                            propWallColor || null,
+                            propWallColor ? propWallColor.adjustLightness(0.8) : null,
+                            propRoofColor ? propRoofColor : propWallColor ? propWallColor.adjustLightness(1.2) : null
+                        ];
+                        item[RENDERCOLOR] = [];
                         res.push(item);
                     }
                 }
@@ -643,9 +653,31 @@ var Color = (function () {
         }
 
         function setZoom(z) {
+            var i, il, j,
+                alpha,
+                item
+            ;
+
             zoom = z;
             size = TILE_SIZE << zoom;
-            zoomAlpha = 1 - (zoom - minZoom) * 0.3 / (maxZoom - minZoom);
+
+            alpha = 1 - (zoom - minZoom) * 0.3 / (maxZoom - minZoom);
+
+            wallColorAlpha = wallColor.adjustAlpha(alpha) + '';
+            altColorAlpha  = altColor.adjustAlpha(alpha) + '';
+            roofColorAlpha = roofColor.adjustAlpha(alpha) + '';
+
+            if (data) {
+                for (i = 0, il = data.length; i < il; i++) {
+                    item = data[i];
+                    item[RENDERCOLOR] = [];
+                    for (j = 0; j < 3; j++) {
+                        if (item[COLOR][j]) {
+                            item[RENDERCOLOR][j] = item[COLOR][j].adjustAlpha(alpha) + '';
+                        }
+                    }
+                }
+            }
         }
 
         function setCam(x, y) {
@@ -658,8 +690,10 @@ var Color = (function () {
             strokeRoofs = style.strokeRoofs !== undefined ? style.strokeRoofs : strokeRoofs;
             if (style.color || style.wallColor) {
                 wallColor = Color.parse(style.color || style.wallColor);
+                altColor = wallColor.adjustLightness(0.8);
+                roofColor = wallColor.adjustLightness(1.2);
             }
-            if (style.roofColor !== undefined) { // allow explicit falsy values in order to remove roof color
+            if (style.roofColor) {
                 roofColor = Color.parse(style.roofColor);
             }
             render();
@@ -753,14 +787,8 @@ var Color = (function () {
                 sortCam = [camX + offX, camY + offY],
                 footprint, roof, walls,
                 isVisible,
-                ax, ay, bx, by, _a, _b,
-                wallColorAlpha = wallColor.adjustAlpha(zoomAlpha) + '',
-                roofColorAlpha = (roofColor || wallColor.adjustLightness(1.2)).adjustAlpha(zoomAlpha) + ''
+                ax, ay, bx, by, _a, _b
             ;
-
-            if (strokeRoofs) {
-                context.strokeStyle = strokeColor.adjustAlpha(zoomAlpha) + '';
-            }
 
             data.sort(function (a, b) {
                 return distance(b[CENTER], sortCam) / b[HEIGHT] - distance(a[CENTER], sortCam) / a[HEIGHT];
@@ -785,8 +813,6 @@ var Color = (function () {
                 if (!isVisible) {
                     continue;
                 }
-
-                context.fillStyle = item[COLOR] && item[COLOR][0] ? item[COLOR][0].adjustAlpha(zoomAlpha) + '' : wallColorAlpha;
 
                 // when fading in, use a dynamic height
                 h = item[IS_NEW] ? item[HEIGHT] * fadeFactor : item[HEIGHT];
@@ -816,10 +842,11 @@ var Color = (function () {
                             _b.x, _b.y
                         ];
 
+                        // depending on direction, set wall shading
                         if ((ax < bx && ay < by) || (ax > bx && ay > by)) {
-                            context.fillStyle = wallColor.adjustAlpha(zoomAlpha).adjustLightness(0.8) + '';
+                            context.fillStyle = item[RENDERCOLOR][1] || altColorAlpha;
                         } else {
-                            context.fillStyle = item[COLOR] && item[COLOR][0] ? item[COLOR][0].adjustAlpha(zoomAlpha) + '' : wallColorAlpha;
+                            context.fillStyle = item[RENDERCOLOR][0] || wallColorAlpha;
                         }
 
                         drawShape(walls);
@@ -829,14 +856,11 @@ var Color = (function () {
                     roof[j + 1] = _a.y;
                 }
 
-                // TODO refactor this to a lookup table
                 // fill roof and optionally stroke it
-                context.fillStyle = !item[COLOR] ? roofColorAlpha : // no item color => use default roof color (which is in worst case build from default wall color)
-                    item[COLOR][1] ? item[COLOR][1].adjustAlpha(zoomAlpha) + '' : // item roof color exists => adapt & use it
-                    roofColor ? roofColorAlpha : // default roof color exists => use it
-                    item[COLOR][0].adjustLightness(1.2).adjustAlpha(zoomAlpha) + '' // item wall color exists => adapt & use it
-                ;
-
+                context.fillStyle = item[RENDERCOLOR][2] || roofColorAlpha;
+                if (strokeRoofs) {
+                    context.strokeStyle = item[RENDERCOLOR][1] || altColorAlpha;
+                }
                 drawShape(roof, strokeRoofs);
             }
         }
