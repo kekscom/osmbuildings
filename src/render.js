@@ -110,10 +110,8 @@
 
                 // fill roof and optionally stroke it
                 context.fillStyle = item[RENDERCOLOR][2] || roofColorAlpha;
-                if (strokeRoofs) {
-                    context.strokeStyle = item[RENDERCOLOR][1] || altColorAlpha;
-                }
-                drawShape(roof, strokeRoofs);
+                context.strokeStyle = item[RENDERCOLOR][1] || altColorAlpha;
+                drawShape(roof, true);
             }
         }
 

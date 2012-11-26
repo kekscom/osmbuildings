@@ -54,3 +54,15 @@
         }
         return distance(p, [x, y]);
     }
+
+    function center(points) {
+        var len,
+            x = 0, y = 0
+        ;
+        for (var i = 0, il = points.length - 3; i < il; i += 2) {
+            x += points[i];
+            y += points[i + 1];
+        }
+        len = (points.length - 2) * 2;
+        return [x / len << 0, y / len << 0];
+    }

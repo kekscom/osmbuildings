@@ -25,9 +25,7 @@
 
             alpha = 1 - (zoom - minZoom) * 0.3 / (maxZoom - minZoom);
 
-            wallColorAlpha = wallColor.adjustAlpha(alpha) + '';
-            altColorAlpha  = altColor.adjustAlpha(alpha) + '';
-            roofColorAlpha = roofColor.adjustAlpha(alpha) + '';
+            updateColorAlpha();
 
             if (data) {
                 for (i = 0, il = data.length; i < il; i++) {
@@ -49,7 +47,6 @@
 
         function setStyle(style) {
             style = style || {};
-            strokeRoofs = style.strokeRoofs !== undefined ? style.strokeRoofs : strokeRoofs;
             if (style.color || style.wallColor) {
                 wallColor = Color.parse(style.color || style.wallColor);
                 altColor = wallColor.adjustLightness(0.8);
@@ -58,5 +55,14 @@
             if (style.roofColor) {
                 roofColor = Color.parse(style.roofColor);
             }
+
+            updateColorAlpha();
             render();
+        }
+
+        function updateColorAlpha() {
+            var alpha = 1 - (zoom - minZoom) * 0.3 / (maxZoom - minZoom);
+            wallColorAlpha = wallColor.adjustAlpha(alpha) + '';
+            altColorAlpha  = altColor.adjustAlpha(alpha) + '';
+            roofColorAlpha = roofColor.adjustAlpha(alpha) + '';
         }

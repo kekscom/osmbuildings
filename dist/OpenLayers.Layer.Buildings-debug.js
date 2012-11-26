@@ -235,6 +235,18 @@ var Color = (function () {
         return distance(p, [x, y]);
     }
 
+    function center(points) {
+        var len,
+            x = 0, y = 0
+        ;
+        for (var i = 0, il = points.length - 3; i < il; i += 2) {
+            x += points[i];
+            y += points[i + 1];
+        }
+        len = (points.length - 2) * 2;
+        return [x / len << 0, y / len << 0];
+    }
+
 
 //****** file: prefix.class.js ******
 
@@ -255,7 +267,6 @@ var Color = (function () {
             canvas, context,
 
             url,
-            strokeRoofs,
 
             wallColor = new Color(200, 190, 180),
             altColor = wallColor.adjustLightness(0.8),
@@ -381,7 +392,8 @@ var Color = (function () {
                 resData, resMeta,
                 keyList = [], k,
                 offX = 0, offY = 0,
-                item
+                item,
+                footprint
             ;
 
             minZoom = MIN_ZOOM;
@@ -411,10 +423,16 @@ var Color = (function () {
             meta = resMeta;
             data = [];
             for (i = 0, il = resData.length; i < il; i++) {
-                item = parsePolygon(resData[i][FOOTPRINT]);
-                if (!item) {
+                item = [];
+
+                footprint = simplify(resData[i][FOOTPRINT]);
+                if (footprint.length < 8) { // 3 points & end = start (x2)
                     continue;
                 }
+
+                item[FOOTPRINT] = footprint;
+                item[CENTER] = center(footprint);
+
                 item[HEIGHT] = min(resData[i][HEIGHT], MAX_HEIGHT);
                 k = item[FOOTPRINT][0] + ',' + item[FOOTPRINT][1];
                 item[IS_NEW] = !(keyList && ~keyList.indexOf(k));
@@ -426,36 +444,6 @@ var Color = (function () {
             }
             resMeta = resData = keyList = null; // gc
             fadeIn();
-        }
-
-        function parsePolygon(points) {
-            var item = [],
-                len,
-                x, y,
-                cx = 0, cy = 0
-            ;
-
-            points = simplify(points);
-            if (points.length < 8) { // 3 points & end = start (x2)
-                return;
-            }
-
-            // makeClockwiseWinding
-
-            // get center
-            for (var i = 0, il = points.length - 3; i < il; i += 2) {
-                x = points[i];
-                y = points[i + 1];
-                cx += x;
-                cy += y;
-            }
-
-            len = (points.length - 2) * 2,
-
-            item[FOOTPRINT] = points;
-            item[CENTER]    = [cx / len << 0, cy / len << 0];
-
-            return item;
         }
 
         // detect polygon winding direction: clockwise or counter clockwise
@@ -492,26 +480,36 @@ var Color = (function () {
             var
                 res = [],
                 i, il, j, jl,
-                item,
-                coords, footprint,
-                p,
+                oldItem, item,
+                coords, p,
+                footprint,
                 z = maxZoom - zoom
             ;
 
             for (i = 0, il = data.length; i < il; i++) {
-                item = data[i];
-                coords = item[FOOTPRINT];
+                oldItem = data[i];
+                coords = oldItem[FOOTPRINT];
                 footprint = new Int32Array(coords.length);
                 for (j = 0, jl = coords.length - 1; j < jl; j += 2) {
                     p = geoToPixel(coords[j], coords[j + 1]);
                     footprint[j]     = p.x;
                     footprint[j + 1] = p.y;
                 }
-                res[i] = [];
-                res[i][HEIGHT]    = min(item[HEIGHT] >> z, MAX_HEIGHT);
-                res[i][FOOTPRINT] = footprint;
-                res[i][COLOR]     = item[COLOR];
-                res[i][IS_NEW]    = isNew;
+
+                footprint = simplify(footprint);
+                if (footprint.length < 8) { // 3 points & end = start (x2)
+                    continue;
+                }
+
+                item = [];
+                item[FOOTPRINT]   = footprint;
+                item[CENTER]      = center(footprint);
+                item[HEIGHT]      = min(oldItem[HEIGHT] >> z, MAX_HEIGHT);
+                item[IS_NEW]      = isNew;
+                item[COLOR]       = oldItem[COLOR];
+                item[RENDERCOLOR] = [];
+
+                res.push(item);
             }
 
             return res;
@@ -593,14 +591,13 @@ var Color = (function () {
 
                     if (heightSum) {
                         item = [];
-                        item[HEIGHT] = heightSum / coords.length << 0;
                         item[FOOTPRINT] = makeClockwiseWinding(footprint);
+                        item[HEIGHT]    = heightSum / coords.length << 0;
                         item[COLOR] = [
                             propWallColor || null,
                             propWallColor ? propWallColor.adjustLightness(0.8) : null,
                             propRoofColor ? propRoofColor : propWallColor ? propWallColor.adjustLightness(1.2) : null
                         ];
-                        item[RENDERCOLOR] = [];
                         res.push(item);
                     }
                 }
@@ -663,9 +660,7 @@ var Color = (function () {
 
             alpha = 1 - (zoom - minZoom) * 0.3 / (maxZoom - minZoom);
 
-            wallColorAlpha = wallColor.adjustAlpha(alpha) + '';
-            altColorAlpha  = altColor.adjustAlpha(alpha) + '';
-            roofColorAlpha = roofColor.adjustAlpha(alpha) + '';
+            updateColors();
 
             if (data) {
                 for (i = 0, il = data.length; i < il; i++) {
@@ -687,7 +682,6 @@ var Color = (function () {
 
         function setStyle(style) {
             style = style || {};
-            strokeRoofs = style.strokeRoofs !== undefined ? style.strokeRoofs : strokeRoofs;
             if (style.color || style.wallColor) {
                 wallColor = Color.parse(style.color || style.wallColor);
                 altColor = wallColor.adjustLightness(0.8);
@@ -696,7 +690,16 @@ var Color = (function () {
             if (style.roofColor) {
                 roofColor = Color.parse(style.roofColor);
             }
+
+            updateColors();
             render();
+        }
+
+        function updateColors() {
+            var alpha = 1 - (zoom - minZoom) * 0.3 / (maxZoom - minZoom);
+            wallColorAlpha = wallColor.adjustAlpha(alpha) + '';
+            altColorAlpha  = altColor.adjustAlpha(alpha) + '';
+            roofColorAlpha = roofColor.adjustAlpha(alpha) + '';
         }
 
 
@@ -858,10 +861,8 @@ var Color = (function () {
 
                 // fill roof and optionally stroke it
                 context.fillStyle = item[RENDERCOLOR][2] || roofColorAlpha;
-                if (strokeRoofs) {
-                    context.strokeStyle = item[RENDERCOLOR][1] || altColorAlpha;
-                }
-                drawShape(roof, strokeRoofs);
+                context.strokeStyle = item[RENDERCOLOR][1] || altColorAlpha;
+                drawShape(roof, true);
             }
         }
 

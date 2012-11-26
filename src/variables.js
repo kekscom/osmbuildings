@@ -10,7 +10,6 @@
             canvas, context,
 
             url,
-            strokeRoofs,
 
             wallColor = new Color(200, 190, 180),
             altColor = wallColor.adjustLightness(0.8),
