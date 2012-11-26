@@ -160,6 +160,12 @@
                 item[COLOR]       = oldItem[COLOR];
                 item[RENDERCOLOR] = [];
 
+                for (j = 0; j < 3; j++) {
+                    if (item[COLOR][j]) {
+                        item[RENDERCOLOR][j] = item[COLOR][j].adjustAlpha(zoomAlpha) + '';
+                    }
+                }
+
                 res.push(item);
             }
 
@@ -247,13 +253,12 @@
                         item[COLOR] = [
                             propWallColor || null,
                             propWallColor ? propWallColor.adjustLightness(0.8) : null,
-                            propRoofColor ? propRoofColor : propWallColor ? propWallColor.adjustLightness(1.2) : null
+                            propRoofColor ? propRoofColor : propWallColor ? propWallColor.adjustLightness(1.2) : roofColor
                         ];
                         res.push(item);
                     }
                 }
             }
-
             return res;
         }
 

@@ -23,6 +23,7 @@
             meta, data,
 
             fadeFactor = 1, fadeTimer,
+            zoomAlpha = 1,
 
             minZoom = MIN_ZOOM,
             maxZoom = 20,
