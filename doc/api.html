@@ -140,7 +140,6 @@
 'rgb(255,200,200)'
 'rgba(255,200,200,0.9)'</td>
                 <td>Define the objects primary color.<br>
-                    <em>Deprecation notice</em>: the name wallColor be dropped in favor to color.<br>
                     Default color is rgb(200,190,180).
                     If setStyle() has been used to set different global colors, these will be applied.
                     If color is set in GeoJSON, this will be used with highest priority.
@@ -153,17 +152,10 @@
 'rgb(255,200,200)'
 'rgba(255,200,200,0.9)'</td>
                 <td>Define the objects alternate color.<br>
-                    <em>Deprecation notice</em>: the name will likely change to altColor.<br>
                     By default, wallColor will be adapted by some different brightness.
                     If setStyle() has been used used to set a different global wallColor, this will be applied.
                     If roofColor is set in GeoJSON, this will be used with highest priority.
                 </td>
-            </tr>
-            <tr>
-                <td>strokeRoofs:</td>
-                <td>Boolean</td>
-                <td class="api-code">false</td>
-                <td>Set whether roof edges are outlined or not. False by default.</td>
             </tr>
         </table>
 

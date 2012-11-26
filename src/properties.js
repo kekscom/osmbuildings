@@ -16,16 +16,17 @@
 
         function setZoom(z) {
             var i, il, j,
-                alpha,
                 item
             ;
 
             zoom = z;
             size = TILE_SIZE << zoom;
 
-            alpha = 1 - (zoom - minZoom) * 0.3 / (maxZoom - minZoom);
+            zoomAlpha = 1 - (zoom - minZoom) * 0.3 / (maxZoom - minZoom);
 
-            updateColorAlpha();
+            wallColorAlpha = wallColor.adjustAlpha(zoomAlpha) + '';
+            altColorAlpha  = altColor.adjustAlpha(zoomAlpha) + '';
+            roofColorAlpha = roofColor.adjustAlpha(zoomAlpha) + '';
 
             if (data) {
                 for (i = 0, il = data.length; i < il; i++) {
@@ -33,7 +34,7 @@
                     item[RENDERCOLOR] = [];
                     for (j = 0; j < 3; j++) {
                         if (item[COLOR][j]) {
-                            item[RENDERCOLOR][j] = item[COLOR][j].adjustAlpha(alpha) + '';
+                            item[RENDERCOLOR][j] = item[COLOR][j].adjustAlpha(zoomAlpha) + '';
                         }
                     }
                 }
@@ -51,18 +52,15 @@
                 wallColor = Color.parse(style.color || style.wallColor);
                 altColor = wallColor.adjustLightness(0.8);
                 roofColor = wallColor.adjustLightness(1.2);
+
+                wallColorAlpha = wallColor.adjustAlpha(zoomAlpha) + '';
+                altColorAlpha  = altColor.adjustAlpha(zoomAlpha) + '';
             }
+
             if (style.roofColor) {
                 roofColor = Color.parse(style.roofColor);
             }
 
-            updateColorAlpha();
+            roofColorAlpha = roofColor.adjustAlpha(zoomAlpha) + '';
             render();
-        }
-
-        function updateColorAlpha() {
-            var alpha = 1 - (zoom - minZoom) * 0.3 / (maxZoom - minZoom);
-            wallColorAlpha = wallColor.adjustAlpha(alpha) + '';
-            altColorAlpha  = altColor.adjustAlpha(alpha) + '';
-            roofColorAlpha = roofColor.adjustAlpha(alpha) + '';
         }

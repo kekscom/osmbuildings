@@ -160,6 +160,12 @@
                 item[COLOR]       = oldItem[COLOR];
                 item[RENDERCOLOR] = [];
 
+                for (j = 0; j < 3; j++) {
+                    if (item[COLOR][j]) {
+                        item[RENDERCOLOR][j] = item[COLOR][j].adjustAlpha(zoomAlpha) + '';
+                    }
+                }
+
                 res.push(item);
             }
 
