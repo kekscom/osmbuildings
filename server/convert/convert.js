@@ -46,18 +46,27 @@ var
 function setLatLonOrder(str) {
     // TODO: fix winding as well
 
+    var str = str.replace('/\s*,\s*/g', ',');
+    var str_parts = /^\w+\(+(.*?)\)+$/.exec(str);
+
     if (/^lat/i.test(pgCoords)) {
-        return vstr;
+        var lines_str = str_parts[1];
+    }
+    else {
+        var lines = str_parts[1].split('),(');
+        for (l in lines) {
+            var coords = lines[l].replace(/^[A-Z\(]+|\)+$/g, '').replace(/ /g, ',').split(',');
+
+            var res = [];
+            for (var i = 0, il = coords.length - 1; i < il; i += 2) {
+                res.push(coords[i + 1] + ' ' + coords[i]);
+            }
+            lines[l] = res.join(',');
+        }
+        var lines_str = lines.join('),(');
     }
 
-    var coords = str.replace(/^[A-Z\(]+|\)+$/g, '').replace(/ /g, ',').split(',');
-
-    var res = [];
-    for (var i = 0, il = coords.length - 1; i < il; i += 2) {
-        res.push(coords[i + 1] + ' ' + coords[i]);
-    }
-
-    return 'POLYGON((' + res.join(',') + '))';
+    return 'POLYGON((' + lines_str + '))';
 }
 
 function filterByBBox() {
@@ -109,7 +118,7 @@ sql.connect();
 
 var query =
     'SELECT ' + pgHeightField + ' AS height,' +
-    ' ST_AsText(ST_ExteriorRing(' + pgFootprintField + ')) AS footprint' +
+    ' ST_AsText(ST_Boundary(' + pgFootprintField + ')) AS footprint' +
     ' FROM ' + pgTable +
     ' WHERE ' + filterByBBox(pgBBox) +
     ' AND (' + pgFilter + ')' +
