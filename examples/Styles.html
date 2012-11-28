@@ -36,7 +36,6 @@
             <button class="color" style="background:rgb(220,220,50);" onclick="setStyle(this, 'roof')"></button>
             <button class="color" style="background:rgb(150,100,150);" onclick="setStyle(this, 'roof')"></button>
             <button class="color" style="background:rgb(200,150,100);" onclick="setStyle(this, 'roof')"></button>
-            <label style="cursor:pointer;"><input name="strokeRoofs" type="checkbox" value="1" onclick="setStyle(this, 'stroke')">stroke</label>
         </p>
     </div>
 
@@ -59,8 +58,7 @@
 
     var
         wallColor = 'rgb(200,190,180)',
-        roofColor = null,
-        strokeRoofs = false
+        roofColor = null
     ;
     function setStyle(el, type) {
         if (el) {
@@ -70,13 +68,10 @@
             if (type === 'roof') {
                 roofColor = el.style.backgroundColor;
             }
-            if (type === 'stroke') {
-                strokeRoofs = !!el.checked;
-            }
         }
-        osmb.setStyle({ wallColor: wallColor, roofColor: roofColor, strokeRoofs: strokeRoofs });
+        osmb.setStyle({ wallColor: wallColor, roofColor: roofColor });
 
-        code.innerText = src.innerText + 'osmb.setStyle({ wallColor: \'' + wallColor + '\', roofColor: \'' + roofColor + '\', strokeRoofs: ' + strokeRoofs + ' });';
+        code.innerText = src.innerText + 'osmb.setStyle({ wallColor: \'' + wallColor + '\', roofColor: \'' + roofColor + ' });';
         hljs.highlightBlock(code);
     }
 

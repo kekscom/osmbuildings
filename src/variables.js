@@ -10,16 +10,20 @@
             canvas, context,
 
             url,
-            strokeRoofs,
+
             wallColor = new Color(200, 190, 180),
-            roofColor,
-            strokeColor = new Color(145, 140, 135),
+            altColor = wallColor.adjustLightness(0.8),
+            roofColor = wallColor.adjustLightness(1.2),
+
+            wallColorAlpha = wallColor + '',
+            altColorAlpha  = altColor + '',
+            roofColorAlpha = roofColor + '',
 
             rawData,
             meta, data,
 
-            zoomAlpha = 1, zoomSimplify = 0,
             fadeFactor = 1, fadeTimer,
+            zoomAlpha = 1,
 
             minZoom = MIN_ZOOM,
             maxZoom = 20,
