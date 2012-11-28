@@ -50,17 +50,19 @@
             style = style || {};
             if (style.color || style.wallColor) {
                 wallColor = Color.parse(style.color || style.wallColor);
-                altColor = wallColor.adjustLightness(0.8);
-                roofColor = wallColor.adjustLightness(1.2);
-
                 wallColorAlpha = wallColor.adjustAlpha(zoomAlpha) + '';
-                altColorAlpha  = altColor.adjustAlpha(zoomAlpha) + '';
+
+                altColor = wallColor.adjustLightness(0.8);
+                altColorAlpha = altColor.adjustAlpha(zoomAlpha) + '';
+
+                roofColor = wallColor.adjustLightness(1.2);
+                roofColorAlpha = roofColor.adjustAlpha(zoomAlpha) + '';
             }
 
             if (style.roofColor) {
                 roofColor = Color.parse(style.roofColor);
+                roofColorAlpha = roofColor.adjustAlpha(zoomAlpha) + '';
             }
 
-            roofColorAlpha = roofColor.adjustAlpha(zoomAlpha) + '';
             render();
         }

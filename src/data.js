@@ -253,13 +253,12 @@
                         item[COLOR] = [
                             propWallColor || null,
                             propWallColor ? propWallColor.adjustLightness(0.8) : null,
-                            propRoofColor ? propRoofColor : propWallColor ? propWallColor.adjustLightness(1.2) : null
+                            propRoofColor ? propRoofColor : propWallColor ? propWallColor.adjustLightness(1.2) : roofColor
                         ];
                         res.push(item);
                     }
                 }
             }
-
             return res;
         }
 

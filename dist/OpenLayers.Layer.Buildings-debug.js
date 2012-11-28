@@ -603,13 +603,12 @@ var Color = (function () {
                         item[COLOR] = [
                             propWallColor || null,
                             propWallColor ? propWallColor.adjustLightness(0.8) : null,
-                            propRoofColor ? propRoofColor : propWallColor ? propWallColor.adjustLightness(1.2) : null
+                            propRoofColor ? propRoofColor : propWallColor ? propWallColor.adjustLightness(1.2) : roofColor
                         ];
                         res.push(item);
                     }
                 }
             }
-
             return res;
         }
 
@@ -692,18 +691,20 @@ var Color = (function () {
             style = style || {};
             if (style.color || style.wallColor) {
                 wallColor = Color.parse(style.color || style.wallColor);
-                altColor = wallColor.adjustLightness(0.8);
-                roofColor = wallColor.adjustLightness(1.2);
-
                 wallColorAlpha = wallColor.adjustAlpha(zoomAlpha) + '';
-                altColorAlpha  = altColor.adjustAlpha(zoomAlpha) + '';
+
+                altColor = wallColor.adjustLightness(0.8);
+                altColorAlpha = altColor.adjustAlpha(zoomAlpha) + '';
+
+                roofColor = wallColor.adjustLightness(1.2);
+                roofColorAlpha = roofColor.adjustAlpha(zoomAlpha) + '';
             }
 
             if (style.roofColor) {
                 roofColor = Color.parse(style.roofColor);
+                roofColorAlpha = roofColor.adjustAlpha(zoomAlpha) + '';
             }
 
-            roofColorAlpha = roofColor.adjustAlpha(zoomAlpha) + '';
             render();
         }
 
