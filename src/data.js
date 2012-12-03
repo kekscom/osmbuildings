@@ -172,6 +172,7 @@
                 res[i] = [];
                 res[i][HEIGHT]    = min(item[HEIGHT] >> z, MAX_HEIGHT);
                 res[i][FOOTPRINT] = footprint;
+                res[i][CENTER]    = item[CENTER];
                 res[i][COLOR]     = item[COLOR];
                 res[i][IS_NEW]    = isNew;
             }
@@ -212,7 +213,8 @@
                 lat = isLonLat ? 1 : 0,
                 lon = isLonLat ? 0 : 1,
                 alt = 2,
-                item
+                item,
+                x, y, cx, cy
             ;
 
             if (features) {
@@ -244,12 +246,18 @@
                     propRoofColor = Color.parse(properties.roofColor);
                 }
 
+                cx = 0;
+                cy = 0;
                 for (i = 0, il = polygons.length; i < il; i++) {
                     coords = polygons[i][0];
                     footprint = [];
                     heightSum = 0;
                     for (j = 0, jl = coords.length; j < jl; j++) {
-                        footprint.push(coords[j][lat], coords[j][lon]);
+                        x = coords[j][lon];
+                        y = coords[j][lat];
+                        cx += x;
+                        cy += y;
+                        footprint.push(y, x);
                         heightSum += propHeight || coords[j][alt] || 0;
                     }
 
@@ -257,6 +265,7 @@
                         item = [];
                         item[HEIGHT] = heightSum / coords.length << 0;
                         item[FOOTPRINT] = makeClockwiseWinding(footprint);
+                        item[CENTER] = [cx / jl << 0, cy / jl << 0];
                         item[COLOR] = [
                             propWallColor || null,
                             propWallColor ? propWallColor.adjustLightness(0.8) : null,
@@ -279,6 +288,8 @@
             }
 
             rawData = parseGeoJSON(json, isLonLat);
+            data = scaleData(rawData, true);
+
             minZoom = 0;
             setZoom(zoom); // recalculating all zoom related variables
 
@@ -291,7 +302,6 @@
                 y: 0,
                 z: zoom
             };
-            data = scaleData(rawData, true);
 
             fadeIn();
         }
