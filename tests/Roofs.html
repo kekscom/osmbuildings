@@ -10,10 +10,10 @@
     #map { width: 100%; height: 100%; position: absolute; }
     </style>
 
-    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.4.4/leaflet.css">
-    <!--[if lte IE 8]><link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.4.4/leaflet.ie.css" /><![endif]-->
-    <script src="http://cdn.leafletjs.com/leaflet-0.4.4/leaflet.js"></script>
-    <script src="../dist/buildings-debug.js"></script>
+    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.4.5/leaflet.css">
+    <!--[if lte IE 8]><link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.4.5/leaflet.ie.css" /><![endif]-->
+    <script src="http://cdn.leafletjs.com/leaflet-0.4.5/leaflet.js"></script>
+    <script src="../dist/L.BuildingsLayer-debug.js"></script>
 </head>
 
 <body>
@@ -42,14 +42,14 @@
 			},
 			"properties":{
 				"color":"#ffcc00",
-				"height":20,
-				"roof:height":10,
+				"height":100,
+				"roof:height":50,
 				"roof:shape":"pyramid"
 			}
 		}]
 	};
 
-    new OSMBuildings(map).geoJSON(data, 1);
+    new L.BuildingsLayer().addTo(map).geoJSON(data, 1);
     </script>
 </body>
 </html>

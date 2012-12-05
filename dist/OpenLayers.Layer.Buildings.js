@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 /**
  * Copyright (C) 2012 OSM Buildings, Jan Marsch
  * A leightweight JavaScript library for visualizing 3D building geometry on interactive maps.
@@ -173,32 +172,40 @@ var Color = (function () {
         MAX_HEIGHT = CAM_Z - 50,
 
         LAT = 'latitude', LON = 'longitude',
-        HEIGHT = 0, FOOTPRINT = 1, COLOR = 2, CENTER = 3, IS_NEW = 4
+        HEIGHT = 0, FOOTPRINT = 1, COLOR = 2, CENTER = 3, IS_NEW = 4, RENDERCOLOR = 5
     ;
 
 
 //****** file: geometry.js ******
 
-    function simplify(points, tolerance) {
-        var sqTolerance = tolerance * tolerance,
-            p,
-            prevPoint = [points[0], points[1]],
+    function simplify(points) {
+        var cost,
+            curr, prev = [points[0], points[1]], next,
             newPoints = [points[0], points[1]]
         ;
 
+        // TODO this is not iterative yet
         for (var i = 2, il = points.length - 3; i < il; i += 2) {
-            p = [points[i], points[i + 1]];
-            if (distance(p, prevPoint) > sqTolerance) {
-                newPoints.push(p[0], p[1]);
-                prevPoint = p;
+            curr = [points[i], points[i + 1]];
+            next = [points[i + 2] || points[0], points[i + 3] || points[1]];
+            cost = collapseCost(prev, curr, next);
+            if (cost > 750) {
+                newPoints.push(curr[0], curr[1]);
+                prev = curr;
             }
         }
 
-        if (p[0] !== points[0] || p[1] !== points[1]) {
+        if (curr[0] !== points[0] || curr[1] !== points[1]) {
             newPoints.push(points[0], points[1]);
         }
 
         return newPoints;
+    }
+
+    function collapseCost(a, b, c) {
+        var dist = segmentDistance(b, a, c) * 2; // * 2: put more weight in angle
+        var length = distance(a, c);
+        return dist * length;
     }
 
     function distance(p1, p2) {
@@ -206,6 +213,38 @@ var Color = (function () {
             dy = p1[1] - p2[1]
         ;
         return dx * dx + dy * dy;
+    }
+
+    function segmentDistance(p, p1, p2) { // square distance from a point to a segment
+        var x = p1[0],
+            y = p1[1],
+            dx = p2[0] - x,
+            dy = p2[1] - y,
+            t
+        ;
+        if (dx !== 0 || dy !== 0) {
+            t = ((p[0] - x) * dx + (p[1] - y) * dy) / (dx * dx + dy * dy);
+            if (t > 1) {
+                x = p2[0];
+                y = p2[1];
+            } else if (t > 0) {
+                x += dx * t;
+                y += dy * t;
+            }
+        }
+        return distance(p, [x, y]);
+    }
+
+    function center(points) {
+        var len,
+            x = 0, y = 0
+        ;
+        for (var i = 0, il = points.length - 3; i < il; i += 2) {
+            x += points[i];
+            y += points[i + 1];
+        }
+        len = (points.length - 2) * 2;
+        return [x / len << 0, y / len << 0];
     }
 
 
@@ -228,16 +267,20 @@ var Color = (function () {
             canvas, context,
 
             url,
-            strokeRoofs,
+
             wallColor = new Color(200, 190, 180),
-            roofColor,
-            strokeColor = new Color(145, 140, 135),
+            altColor = wallColor.adjustLightness(0.8),
+            roofColor = wallColor.adjustLightness(1.2),
+
+            wallColorAlpha = wallColor + '',
+            altColorAlpha  = altColor + '',
+            roofColorAlpha = roofColor + '',
 
             rawData,
             meta, data,
 
-            zoomAlpha = 1, zoomSimplify = 0,
             fadeFactor = 1, fadeTimer,
+            zoomAlpha = 1,
 
             minZoom = MIN_ZOOM,
             maxZoom = 20,
@@ -350,7 +393,8 @@ var Color = (function () {
                 resData, resMeta,
                 keyList = [], k,
                 offX = 0, offY = 0,
-                item
+                item,
+                footprint
             ;
 
             minZoom = MIN_ZOOM;
@@ -380,49 +424,27 @@ var Color = (function () {
             meta = resMeta;
             data = [];
             for (i = 0, il = resData.length; i < il; i++) {
-                item = parsePolygon(resData[i][FOOTPRINT], zoomSimplify);
-                if (!item) {
+                item = [];
+
+                footprint = simplify(resData[i][FOOTPRINT]);
+                if (footprint.length < 8) { // 3 points & end = start (x2)
                     continue;
                 }
+
+                item[FOOTPRINT] = footprint;
+                item[CENTER] = center(footprint);
+
                 item[HEIGHT] = min(resData[i][HEIGHT], MAX_HEIGHT);
                 k = item[FOOTPRINT][0] + ',' + item[FOOTPRINT][1];
                 item[IS_NEW] = !(keyList && ~keyList.indexOf(k));
 
+                item[COLOR] = [];
+                item[RENDERCOLOR] = [];
+
                 data.push(item);
             }
-
             resMeta = resData = keyList = null; // gc
             fadeIn();
-        }
-
-        function parsePolygon(points, tolerance) {
-            var item = [],
-                len,
-                x, y,
-                cx = 0, cy = 0
-            ;
-
-            points = simplify(points, tolerance);
-            if (points.length < 8) { // 3 points & end = start (x2)
-                return;
-            }
-
-            // makeClockwiseWinding
-
-			// get center
-            for (var i = 0, il = points.length - 3; i < il; i += 2) {
-                x = points[i];
-                y = points[i + 1];
-                cx += x;
-                cy += y;
-            }
-
-            len = (points.length - 2) * 2,
-
-            item[FOOTPRINT] = points;
-            item[CENTER]    = [cx / len << 0, cy / len << 0];
-
-            return item;
         }
 
         // detect polygon winding direction: clockwise or counter clockwise
@@ -459,26 +481,42 @@ var Color = (function () {
             var
                 res = [],
                 i, il, j, jl,
-                item,
-                coords, footprint,
-                p,
+                oldItem, item,
+                coords, p,
+                footprint,
                 z = maxZoom - zoom
             ;
 
             for (i = 0, il = data.length; i < il; i++) {
-                item = data[i];
-                coords = item[FOOTPRINT];
+                oldItem = data[i];
+                coords = oldItem[FOOTPRINT];
                 footprint = new Int32Array(coords.length);
                 for (j = 0, jl = coords.length - 1; j < jl; j += 2) {
                     p = geoToPixel(coords[j], coords[j + 1]);
                     footprint[j]     = p.x;
                     footprint[j + 1] = p.y;
                 }
-                res[i] = [];
-                res[i][HEIGHT]    = min(item[HEIGHT] >> z, MAX_HEIGHT);
-                res[i][FOOTPRINT] = footprint;
-                res[i][COLOR]     = item[COLOR];
-                res[i][IS_NEW]    = isNew;
+
+                footprint = simplify(footprint);
+                if (footprint.length < 8) { // 3 points & end = start (x2)
+                    continue;
+                }
+
+                item = [];
+                item[FOOTPRINT]   = footprint;
+                item[CENTER]      = center(footprint);
+                item[HEIGHT]      = min(oldItem[HEIGHT] >> z, MAX_HEIGHT);
+                item[IS_NEW]      = isNew;
+                item[COLOR]       = oldItem[COLOR];
+                item[RENDERCOLOR] = [];
+
+                for (j = 0; j < 3; j++) {
+                    if (item[COLOR][j]) {
+                        item[RENDERCOLOR][j] = item[COLOR][j].adjustAlpha(zoomAlpha) + '';
+                    }
+                }
+
+                res.push(item);
             }
 
             return res;
@@ -560,16 +598,17 @@ var Color = (function () {
 
                     if (heightSum) {
                         item = [];
-                        item[HEIGHT] = heightSum / coords.length << 0;
                         item[FOOTPRINT] = makeClockwiseWinding(footprint);
-                        if (propWallColor || propRoofColor) {
-                            item[COLOR] = [propWallColor, propRoofColor];
-                        }
+                        item[HEIGHT]    = heightSum / coords.length << 0;
+                        item[COLOR] = [
+                            propWallColor || null,
+                            propWallColor ? propWallColor.adjustLightness(0.8) : null,
+                            propRoofColor ? propRoofColor : propWallColor ? propWallColor.adjustLightness(1.2) : roofColor
+                        ];
                         res.push(item);
                     }
                 }
             }
-
             return res;
         }
 
@@ -617,10 +656,30 @@ var Color = (function () {
         }
 
         function setZoom(z) {
+            var i, il, j,
+                item
+            ;
+
             zoom = z;
             size = TILE_SIZE << zoom;
+
             zoomAlpha = 1 - (zoom - minZoom) * 0.3 / (maxZoom - minZoom);
-            zoomSimplify = max(1, (zoom - minZoom) * 2) + 1;
+
+            wallColorAlpha = wallColor.adjustAlpha(zoomAlpha) + '';
+            altColorAlpha  = altColor.adjustAlpha(zoomAlpha) + '';
+            roofColorAlpha = roofColor.adjustAlpha(zoomAlpha) + '';
+
+            if (data) {
+                for (i = 0, il = data.length; i < il; i++) {
+                    item = data[i];
+                    item[RENDERCOLOR] = [];
+                    for (j = 0; j < 3; j++) {
+                        if (item[COLOR][j]) {
+                            item[RENDERCOLOR][j] = item[COLOR][j].adjustAlpha(zoomAlpha) + '';
+                        }
+                    }
+                }
+            }
         }
 
         function setCam(x, y) {
@@ -630,13 +689,22 @@ var Color = (function () {
 
         function setStyle(style) {
             style = style || {};
-            strokeRoofs = style.strokeRoofs !== undefined ? style.strokeRoofs : strokeRoofs;
             if (style.color || style.wallColor) {
                 wallColor = Color.parse(style.color || style.wallColor);
+                wallColorAlpha = wallColor.adjustAlpha(zoomAlpha) + '';
+
+                altColor = wallColor.adjustLightness(0.8);
+                altColorAlpha = altColor.adjustAlpha(zoomAlpha) + '';
+
+                roofColor = wallColor.adjustLightness(1.2);
+                roofColorAlpha = roofColor.adjustAlpha(zoomAlpha) + '';
             }
-            if (style.roofColor !== undefined) { // allow explicit falsy values in order to remove roof color
+
+            if (style.roofColor) {
                 roofColor = Color.parse(style.roofColor);
+                roofColorAlpha = roofColor.adjustAlpha(zoomAlpha) + '';
             }
+
             render();
         }
 
@@ -728,14 +796,8 @@ var Color = (function () {
                 sortCam = [camX + offX, camY + offY],
                 footprint, roof, walls,
                 isVisible,
-                ax, ay, bx, by, _a, _b,
-                wallColorAlpha = wallColor.adjustAlpha(zoomAlpha) + '',
-                roofColorAlpha = (roofColor || wallColor.adjustLightness(1.2)).adjustAlpha(zoomAlpha) + ''
+                ax, ay, bx, by, _a, _b
             ;
-
-            if (strokeRoofs) {
-                context.strokeStyle = strokeColor.adjustAlpha(zoomAlpha) + '';
-            }
 
             data.sort(function (a, b) {
                 return distance(b[CENTER], sortCam) / b[HEIGHT] - distance(a[CENTER], sortCam) / a[HEIGHT];
@@ -761,8 +823,6 @@ var Color = (function () {
                     continue;
                 }
 
-                context.fillStyle = item[COLOR] && item[COLOR][0] ? item[COLOR][0].adjustAlpha(zoomAlpha) + '' : wallColorAlpha;
-
                 // when fading in, use a dynamic height
                 h = item[IS_NEW] ? item[HEIGHT] * fadeFactor : item[HEIGHT];
 
@@ -783,36 +843,32 @@ var Color = (function () {
                     _b = project(bx, by, m);
 
                     // backface culling check
-                    if ((bx - ax) * (_a.y - ay) > (_a.x - ax) * (by - ay)) {
+                    if ((bx - ax) * (_a[1] - ay) > (_a[0] - ax) * (by - ay)) {
                         walls = [
                             bx + 0.5, by + 0.5,
                             ax + 0.5, ay + 0.5,
-                            _a.x, _a.y,
-                            _b.x, _b.y
+                            _a[0], _a[1],
+                            _b[0], _b[1]
                         ];
 
+                        // depending on direction, set wall shading
                         if ((ax < bx && ay < by) || (ax > bx && ay > by)) {
-                            context.fillStyle = wallColor.adjustAlpha(zoomAlpha).adjustLightness(0.8) + '';
+                            context.fillStyle = item[RENDERCOLOR][1] || altColorAlpha;
                         } else {
-                            context.fillStyle = item[COLOR] && item[COLOR][0] ? item[COLOR][0].adjustAlpha(zoomAlpha) + '' : wallColorAlpha;
+                            context.fillStyle = item[RENDERCOLOR][0] || wallColorAlpha;
                         }
 
                         drawShape(walls);
                     }
 
-                    roof[j]     = _a.x;
-                    roof[j + 1] = _a.y;
+                    roof[j]     = _a[0];
+                    roof[j + 1] = _a[1];
                 }
 
-                // TODO refactor this to a lookup table
                 // fill roof and optionally stroke it
-                context.fillStyle = !item[COLOR] ? roofColorAlpha : // no item color => use default roof color (which is in worst case build from default wall color)
-                    item[COLOR][1] ? item[COLOR][1].adjustAlpha(zoomAlpha) + '' : // item roof color exists => adapt & use it
-                    roofColor ? roofColorAlpha : // default roof color exists => use it
-                    item[COLOR][0].adjustLightness(1.2).adjustAlpha(zoomAlpha) + '' // item wall color exists => adapt & use it
-                ;
-
-                drawRoof(roof, h, strokeRoofs);
+                context.fillStyle = item[RENDERCOLOR][2] || roofColorAlpha;
+                context.strokeStyle = item[RENDERCOLOR][1] || altColorAlpha;
+                drawRoof3(roof, h);
             }
         }
 
@@ -820,9 +876,72 @@ var Color = (function () {
 
 
 
-        function circle(x, y, diameter, stroke) {
-            ellipse(x, y, diameter, diameter, stroke);
+//        function circle(x, y, diameter, stroke) {
+//            ellipse(x, y, diameter, diameter, stroke);
+//        }
+
+        function circle(x, y, diameter) {
+            context.beginPath();
+            context.arc(x, y, diameter / 2, 0, 360);
+            context.stroke();
         }
+
+        var KAPPA = 0.5522847498;
+
+        function dome(x, y, z, radius) {
+            z = 0;
+            radius = 40;
+
+            var
+                k = radius * KAPPA,
+
+                mz  = CAM_Z / (CAM_Z - z),
+                mzk = CAM_Z / (CAM_Z - (z + k / 2)),
+                mzr = CAM_Z / (CAM_Z - (z + radius / 2)),
+
+                a, b, c,
+                apex = project(x, y, mzr)
+            ;
+
+            a = project(x-radius, y, mz);
+            b = project(x-radius, y, mzk);
+            c = project(x-k,      y, mzr);
+
+            context.beginPath();
+            context.moveTo(a[0], a[1]);
+            context.bezierCurveTo(b[0], b[1], c[0], c[1], apex[0], apex[1]);
+
+            a = project(x+radius, y, mz);
+            b = project(x+radius, y, mzk);
+            c = project(x+k,      y, mzr);
+
+
+            context.moveTo(a[0], a[1]);
+            context.bezierCurveTo(b[0], b[1], c[0], c[1], apex[0], apex[1]);
+
+
+
+            a = project(x, y-radius, mz);
+            b = project(x, y-radius, mzk);
+            c = project(x, y-k,      mzr);
+
+            context.moveTo(a[0], a[1]);
+            context.bezierCurveTo(b[0], b[1], c[0], c[1], apex[0], apex[1]);
+
+            a = project(x, y+radius, mz);
+            b = project(x, y+radius, mzk);
+            c = project(x, y+k,      mzr);
+
+            context.moveTo(a[0], a[1]);
+            context.bezierCurveTo(b[0], b[1], c[0], c[1], apex[0], apex[1]);
+
+                context.stroke();
+        }
+
+        function sphere() {
+        }
+
+
 
         function ellipse(x, y, w, h, stroke) {
             var
@@ -863,28 +982,26 @@ var Color = (function () {
             ;
 
             var d = 65;
-            circle(center[0], center[1], d, d, true);
+            circle(center[0], center[1], d);
 
             context.beginPath();
             context.moveTo(center[0] - d / 2, center[1]);
-            context.lineTo(apex.x, apex.y);
+            context.lineTo(apex[0], apex[1]);
             context.lineTo(center[0] + d / 2, center[1]);
             context.stroke();
 
             context.beginPath();
             context.moveTo(center[0], center[1] - d / 2);
-            context.lineTo(apex.x, apex.y);
+            context.lineTo(apex[0], apex[1]);
             context.lineTo(center[0], center[1] + d / 2);
             context.stroke();
         }
 
 
-        function drawRoof3(points) {
-            context.fillStyle = 'rgba(240,0,0,0.25)';
-            context.strokeStyle = strokeColor.adjustAlpha(zoomAlpha) + '';
+        function drawRoof3(points, h) {
+            drawShape(points, true);
 
             var
-                h = 10,
                 center = [
                     (points[0] + points[2] + points[4] + points[6]) / 4,
                     (points[1] + points[3] + points[5] + points[7]) / 4
@@ -892,25 +1009,19 @@ var Color = (function () {
                 apex = project(center[0], center[1], CAM_Z / (CAM_Z - h))
             ;
 
-            var d = 65;
-            circle(center[0], center[1], d, d, true);
-            debugMarker(apex.x, apex.y);
+            var d = 75;
+            //circle(center[0], center[1], d);
+            var apex = project(center[0], center[1], CAM_Z / (CAM_Z));
+            circle(apex[0], apex[1], d);
 
-            var d2 = d / 2;
-            var w = center[0] - d2;
-            var e = center[0] + d2;
-            var n = center[1] - d2;
-            var s = center[1] + d2;
 
-            context.beginPath();
-            context.moveTo(w, center[1]);
-            context.bezierCurveTo((apex.x + w) / 2.05, center[1] + (apex.y - center[1]) * 1.5, (apex.x + e) / 1.95, center[1] + (apex.y - center[1]) * 1.5, e, center[1]);
-            context.stroke();
+            var apex = project(center[0], center[1], CAM_Z / (CAM_Z - d/12));
+            circle(apex[0], apex[1], d  * 0.6);
 
-            context.beginPath();
-            context.moveTo(center[0], n);
-            context.bezierCurveTo(center[0] + (apex.x - center[0]) * 1.5, (apex.y + n) / 2.05, center[0] + (apex.x - center[0]) * 1.5, (apex.y + s) / 1.95, center[0], s);
-            context.stroke();
+
+
+
+            dome(center[0], center[1], 30, 30);
         }
 
         function drawRoof(points, height, strokeRoofs) {
@@ -953,7 +1064,7 @@ var Color = (function () {
                 drawShape([
                     points[i],     points[i + 1],
                     points[i + 2], points[i + 3],
-                    apex.x, apex.y
+                    apex[0], apex[1]
                 ], strokeRoofs);
             }
 
@@ -971,7 +1082,7 @@ var Color = (function () {
             drawShape([
                 points[i], points[i + 1],
                 points[0], points[1],
-                apex.x, apex.y
+                apex[0], apex[1]
             ], strokeRoofs);
         }
 
@@ -1003,10 +1114,10 @@ var Color = (function () {
         }
 
         function project(x, y, m) {
-            return {
-                x: ((x - camX) * m + camX << 0) + 0.5, // + 0.5: disabling(!) anti alias
-                y: ((y - camY) * m + camY << 0) + 0.5  // + 0.5: disabling(!) anti alias
-            };
+            return [
+                ((x - camX) * m + camX << 0) + 0.5, // + 0.5: disabling(!) anti alias
+                ((y - camY) * m + camY << 0) + 0.5  // + 0.5: disabling(!) anti alias
+            ];
         }
 
 
@@ -1161,25 +1272,3 @@ OpenLayers.Layer.Buildings = OpenLayers.Class(OpenLayers.Layer, {
 });
 
 
-=======
-(function(l){function F(i){for(var m,x=[i[0],i[1]],c,f=[i[0],i[1]],j=2,p=i.length-3;j<p;j+=2){m=[i[j],i[j+1]];c=[i[j+2]||i[0],i[j+3]||i[1]];var t=x,q=t[0],u=t[1],G=c[0]-q,v=c[1]-u,y=void 0;if(G!==0||v!==0){y=((m[0]-q)*G+(m[1]-u)*v)/(G*G+v*v);if(y>1){q=c[0];u=c[1]}else if(y>0){q+=G*y;u+=v*y}}q=z(m,[q,u])*2;c=z(t,c);if(q*c>750){f.push(m[0],m[1]);x=m}}if(m[0]!==i[0]||m[1]!==i[1])f.push(i[0],i[1]);return f}function z(i,m){var x=i[0]-m[0],c=i[1]-m[1];return x*x+c*c}function ka(i){for(var m=0,x=0,c=0,f=
-i.length-3;c<f;c+=2){m+=i[c];x+=i[c+1]}i=(i.length-2)*2;return[m/i<<0,x/i<<0]}var Ba=Ba||Array,Ga=Math.exp,Ha=Math.log,Ia=Math.tan,Ja=Math.atan,ra=Math.min,Ka=Math.max,sa=l.document,K=function(){function i(c,f,j){if(j<0)j+=1;if(j>1)j-=1;if(j<1/6)return c+(f-c)*6*j;if(j<0.5)return f;if(j<2/3)return c+(f-c)*(2/3-j)*6;return c}function m(c,f,j,p){this.r=c;this.g=f;this.b=j;this.a=arguments.length<4?1:p}var x=m.prototype;x.toString=function(){return"rgba("+[this.r,this.g,this.b,this.a.toFixed(2)].join(",")+
-")"};x.adjustLightness=function(c){var f=K.toHSLA(this);f.l*=c;f.l=Math.min(1,Math.max(0,f.l));var j,p;if(f.s===0)c=j=p=f.l;else{p=f.l<0.5?f.l*(1+f.s):f.l+f.s-f.l*f.s;var t=2*f.l-p;c=i(t,p,f.h+1/3);j=i(t,p,f.h);p=i(t,p,f.h-1/3)}return new K(c*255<<0,j*255<<0,p*255<<0,f.a)};x.adjustAlpha=function(c){return new K(this.r,this.g,this.b,this.a*c)};m.parse=function(c){c+="";if(~c.indexOf("#")){c=c.match(/^#?(\w{2})(\w{2})(\w{2})(\w{2})?$/);return new K(parseInt(c[1],16),parseInt(c[2],16),parseInt(c[3],
-16),c[4]?parseInt(c[4],16)/255:1)}if(c=c.match(/rgba?\((\d+)\D+(\d+)\D+(\d+)(\D+([\d.]+))?\)/))return new K(parseInt(c[1],10),parseInt(c[2],10),parseInt(c[3],10),c[4]?parseFloat(c[5],10):1)};m.toHSLA=function(c){var f=c.r/255,j=c.g/255,p=c.b/255,t=Math.max(f,j,p),q=Math.min(f,j,p),u,G=(t+q)/2,v;if(t===q)u=q=0;else{v=t-q;q=G>0.5?v/(2-t-q):v/(t+q);switch(t){case f:u=(j-p)/v+(j<p?6:0);break;case j:u=(p-f)/v+2;break;case p:u=(f-j)/v+4;break}u/=6}return{h:u,s:q,l:G,a:c.a}};return m}(),aa=Math.PI,Ca=aa/
-2,La=aa/4,Ma=180/aa,Na=256,ta=14,ua=400,Da=ua-50,ba="latitude",ca="longitude",P=0,L=1,S=2,la=3,ma=4,Q=5;l.OSMBuildings=function(i){function m(a,e){var b={};a/=da;e/=da;b[ba]=e<=0?90:e>=1?-90:Ma*(2*Ja(Ga(aa*(1-2*e)))-Ca);b[ca]=(a===1?1:(a%1+1)%1)*360-180;return b}function x(a,e){return a.replace(/\{ *([\w_]+) *\}/g,function(b,d){return e[d]})}function c(a,e){var b=new XMLHttpRequest;b.onreadystatechange=function(){if(b.readyState===4)!b.status||b.status<200||b.status>299||b.responseText&&e(JSON.parse(b.responseText))};
-b.open("GET",a);b.send(null);return b}function f(){if(!(!va||J<ta)){var a=m(Z-ea,$-wa),e=m(Z+U+ea,$+R+wa);na&&na.abort();na=c(x(va,{w:a[ca],n:a[ba],e:e[ca],s:e[ba],z:J}),j)}}function j(a){var e,b,d,k=[],g,h=g=0;fa=ta;G(J);na=null;if(!(!a||a.meta.z!==J)){d=a.meta;b=a.data;if(A&&s&&A.z===d.z){g=A.x-d.x;h=A.y-d.y;a=0;for(e=s.length;a<e;a++)k[a]=s[a][L][0]+g+","+(s[a][L][1]+h)}A=d;s=[];a=0;for(e=b.length;a<e;a++){d=[];g=F(b[a][L]);if(!(g.length<8)){d[L]=g;d[la]=ka(g);d[P]=ra(b[a][P],Da);g=d[L][0]+","+
-d[L][1];d[ma]=!(k&&~k.indexOf(g));d[S]=[];d[Q]=[];s.push(d)}}v()}}function p(a,e){var b=[],d,k,g,h,n,B,o,r,C=xa-J;d=0;for(k=a.length;d<k;d++){n=a[d];B=n[L];r=new Ba(B.length);g=0;for(h=B.length-1;g<h;g+=2){o=B[g+1];var M=ra(1,Ka(0,0.5-Ha(Ia(La+Ca*B[g]/180))/aa/2));o={x:(o/360+0.5)*da<<0,y:M*da<<0};r[g]=o.x;r[g+1]=o.y}r=F(r);if(!(r.length<8)){h=[];h[L]=r;h[la]=ka(r);h[P]=ra(n[P]>>C,Da);h[ma]=e;h[S]=n[S];h[Q]=[];for(g=0;g<3;g++)if(h[S][g])h[Q][g]=h[S][g].adjustAlpha(N)+"";b.push(h)}}return b}function t(a,
-e){if(typeof a==="object")u(a,!e);else{var b=sa.documentElement,d=sa.createElement("script");l.jsonpCallback=function(k){delete l.jsonpCallback;b.removeChild(d);u(k,!e)};b.insertBefore(d,b.lastChild).src=a.replace(/\{callback\}/,"jsonpCallback")}}function q(a,e,b){if(b===undefined)b=[];var d,k,g,h=a[0]?a:a.features,n,B,o,r,C,M=e?1:0,H=e?0:1;if(h){d=0;for(a=h.length;d<a;d++)q(h[d],e,b);return b}if(a.type==="Feature"){n=a.geometry;d=a.properties}if(n.type==="Polygon")B=[n.coordinates];if(n.type==="MultiPolygon")B=
-n.coordinates;if(B){e=d.height;if(d.color||d.wallColor)r=K.parse(d.color||d.wallColor);if(d.roofColor)C=K.parse(d.roofColor);d=0;for(a=B.length;d<a;d++){h=B[d][0];o=[];k=n=0;for(g=h.length;k<g;k++){o.push(h[k][M],h[k][H]);n+=e||h[k][2]||0}if(n){k=[];g=L;var I=void 0,D=void 0,O=void 0,ga=void 0,ha=0,V=void 0,Ea=void 0;V=0;for(Ea=o.length-3;V<Ea;V+=2){I=o[V];D=o[V+1];O=o[V+2];ga=o[V+3];ha+=I*ga-O*D}if((ha/2>0?"CW":"CCW")==="CW")o=o;else{I=[];for(D=o.length-2;D>=0;D-=2)I.push(o[D],o[D+1]);o=I}k[g]=o;
-k[P]=n/h.length<<0;k[S]=[r||null,r?r.adjustLightness(0.8):null,C?C:r?r.adjustLightness(1.2):W];b.push(k)}}}return b}function u(a,e){if(a){ia=q(a,e);fa=0;G(J);A={n:90,w:-180,s:-90,e:180,x:0,y:0,z:J};s=p(ia,true);v()}else{ia=null;y()}}function G(a){var e,b,d;J=a;da=Na<<J;N=1-(J-fa)*0.3/(xa-fa);ya=T.adjustAlpha(N)+"";oa=pa.adjustAlpha(N)+"";qa=W.adjustAlpha(N)+"";if(s){a=0;for(e=s.length;a<e;a++){d=s[a];d[Q]=[];for(b=0;b<3;b++)if(d[S][b])d[Q][b]=d[S][b].adjustAlpha(N)+""}}}function v(){ja=0;clearInterval(za);
-za=setInterval(function(){ja+=0.1;if(ja>1){clearInterval(za);ja=1;for(var a=0,e=s.length;a<e;a++)s[a][ma]=0}y()},33)}function y(){w.clearRect(0,0,U,R);if(A&&s)if(!(J<fa||Aa)){var a,e,b,d,k,g,h,n,B=Z-A.x,o=$-A.y,r=[X+B,Y+o],C,M,H,I,D,O;s.sort(function(ga,ha){return z(ha[la],r)/ha[P]-z(ga[la],r)/ga[P]});a=0;for(e=s.length;a<e;a++){k=s[a];H=false;g=k[L];C=[];b=0;for(d=g.length-1;b<d;b+=2){C[b]=h=g[b]-B;C[b+1]=n=g[b+1]-o;H||(H=h>0&&h<U&&n>0&&n<R)}if(H){b=k[ma]?k[P]*ja:k[P];g=ua/(ua-b);h=[];M=[];b=0;for(d=
-C.length-3;b<d;b+=2){n=C[b];H=C[b+1];I=C[b+2];D=C[b+3];O={x:((n-X)*g+X<<0)+0.5,y:((H-Y)*g+Y<<0)+0.5};M={x:((I-X)*g+X<<0)+0.5,y:((D-Y)*g+Y<<0)+0.5};if((I-n)*(O.y-H)>(O.x-n)*(D-H)){M=[I+0.5,D+0.5,n+0.5,H+0.5,O.x,O.y,M.x,M.y];w.fillStyle=n<I&&H<D||n>I&&H>D?k[Q][1]||oa:k[Q][0]||ya;Fa(M)}h[b]=O.x;h[b+1]=O.y}w.fillStyle=k[Q][2]||qa;w.strokeStyle=k[Q][1]||oa;Fa(h,true)}}}}function Fa(a,e){if(a.length){w.beginPath();w.moveTo(a[0],a[1]);for(var b=2,d=a.length;b<d;b+=2)w.lineTo(a[b],a[b+1]);w.closePath();e&&
-w.stroke();w.fill()}}var U=0,R=0,ea=0,wa=0,Z=0,$=0,J,da,na,E,w,va,T=new K(200,190,180),pa=T.adjustLightness(0.8),W=T.adjustLightness(1.2),ya=T+"",oa=pa+"",qa=W+"",ia,A,s,ja=1,za,N=1,fa=ta,xa=20,X,Y,Aa;this.setStyle=function(a){a=(a=a)||{};if(a.color||a.wallColor){T=K.parse(a.color||a.wallColor);ya=T.adjustAlpha(N)+"";pa=T.adjustLightness(0.8);oa=pa.adjustAlpha(N)+"";W=T.adjustLightness(1.2);qa=W.adjustAlpha(N)+""}if(a.roofColor){W=K.parse(a.roofColor);qa=W.adjustAlpha(N)+""}y();return this};this.geoJSON=
-function(a,e){t(a,e);return this};this.setCamOffset=function(a,e){X=ea+a;Y=R+e};this.setMaxZoom=function(a){xa=a};this.createCanvas=function(a){E=sa.createElement("canvas");E.style.webkitTransform="translate3d(0,0,0)";E.style.imageRendering="optimizeSpeed";E.style.position="absolute";E.style.pointerEvents="none";E.style.left=0;E.style.top=0;a.appendChild(E);w=E.getContext("2d");w.lineCap="round";w.lineJoin="round";w.lineWidth=1;try{w.mozImageSmoothingEnabled=false}catch(e){}return E};this.destroyCanvas=
-function(){E.parentNode.removeChild(E)};this.loadData=f;this.onMoveEnd=function(){var a=m(Z,$),e=m(Z+U,$+R);y();if(A&&(a[ba]>A.n||a[ca]<A.w||e[ba]<A.s||e[ca]>A.e))f()};this.onZoomEnd=function(a){Aa=false;G(a.zoom);if(ia){s=p(ia);y()}else{y();f()}};this.onZoomStart=function(){Aa=true;y()};this.render=y;this.setOrigin=function(a,e){Z=a;$=e};this.setSize=function(a,e){U=a;R=e;ea=U/2<<0;wa=R/2<<0;X=ea;Y=R;E.width=U;E.height=R};this.setZoom=G;va=i};l.OSMBuildings.VERSION="0.1.7a";l.OSMBuildings.ATTRIBUTION=
-'&copy; <a href="http://osmbuildings.org">OSM Buildings</a>'})(this);
-OpenLayers.Layer.Buildings=OpenLayers.Class(OpenLayers.Layer,{CLASS_NAME:"OpenLayers.Layer.Buildings",name:"OSM Buildings",attribution:OSMBuildings.ATTRIBUTION,isBaseLayer:false,alwaysInRange:true,dxSum:0,dySum:0,initialize:function(l){l=l||{};l.projection="EPSG:900913";OpenLayers.Layer.prototype.initialize(this.name,l)},setOrigin:function(){var l=this.map.getLonLatFromPixel(new OpenLayers.Pixel(0,0)),F=this.map.resolution,z=this.maxExtent;this.osmb.setOrigin(Math.round((l.lon-z.left)/F),Math.round((z.top-
-l.lat)/F))},setMap:function(l){if(!this.map){OpenLayers.Layer.prototype.setMap(l);this.osmb=new OSMBuildings(this.options.url);this.osmb.createCanvas(this.div);this.osmb.setSize(this.map.size.w,this.map.size.h);this.osmb.setZoom(this.map.zoom);this.setOrigin();this.osmb.loadData()}},removeMap:function(l){this.osmb.destroyCanvas();this.osmb=null;OpenLayers.Layer.prototype.removeMap(l)},onMapResize:function(){OpenLayers.Layer.prototype.onMapResize();this.osmb.onResize({width:this.map.size.w,height:this.map.size.h})},
-moveTo:function(l,F,z){l=OpenLayers.Layer.prototype.moveTo(l,F,z);if(!z){z=parseInt(this.map.layerContainerDiv.style.left,10);var ka=parseInt(this.map.layerContainerDiv.style.top,10);this.div.style.left=-z+"px";this.div.style.top=-ka+"px"}this.setOrigin();this.dySum=this.dxSum=0;this.osmb.setCamOffset(this.dxSum,this.dySum);F?this.osmb.onZoomEnd({zoom:this.map.zoom}):this.osmb.onMoveEnd();return l},moveByPx:function(l,F){this.dxSum+=l;this.dySum+=F;var z=OpenLayers.Layer.prototype.moveByPx(l,F);this.osmb.setCamOffset(this.dxSum,
-this.dySum);this.osmb.render();return z},geoJSON:function(l,F){return this.osmb.geoJSON(l,F)},setStyle:function(l){return this.osmb.setStyle(l)}});
->>>>>>> master
