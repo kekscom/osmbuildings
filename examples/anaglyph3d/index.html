@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>OSM Buildings - 3D Anaglyph</title>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <style type="text/css">
+    html, body {
+        border: 0;
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+    }
+
+    #map {
+        height: 100%;
+    }
+
+    .logo {
+        position: absolute;
+        left: 10px;
+        bottom: 10px;
+        width: 100px;
+        height: 50px;
+        border: 0;
+    }
+    </style>
+
+    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.4.5/leaflet.css">
+    <script src="http://cdn.leafletjs.com/leaflet-0.4.5/leaflet.js"></script>
+    <script src="L.BuildingsLayer-anaglyph3d.js"></script>
+	<script src="../js/piwik.js"></script>
+</head>
+
+<body>
+    <div id="map"></div>
+    <a href="http://osmbuildings.org/"><img src="OSMB.png" class="logo"></a>
+
+    <script>
+    var map = new L.Map('map').setView([52.50440, 13.33522], 17);
+
+    new L.TileLayer(
+        'http://{s}.tiles.mapbox.com/v3/mapbox.mapbox-streets/{z}/{x}/{y}.png',
+        { attribution: 'Map tiles &copy; <a href="http://mapbox.com">MapBox</a>', maxZoom: 17 }
+    ).addTo(map);
+
+    var osmb = new L.BuildingsLayer({ url: '../server/?w={w}&n={n}&e={e}&s={s}&z={z}' }).addTo(map);
+    L.control.layers({}, { Buildings: osmb }).addTo(map);
+    </script>
+</body>
+</html>

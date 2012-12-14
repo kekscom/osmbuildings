@@ -772,8 +772,138 @@ var Color = (function () {
             }, 33);
         }
 
-        function render() {
+
+        function renderX() {
             context.clearRect(0, 0, width, height);
+
+            // data needed for rendering
+            if (!meta || !data) {
+                return;
+            }
+
+            // show buildings in high zoom levels only
+            // avoid rendering during zoom
+            if (zoom < minZoom || isZooming) {
+                return;
+            }
+
+            var
+                i, il, j, jl,
+                item,
+                f,
+                x, y,
+                offX = originX - meta.x,
+                offY = originY - meta.y,
+                sortCam = [camX + offX, camY + offY],
+                footprint,
+                isVisible
+            ;
+
+            data.sort(function (a, b) {
+                return distance(b[CENTER], sortCam) / b[HEIGHT] * 0.5 - distance(a[CENTER], sortCam) / a[HEIGHT] * 0.5 ;
+            });
+
+            for (i = 0, il = data.length; i < il; i++) {
+                item = data[i];
+
+                isVisible = false;
+                f = item[FOOTPRINT];
+                footprint = []; // typed array would be created each pass and is way too slow
+                for (j = 0, jl = f.length - 1; j < jl; j += 2) {
+                    footprint[j]     = x = (f[j]     - offX);
+                    footprint[j + 1] = y = (f[j + 1] - offY);
+
+                    // checking footprint is sufficient for visibility
+                    if (!isVisible) {
+                        isVisible = (x > 0 && x < width && y > 0 && y < height);
+                    }
+                }
+
+                if (!isVisible) {
+                    continue;
+                }
+
+                camX -= 10;
+                wallColorAlpha = new Color(0, wallColor.g, wallColor.b, wallColor.a * 0.9) + '';
+                altColorAlpha  = new Color(0, altColor.g,  altColor.b,  altColor.a  * 0.9) + '';
+                roofColorAlpha = new Color(0, roofColor.g, roofColor.b, roofColor.a * 0.9) + '';
+                drawBuilding(item, footprint);
+
+                camX += 20;
+                wallColorAlpha = new Color(wallColor.g * 0.7 + wallColor.b * 0.3, 0, 0, wallColor.a * 0.9) + '';
+                altColorAlpha  = new Color(altColor.g  * 0.7 + altColor.b  * 0.3, 0, 0, altColor.a  * 0.9) + '';
+                roofColorAlpha = new Color(roofColor.g * 0.7 + roofColor.b * 0.3, 0, 0, roofColor.a * 0.9) + '';
+                drawBuilding(item, footprint);
+
+                camX -= 10;
+            }
+        }
+
+        function drawBuilding(item, footprint) {
+            var
+                j, jl,
+                h, m,
+                roof, walls,
+                ax, ay, bx, by, _a, _b
+            ;
+
+            // when fading in, use a dynamic height
+            h = item[IS_NEW] ? item[HEIGHT] * fadeFactor : item[HEIGHT];
+
+            // precalculating projection height scale
+            m = CAM_Z / (CAM_Z - h);
+
+            roof = []; // typed array would be created each pass and is way too slow
+            walls = [];
+
+            for (j = 0, jl = footprint.length - 3; j < jl; j += 2) {
+                ax = footprint[j];
+                ay = footprint[j + 1];
+                bx = footprint[j + 2];
+                by = footprint[j + 3];
+
+                // project 3d to 2d on extruded footprint
+                _a = project(ax, ay, m);
+                _b = project(bx, by, m);
+
+                // backface culling check
+                if ((bx - ax) * (_a.y - ay) > (_a.x - ax) * (by - ay)) {
+                    walls = [
+                        bx + 0.5, by + 0.5,
+                        ax + 0.5, ay + 0.5,
+                        _a.x, _a.y,
+                        _b.x, _b.y
+                    ];
+
+                    // depending on direction, set wall shading
+                    if ((ax < bx && ay < by) || (ax > bx && ay > by)) {
+                        context.fillStyle = item[RENDERCOLOR][1] || altColorAlpha;
+                    } else {
+                        context.fillStyle = item[RENDERCOLOR][0] || wallColorAlpha;
+                    }
+
+                    drawShape(walls);
+                }
+
+                roof[j]     = _a.x;
+                roof[j + 1] = _a.y;
+            }
+
+            // fill roof and optionally stroke it
+            context.fillStyle   = item[RENDERCOLOR][2] || roofColorAlpha;
+            context.strokeStyle = item[RENDERCOLOR][1] || altColorAlpha;
+            drawShape(roof, true);
+        }
+
+
+
+
+
+
+
+        function renderPass() {
+            context.fillStyle = 'rgba(240,235,230,0.75)';
+            context.fillRect(0, 0, width, height);
 
             // data needed for rendering
             if (!meta || !data) {
@@ -800,7 +930,7 @@ var Color = (function () {
             ;
 
             data.sort(function (a, b) {
-                return distance(b[CENTER], sortCam) / b[HEIGHT] - distance(a[CENTER], sortCam) / a[HEIGHT];
+                return distance(b[CENTER], sortCam) / b[HEIGHT] * 0.5 - distance(a[CENTER], sortCam) / a[HEIGHT] * 0.5 ;
             });
 
             for (i = 0, il = data.length; i < il; i++) {
@@ -866,10 +996,70 @@ var Color = (function () {
                 }
 
                 // fill roof and optionally stroke it
-                context.fillStyle = item[RENDERCOLOR][2] || roofColorAlpha;
+                context.fillStyle   = item[RENDERCOLOR][2] || roofColorAlpha;
                 context.strokeStyle = item[RENDERCOLOR][1] || altColorAlpha;
                 drawShape(roof, true);
             }
+        }
+
+        function render() {
+            var algo = 'color-anaglyphs';
+
+            context.clearRect(0, 0, width, height);
+
+            camX -= 10;
+            renderPass();
+            var canvasData1 = context.getImageData(0, 0, width, height);
+
+            camX += 20;
+            renderPass();
+            var canvasData2 = context.getImageData(0, 0, width, height);
+
+            camX -= 10;
+
+            for (var i = 0, il = canvasData1.data.length; i < il; i+= 4) {
+                var r1 = canvasData1.data[i + 0],
+                    r2 = canvasData2.data[i + 0],
+                    g1 = canvasData1.data[i + 1],
+                    g2 = canvasData2.data[i + 1],
+                    b1 = canvasData1.data[i + 2],
+                    b2 = canvasData2.data[i + 2],
+                    ra = 0,
+                    ga = 0,
+                    ba = 0
+                ;
+
+                switch (algo) {
+                    case 'true-anaglyphs':
+                        ra = 0.299 * r1 + 0.587 * g1 + 0.114 * b1;
+                        ba = 0.299 * r2 + 0.587 * g2 + 0.114 * b2;
+                        break;
+                    case 'optimized-anaglyphs':
+                        ra = 0.7 * g1 + 0.3 * b1;
+                        ga = g2;
+                        ba = b2;
+                        break;
+                    case 'gray-anaglyphs':
+                        ra = 0.299 * r1 + 0.587 * g1 + 0.114 * b1;
+                        ga = ba = 0.299 * r2 + 0.587 * g2 + 0.114 * b2;
+                        break;
+                    case 'color-anaglyphs':
+                        ra = r1;
+                        ga = r2;
+                        ba = b2;
+                        break;
+                    case 'half-color-anaglyphs':
+                        ra = 0.299 * r1 + 0.587 * g1 + 0.114 * b1;
+                        ga = r2;
+                        ba = b2;
+                        break;
+                }
+                canvasData1.data[i + 0] = ra;
+                canvasData1.data[i + 1] = ga;
+                canvasData1.data[i + 2] = ba;
+            }
+            context.clearRect(0, 0, width, height);
+            context.putImageData(canvasData1, 0, 0);
         }
 
         function debugMarker(x, y, color, size) {
