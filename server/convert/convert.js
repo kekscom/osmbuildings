@@ -26,7 +26,7 @@ var
     pgHeightField    = config['pg-height-field']    || 'COALESCE(height, "building:height")', // the field containing height info, usually just 'height' but you can also use COALESCE() statements here
     pgFootprintField = config['pg-footprint-field'] || 'the_geom',       // the field containing geometry info
     pgCoords         = config['pg-coords']          || 'lon, lat',       // the coordinate order of your data
-    pgBBox           = config['pg-bbox']            || null,             // { n: .., w: .., s: .., e: .. } optional info to convert a certain segment of data (not tested yet)
+    pgBBox           = config['pg-bbox']            || null,             // optional info to convert a certain segment of data (format: 'w,n,e,s' for 'lon, lat' / 'n,w,s,e' for 'lat, lon')
     pgFilter         = config['pg-filter']          || '1=1',            // optional WHERE condition
 
     myTable  = config['my-table']  || 'buildings',      // the table name in mysql
@@ -46,31 +46,36 @@ var
 function setLatLonOrder(str) {
     // TODO: fix winding as well
 
+    var str = str.replace('/\s*,\s*/g', ',');
+    var str_parts = /^\w+\(+(.*?)\)+$/.exec(str);
+
     if (/^lat/i.test(pgCoords)) {
-        return vstr;
+        var lines_str = str_parts[1];
+    }
+    else {
+        var lines = str_parts[1].split('),(');
+        for (l in lines) {
+            var coords = lines[l].replace(/^[A-Z\(]+|\)+$/g, '').replace(/ /g, ',').split(',');
+
+            var res = [];
+            for (var i = 0, il = coords.length - 1; i < il; i += 2) {
+                res.push(coords[i + 1] + ' ' + coords[i]);
+            }
+            lines[l] = res.join(',');
+        }
+        var lines_str = lines.join('),(');
     }
 
-    var coords = str.replace(/^[A-Z\(]+|\)+$/g, '').replace(/ /g, ',').split(',');
-
-    var res = [];
-    for (var i = 0, il = coords.length - 1; i < il; i += 2) {
-        res.push(coords[i + 1] + ' ' + coords[i]);
-    }
-
-    return 'POLYGON((' + res.join(',') + '))';
+    return 'POLYGON((' + lines_str + '))';
 }
 
-function filterByBBox() {
+function filterByBBox(pgBBox) {
     if (!pgBBox) {
         return '1=1';
     }
-    var polygon;
-    if (/^lat/i.test(pgCoords)) {
-        polygon = 'POLYGON((' + pgBBox.n + ' ' + pgBBox.w + ', ' + pgBBox.n + ' ' + pgBBox.e + ', ' + pgBBox.s + ' ' + pgBBox.e + ', ' + pgBBox.s + ' ' + pgBBox.w + ', ' + pgBBox.n + ' ' + pgBBox.w + '))';
-    } else {
-        polygon = 'POLYGON((' + pgBBox.w + ' ' + pgBBox.n + ', ' + pgBBox.e + ' ' + pgBBox.n + ', ' + pgBBox.e + ' ' + pgBBox.s + ', ' + pgBBox.w + ' ' + pgBBox.s + ', ' + pgBBox.w + ' ' + pgBBox.n + '))';
-    }
-    return 'WHERE ST_Intersects(ST_GeomFromText(\'' + polygon + '\', 4326), ' + pgFootprintField + ')';
+    var pgBBox = pgBBox.split(',');
+    var polygon = 'POLYGON((' + pgBBox[0] + ' ' + pgBBox[1] + ', ' + pgBBox[2] + ' ' + pgBBox[1] + ', ' + pgBBox[2] + ' ' + pgBBox[3] + ', ' + pgBBox[0] + ' ' + pgBBox[3] + ', ' + pgBBox[0] + ' ' + pgBBox[1] + '))';
+    return 'ST_Intersects(ST_GeomFromText(\'' + polygon + '\', 4326), ' + pgFootprintField + ')';
 }
 
 //*****************************************************************************
@@ -109,7 +114,7 @@ sql.connect();
 
 var query =
     'SELECT ' + pgHeightField + ' AS height,' +
-    ' ST_AsText(ST_ExteriorRing(' + pgFootprintField + ')) AS footprint' +
+    ' ST_AsText(ST_Boundary(' + pgFootprintField + ')) AS footprint' +
     ' FROM ' + pgTable +
     ' WHERE ' + filterByBBox(pgBBox) +
     ' AND (' + pgFilter + ')' +
