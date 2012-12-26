@@ -17,7 +17,10 @@
 
 
         function renderX() {
+            context.globalCompositeOperation = 'darker';
             context.clearRect(0, 0, width, height);
+context.fillStyle = 'rgba(240,235,230,0.75)';
+context.fillRect(0, 0, width, height);
 
             // data needed for rendering
             if (!meta || !data) {
@@ -66,19 +69,31 @@
                     continue;
                 }
 
-                camX -= 10;
-                wallColorAlpha = new Color(0, wallColor.g, wallColor.b, wallColor.a * 0.9) + '';
-                altColorAlpha  = new Color(0, altColor.g,  altColor.b,  altColor.a  * 0.9) + '';
-                roofColorAlpha = new Color(0, roofColor.g, roofColor.b, roofColor.a * 0.9) + '';
+//ra = 0.7 * g1 + 0.3 * b1;
+//ga = g2;
+//ba = b2;
+
+                camX += 10;
+                wallColorAlpha = new Color(222, 190, 180, 0.5).adjustLightness(0.8) + '';
+                altColorAlpha  = new Color(212, 152, 136, 0.5).adjustLightness(0.6) + '';
+                roofColorAlpha = new Color(232, 228, 223, 0.5).adjustLightness(0.9) + '';
                 drawBuilding(item, footprint);
 
-                camX += 20;
-                wallColorAlpha = new Color(wallColor.g * 0.7 + wallColor.b * 0.3, 0, 0, wallColor.a * 0.9) + '';
-                altColorAlpha  = new Color(altColor.g  * 0.7 + altColor.b  * 0.3, 0, 0, altColor.a  * 0.9) + '';
-                roofColorAlpha = new Color(roofColor.g * 0.7 + roofColor.b * 0.3, 0, 0, roofColor.a * 0.9) + '';
+
+                camX -= 20;
+                wallColorAlpha = new Color(187, 224, 217, 0.2).adjustLightness(1.4) + '';
+                altColorAlpha  = new Color(147, 214, 206, 0.5).adjustLightness(1.1) + '';
+                roofColorAlpha = new Color(226, 233, 228, 0.5).adjustLightness(1.1) + '';
                 drawBuilding(item, footprint);
 
-                camX -= 10;
+//
+//                camX += 20;
+//                wallColorAlpha = new Color(222, 190, 180, 0.5) + '';
+//                altColorAlpha  = new Color(212, 152, 136, 0.5) + '';
+//                roofColorAlpha = new Color(232, 228, 223, 0.5) + '';
+//                drawBuilding(item, footprint);
+
+                camX += 10;
             }
         }
 
@@ -145,9 +160,9 @@
 
 
         function renderPass() {
-            context.fillStyle = 'rgba(240,235,230,0.75)';
-            context.fillRect(0, 0, width, height);
-
+            context.clearRect(0, 0, width, height);
+context.fillStyle = 'rgba(255,255,255,1)';
+context.fillRect(0, 0, width, height);
             // data needed for rendering
             if (!meta || !data) {
                 return;
@@ -246,9 +261,7 @@
         }
 
         function render() {
-            var algo = 'color-anaglyphs';
-
-            context.clearRect(0, 0, width, height);
+            var algo = 'optimized-anaglyphs';
 
             camX -= 10;
             renderPass();

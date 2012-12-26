@@ -28,6 +28,10 @@
             altColorAlpha  = altColor.adjustAlpha(zoomAlpha) + '';
             roofColorAlpha = roofColor.adjustAlpha(zoomAlpha) + '';
 
+wallColorAlpha = wallColor + '';
+altColorAlpha  = altColor + '';
+roofColorAlpha = roofColor + '';
+
             if (data) {
                 for (i = 0, il = data.length; i < il; i++) {
                     item = data[i];
