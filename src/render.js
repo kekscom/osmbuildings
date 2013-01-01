@@ -16,11 +16,10 @@
         }
 
 
-        function renderX() {
-            context.globalCompositeOperation = 'darker';
+        function render() {
             context.clearRect(0, 0, width, height);
-context.fillStyle = 'rgba(240,235,230,0.75)';
-context.fillRect(0, 0, width, height);
+//context.fillStyle = 'rgba(240,235,230,0.75)';
+//context.fillRect(0, 0, width, height);
 
             // data needed for rendering
             if (!meta || !data) {
@@ -69,35 +68,34 @@ context.fillRect(0, 0, width, height);
                     continue;
                 }
 
-//ra = 0.7 * g1 + 0.3 * b1;
-//ga = g2;
-//ba = b2;
 
+if(item[HEIGHT] > 7) {
                 camX += 10;
-                wallColorAlpha = new Color(222, 190, 180, 0.5).adjustLightness(0.8) + '';
-                altColorAlpha  = new Color(212, 152, 136, 0.5).adjustLightness(0.6) + '';
-                roofColorAlpha = new Color(232, 228, 223, 0.5).adjustLightness(0.9) + '';
+                wallColorAlpha = new Color((wallColor.g * 0.7 + wallColor.b * 0.3 ), 128, 128, wallColor.a / 2) + '';
+                altColorAlpha  = new Color((altColor.g  * 0.7 + altColor.b  * 0.3 ), 128, 128, altColor.a  / 2) + '';
+                roofColorAlpha = new Color((roofColor.g * 0.7 + roofColor.b * 0.3 ), 128, 128, roofColor.a / 2) + '';
                 drawBuilding(item, footprint);
-
 
                 camX -= 20;
-                wallColorAlpha = new Color(187, 224, 217, 0.2).adjustLightness(1.4) + '';
-                altColorAlpha  = new Color(147, 214, 206, 0.5).adjustLightness(1.1) + '';
-                roofColorAlpha = new Color(226, 233, 228, 0.5).adjustLightness(1.1) + '';
+                wallColorAlpha = new Color(128, (wallColor.g) , (wallColor.b) , wallColor.a / 2) + '';
+                altColorAlpha  = new Color(128, (altColor.g ) , (altColor.b ) ,  altColor.a / 2) + '';
+                roofColorAlpha = new Color(128, (roofColor.g) , (roofColor.b) , roofColor.a / 2) + '';
                 drawBuilding(item, footprint);
 
-//
-//                camX += 20;
-//                wallColorAlpha = new Color(222, 190, 180, 0.5) + '';
-//                altColorAlpha  = new Color(212, 152, 136, 0.5) + '';
-//                roofColorAlpha = new Color(232, 228, 223, 0.5) + '';
-//                drawBuilding(item, footprint);
-
                 camX += 10;
+
+                wallColorAlpha = wallColor + '';
+                altColorAlpha  = altColor  + '';
+                roofColorAlpha = roofColor + '';
+                //drawBuilding(item, footprint);
+} else {
+                drawBuilding(item, footprint);
+}
             }
         }
 
         function drawBuilding(item, footprint) {
+//if(item[HEIGHT] > 7) console.log(wallColorAlpha, altColorAlpha, roofColorAlpha);
             var
                 j, jl,
                 h, m,
@@ -139,7 +137,6 @@ context.fillRect(0, 0, width, height);
                     } else {
                         context.fillStyle = item[RENDERCOLOR][0] || wallColorAlpha;
                     }
-
                     drawShape(walls);
                 }
 
@@ -150,7 +147,7 @@ context.fillRect(0, 0, width, height);
             // fill roof and optionally stroke it
             context.fillStyle   = item[RENDERCOLOR][2] || roofColorAlpha;
             context.strokeStyle = item[RENDERCOLOR][1] || altColorAlpha;
-            drawShape(roof, true);
+            drawShape(roof, false);
         }
 
 
@@ -161,8 +158,9 @@ context.fillRect(0, 0, width, height);
 
         function renderPass() {
             context.clearRect(0, 0, width, height);
-context.fillStyle = 'rgba(255,255,255,1)';
+context.fillStyle = 'rgba(241, 237, 233, 0.25)';
 context.fillRect(0, 0, width, height);
+
             // data needed for rendering
             if (!meta || !data) {
                 return;
@@ -256,11 +254,11 @@ context.fillRect(0, 0, width, height);
                 // fill roof and optionally stroke it
                 context.fillStyle   = item[RENDERCOLOR][2] || roofColorAlpha;
                 context.strokeStyle = item[RENDERCOLOR][1] || altColorAlpha;
-                drawShape(roof, true);
+                drawShape(roof, false);
             }
         }
 
-        function render() {
+        function renderX() {
             var algo = 'optimized-anaglyphs';
 
             camX -= 10;
@@ -273,47 +271,43 @@ context.fillRect(0, 0, width, height);
 
             camX -= 10;
 
-            for (var i = 0, il = canvasData1.data.length; i < il; i+= 4) {
-                var r1 = canvasData1.data[i + 0],
-                    r2 = canvasData2.data[i + 0],
-                    g1 = canvasData1.data[i + 1],
-                    g2 = canvasData2.data[i + 1],
-                    b1 = canvasData1.data[i + 2],
-                    b2 = canvasData2.data[i + 2],
-                    ra = 0,
-                    ga = 0,
-                    ba = 0
-                ;
+            var
+                data1 = canvasData1.data,
+                data2 = canvasData2.data,
+                R, G, B
+            ;
 
+            for (var i = 0, il = data1.length; i < il; i+= 4) {
+                R = i;
+                G = i + 1;
+                B = i + 2;
                 switch (algo) {
                     case 'true-anaglyphs':
-                        ra = 0.299 * r1 + 0.587 * g1 + 0.114 * b1;
-                        ba = 0.299 * r2 + 0.587 * g2 + 0.114 * b2;
+                        data1[R] = 0.299 * data1[R] + 0.587 * data1[G] + 0.114 * data1[B];
+                        data1[B] = 0.299 * data2[R] + 0.587 * data2[G] + 0.114 * data2[B];
                         break;
                     case 'optimized-anaglyphs':
-                        ra = 0.7 * g1 + 0.3 * b1;
-                        ga = g2;
-                        ba = b2;
+                        data1[R] = 0.7 * data1[G] + 0.3 * data1[B];
+                        data1[G] = data2[G];
+                        data1[B] = data2[B];
                         break;
                     case 'gray-anaglyphs':
-                        ra = 0.299 * r1 + 0.587 * g1 + 0.114 * b1;
-                        ga = ba = 0.299 * r2 + 0.587 * g2 + 0.114 * b2;
+                        data1[R] = 0.299 * data1[R] + 0.587 * data1[G] + 0.114 * data1[B];
+                        data1[G] = data1[B] = 0.299 * data2[R] + 0.587 * data2[G] + 0.114 * data2[B];
                         break;
                     case 'color-anaglyphs':
-                        ra = r1;
-                        ga = r2;
-                        ba = b2;
+                        data1[R] = data1[R];
+                        data1[G] = data2[R];
+                        data1[B] = data2[B];
                         break;
                     case 'half-color-anaglyphs':
-                        ra = 0.299 * r1 + 0.587 * g1 + 0.114 * b1;
-                        ga = r2;
-                        ba = b2;
+                        data1[R] = 0.299 * data1[R] + 0.587 * data1[G] + 0.114 * data1[B];
+                        data1[G] = data2[R];
+                        data1[B] = data2[B];
                         break;
                 }
-                canvasData1.data[i + 0] = ra;
-                canvasData1.data[i + 1] = ga;
-                canvasData1.data[i + 2] = ba;
             }
+
             context.clearRect(0, 0, width, height);
             context.putImageData(canvasData1, 0, 0);
         }
