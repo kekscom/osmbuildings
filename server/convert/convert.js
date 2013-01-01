@@ -24,6 +24,7 @@ var
     pgDatabase       = config['pg-database']        || 'postgis20',      // your postgres database name
     pgTable          = config['pg-table']           || 'buildings',      // your postgres table name
     pgHeightField    = config['pg-height-field']    || 'COALESCE(height, "building:height")', // the field containing height info, usually just 'height' but you can also use COALESCE() statements here
+    pgMinHeightField = config['pg-minheight-field'] || 'COALESCE(min_height, "building:min_height")', // the field containing min height info
     pgFootprintField = config['pg-footprint-field'] || 'the_geom',       // the field containing geometry info
     pgCoords         = config['pg-coords']          || 'lon, lat',       // the coordinate order of your data
     pgBBox           = config['pg-bbox']            || null,             // { n: .., w: .., s: .., e: .. } optional info to convert a certain segment of data (not tested yet)
@@ -102,28 +103,34 @@ var BulkInsert = function(handle, query, limit, callback) {
 var writeStream = fs.createWriteStream(myFile);
 writeStream.write('DELETE FROM ' + myTable + ' WHERE region="' + myRegion + '";\n');
 
-var inserter = new BulkInsert(writeStream, 'INSERT INTO ' + myTable + ' (height, footprint, region) VALUES {values};\n', 5000);
+var inserter = new BulkInsert(writeStream, 'INSERT INTO ' + myTable + ' (height, min_height, footprint, region) VALUES {values};\n', 5000);
 
 var sql = new pg.Client('postgres://' + pgUsername + ':' + pgPassword + '@' + pgHost + '/' + pgDatabase);
 sql.connect();
 
 var query =
-    'SELECT ' + pgHeightField + ' AS height,' +
-    ' ST_AsText(ST_ExteriorRing(' + pgFootprintField + ')) AS footprint' +
-    ' FROM ' + pgTable +
-    ' WHERE ' + filterByBBox(pgBBox) +
-    ' AND (' + pgFilter + ')' +
-    ' ORDER BY height DESC'
+    'SELECT' +
+	' ' + pgHeightField + ' AS height,' +
+	' ' + pgMinHeightField + ' AS minHeight,' +
+    '  ST_AsText(ST_ExteriorRing(' + pgFootprintField + ')) AS footprint' +
+    'FROM ' + pgTable +
+    'WHERE ' + filterByBBox(pgBBox) +
+    '  AND (' + pgFilter + ')' +
+    'ORDER BY height DESC'
 ;
 
 sql.query(query, function(err, res) {
     sql.end();
 
+	var row, height, minHeight;
+
     for (var i = 0, il = res.rows.length; i < il; i++) {
-        var row = res.rows[i];
-        var height = row.height ? (row.height + '').replace(/\D/g, '') : null;
+        row = res.rows[i];
+        height = row.height ? (row.height + '').replace(/\D/g, '') : null;
+        minHeight = row.minHeight ? (row.minHeight + '').replace(/\D/g, '') : null;
         inserter.add([
             height || 'NULL',
+            minHeight || 'NULL',
             'GEOMFROMTEXT("' + setLatLonOrder(row.footprint) + '")',
             '"' + myRegion + '"'
         ]);

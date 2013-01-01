@@ -1,11 +1,11 @@
 <?php
 
-require_once dirname(__FILE__) . '/Abstract.php';
+require_once(dirname(__FILE__)."/Abstract.php");
 
 class Source_Mysql extends Source_Abstract {
 
     public function init() {
-        $this->_link = new mysqli($this->_options['host'], $this->_options['user'], $this->_options['password'], $this->_options['dbname']);
+        $this->_link = new mysqli($this->_options["host"], $this->_options["user"], $this->_options["password"], $this->_options["dbname"]);
         if ($this->_link->connect_errno) {
             throw new Exception($this->_link->connect_error);
         }
@@ -26,8 +26,8 @@ class Source_Mysql extends Source_Abstract {
                 height
         ";
 
-        $bboxStr = vsprintf('POLYGON((%1$.5f %2$.5f, %1$.5f %4$.5f, %3$.5f %4$.5f, %3$.5f %2$.5f, %1$.5f %2$.5f))', $bbox);
-        $query = vsprintf($query, array_map('mysql_escape_string', array($bboxStr)));
+        $bboxStr = vsprintf("POLYGON((%1$.5f %2$.5f, %1$.5f %4$.5f, %3$.5f %4$.5f, %3$.5f %2$.5f, %1$.5f %2$.5f))", $bbox);
+        $query = vsprintf($query, array_map("mysql_escape_string", array($bboxStr)));
 
         $this->_collection = $this->_link->query($query);
         if ($this->_link->errno) {
@@ -47,4 +47,5 @@ class Source_Mysql extends Source_Abstract {
         return $this->_collection->fetch_object();
     }
 }
+
 ?>
