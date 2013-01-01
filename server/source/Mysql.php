@@ -2,10 +2,9 @@
 
 require_once dirname(__FILE__) . '/Abstract.php';
 
-class Source_Mysql extends Source_Abstract
-{
-    public function init()
-    {
+class Source_Mysql extends Source_Abstract {
+
+    public function init() {
         $this->_link = new mysqli($this->_options['host'], $this->_options['user'], $this->_options['password'], $this->_options['dbname']);
         if ($this->_link->connect_errno) {
             throw new Exception($this->_link->connect_error);
@@ -13,11 +12,11 @@ class Source_Mysql extends Source_Abstract
         $this->_link->query("SET NAMES 'utf8'");
     }
 
-    public function query($bbox)
-    {
+    public function query($bbox) {
         $query = "
             SELECT
                 height,
+                min_height AS minHeight,
                 ASTEXT(footprint) AS footprint
             FROM
                 {$this->_options['table']}
@@ -37,16 +36,15 @@ class Source_Mysql extends Source_Abstract
         return $this;
     }
 
-    public function count()
-    {
+    public function count() {
         if ($this->_collection) {
             return $this->_collection->num_rows;
         }
         return NULL;
     }
 
-    public function fetch()
-    {
+    public function fetch() {
         return $this->_collection->fetch_object();
     }
 }
+?>
