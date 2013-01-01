@@ -53,7 +53,7 @@ var Color = (function () {
     var proto = C.prototype;
 
     proto.toString = function () {
-        return 'rgba(' + [this.r, this.g, this.b, this.a.toFixed(2)].join(',') + ')';
+        return 'rgba(' + [this.r << 0, this.g << 0, this.b << 0, this.a.toFixed(2)].join(',') + ')';
     };
 
     proto.adjustLightness = function (l) {
