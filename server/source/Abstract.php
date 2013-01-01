@@ -1,28 +1,27 @@
 <?php
 
-abstract class Source_Abstract
-{
+abstract class Source_Abstract {
+
     protected $_link;
     protected $_collection;
     protected $_options = array();
     protected $_table;
     private static $validSources = array("Mysql", "Mapnik");
 
-    public function __construct(array $options = array())
-    {
+    public function __construct(array $options = array()) {
         $this->_options = $options;
         $this->init();
     }
 
     public static function create($dbConfig) {
-        if (!in_array($dbConfig['source'], self::$validSources)) {
+        if (!in_array($dbConfig["source"], self::$validSources)) {
             // TODO: throw proper exception
             return FALSE;
         }
 
-        require_once dirname(__FILE__) . '/'. $dbConfig['source'] . '.php';
+        require_once dirname(__FILE__)."/".$dbConfig["source"].".php";
 
-        $className = 'Source_' . $dbConfig['source'];
+        $className = "Source_".$dbConfig["source"];
         return new $className($dbConfig);
     }
 
@@ -34,3 +33,5 @@ abstract class Source_Abstract
 
     abstract public function fetch();
 }
+
+?>

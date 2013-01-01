@@ -5,17 +5,17 @@ function geoToPixel($lat, $lon, $zoomLevel) {
     $mapSize = $tileSize << $zoomLevel;
     $latitude  = min(1, max(0, .5-( log( tan( M_PI/4 + M_PI/2 * $lat/180)) / M_PI) / 2) );
     $longitude = $lon/360 + .5;
-    return array('x'=>intval($longitude*$mapSize), 'y'=>intval($latitude*$mapSize));
+    return array("x"=>intval($longitude*$mapSize), "y"=>intval($latitude*$mapSize));
 }
 
 // parse from geometry text, swap llon/lat order
 function strToPoly($str) {
     global $coordsOrder;
-    $coords = explode(',', str_replace(' ', ',', preg_replace('/^[A-Z\(]+|\)+$/', '', $str)));
+    $coords = explode(",", str_replace(" ", ",", preg_replace("/^[A-Z\(]+|\)+$/", "", $str)));
     $res = array();
 
     for ($i = 0; $i < count($coords)-1; $i+=2) {
-        if ($coordsOrder === 'lat,lon') {
+        if ($coordsOrder === "lat,lon") {
             $res[$i  ] = $coords[$i  ]*1;
             $res[$i+1] = $coords[$i+1]*1;
         } else {
@@ -30,7 +30,7 @@ function strToPoly($str) {
 // creates the bounding box accoriding to expected lat/lon order
 function createBBox($n, $w, $s, $e) {
     global $coordsOrder;
-    if ($coordsOrder === 'lat,lon') {
+    if ($coordsOrder === "lat,lon") {
         return array($n, $w, $s, $e);
     }
     return array($w, $n, $e, $s);
@@ -50,13 +50,13 @@ function getPolygonWinding($points) {
         $y2 = $points[$i+3];
         $a += $x1 * $y2 - $x2 * $y1;
     }
-    return ($a / 2) > 0 ? 'CW' : 'CCW';
+    return ($a / 2) > 0 ? "CW" : "CCW";
 }
 
 // Make polygon winding clockwise. This is needed for proper backface culling on client side.
 function makeClockwiseWinding($points) {
     $winding = getPolygonWinding($points);
-    if ($winding == 'CW') {
+    if ($winding == "CW") {
         return $points;
     }
     $revPoints = array();
@@ -66,3 +66,5 @@ function makeClockwiseWinding($points) {
     }
     return $revPoints;
 }
+
+?>

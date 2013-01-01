@@ -85,11 +85,12 @@
                 item[CENTER] = center(footprint);
 
                 item[HEIGHT] = min(resData[i][HEIGHT], MAX_HEIGHT);
+                item[MIN_HEIGHT] = resData[i][MIN_HEIGHT];
                 k = item[FOOTPRINT][0] + ',' + item[FOOTPRINT][1];
                 item[IS_NEW] = !(keyList && ~keyList.indexOf(k));
 
                 item[COLOR] = [];
-                item[RENDERCOLOR] = [];
+                item[RENDER_COLOR] = [];
 
                 data.push(item);
             }
@@ -156,13 +157,14 @@
                 item[FOOTPRINT]   = footprint;
                 item[CENTER]      = center(footprint);
                 item[HEIGHT]      = min(oldItem[HEIGHT] >> z, MAX_HEIGHT);
+                item[MIN_HEIGHT]  = oldItem[MIN_HEIGHT];
                 item[IS_NEW]      = isNew;
                 item[COLOR]       = oldItem[COLOR];
-                item[RENDERCOLOR] = [];
+                item[RENDER_COLOR] = [];
 
                 for (j = 0; j < 3; j++) {
                     if (item[COLOR][j]) {
-                        item[RENDERCOLOR][j] = item[COLOR][j].adjustAlpha(zoomAlpha) + '';
+                        item[RENDER_COLOR][j] = item[COLOR][j].adjustAlpha(zoomAlpha) + '';
                     }
                 }
 

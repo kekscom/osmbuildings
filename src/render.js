@@ -33,13 +33,15 @@
                 i, il, j, jl,
                 item,
                 f, h, m,
+                k, n,
                 x, y,
                 offX = originX - meta.x,
                 offY = originY - meta.y,
                 sortCam = [camX + offX, camY + offY],
                 footprint, roof, walls,
                 isVisible,
-                ax, ay, bx, by, _a, _b
+                ax, ay, bx, by,
+                a, b, _a, _b
             ;
 
             data.sort(function (a, b) {
@@ -85,6 +87,17 @@
                     _a = project(ax, ay, m);
                     _b = project(bx, by, m);
 
+                    if (item[MIN_HEIGHT]) {
+                        k = item[IS_NEW] ? item[MIN_HEIGHT] * fadeFactor : item[MIN_HEIGHT];
+                        n = CAM_Z / (CAM_Z - k);
+                        a = project(ax, ay, n);
+                        b = project(bx, by, n);
+                        ax = a.x;
+                        ay = a.y;
+                        bx = b.x;
+                        by = b.y;
+                    }
+
                     // backface culling check
                     if ((bx - ax) * (_a.y - ay) > (_a.x - ax) * (by - ay)) {
                         walls = [
@@ -96,9 +109,9 @@
 
                         // depending on direction, set wall shading
                         if ((ax < bx && ay < by) || (ax > bx && ay > by)) {
-                            context.fillStyle = item[RENDERCOLOR][1] || altColorAlpha;
+                            context.fillStyle = item[RENDER_COLOR][1] || altColorAlpha;
                         } else {
-                            context.fillStyle = item[RENDERCOLOR][0] || wallColorAlpha;
+                            context.fillStyle = item[RENDER_COLOR][0] || wallColorAlpha;
                         }
 
                         drawShape(walls);
@@ -109,8 +122,8 @@
                 }
 
                 // fill roof and optionally stroke it
-                context.fillStyle = item[RENDERCOLOR][2] || roofColorAlpha;
-                context.strokeStyle = item[RENDERCOLOR][1] || altColorAlpha;
+                context.fillStyle = item[RENDER_COLOR][2] || roofColorAlpha;
+                context.strokeStyle = item[RENDER_COLOR][1] || altColorAlpha;
                 drawShape(roof, true);
             }
         }
