@@ -10,11 +10,12 @@ Probably develop the concept into rendering pipelines.
 (http://jsperf.com/projcache)
 
 
-## Readable keys (for cryptic data)
+## Readable keys (for compact data structures)
 
 Seemed to be a good idea making these a bit more readable.
 Loss expected but turned out to be a slight gain.
-(http://jsperf.com/readable-keys)
+http://jsperf.com/readable-keys/2
+TODO: Not true anymore. Refactor to objects/properties.
 
 
 ## Combined 2d faces

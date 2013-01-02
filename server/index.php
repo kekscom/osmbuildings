@@ -63,9 +63,10 @@ $json = array(
 //*****************************************************************************
 
 while ($row = $source->fetch()) {
-    $h = ($row->height ? $row->height : 5) * $heightScale >> $z;
+    $height    = ($row->height    ? $row->height    : 5) * $heightScale >> $z;
+    $minHeight = ($row->minHeight ? $row->minHeight : 0) * $heightScale >> $z;
 
-    if ($h <= 1) {
+    if ($height <= 1) {
         continue;
     }
 
@@ -82,7 +83,7 @@ while ($row = $source->fetch()) {
     // TODO: do this during data import
     $fp = makeClockwiseWinding($fp);
 
-    $json["data"][] = array($h, $fp);
+    $json["data"][] = array($height, $minHeight, $fp);
 }
 
 if ($_GET["callback"]) {
