@@ -1,5 +1,10 @@
 # Changelog
 
+## latest
+
+- improving simplification algorithm, inspired by Vladimir Agafonkin (http://mourner.github.com/simplify-js/)
+
+
 ## v0.1.7a @ 2012-10-10
 
 - adding OpenLayers support, credits to Jérémy Judéaux (https://github.com/Volune)

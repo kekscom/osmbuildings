@@ -16,6 +16,7 @@
     // object access shortcuts
     var
         Int32Array = Int32Array || Array,
+        Uint8Array = Uint8Array || Array,
         exp = Math.exp,
         log = Math.log,
         tan = Math.tan,
@@ -178,61 +179,11 @@ var Color = (function () {
 
 //****** file: geometry.js ******
 
-    function simplify(points) {
-        var cost,
-            curr, prev = [points[0], points[1]], next,
-            newPoints = [points[0], points[1]]
-        ;
-
-        // TODO this is not iterative yet
-        for (var i = 2, il = points.length - 3; i < il; i += 2) {
-            curr = [points[i], points[i + 1]];
-            next = [points[i + 2] || points[0], points[i + 3] || points[1]];
-            cost = collapseCost(prev, curr, next);
-            if (cost > 750) {
-                newPoints.push(curr[0], curr[1]);
-                prev = curr;
-            }
-        }
-
-        if (curr[0] !== points[0] || curr[1] !== points[1]) {
-            newPoints.push(points[0], points[1]);
-        }
-
-        return newPoints;
-    }
-
-    function collapseCost(a, b, c) {
-        var dist = segmentDistance(b, a, c) * 2; // * 2: put more weight in angle
-        var length = distance(a, c);
-        return dist * length;
-    }
-
     function distance(p1, p2) {
         var dx = p1[0] - p2[0],
             dy = p1[1] - p2[1]
         ;
         return dx * dx + dy * dy;
-    }
-
-    function segmentDistance(p, p1, p2) { // square distance from a point to a segment
-        var x = p1[0],
-            y = p1[1],
-            dx = p2[0] - x,
-            dy = p2[1] - y,
-            t
-        ;
-        if (dx !== 0 || dy !== 0) {
-            t = ((p[0] - x) * dx + (p[1] - y) * dy) / (dx * dx + dy * dy);
-            if (t > 1) {
-                x = p2[0];
-                y = p2[1];
-            } else if (t > 0) {
-                x += dx * t;
-                y += dy * t;
-            }
-        }
-        return distance(p, [x, y]);
     }
 
     function center(points) {
@@ -245,6 +196,84 @@ var Color = (function () {
         }
         len = (points.length - 2) * 2;
         return [x / len << 0, y / len << 0];
+    }
+
+    function getSquareSegmentDistance(px, py, p1x, p1y, p2x, p2y) {
+        var dx = p2x - p1x,
+            dy = p2y - p1y,
+            t;
+        if (dx !== 0 || dy !== 0) {
+            t = ((px - p1x) * dx + (py - p1y) * dy) / (dx * dx + dy * dy);
+            if (t > 1) {
+                p1x = p2x;
+                p1y = p2y;
+            } else if (t > 0) {
+                p1x += dx * t;
+                p1y += dy * t;
+            }
+        }
+        dx = px - p1x;
+        dy = py - p1y;
+        return dx * dx + dy * dy;
+    }
+
+    function simplify(points) {
+        var sqTolerance = 7,
+            len = points.length / 2,
+            markers = new Uint8Array(len),
+
+            first = 0,
+            last  = len - 1,
+
+            i,
+            maxSqDist,
+            sqDist,
+            index,
+
+            firstStack = [],
+            lastStack  = [],
+
+            newPoints  = []
+        ;
+
+        markers[first] = markers[last] = 1;
+
+        while (last) {
+            maxSqDist = 0;
+
+            for (i = first + 1; i < last; i++) {
+                sqDist = getSquareSegmentDistance(
+                    points[i     * 2], points[i     * 2 + 1],
+                    points[first * 2], points[first * 2 + 1],
+                    points[last  * 2], points[last  * 2 + 1]
+                );
+                if (sqDist > maxSqDist) {
+                    index = i;
+                    maxSqDist = sqDist;
+                }
+            }
+
+            if (maxSqDist > sqTolerance) {
+                markers[index] = 1;
+
+                firstStack.push(first);
+                lastStack.push(index);
+
+                firstStack.push(index);
+                lastStack.push(last);
+            }
+
+            first = firstStack.pop();
+            last = lastStack.pop();
+        }
+
+        for (i = 0; i < len; i++) {
+            if (markers[i]) {
+                newPoints.push(points[i * 2], points[i * 2 + 1]);
+            }
+        }
+
+        return newPoints;
     }
 
 
@@ -791,8 +820,7 @@ var Color = (function () {
             var
                 i, il, j, jl,
                 item,
-                f, h, m,
-                k, n,
+                f, h, m, n,
                 x, y,
                 offX = originX - meta.x,
                 offY = originY - meta.y,
@@ -829,9 +857,14 @@ var Color = (function () {
 
                 // when fading in, use a dynamic height
                 h = item[IS_NEW] ? item[HEIGHT] * fadeFactor : item[HEIGHT];
-
                 // precalculating projection height scale
                 m = CAM_Z / (CAM_Z - h);
+
+                // prepare same calculations for min_height if applicable
+                if (item[MIN_HEIGHT]) {
+                    h = item[IS_NEW] ? item[MIN_HEIGHT] * fadeFactor : item[MIN_HEIGHT];
+                    n = CAM_Z / (CAM_Z - h);
+                }
 
                 roof = []; // typed array would be created each pass and is way too slow
                 walls = [];
@@ -847,8 +880,6 @@ var Color = (function () {
                     _b = project(bx, by, m);
 
                     if (item[MIN_HEIGHT]) {
-                        k = item[IS_NEW] ? item[MIN_HEIGHT] * fadeFactor : item[MIN_HEIGHT];
-                        n = CAM_Z / (CAM_Z - k);
                         a = project(ax, ay, n);
                         b = project(bx, by, n);
                         ax = a.x;
