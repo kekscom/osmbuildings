@@ -178,18 +178,18 @@ var Color = (function () {
 
 //****** file: geometry.js ******
 
-    function simplify(points) {
-        var cost,
+    function simplify(points, height) {
+        var cost, maxCost = height > 3 ? 5 : 1000,
             curr, prev = [points[0], points[1]], next,
             newPoints = [points[0], points[1]]
         ;
 
-        // TODO this is not iterative yet
+        // TODO: make this this iterative
         for (var i = 2, il = points.length - 3; i < il; i += 2) {
             curr = [points[i], points[i + 1]];
             next = [points[i + 2] || points[0], points[i + 3] || points[1]];
             cost = collapseCost(prev, curr, next);
-            if (cost > 750) {
+            if (cost > maxCost) {
                 newPoints.push(curr[0], curr[1]);
                 prev = curr;
             }
@@ -198,6 +198,8 @@ var Color = (function () {
         if (curr[0] !== points[0] || curr[1] !== points[1]) {
             newPoints.push(points[0], points[1]);
         }
+
+        console.log(points.length, newPoints.length, height, maxCost);
 
         return newPoints;
     }
@@ -426,7 +428,7 @@ var Color = (function () {
             for (i = 0, il = resData.length; i < il; i++) {
                 item = [];
 
-                footprint = simplify(resData[i][FOOTPRINT]);
+                footprint = simplify(resData[i][FOOTPRINT], resData[i][HEIGHT]);
                 if (footprint.length < 8) { // 3 points & end = start (x2)
                     continue;
                 }
@@ -498,7 +500,7 @@ var Color = (function () {
                     footprint[j + 1] = p.y;
                 }
 
-                footprint = simplify(footprint);
+                footprint = simplify(footprint, oldItem[HEIGHT]);
                 if (footprint.length < 8) { // 3 points & end = start (x2)
                     continue;
                 }
@@ -791,8 +793,7 @@ var Color = (function () {
             var
                 i, il, j, jl,
                 item,
-                f, h, m,
-                k, n,
+                f, h, m, n,
                 x, y,
                 offX = originX - meta.x,
                 offY = originY - meta.y,
@@ -829,9 +830,14 @@ var Color = (function () {
 
                 // when fading in, use a dynamic height
                 h = item[IS_NEW] ? item[HEIGHT] * fadeFactor : item[HEIGHT];
-
                 // precalculating projection height scale
                 m = CAM_Z / (CAM_Z - h);
+
+                // prepare same calculations for min_height if applicable
+                if (item[MIN_HEIGHT]) {
+                    h = item[IS_NEW] ? item[MIN_HEIGHT] * fadeFactor : item[MIN_HEIGHT];
+                    n = CAM_Z / (CAM_Z - h);
+                }
 
                 roof = []; // typed array would be created each pass and is way too slow
                 walls = [];
@@ -847,8 +853,6 @@ var Color = (function () {
                     _b = project(bx, by, m);
 
                     if (item[MIN_HEIGHT]) {
-                        k = item[IS_NEW] ? item[MIN_HEIGHT] * fadeFactor : item[MIN_HEIGHT];
-                        n = CAM_Z / (CAM_Z - k);
                         a = project(ax, ay, n);
                         b = project(bx, by, n);
                         ax = a.x;

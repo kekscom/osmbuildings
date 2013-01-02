@@ -1,15 +1,15 @@
-    function simplify(points) {
-        var cost,
+    function simplify(points, height) {
+        var cost, maxCost = height > 3 ? 5 : 1000,
             curr, prev = [points[0], points[1]], next,
             newPoints = [points[0], points[1]]
         ;
 
-        // TODO this is not iterative yet
+        // TODO: make this this iterative
         for (var i = 2, il = points.length - 3; i < il; i += 2) {
             curr = [points[i], points[i + 1]];
             next = [points[i + 2] || points[0], points[i + 3] || points[1]];
             cost = collapseCost(prev, curr, next);
-            if (cost > 750) {
+            if (cost > maxCost) {
                 newPoints.push(curr[0], curr[1]);
                 prev = curr;
             }

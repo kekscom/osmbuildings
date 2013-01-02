@@ -32,8 +32,7 @@
             var
                 i, il, j, jl,
                 item,
-                f, h, m,
-                k, n,
+                f, h, m, n,
                 x, y,
                 offX = originX - meta.x,
                 offY = originY - meta.y,
@@ -70,9 +69,14 @@
 
                 // when fading in, use a dynamic height
                 h = item[IS_NEW] ? item[HEIGHT] * fadeFactor : item[HEIGHT];
-
                 // precalculating projection height scale
                 m = CAM_Z / (CAM_Z - h);
+
+                // prepare same calculations for min_height if applicable
+                if (item[MIN_HEIGHT]) {
+                    h = item[IS_NEW] ? item[MIN_HEIGHT] * fadeFactor : item[MIN_HEIGHT];
+                    n = CAM_Z / (CAM_Z - h);
+                }
 
                 roof = []; // typed array would be created each pass and is way too slow
                 walls = [];
@@ -88,8 +92,6 @@
                     _b = project(bx, by, m);
 
                     if (item[MIN_HEIGHT]) {
-                        k = item[IS_NEW] ? item[MIN_HEIGHT] * fadeFactor : item[MIN_HEIGHT];
-                        n = CAM_Z / (CAM_Z - k);
                         a = project(ax, ay, n);
                         b = project(bx, by, n);
                         ax = a.x;
