@@ -110,24 +110,24 @@ sql.connect();
 
 var query =
     'SELECT' +
-	' ' + pgHeightField + ' AS height,' +
-	' ' + pgMinHeightField + ' AS minHeight,' +
-    '  ST_AsText(ST_ExteriorRing(' + pgFootprintField + ')) AS footprint' +
-    'FROM ' + pgTable +
-    'WHERE ' + filterByBBox(pgBBox) +
-    '  AND (' + pgFilter + ')' +
-    'ORDER BY height DESC'
+    ' ' + pgHeightField + ' AS height,' +
+    ' ' + pgMinHeightField + ' AS min_height,' +
+    '   ST_AsText(ST_ExteriorRing(' + pgFootprintField + ')) AS footprint' +
+    ' FROM ' + pgTable +
+    ' WHERE ' + filterByBBox(pgBBox) +
+    '   AND (' + pgFilter + ')' +
+    ' ORDER BY height DESC'
 ;
 
 sql.query(query, function(err, res) {
     sql.end();
 
-	var row, height, minHeight;
+    var row, height, minHeight;
 
     for (var i = 0, il = res.rows.length; i < il; i++) {
         row = res.rows[i];
         height = row.height ? (row.height + '').replace(/\D/g, '') : null;
-        minHeight = row.minHeight ? (row.minHeight + '').replace(/\D/g, '') : null;
+        minHeight = row.min_height ? (row.min_height + '').replace(/\D/g, '') : null;
         inserter.add([
             height || 'NULL',
             minHeight || 'NULL',
