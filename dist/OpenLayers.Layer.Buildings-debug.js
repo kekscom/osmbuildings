@@ -179,41 +179,6 @@ var Color = (function () {
 
 //****** file: geometry.js ******
 
-<<<<<<< HEAD
-=======
-    function simplify(points, height) {
-        var cost, maxCost = height > 3 ? 5 : 1000,
-            curr, prev = [points[0], points[1]], next,
-            newPoints = [points[0], points[1]]
-        ;
-
-        // TODO: make this this iterative
-        for (var i = 2, il = points.length - 3; i < il; i += 2) {
-            curr = [points[i], points[i + 1]];
-            next = [points[i + 2] || points[0], points[i + 3] || points[1]];
-            cost = collapseCost(prev, curr, next);
-            if (cost > maxCost) {
-                newPoints.push(curr[0], curr[1]);
-                prev = curr;
-            }
-        }
-
-        if (curr[0] !== points[0] || curr[1] !== points[1]) {
-            newPoints.push(points[0], points[1]);
-        }
-
-        console.log(points.length, newPoints.length, height, maxCost);
-
-        return newPoints;
-    }
-
-    function collapseCost(a, b, c) {
-        var dist = segmentDistance(b, a, c) * 2; // * 2: put more weight in angle
-        var length = distance(a, c);
-        return dist * length;
-    }
-
->>>>>>> e309b6dd2b9a918e68b9e961e9a6bb348ea608b3
     function distance(p1, p2) {
         var dx = p1[0] - p2[0],
             dy = p1[1] - p2[1]

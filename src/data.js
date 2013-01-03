@@ -76,7 +76,7 @@
             for (i = 0, il = resData.length; i < il; i++) {
                 item = [];
 
-                footprint = simplify(resData[i][FOOTPRINT], resData[i][HEIGHT]);
+                footprint = simplify(resData[i][FOOTPRINT]);
                 if (footprint.length < 8) { // 3 points & end = start (x2)
                     continue;
                 }
@@ -148,7 +148,7 @@
                     footprint[j + 1] = p.y;
                 }
 
-                footprint = simplify(footprint, oldItem[HEIGHT]);
+                footprint = simplify(footprint);
                 if (footprint.length < 8) { // 3 points & end = start (x2)
                     continue;
                 }
