@@ -76,6 +76,10 @@
             for (i = 0, il = resData.length; i < il; i++) {
                 item = [];
 
+                if (resData[i][MIN_HEIGHT] > MAX_HEIGHT) {
+                    continue;
+                }
+
                 footprint = simplify(resData[i][FOOTPRINT]);
                 if (footprint.length < 8) { // 3 points & end = start (x2)
                     continue;
@@ -86,6 +90,7 @@
 
                 item[HEIGHT] = min(resData[i][HEIGHT], MAX_HEIGHT);
                 item[MIN_HEIGHT] = resData[i][MIN_HEIGHT];
+
                 k = item[FOOTPRINT][0] + ',' + item[FOOTPRINT][1];
                 item[IS_NEW] = !(keyList && ~keyList.indexOf(k));
 
@@ -134,12 +139,21 @@
                 i, il, j, jl,
                 oldItem, item,
                 coords, p,
+				minHeight,
                 footprint,
                 z = maxZoom - zoom
             ;
 
             for (i = 0, il = data.length; i < il; i++) {
                 oldItem = data[i];
+
+                // TODO: later on, keep continued' objects in order not to loose them on zoom back in
+
+				minHeight = oldItem[MIN_HEIGHT] >> z;
+                if (minHeight > MAX_HEIGHT) {
+                    continue;
+                }
+
                 coords = oldItem[FOOTPRINT];
                 footprint = new Int32Array(coords.length);
                 for (j = 0, jl = coords.length - 1; j < jl; j += 2) {
@@ -157,7 +171,7 @@
                 item[FOOTPRINT]   = footprint;
                 item[CENTER]      = center(footprint);
                 item[HEIGHT]      = min(oldItem[HEIGHT] >> z, MAX_HEIGHT);
-                item[MIN_HEIGHT]  = oldItem[MIN_HEIGHT];
+                item[MIN_HEIGHT]  = minHeight;
                 item[IS_NEW]      = isNew;
                 item[COLOR]       = oldItem[COLOR];
                 item[RENDER_COLOR] = [];
