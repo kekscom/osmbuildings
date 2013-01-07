@@ -37,7 +37,7 @@
                 offX = originX - meta.x,
                 offY = originY - meta.y,
                 sortCam = [camX + offX, camY + offY],
-                footprint, roof, walls,
+                footprint, roof, wall,
                 isVisible,
                 ax, ay, bx, by,
                 a, b, _a, _b
@@ -50,7 +50,7 @@
             for (i = 0, il = data.length; i < il; i++) {
                 item = data[i];
 
-                isVisible = false;
+                isVisible = FALSE;
                 f = item[FOOTPRINT];
                 footprint = []; // typed array would be created each pass and is way too slow
                 for (j = 0, jl = f.length - 1; j < jl; j += 2) {
@@ -79,7 +79,7 @@
                 }
 
                 roof = []; // typed array would be created each pass and is way too slow
-                walls = [];
+                wall = [];
 
                 for (j = 0, jl = footprint.length - 3; j < jl; j += 2) {
                     ax = footprint[j];
@@ -102,7 +102,7 @@
 
                     // backface culling check
                     if ((bx - ax) * (_a[1] - ay) > (_a[0] - ax) * (by - ay)) {
-                        walls = [
+                        wall = [
                             bx + 0.5, by + 0.5,
                             ax + 0.5, ay + 0.5,
                             _a[0], _a[1],
@@ -116,7 +116,7 @@
                             context.fillStyle = item[RENDER_COLOR][0] || wallColorAlpha;
                         }
 
-                        drawShape(walls);
+                        drawShape(wall);
                     }
 
                     roof[j]     = _a[0];
@@ -124,232 +124,16 @@
                 }
 
                 // fill roof and optionally stroke it
-                context.fillStyle = item[RENDER_COLOR][2] || roofColorAlpha;
+                context.fillStyle   = item[RENDER_COLOR][2] || roofColorAlpha;
                 context.strokeStyle = item[RENDER_COLOR][1] || altColorAlpha;
-                drawRoof3(roof, h);
+                drawShape(roof, TRUE);
             }
         }
-
-
-
-
-
-//        function circle(x, y, diameter, stroke) {
-//            ellipse(x, y, diameter, diameter, stroke);
-//        }
-
-        function circle(x, y, diameter) {
-            context.beginPath();
-            context.arc(x, y, diameter / 2, 0, 360);
-            context.stroke();
-        }
-
-        var KAPPA = 0.5522847498;
-
-        function dome(x, y, z, radius) {
-            z = 0;
-            radius = 40;
-
-            var
-                k = radius * KAPPA,
-
-                mz  = CAM_Z / (CAM_Z - z),
-                mzk = CAM_Z / (CAM_Z - (z + k / 2)),
-                mzr = CAM_Z / (CAM_Z - (z + radius / 2)),
-
-                a, b, c,
-                apex = project(x, y, mzr)
-            ;
-
-            a = project(x-radius, y, mz);
-            b = project(x-radius, y, mzk);
-            c = project(x-k,      y, mzr);
-
-            context.beginPath();
-            context.moveTo(a[0], a[1]);
-            context.bezierCurveTo(b[0], b[1], c[0], c[1], apex[0], apex[1]);
-
-            a = project(x+radius, y, mz);
-            b = project(x+radius, y, mzk);
-            c = project(x+k,      y, mzr);
-
-
-            context.moveTo(a[0], a[1]);
-            context.bezierCurveTo(b[0], b[1], c[0], c[1], apex[0], apex[1]);
-
-
-
-            a = project(x, y-radius, mz);
-            b = project(x, y-radius, mzk);
-            c = project(x, y-k,      mzr);
-
-            context.moveTo(a[0], a[1]);
-            context.bezierCurveTo(b[0], b[1], c[0], c[1], apex[0], apex[1]);
-
-            a = project(x, y+radius, mz);
-            b = project(x, y+radius, mzk);
-            c = project(x, y+k,      mzr);
-
-            context.moveTo(a[0], a[1]);
-            context.bezierCurveTo(b[0], b[1], c[0], c[1], apex[0], apex[1]);
-
-                context.stroke();
-        }
-
-        function sphere() {
-        }
-
-
-
-        function ellipse(x, y, w, h, stroke) {
-            var
-                w2 = w / 2, h2 = h / 2,
-                hB = w2 * 0.5522848,
-                vB = h2 * 0.5522848,
-                eX = x + w2, eY = y + h2,
-                mX = x, mY = y
-            ;
-
-            x -= w2;
-            y -= h2;
-
-            context.beginPath();
-            context.moveTo(x, mY);
-            context.bezierCurveTo( x,      mY - vB, mX - hB,  y,      mX, y);
-            context.bezierCurveTo(mX + hB,       y, eX,      mY - vB, eX, mY);
-            context.bezierCurveTo(eX,      mY + vB, mX + hB, eY,      mX, eY);
-            context.bezierCurveTo(mX - hB,      eY,  x,      mY + vB,  x, mY);
-            context.closePath();
-            context.fill();
-            if (stroke) {
-                context.stroke();
-            }
-        }
-
-        function drawRoof2(points) {
-            context.fillStyle = 'rgba(240,0,0,0.25)';
-            context.strokeStyle = strokeColor.adjustAlpha(zoomAlpha) + '';
-
-            var
-                h = 20,
-                center = [
-                    (points[0] + points[2] + points[4] + points[6]) / 4,
-                    (points[1] + points[3] + points[5] + points[7]) / 4
-                ],
-                apex = project(center[0], center[1], CAM_Z / (CAM_Z - h))
-            ;
-
-            var d = 65;
-            circle(center[0], center[1], d);
-
-            context.beginPath();
-            context.moveTo(center[0] - d / 2, center[1]);
-            context.lineTo(apex[0], apex[1]);
-            context.lineTo(center[0] + d / 2, center[1]);
-            context.stroke();
-
-            context.beginPath();
-            context.moveTo(center[0], center[1] - d / 2);
-            context.lineTo(apex[0], apex[1]);
-            context.lineTo(center[0], center[1] + d / 2);
-            context.stroke();
-        }
-
-
-        function drawRoof3(points, h) {
-            drawShape(points, true);
-
-            var
-                center = [
-                    (points[0] + points[2] + points[4] + points[6]) / 4,
-                    (points[1] + points[3] + points[5] + points[7]) / 4
-                ],
-                apex = project(center[0], center[1], CAM_Z / (CAM_Z - h))
-            ;
-
-            var d = 75;
-            //circle(center[0], center[1], d);
-            var apex = project(center[0], center[1], CAM_Z / (CAM_Z));
-            circle(apex[0], apex[1], d);
-
-
-            var apex = project(center[0], center[1], CAM_Z / (CAM_Z - d/12));
-            circle(apex[0], apex[1], d  * 0.6);
-
-
-
-
-            dome(center[0], center[1], 30, 30);
-        }
-
-        function drawRoof(points, height, strokeRoofs) {
-            if (height <= 20) {
-                context.fillStyle = 'rgba(225,175,175,0.5)';
-            }
-
-            if (points.length > 8 || height > 20) {
-                drawShape(points, strokeRoofs);
-                return;
-            }
-
-            var
-                h = height * 1.3,
-                cx = 0, cy = 0,
-                num = points.length / 2,
-                apex
-            ;
-
-            for (var i = 0, il = points.length - 1; i < il; i += 2) {
-                cx += points[i];
-                cy += points[i + 1];
-            }
-
-            apex = project(cx / num, cy / num, CAM_Z / (CAM_Z - h));
-
-            for (var i = 0, il = points.length - 3; i < il; i += 2) {
-                var ax = points[i];
-                var bx = points[i + 2];
-                var ay = points[i + 1];
-                var by = points[i + 3];
-
-                //if ((ax - bx) > (ay - by)) {
-                if ((ax < bx && ay < by) || (ax > bx && ay > by)) {
-                    context.fillStyle = 'rgba(200,100,100,0.25)';
-                } else {
-                    context.fillStyle = 'rgba(200,175,175,0.25)';
-                }
-
-                drawShape([
-                    points[i],     points[i + 1],
-                    points[i + 2], points[i + 3],
-                    apex[0], apex[1]
-                ], strokeRoofs);
-            }
-
-            var ax = points[i];
-            var bx = points[0];
-            var ay = points[i + 1];
-            var by = points[1];
-
-            if ((ax - bx) > (ay - by)) {
-                context.fillStyle = 'rgba(250,0,0,0.25)';
-            } else {
-                context.fillStyle = 'rgba(250,100,100,0.25)';
-            }
-
-            drawShape([
-                points[i], points[i + 1],
-                points[0], points[1],
-                apex[0], apex[1]
-            ], strokeRoofs);
-        }
-
-
 
         function debugMarker(x, y, color, size) {
             context.fillStyle = color || '#ffcc00';
             context.beginPath();
-            context.arc(x, y, size || 3, 0, PI * 2, true);
+            context.arc(x, y, size || 3, 0, PI * 2, TRUE);
             context.closePath();
             context.fill();
         }
@@ -376,4 +160,5 @@
                 ((x - camX) * m + camX << 0) + 0.5, // + 0.5: disabling(!) anti alias
                 ((y - camY) * m + camY << 0) + 0.5  // + 0.5: disabling(!) anti alias
             ];
+
         }

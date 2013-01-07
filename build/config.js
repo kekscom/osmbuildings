@@ -23,6 +23,7 @@ exports.srcFiles = [
         srcPath + '/properties.js',
         srcPath + '/events.js',
         srcPath + '/render.js',
+        srcPath + '/objects.js', // TODO move up when finished
         srcPath + '/public.js',
         srcPath + '/suffix.class.js',
     srcPath + '/suffix.js'

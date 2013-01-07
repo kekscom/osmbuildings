@@ -14,16 +14,16 @@
 //****** file: shortcuts.js ******
 
     // object access shortcuts
-    var
-        Int32Array = Int32Array || Array,
+    var Int32Array = Int32Array || Array,
         Uint8Array = Uint8Array || Array,
-        exp = Math.exp,
-        log = Math.log,
-        tan = Math.tan,
+        exp  = Math.exp,
+        log  = Math.log,
+        tan  = Math.tan,
         atan = Math.atan,
-        min = Math.min,
-        max = Math.max,
-        doc = global.document
+        min  = Math.min,
+        max  = Math.max,
+        sqrt = Math.sqrt,
+        doc = document
     ;
 
 
@@ -157,8 +157,7 @@ var Color = (function () {
 //****** file: constants.js ******
 
     // constants, shared to all instances
-    var
-        VERSION = '0.1.7a',
+    var VERSION = '0.1.7a',
         ATTRIBUTION = '&copy; <a href="http://osmbuildings.org">OSM Buildings</a>',
 
         PI = Math.PI,
@@ -173,7 +172,9 @@ var Color = (function () {
         MAX_HEIGHT = CAM_Z - 50,
 
         LAT = 'latitude', LON = 'longitude',
-        HEIGHT = 0, MIN_HEIGHT = 1, FOOTPRINT = 2, COLOR = 3, CENTER = 4, IS_NEW = 5, RENDER_COLOR = 6
+        HEIGHT = 0, MIN_HEIGHT = 1, FOOTPRINT = 2, COLOR = 3, CENTER = 4, IS_NEW = 5, RENDER_COLOR = 6,
+
+        TRUE = true, FALSE = false
     ;
 
 
@@ -285,8 +286,7 @@ var Color = (function () {
 //****** file: variables.js ******
 
         // private variables, specific to an instance
-        var
-            width = 0, height = 0,
+        var width = 0, height = 0,
             halfWidth = 0, halfHeight = 0,
             originX = 0, originY = 0,
             zoom, size,
@@ -337,7 +337,7 @@ var Color = (function () {
             context.lineWidth = 1;
 
             try {
-                context.mozImageSmoothingEnabled = false;
+                context.mozImageSmoothingEnabled = FALSE;
             } catch (err) {
             }
 
@@ -558,23 +558,17 @@ var Color = (function () {
                 }
 
                 item = [];
-                item[FOOTPRINT]   = footprint;
-                item[CENTER]      = center(footprint);
-                item[HEIGHT]      = min(oldItem[HEIGHT] >> z, MAX_HEIGHT);
-                item[MIN_HEIGHT]  = minHeight;
-                item[IS_NEW]      = isNew;
-                item[COLOR]       = oldItem[COLOR];
+                item[FOOTPRINT]    = footprint;
+                item[CENTER]       = center(footprint);
+                item[HEIGHT]       = min(oldItem[HEIGHT] >> z, MAX_HEIGHT);
+                item[MIN_HEIGHT]   = minHeight;
+                item[IS_NEW]       = isNew;
+                item[COLOR]        = oldItem[COLOR];
                 item[RENDER_COLOR] = [];
 
                 for (j = 0; j < 3; j++) {
                     if (item[COLOR][j]) {
                         item[RENDER_COLOR][j] = item[COLOR][j].adjustAlpha(zoomAlpha) + '';
-                    }
-                }
-
-                for (j = 0; j < 3; j++) {
-                    if (item[COLOR][j]) {
-                        item[RENDERCOLOR][j] = item[COLOR][j].adjustAlpha(zoomAlpha) + '';
                     }
                 }
 
@@ -694,7 +688,7 @@ var Color = (function () {
                 y: 0,
                 z: zoom
             };
-            data = scaleData(rawData, true);
+            data = scaleData(rawData, TRUE);
 
             fadeIn();
         }
@@ -737,11 +731,7 @@ var Color = (function () {
                     item[RENDER_COLOR] = [];
                     for (j = 0; j < 3; j++) {
                         if (item[COLOR][j]) {
-<<<<<<< HEAD
-                            item[RENDERCOLOR][j] = item[COLOR][j].adjustAlpha(zoomAlpha) + '';
-=======
                             item[RENDER_COLOR][j] = item[COLOR][j].adjustAlpha(zoomAlpha) + '';
->>>>>>> master
                         }
                     }
                 }
@@ -801,12 +791,12 @@ var Color = (function () {
         }
 
         function onZoomStart(e) {
-            isZooming = true;
+            isZooming = TRUE;
             render(); // effectively clears because of isZooming flag
         }
 
         function onZoomEnd(e) {
-            isZooming = false;
+            isZooming = FALSE;
             setZoom(e.zoom);
 
             if (rawData) {
@@ -860,7 +850,7 @@ var Color = (function () {
                 offX = originX - meta.x,
                 offY = originY - meta.y,
                 sortCam = [camX + offX, camY + offY],
-                footprint, roof, walls,
+                footprint, roof, wall,
                 isVisible,
                 ax, ay, bx, by,
                 a, b, _a, _b
@@ -873,7 +863,7 @@ var Color = (function () {
             for (i = 0, il = data.length; i < il; i++) {
                 item = data[i];
 
-                isVisible = false;
+                isVisible = FALSE;
                 f = item[FOOTPRINT];
                 footprint = []; // typed array would be created each pass and is way too slow
                 for (j = 0, jl = f.length - 1; j < jl; j += 2) {
@@ -902,7 +892,7 @@ var Color = (function () {
                 }
 
                 roof = []; // typed array would be created each pass and is way too slow
-                walls = [];
+                wall = [];
 
                 for (j = 0, jl = footprint.length - 3; j < jl; j += 2) {
                     ax = footprint[j];
@@ -925,7 +915,7 @@ var Color = (function () {
 
                     // backface culling check
                     if ((bx - ax) * (_a[1] - ay) > (_a[0] - ax) * (by - ay)) {
-                        walls = [
+                        wall = [
                             bx + 0.5, by + 0.5,
                             ax + 0.5, ay + 0.5,
                             _a[0], _a[1],
@@ -939,7 +929,7 @@ var Color = (function () {
                             context.fillStyle = item[RENDER_COLOR][0] || wallColorAlpha;
                         }
 
-                        drawShape(walls);
+                        drawShape(wall);
                     }
 
                     roof[j]     = _a[0];
@@ -947,112 +937,245 @@ var Color = (function () {
                 }
 
                 // fill roof and optionally stroke it
-<<<<<<< HEAD
-                context.fillStyle = item[RENDERCOLOR][2] || roofColorAlpha;
-                context.strokeStyle = item[RENDERCOLOR][1] || altColorAlpha;
-                drawRoof3(roof, h);
+                context.fillStyle   = item[RENDER_COLOR][2] || roofColorAlpha;
+                context.strokeStyle = item[RENDER_COLOR][1] || altColorAlpha;
+                drawShape(roof, TRUE);
             }
         }
 
-
-
-
-
-//        function circle(x, y, diameter, stroke) {
-//            ellipse(x, y, diameter, diameter, stroke);
-//        }
-
-        function circle(x, y, diameter) {
+        function debugMarker(x, y, color, size) {
+            context.fillStyle = color || '#ffcc00';
             context.beginPath();
-            context.arc(x, y, diameter / 2, 0, 360);
-            context.stroke();
-        }
-
-        var KAPPA = 0.5522847498;
-
-        function dome(x, y, z, radius) {
-            z = 0;
-            radius = 40;
-
-            var
-                k = radius * KAPPA,
-
-                mz  = CAM_Z / (CAM_Z - z),
-                mzk = CAM_Z / (CAM_Z - (z + k / 2)),
-                mzr = CAM_Z / (CAM_Z - (z + radius / 2)),
-
-                a, b, c,
-                apex = project(x, y, mzr)
-            ;
-
-            a = project(x-radius, y, mz);
-            b = project(x-radius, y, mzk);
-            c = project(x-k,      y, mzr);
-
-            context.beginPath();
-            context.moveTo(a[0], a[1]);
-            context.bezierCurveTo(b[0], b[1], c[0], c[1], apex[0], apex[1]);
-
-            a = project(x+radius, y, mz);
-            b = project(x+radius, y, mzk);
-            c = project(x+k,      y, mzr);
-
-
-            context.moveTo(a[0], a[1]);
-            context.bezierCurveTo(b[0], b[1], c[0], c[1], apex[0], apex[1]);
-
-
-
-            a = project(x, y-radius, mz);
-            b = project(x, y-radius, mzk);
-            c = project(x, y-k,      mzr);
-
-            context.moveTo(a[0], a[1]);
-            context.bezierCurveTo(b[0], b[1], c[0], c[1], apex[0], apex[1]);
-
-            a = project(x, y+radius, mz);
-            b = project(x, y+radius, mzk);
-            c = project(x, y+k,      mzr);
-
-            context.moveTo(a[0], a[1]);
-            context.bezierCurveTo(b[0], b[1], c[0], c[1], apex[0], apex[1]);
-
-                context.stroke();
-        }
-
-        function sphere() {
-        }
-
-
-
-        function ellipse(x, y, w, h, stroke) {
-            var
-                w2 = w / 2, h2 = h / 2,
-                hB = w2 * 0.5522848,
-                vB = h2 * 0.5522848,
-                eX = x + w2, eY = y + h2,
-                mX = x, mY = y
-            ;
-
-            x -= w2;
-            y -= h2;
-
-            context.beginPath();
-            context.moveTo(x, mY);
-            context.bezierCurveTo( x,      mY - vB, mX - hB,  y,      mX, y);
-            context.bezierCurveTo(mX + hB,       y, eX,      mY - vB, eX, mY);
-            context.bezierCurveTo(eX,      mY + vB, mX + hB, eY,      mX, eY);
-            context.bezierCurveTo(mX - hB,      eY,  x,      mY + vB,  x, mY);
+            context.arc(x, y, size || 3, 0, PI * 2, TRUE);
             context.closePath();
             context.fill();
+        }
+
+        function drawShape(points, stroke) {
+            if (!points.length) {
+                return;
+            }
+
+            context.beginPath();
+            context.moveTo(points[0], points[1]);
+            for (var i = 2, il = points.length; i < il; i += 2) {
+                context.lineTo(points[i], points[i + 1]);
+            }
+            context.closePath();
             if (stroke) {
                 context.stroke();
             }
+            context.fill();
         }
 
-        function drawRoof2(points) {
+        function project(x, y, m) {
+            return [
+                ((x - camX) * m + camX << 0) + 0.5, // + 0.5: disabling(!) anti alias
+                ((y - camY) * m + camY << 0) + 0.5  // + 0.5: disabling(!) anti alias
+            ];
+
+        }
+
+
+//****** file: objects.js ******
+
+
+        function render() {
+            context.clearRect(0, 0, width, height);
+            context.strokeStyle = altColorAlpha;
+
+            var p = geoToPixel(52.50700, 13.33300);
+            var x = p.x - originX;
+            var y = p.y - originY;
+            cylinder(x, y, 20, 200);
+
+            var p = geoToPixel(52.50557, 13.33451);
+            var x = p.x - originX;
+            var y = p.y - originY;
+            cylinder(x, y, 30, 150);
+        }
+
+        //*** finished methods ************************************************
+
+        /**
+         * @param x {float} position on ground level (in pixels)
+         * @param y {float} position on ground level (in pixels)
+         * @param r {float} radius (in pixels)
+         * @param h {float} height in (in pixels)
+         */
+        function cylinder(x, y, r, h, minHeight) {
+            var m = CAM_Z / (CAM_Z - h),
+                p = project(x, y, m),
+                _x = p[0],
+                _y = p[1],
+                p = project(x - r, y, m),
+                _r = _x - p[0]
+            ;
+
+            if (minHeight) {
+                var $x = x;
+                m = CAM_Z / (CAM_Z - minHeight),
+                p = project(x, y, m);
+                x = p[0];
+                y = p[1];
+                p = project($x - r, y, m);
+                r = x - p[0];
+            }
+
+            var t = getTangents(x, y, r, _x, _y, _r), // common tangents for ground and roof circle
+                tx, ty, ta,
+                isAlt,
+                ax, ay
+            ;
+
+            // no tangents? roof overlaps everything near cam position
+            if (t) {
+                // draw normal and alternative colored wall segments
+                for (var i = 0; i < 2; i++) {
+                    isAlt = !!i;
+                    tx = t[i][0];
+                    ty = t[i][1];
+                    ax = (x - tx) * (isAlt ? 1 : -1);
+                    ay = (y - ty) * (isAlt ? 1 : -1);
+                    ta = Math.atan2(ay, ax) + (isAlt ? PI : 0);
+
+                    // tangent not visible, avoid flickering
+                    if (ax < 0) {
+                        continue;
+                    }
+
+                    context.fillStyle = !isAlt ? wallColorAlpha : altColorAlpha;
+                    context.beginPath();
+                    context.moveTo(tx, ty);
+                    context.arc(x, y, r, ta, HALF_PI, isAlt);
+                    context.arc(_x, _y, _r, HALF_PI, ta, !isAlt);
+                    context.closePath();
+                    context.fill();
+                }
+            }
+
+            context.fillStyle = roofColorAlpha;
+            circle(_x, _y, _r, TRUE);
+        }
+
+        /**
+         * @param x {float} position (in pixels)
+         * @param y {float} position (in pixels)
+         * @param r {float} radius (in pixels)
+         * @param stroke {boolean} optionally stroke circle's outline
+         */
+        function circle(x, y, r, stroke) {
+            context.beginPath();
+            context.arc(x, y, r, 0, 360);
+            if (stroke) {
+                context.stroke();
+            }
+            context.fill();
+        }
+
+        /**
+         * @see http://en.wikibooks.org/wiki/Algorithm_Implementation/Geometry/Tangents_between_two_circles
+         *
+         * @param x1 {float} position circle 1
+         * @param y1 {float} position circle 1
+         * @param r1 {float} radius circle 1
+         * @param x2 {float} position circle 2
+         * @param y2 {float} position circle 2
+         * @param r2 {float} radius circle 2
+         * @returns {array} list of two tangents as points on each circle
+         */
+        function getTangents(x1, y1, r1, x2, y2, r2) {
+            var sqd = (x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2);
+            if (sqd <= (r1 - r2) * (r1 - r2)) {
+                return;
+            }
+
+            var d = sqrt(sqd),
+                vx = (x2 - x1) / d,
+                vy = (y2 - y1) / d,
+                res = [],
+                c = (r1 - r2) / d,
+                h, nx, ny
+            ;
+
+            // Let A, B be the centers, and C, D be points at which the tangent
+            // touches first and second circle, and n be the normal vector to it.
+            //
+            // We have the system:
+            //   n * n = 1          (n is a unit vector)
+            //   C = A + r1 * n
+            //   D = B + r2 * n
+            //   n * CD = 0         (common orthogonality)
+            //
+            // n * CD = n * (AB + r2*n - r1*n) = AB*n - (r1 -/+ r2) = 0,  <=>
+            // AB * n = (r1 -/+ r2), <=>
+            // v * n = (r1 -/+ r2) / d,  where v = AB/|AB| = AB/d
+            // This is a linear equation in unknown vector n.
+
+            // Now we're just intersecting a line with a circle: v*n=c, n*n=1
+
+            h = sqrt(max(0, 1 - c * c));
+            for (var sign = 1; sign >= -1; sign -= 2) {
+                nx = vx * c - sign * h * vy;
+                ny = vy * c + sign * h * vx;
+                res.push([
+                    x1 + r1 * nx << 0, y1 + r1 * ny << 0,
+                    x2 + r2 * nx << 0, y2 + r2 * ny << 0
+                ]);
+            }
+
+            return res;
+        }
+
+
+
+
+
+        //*** helpers *********************************************************
+
+//        function circle(x, y, radius, stroke) {
+//            ellipse(x, y, radius*2, radius*2, stroke);
+//        }
+//
+//        function ellipse(x, y, w, h, stroke) {
+//            var
+//                w2 = w / 2, h2 = h / 2,
+//                hB = w2 * 0.5522848,
+//                vB = h2 * 0.5522848,
+//                eX = x + w2, eY = y + h2,
+//                mX = x, mY = y
+//            ;
+//
+//            x -= w2;
+//            y -= h2;
+//
+//            context.beginPath();
+//            context.moveTo(x, mY);
+//            context.bezierCurveTo( x,      mY - vB, mX - hB,  y,      mX, y);
+//            context.bezierCurveTo(mX + hB,       y, eX,      mY - vB, eX, mY);
+//            context.bezierCurveTo(eX,      mY + vB, mX + hB, eY,      mX, eY);
+//            context.bezierCurveTo(mX - hB,      eY,  x,      mY + vB,  x, mY);
+//            context.closePath();
+//            context.fill();
+//            if (stroke) {
+//                context.stroke();
+//            }
+//        }
+
+
+
+        function line(a, b) {
+            context.beginPath();
+            context.moveTo(a[0], a[1]);
+            context.lineTo(b[0], b[1]);
+            context.stroke();
+        }
+
+        //*********************************************************************
+
+        function drawConeRoof(points) {
             context.fillStyle = 'rgba(240,0,0,0.25)';
-            context.strokeStyle = strokeColor.adjustAlpha(zoomAlpha) + '';
+            context.strokeStyle = altColor.adjustAlpha(zoomAlpha) + '';
 
             var
                 h = 20,
@@ -1064,7 +1187,7 @@ var Color = (function () {
             ;
 
             var d = 65;
-            circle(center[0], center[1], d);
+            circle(center[0], center[1], d / 2);
 
             context.beginPath();
             context.moveTo(center[0] - d / 2, center[1]);
@@ -1079,34 +1202,27 @@ var Color = (function () {
             context.stroke();
         }
 
+        function drawDomeRoof(points, h) {
+            drawShape(points, TRUE);
 
-        function drawRoof3(points, h) {
-            drawShape(points, true);
-
-            var
-                center = [
+            var center = [
                     (points[0] + points[2] + points[4] + points[6]) / 4,
                     (points[1] + points[3] + points[5] + points[7]) / 4
                 ],
                 apex = project(center[0], center[1], CAM_Z / (CAM_Z - h))
             ;
-
             var d = 75;
-            //circle(center[0], center[1], d);
+            //circle(center[0], center[1], d / 2);
             var apex = project(center[0], center[1], CAM_Z / (CAM_Z));
-            circle(apex[0], apex[1], d);
-
+            circle(apex[0], apex[1], d / 2);
 
             var apex = project(center[0], center[1], CAM_Z / (CAM_Z - d/12));
-            circle(apex[0], apex[1], d  * 0.6);
-
-
-
+            circle(apex[0], apex[1], d / 2 * 0.6);
 
             dome(center[0], center[1], 30, 30);
         }
 
-        function drawRoof(points, height, strokeRoofs) {
+        function drawPyramidalRoof(points, height, strokeRoofs) {
             if (height <= 20) {
                 context.fillStyle = 'rgba(225,175,175,0.5)';
             }
@@ -1116,8 +1232,7 @@ var Color = (function () {
                 return;
             }
 
-            var
-                h = height * 1.3,
+            var h = height * 1.3,
                 cx = 0, cy = 0,
                 num = points.length / 2,
                 apex
@@ -1148,11 +1263,6 @@ var Color = (function () {
                     points[i + 2], points[i + 3],
                     apex[0], apex[1]
                 ], strokeRoofs);
-=======
-                context.fillStyle = item[RENDER_COLOR][2] || roofColorAlpha;
-                context.strokeStyle = item[RENDER_COLOR][1] || altColorAlpha;
-                drawShape(roof, true);
->>>>>>> master
             }
 
             var ax = points[i];
@@ -1173,40 +1283,64 @@ var Color = (function () {
             ], strokeRoofs);
         }
 
+        //*********************************************************************
 
+        function prism() {
+        }
 
-        function debugMarker(x, y, color, size) {
-            context.fillStyle = color || '#ffcc00';
+        function pyramid() {
+        }
+
+        function cone() {
+        }
+
+        var KAPPA = 0.5522847498;
+        function dome(x, y, z, radius) {
+            z = 0;
+            radius = 40;
+
+            var k = radius * KAPPA,
+                mz  = CAM_Z / (CAM_Z - z),
+                mzk = CAM_Z / (CAM_Z - (z + k / 2)),
+                mzr = CAM_Z / (CAM_Z - (z + radius / 2)),
+                a, b, c,
+                apex = project(x, y, mzr)
+            ;
+
+            a = project(x-radius, y, mz);
+            b = project(x-radius, y, mzk);
+            c = project(x-k,      y, mzr);
+
             context.beginPath();
-            context.arc(x, y, size || 3, 0, PI * 2, true);
-            context.closePath();
-            context.fill();
+            context.moveTo(a[0], a[1]);
+            context.bezierCurveTo(b[0], b[1], c[0], c[1], apex[0], apex[1]);
+
+            a = project(x+radius, y, mz);
+            b = project(x+radius, y, mzk);
+            c = project(x+k,      y, mzr);
+
+            context.moveTo(a[0], a[1]);
+            context.bezierCurveTo(b[0], b[1], c[0], c[1], apex[0], apex[1]);
+
+            a = project(x, y-radius, mz);
+            b = project(x, y-radius, mzk);
+            c = project(x, y-k,      mzr);
+
+            context.moveTo(a[0], a[1]);
+            context.bezierCurveTo(b[0], b[1], c[0], c[1], apex[0], apex[1]);
+
+            a = project(x, y+radius, mz);
+            b = project(x, y+radius, mzk);
+            c = project(x, y+k,      mzr);
+
+            context.moveTo(a[0], a[1]);
+            context.bezierCurveTo(b[0], b[1], c[0], c[1], apex[0], apex[1]);
+
+            context.stroke();
         }
 
-        function drawShape(points, stroke) {
-            if (!points.length) {
-                return;
-            }
-
-            context.beginPath();
-            context.moveTo(points[0], points[1]);
-            for (var i = 2, il = points.length; i < il; i += 2) {
-                context.lineTo(points[i], points[i + 1]);
-            }
-            context.closePath();
-            if (stroke) {
-                context.stroke();
-            }
-            context.fill();
+        function sphere() {
         }
-
-        function project(x, y, m) {
-            return [
-                ((x - camX) * m + camX << 0) + 0.5, // + 0.5: disabling(!) anti alias
-                ((y - camY) * m + camY << 0) + 0.5  // + 0.5: disabling(!) anti alias
-            ];
-        }
-
 
 //****** file: public.js ******
 

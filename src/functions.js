@@ -14,7 +14,7 @@
             context.lineWidth = 1;
 
             try {
-                context.mozImageSmoothingEnabled = false;
+                context.mozImageSmoothingEnabled = FALSE;
             } catch (err) {
             }
 

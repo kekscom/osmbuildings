@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 /**
  * Copyright (C) 2012 OSM Buildings, Jan Marsch
  * A leightweight JavaScript library for visualizing 3D building geometry on interactive maps.
@@ -15,15 +14,16 @@
 //****** file: shortcuts.js ******
 
     // object access shortcuts
-    var
-        Int32Array = Int32Array || Array,
-        exp = Math.exp,
-        log = Math.log,
-        tan = Math.tan,
+    var Int32Array = Int32Array || Array,
+        Uint8Array = Uint8Array || Array,
+        exp  = Math.exp,
+        log  = Math.log,
+        tan  = Math.tan,
         atan = Math.atan,
-        min = Math.min,
-        max = Math.max,
-        doc = global.document
+        min  = Math.min,
+        max  = Math.max,
+        sqrt = Math.sqrt,
+        doc = document
     ;
 
 
@@ -84,7 +84,7 @@ var Color = (function () {
     var proto = C.prototype;
 
     proto.toString = function () {
-        return 'rgba(' + [this.r, this.g, this.b, this.a.toFixed(2)].join(',') + ')';
+        return 'rgba(' + [this.r << 0, this.g << 0, this.b << 0, this.a.toFixed(2)].join(',') + ')';
     };
 
     proto.adjustLightness = function (l) {
@@ -157,8 +157,7 @@ var Color = (function () {
 //****** file: constants.js ******
 
     // constants, shared to all instances
-    var
-        VERSION = '0.1.7a',
+    var VERSION = '0.1.7a',
         ATTRIBUTION = '&copy; <a href="http://osmbuildings.org">OSM Buildings</a>',
 
         PI = Math.PI,
@@ -173,67 +172,19 @@ var Color = (function () {
         MAX_HEIGHT = CAM_Z - 50,
 
         LAT = 'latitude', LON = 'longitude',
-        HEIGHT = 0, FOOTPRINT = 1, COLOR = 2, CENTER = 3, IS_NEW = 4, RENDERCOLOR = 5
+        HEIGHT = 0, MIN_HEIGHT = 1, FOOTPRINT = 2, COLOR = 3, CENTER = 4, IS_NEW = 5, RENDER_COLOR = 6,
+
+        TRUE = true, FALSE = false
     ;
 
 
 //****** file: geometry.js ******
-
-    function simplify(points) {
-        var cost,
-            curr, prev = [points[0], points[1]], next,
-            newPoints = [points[0], points[1]]
-        ;
-
-        // TODO this is not iterative yet
-        for (var i = 2, il = points.length - 3; i < il; i += 2) {
-            curr = [points[i], points[i + 1]];
-            next = [points[i + 2] || points[0], points[i + 3] || points[1]];
-            cost = collapseCost(prev, curr, next);
-            if (cost > 750) {
-                newPoints.push(curr[0], curr[1]);
-                prev = curr;
-            }
-        }
-
-        if (curr[0] !== points[0] || curr[1] !== points[1]) {
-            newPoints.push(points[0], points[1]);
-        }
-
-        return newPoints;
-    }
-
-    function collapseCost(a, b, c) {
-        var dist = segmentDistance(b, a, c) * 2; // * 2: put more weight in angle
-        var length = distance(a, c);
-        return dist * length;
-    }
 
     function distance(p1, p2) {
         var dx = p1[0] - p2[0],
             dy = p1[1] - p2[1]
         ;
         return dx * dx + dy * dy;
-    }
-
-    function segmentDistance(p, p1, p2) { // square distance from a point to a segment
-        var x = p1[0],
-            y = p1[1],
-            dx = p2[0] - x,
-            dy = p2[1] - y,
-            t
-        ;
-        if (dx !== 0 || dy !== 0) {
-            t = ((p[0] - x) * dx + (p[1] - y) * dy) / (dx * dx + dy * dy);
-            if (t > 1) {
-                x = p2[0];
-                y = p2[1];
-            } else if (t > 0) {
-                x += dx * t;
-                y += dy * t;
-            }
-        }
-        return distance(p, [x, y]);
     }
 
     function center(points) {
@@ -248,6 +199,84 @@ var Color = (function () {
         return [x / len << 0, y / len << 0];
     }
 
+    function getSquareSegmentDistance(px, py, p1x, p1y, p2x, p2y) {
+        var dx = p2x - p1x,
+            dy = p2y - p1y,
+            t;
+        if (dx !== 0 || dy !== 0) {
+            t = ((px - p1x) * dx + (py - p1y) * dy) / (dx * dx + dy * dy);
+            if (t > 1) {
+                p1x = p2x;
+                p1y = p2y;
+            } else if (t > 0) {
+                p1x += dx * t;
+                p1y += dy * t;
+            }
+        }
+        dx = px - p1x;
+        dy = py - p1y;
+        return dx * dx + dy * dy;
+    }
+
+    function simplify(points) {
+        var sqTolerance = 2,
+            len = points.length / 2,
+            markers = new Uint8Array(len),
+
+            first = 0,
+            last  = len - 1,
+
+            i,
+            maxSqDist,
+            sqDist,
+            index,
+
+            firstStack = [],
+            lastStack  = [],
+
+            newPoints  = []
+        ;
+
+        markers[first] = markers[last] = 1;
+
+        while (last) {
+            maxSqDist = 0;
+
+            for (i = first + 1; i < last; i++) {
+                sqDist = getSquareSegmentDistance(
+                    points[i     * 2], points[i     * 2 + 1],
+                    points[first * 2], points[first * 2 + 1],
+                    points[last  * 2], points[last  * 2 + 1]
+                );
+                if (sqDist > maxSqDist) {
+                    index = i;
+                    maxSqDist = sqDist;
+                }
+            }
+
+            if (maxSqDist > sqTolerance) {
+                markers[index] = 1;
+
+                firstStack.push(first);
+                lastStack.push(index);
+
+                firstStack.push(index);
+                lastStack.push(last);
+            }
+
+            first = firstStack.pop();
+            last = lastStack.pop();
+        }
+
+        for (i = 0; i < len; i++) {
+            if (markers[i]) {
+                newPoints.push(points[i * 2], points[i * 2 + 1]);
+            }
+        }
+
+        return newPoints;
+    }
+
 
 //****** file: prefix.class.js ******
 
@@ -257,8 +286,7 @@ var Color = (function () {
 //****** file: variables.js ******
 
         // private variables, specific to an instance
-        var
-            width = 0, height = 0,
+        var width = 0, height = 0,
             halfWidth = 0, halfHeight = 0,
             originX = 0, originY = 0,
             zoom, size,
@@ -309,7 +337,7 @@ var Color = (function () {
             context.lineWidth = 1;
 
             try {
-                context.mozImageSmoothingEnabled = false;
+                context.mozImageSmoothingEnabled = FALSE;
             } catch (err) {
             }
 
@@ -424,10 +452,22 @@ var Color = (function () {
 
             meta = resMeta;
             data = [];
+
+            // var polyCountBefore = 0, polyCountAfter = 0, start = Date.now();
+
             for (i = 0, il = resData.length; i < il; i++) {
                 item = [];
 
+                if (resData[i][MIN_HEIGHT] > MAX_HEIGHT) {
+                    continue;
+                }
+
+                // polyCountBefore += resData[i][FOOTPRINT].length;
+
                 footprint = simplify(resData[i][FOOTPRINT]);
+
+                // polyCountAfter += footprint.length;
+
                 if (footprint.length < 8) { // 3 points & end = start (x2)
                     continue;
                 }
@@ -436,14 +476,19 @@ var Color = (function () {
                 item[CENTER] = center(footprint);
 
                 item[HEIGHT] = min(resData[i][HEIGHT], MAX_HEIGHT);
+                item[MIN_HEIGHT] = resData[i][MIN_HEIGHT];
+
                 k = item[FOOTPRINT][0] + ',' + item[FOOTPRINT][1];
                 item[IS_NEW] = !(keyList && ~keyList.indexOf(k));
 
                 item[COLOR] = [];
-                item[RENDERCOLOR] = [];
+                item[RENDER_COLOR] = [];
 
                 data.push(item);
             }
+
+            // console.log(polyCountBefore, polyCountAfter, Date.now() - start);
+
             resMeta = resData = keyList = null; // gc
             fadeIn();
         }
@@ -484,12 +529,21 @@ var Color = (function () {
                 i, il, j, jl,
                 oldItem, item,
                 coords, p,
+				minHeight,
                 footprint,
                 z = maxZoom - zoom
             ;
 
             for (i = 0, il = data.length; i < il; i++) {
                 oldItem = data[i];
+
+                // TODO: later on, keep continued' objects in order not to loose them on zoom back in
+
+				minHeight = oldItem[MIN_HEIGHT] >> z;
+                if (minHeight > MAX_HEIGHT) {
+                    continue;
+                }
+
                 coords = oldItem[FOOTPRINT];
                 footprint = new Int32Array(coords.length);
                 for (j = 0, jl = coords.length - 1; j < jl; j += 2) {
@@ -504,16 +558,17 @@ var Color = (function () {
                 }
 
                 item = [];
-                item[FOOTPRINT]   = footprint;
-                item[CENTER]      = center(footprint);
-                item[HEIGHT]      = min(oldItem[HEIGHT] >> z, MAX_HEIGHT);
-                item[IS_NEW]      = isNew;
-                item[COLOR]       = oldItem[COLOR];
-                item[RENDERCOLOR] = [];
+                item[FOOTPRINT]    = footprint;
+                item[CENTER]       = center(footprint);
+                item[HEIGHT]       = min(oldItem[HEIGHT] >> z, MAX_HEIGHT);
+                item[MIN_HEIGHT]   = minHeight;
+                item[IS_NEW]       = isNew;
+                item[COLOR]        = oldItem[COLOR];
+                item[RENDER_COLOR] = [];
 
                 for (j = 0; j < 3; j++) {
                     if (item[COLOR][j]) {
-                        item[RENDERCOLOR][j] = item[COLOR][j].adjustAlpha(zoomAlpha) + '';
+                        item[RENDER_COLOR][j] = item[COLOR][j].adjustAlpha(zoomAlpha) + '';
                     }
                 }
 
@@ -633,7 +688,7 @@ var Color = (function () {
                 y: 0,
                 z: zoom
             };
-            data = scaleData(rawData, true);
+            data = scaleData(rawData, TRUE);
 
             fadeIn();
         }
@@ -673,10 +728,10 @@ var Color = (function () {
             if (data) {
                 for (i = 0, il = data.length; i < il; i++) {
                     item = data[i];
-                    item[RENDERCOLOR] = [];
+                    item[RENDER_COLOR] = [];
                     for (j = 0; j < 3; j++) {
                         if (item[COLOR][j]) {
-                            item[RENDERCOLOR][j] = item[COLOR][j].adjustAlpha(zoomAlpha) + '';
+                            item[RENDER_COLOR][j] = item[COLOR][j].adjustAlpha(zoomAlpha) + '';
                         }
                     }
                 }
@@ -736,12 +791,12 @@ var Color = (function () {
         }
 
         function onZoomStart(e) {
-            isZooming = true;
+            isZooming = TRUE;
             render(); // effectively clears because of isZooming flag
         }
 
         function onZoomEnd(e) {
-            isZooming = false;
+            isZooming = FALSE;
             setZoom(e.zoom);
 
             if (rawData) {
@@ -790,14 +845,15 @@ var Color = (function () {
             var
                 i, il, j, jl,
                 item,
-                f, h, m,
+                f, h, m, n,
                 x, y,
                 offX = originX - meta.x,
                 offY = originY - meta.y,
                 sortCam = [camX + offX, camY + offY],
-                footprint, roof, walls,
+                footprint, roof, wall,
                 isVisible,
-                ax, ay, bx, by, _a, _b
+                ax, ay, bx, by,
+                a, b, _a, _b
             ;
 
             data.sort(function (a, b) {
@@ -807,7 +863,7 @@ var Color = (function () {
             for (i = 0, il = data.length; i < il; i++) {
                 item = data[i];
 
-                isVisible = false;
+                isVisible = FALSE;
                 f = item[FOOTPRINT];
                 footprint = []; // typed array would be created each pass and is way too slow
                 for (j = 0, jl = f.length - 1; j < jl; j += 2) {
@@ -826,12 +882,17 @@ var Color = (function () {
 
                 // when fading in, use a dynamic height
                 h = item[IS_NEW] ? item[HEIGHT] * fadeFactor : item[HEIGHT];
-
                 // precalculating projection height scale
                 m = CAM_Z / (CAM_Z - h);
 
+                // prepare same calculations for min_height if applicable
+                if (item[MIN_HEIGHT]) {
+                    h = item[IS_NEW] ? item[MIN_HEIGHT] * fadeFactor : item[MIN_HEIGHT];
+                    n = CAM_Z / (CAM_Z - h);
+                }
+
                 roof = []; // typed array would be created each pass and is way too slow
-                walls = [];
+                wall = [];
 
                 for (j = 0, jl = footprint.length - 3; j < jl; j += 2) {
                     ax = footprint[j];
@@ -843,9 +904,18 @@ var Color = (function () {
                     _a = project(ax, ay, m);
                     _b = project(bx, by, m);
 
+                    if (item[MIN_HEIGHT]) {
+                        a = project(ax, ay, n);
+                        b = project(bx, by, n);
+                        ax = a.x;
+                        ay = a.y;
+                        bx = b.x;
+                        by = b.y;
+                    }
+
                     // backface culling check
                     if ((bx - ax) * (_a[1] - ay) > (_a[0] - ax) * (by - ay)) {
-                        walls = [
+                        wall = [
                             bx + 0.5, by + 0.5,
                             ax + 0.5, ay + 0.5,
                             _a[0], _a[1],
@@ -854,12 +924,12 @@ var Color = (function () {
 
                         // depending on direction, set wall shading
                         if ((ax < bx && ay < by) || (ax > bx && ay > by)) {
-                            context.fillStyle = item[RENDERCOLOR][1] || altColorAlpha;
+                            context.fillStyle = item[RENDER_COLOR][1] || altColorAlpha;
                         } else {
-                            context.fillStyle = item[RENDERCOLOR][0] || wallColorAlpha;
+                            context.fillStyle = item[RENDER_COLOR][0] || wallColorAlpha;
                         }
 
-                        drawShape(walls);
+                        drawShape(wall);
                     }
 
                     roof[j]     = _a[0];
@@ -867,111 +937,245 @@ var Color = (function () {
                 }
 
                 // fill roof and optionally stroke it
-                context.fillStyle = item[RENDERCOLOR][2] || roofColorAlpha;
-                context.strokeStyle = item[RENDERCOLOR][1] || altColorAlpha;
-                drawRoof3(roof, h);
+                context.fillStyle   = item[RENDER_COLOR][2] || roofColorAlpha;
+                context.strokeStyle = item[RENDER_COLOR][1] || altColorAlpha;
+                drawShape(roof, TRUE);
             }
         }
 
-
-
-
-
-//        function circle(x, y, diameter, stroke) {
-//            ellipse(x, y, diameter, diameter, stroke);
-//        }
-
-        function circle(x, y, diameter) {
+        function debugMarker(x, y, color, size) {
+            context.fillStyle = color || '#ffcc00';
             context.beginPath();
-            context.arc(x, y, diameter / 2, 0, 360);
-            context.stroke();
-        }
-
-        var KAPPA = 0.5522847498;
-
-        function dome(x, y, z, radius) {
-            z = 0;
-            radius = 40;
-
-            var
-                k = radius * KAPPA,
-
-                mz  = CAM_Z / (CAM_Z - z),
-                mzk = CAM_Z / (CAM_Z - (z + k / 2)),
-                mzr = CAM_Z / (CAM_Z - (z + radius / 2)),
-
-                a, b, c,
-                apex = project(x, y, mzr)
-            ;
-
-            a = project(x-radius, y, mz);
-            b = project(x-radius, y, mzk);
-            c = project(x-k,      y, mzr);
-
-            context.beginPath();
-            context.moveTo(a[0], a[1]);
-            context.bezierCurveTo(b[0], b[1], c[0], c[1], apex[0], apex[1]);
-
-            a = project(x+radius, y, mz);
-            b = project(x+radius, y, mzk);
-            c = project(x+k,      y, mzr);
-
-
-            context.moveTo(a[0], a[1]);
-            context.bezierCurveTo(b[0], b[1], c[0], c[1], apex[0], apex[1]);
-
-
-
-            a = project(x, y-radius, mz);
-            b = project(x, y-radius, mzk);
-            c = project(x, y-k,      mzr);
-
-            context.moveTo(a[0], a[1]);
-            context.bezierCurveTo(b[0], b[1], c[0], c[1], apex[0], apex[1]);
-
-            a = project(x, y+radius, mz);
-            b = project(x, y+radius, mzk);
-            c = project(x, y+k,      mzr);
-
-            context.moveTo(a[0], a[1]);
-            context.bezierCurveTo(b[0], b[1], c[0], c[1], apex[0], apex[1]);
-
-                context.stroke();
-        }
-
-        function sphere() {
-        }
-
-
-
-        function ellipse(x, y, w, h, stroke) {
-            var
-                w2 = w / 2, h2 = h / 2,
-                hB = w2 * 0.5522848,
-                vB = h2 * 0.5522848,
-                eX = x + w2, eY = y + h2,
-                mX = x, mY = y
-            ;
-
-            x -= w2;
-            y -= h2;
-
-            context.beginPath();
-            context.moveTo(x, mY);
-            context.bezierCurveTo( x,      mY - vB, mX - hB,  y,      mX, y);
-            context.bezierCurveTo(mX + hB,       y, eX,      mY - vB, eX, mY);
-            context.bezierCurveTo(eX,      mY + vB, mX + hB, eY,      mX, eY);
-            context.bezierCurveTo(mX - hB,      eY,  x,      mY + vB,  x, mY);
+            context.arc(x, y, size || 3, 0, PI * 2, TRUE);
             context.closePath();
             context.fill();
+        }
+
+        function drawShape(points, stroke) {
+            if (!points.length) {
+                return;
+            }
+
+            context.beginPath();
+            context.moveTo(points[0], points[1]);
+            for (var i = 2, il = points.length; i < il; i += 2) {
+                context.lineTo(points[i], points[i + 1]);
+            }
+            context.closePath();
             if (stroke) {
                 context.stroke();
             }
+            context.fill();
         }
 
-        function drawRoof2(points) {
+        function project(x, y, m) {
+            return [
+                ((x - camX) * m + camX << 0) + 0.5, // + 0.5: disabling(!) anti alias
+                ((y - camY) * m + camY << 0) + 0.5  // + 0.5: disabling(!) anti alias
+            ];
+
+        }
+
+
+//****** file: objects.js ******
+
+
+        function render() {
+            context.clearRect(0, 0, width, height);
+            context.strokeStyle = altColorAlpha;
+
+            var p = geoToPixel(52.50700, 13.33300);
+            var x = p.x - originX;
+            var y = p.y - originY;
+            cylinder(x, y, 20, 200);
+
+            var p = geoToPixel(52.50557, 13.33451);
+            var x = p.x - originX;
+            var y = p.y - originY;
+            cylinder(x, y, 30, 150);
+        }
+
+        //*** finished methods ************************************************
+
+        /**
+         * @param x {float} position on ground level (in pixels)
+         * @param y {float} position on ground level (in pixels)
+         * @param r {float} radius (in pixels)
+         * @param h {float} height in (in pixels)
+         */
+        function cylinder(x, y, r, h, minHeight) {
+            var m = CAM_Z / (CAM_Z - h),
+                p = project(x, y, m),
+                _x = p[0],
+                _y = p[1],
+                p = project(x - r, y, m),
+                _r = _x - p[0]
+            ;
+
+            if (minHeight) {
+                var $x = x;
+                m = CAM_Z / (CAM_Z - minHeight),
+                p = project(x, y, m);
+                x = p[0];
+                y = p[1];
+                p = project($x - r, y, m);
+                r = x - p[0];
+            }
+
+            var t = getTangents(x, y, r, _x, _y, _r), // common tangents for ground and roof circle
+                tx, ty, ta,
+                isAlt,
+                ax, ay
+            ;
+
+            // no tangents? roof overlaps everything near cam position
+            if (t) {
+                // draw normal and alternative colored wall segments
+                for (var i = 0; i < 2; i++) {
+                    isAlt = !!i;
+                    tx = t[i][0];
+                    ty = t[i][1];
+                    ax = (x - tx) * (isAlt ? 1 : -1);
+                    ay = (y - ty) * (isAlt ? 1 : -1);
+                    ta = Math.atan2(ay, ax) + (isAlt ? PI : 0);
+
+                    // tangent not visible, avoid flickering
+                    if (ax < 0) {
+                        continue;
+                    }
+
+                    context.fillStyle = !isAlt ? wallColorAlpha : altColorAlpha;
+                    context.beginPath();
+                    context.moveTo(tx, ty);
+                    context.arc(x, y, r, ta, HALF_PI, isAlt);
+                    context.arc(_x, _y, _r, HALF_PI, ta, !isAlt);
+                    context.closePath();
+                    context.fill();
+                }
+            }
+
+            context.fillStyle = roofColorAlpha;
+            circle(_x, _y, _r, TRUE);
+        }
+
+        /**
+         * @param x {float} position (in pixels)
+         * @param y {float} position (in pixels)
+         * @param r {float} radius (in pixels)
+         * @param stroke {boolean} optionally stroke circle's outline
+         */
+        function circle(x, y, r, stroke) {
+            context.beginPath();
+            context.arc(x, y, r, 0, 360);
+            if (stroke) {
+                context.stroke();
+            }
+            context.fill();
+        }
+
+        /**
+         * @see http://en.wikibooks.org/wiki/Algorithm_Implementation/Geometry/Tangents_between_two_circles
+         *
+         * @param x1 {float} position circle 1
+         * @param y1 {float} position circle 1
+         * @param r1 {float} radius circle 1
+         * @param x2 {float} position circle 2
+         * @param y2 {float} position circle 2
+         * @param r2 {float} radius circle 2
+         * @returns {array} list of two tangents as points on each circle
+         */
+        function getTangents(x1, y1, r1, x2, y2, r2) {
+            var sqd = (x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2);
+            if (sqd <= (r1 - r2) * (r1 - r2)) {
+                return;
+            }
+
+            var d = sqrt(sqd),
+                vx = (x2 - x1) / d,
+                vy = (y2 - y1) / d,
+                res = [],
+                c = (r1 - r2) / d,
+                h, nx, ny
+            ;
+
+            // Let A, B be the centers, and C, D be points at which the tangent
+            // touches first and second circle, and n be the normal vector to it.
+            //
+            // We have the system:
+            //   n * n = 1          (n is a unit vector)
+            //   C = A + r1 * n
+            //   D = B + r2 * n
+            //   n * CD = 0         (common orthogonality)
+            //
+            // n * CD = n * (AB + r2*n - r1*n) = AB*n - (r1 -/+ r2) = 0,  <=>
+            // AB * n = (r1 -/+ r2), <=>
+            // v * n = (r1 -/+ r2) / d,  where v = AB/|AB| = AB/d
+            // This is a linear equation in unknown vector n.
+
+            // Now we're just intersecting a line with a circle: v*n=c, n*n=1
+
+            h = sqrt(max(0, 1 - c * c));
+            for (var sign = 1; sign >= -1; sign -= 2) {
+                nx = vx * c - sign * h * vy;
+                ny = vy * c + sign * h * vx;
+                res.push([
+                    x1 + r1 * nx << 0, y1 + r1 * ny << 0,
+                    x2 + r2 * nx << 0, y2 + r2 * ny << 0
+                ]);
+            }
+
+            return res;
+        }
+
+
+
+
+
+        //*** helpers *********************************************************
+
+//        function circle(x, y, radius, stroke) {
+//            ellipse(x, y, radius*2, radius*2, stroke);
+//        }
+//
+//        function ellipse(x, y, w, h, stroke) {
+//            var
+//                w2 = w / 2, h2 = h / 2,
+//                hB = w2 * 0.5522848,
+//                vB = h2 * 0.5522848,
+//                eX = x + w2, eY = y + h2,
+//                mX = x, mY = y
+//            ;
+//
+//            x -= w2;
+//            y -= h2;
+//
+//            context.beginPath();
+//            context.moveTo(x, mY);
+//            context.bezierCurveTo( x,      mY - vB, mX - hB,  y,      mX, y);
+//            context.bezierCurveTo(mX + hB,       y, eX,      mY - vB, eX, mY);
+//            context.bezierCurveTo(eX,      mY + vB, mX + hB, eY,      mX, eY);
+//            context.bezierCurveTo(mX - hB,      eY,  x,      mY + vB,  x, mY);
+//            context.closePath();
+//            context.fill();
+//            if (stroke) {
+//                context.stroke();
+//            }
+//        }
+
+
+
+        function line(a, b) {
+            context.beginPath();
+            context.moveTo(a[0], a[1]);
+            context.lineTo(b[0], b[1]);
+            context.stroke();
+        }
+
+        //*********************************************************************
+
+        function drawConeRoof(points) {
             context.fillStyle = 'rgba(240,0,0,0.25)';
-            context.strokeStyle = strokeColor.adjustAlpha(zoomAlpha) + '';
+            context.strokeStyle = altColor.adjustAlpha(zoomAlpha) + '';
 
             var
                 h = 20,
@@ -983,7 +1187,7 @@ var Color = (function () {
             ;
 
             var d = 65;
-            circle(center[0], center[1], d);
+            circle(center[0], center[1], d / 2);
 
             context.beginPath();
             context.moveTo(center[0] - d / 2, center[1]);
@@ -998,34 +1202,27 @@ var Color = (function () {
             context.stroke();
         }
 
+        function drawDomeRoof(points, h) {
+            drawShape(points, TRUE);
 
-        function drawRoof3(points, h) {
-            drawShape(points, true);
-
-            var
-                center = [
+            var center = [
                     (points[0] + points[2] + points[4] + points[6]) / 4,
                     (points[1] + points[3] + points[5] + points[7]) / 4
                 ],
                 apex = project(center[0], center[1], CAM_Z / (CAM_Z - h))
             ;
-
             var d = 75;
-            //circle(center[0], center[1], d);
+            //circle(center[0], center[1], d / 2);
             var apex = project(center[0], center[1], CAM_Z / (CAM_Z));
-            circle(apex[0], apex[1], d);
-
+            circle(apex[0], apex[1], d / 2);
 
             var apex = project(center[0], center[1], CAM_Z / (CAM_Z - d/12));
-            circle(apex[0], apex[1], d  * 0.6);
-
-
-
+            circle(apex[0], apex[1], d / 2 * 0.6);
 
             dome(center[0], center[1], 30, 30);
         }
 
-        function drawRoof(points, height, strokeRoofs) {
+        function drawPyramidalRoof(points, height, strokeRoofs) {
             if (height <= 20) {
                 context.fillStyle = 'rgba(225,175,175,0.5)';
             }
@@ -1035,8 +1232,7 @@ var Color = (function () {
                 return;
             }
 
-            var
-                h = height * 1.3,
+            var h = height * 1.3,
                 cx = 0, cy = 0,
                 num = points.length / 2,
                 apex
@@ -1087,40 +1283,64 @@ var Color = (function () {
             ], strokeRoofs);
         }
 
+        //*********************************************************************
 
+        function prism() {
+        }
 
-        function debugMarker(x, y, color, size) {
-            context.fillStyle = color || '#ffcc00';
+        function pyramid() {
+        }
+
+        function cone() {
+        }
+
+        var KAPPA = 0.5522847498;
+        function dome(x, y, z, radius) {
+            z = 0;
+            radius = 40;
+
+            var k = radius * KAPPA,
+                mz  = CAM_Z / (CAM_Z - z),
+                mzk = CAM_Z / (CAM_Z - (z + k / 2)),
+                mzr = CAM_Z / (CAM_Z - (z + radius / 2)),
+                a, b, c,
+                apex = project(x, y, mzr)
+            ;
+
+            a = project(x-radius, y, mz);
+            b = project(x-radius, y, mzk);
+            c = project(x-k,      y, mzr);
+
             context.beginPath();
-            context.arc(x, y, size || 3, 0, PI * 2, true);
-            context.closePath();
-            context.fill();
+            context.moveTo(a[0], a[1]);
+            context.bezierCurveTo(b[0], b[1], c[0], c[1], apex[0], apex[1]);
+
+            a = project(x+radius, y, mz);
+            b = project(x+radius, y, mzk);
+            c = project(x+k,      y, mzr);
+
+            context.moveTo(a[0], a[1]);
+            context.bezierCurveTo(b[0], b[1], c[0], c[1], apex[0], apex[1]);
+
+            a = project(x, y-radius, mz);
+            b = project(x, y-radius, mzk);
+            c = project(x, y-k,      mzr);
+
+            context.moveTo(a[0], a[1]);
+            context.bezierCurveTo(b[0], b[1], c[0], c[1], apex[0], apex[1]);
+
+            a = project(x, y+radius, mz);
+            b = project(x, y+radius, mzk);
+            c = project(x, y+k,      mzr);
+
+            context.moveTo(a[0], a[1]);
+            context.bezierCurveTo(b[0], b[1], c[0], c[1], apex[0], apex[1]);
+
+            context.stroke();
         }
 
-        function drawShape(points, stroke) {
-            if (!points.length) {
-                return;
-            }
-
-            context.beginPath();
-            context.moveTo(points[0], points[1]);
-            for (var i = 2, il = points.length; i < il; i += 2) {
-                context.lineTo(points[i], points[i + 1]);
-            }
-            context.closePath();
-            if (stroke) {
-                context.stroke();
-            }
-            context.fill();
+        function sphere() {
         }
-
-        function project(x, y, m) {
-            return [
-                ((x - camX) * m + camX << 0) + 0.5, // + 0.5: disabling(!) anti alias
-                ((y - camY) * m + camY << 0) + 0.5  // + 0.5: disabling(!) anti alias
-            ];
-        }
-
 
 //****** file: public.js ******
 
@@ -1273,25 +1493,3 @@ OpenLayers.Layer.Buildings = OpenLayers.Class(OpenLayers.Layer, {
 });
 
 
-=======
-(function(k){function D(l,r){var v=l[0]-r[0],d=l[1]-r[1];return v*v+d*d}function H(l){for(var r=0,v=0,d=0,f=l.length-3;d<f;d+=2){r+=l[d];v+=l[d+1]}l=(l.length-2)*2;return[r/l<<0,v/l<<0]}function qa(l){var r=l.length/2,v=new Fa(r),d=0,f=r-1,g,m,s,w,E=[],M=[],I=[];for(v[d]=v[f]=1;f;){m=0;for(g=d+1;g<f;g++){s=l[g*2];var N=l[g*2+1],$=l[d*2],P=l[d*2+1],Q=l[f*2],J=l[f*2+1],z=Q-$,K=J-P,L=void 0;if(z!==0||K!==0){L=((s-$)*z+(N-P)*K)/(z*z+K*K);if(L>1){$=Q;P=J}else if(L>0){$+=z*L;P+=K*L}}z=s-$;K=N-P;s=z*z+K*
-K;if(s>m){w=g;m=s}}if(m>2){v[w]=1;E.push(d);M.push(w);E.push(w);M.push(f)}d=E.pop();f=M.pop()}for(g=0;g<r;g++)v[g]&&I.push(l[g*2],l[g*2+1]);return I}var Ga=Ga||Array,Fa=Fa||Array,Ja=Math.exp,Ka=Math.log,La=Math.tan,Ma=Math.atan,xa=Math.min,Na=Math.max,ya=k.document,R=function(){function l(d,f,g){if(g<0)g+=1;if(g>1)g-=1;if(g<1/6)return d+(f-d)*6*g;if(g<0.5)return f;if(g<2/3)return d+(f-d)*(2/3-g)*6;return d}function r(d,f,g,m){this.r=d;this.g=f;this.b=g;this.a=arguments.length<4?1:m}var v=r.prototype;
-v.toString=function(){return"rgba("+[this.r<<0,this.g<<0,this.b<<0,this.a.toFixed(2)].join(",")+")"};v.adjustLightness=function(d){var f=R.toHSLA(this);f.l*=d;f.l=Math.min(1,Math.max(0,f.l));var g,m;if(f.s===0)d=g=m=f.l;else{m=f.l<0.5?f.l*(1+f.s):f.l+f.s-f.l*f.s;var s=2*f.l-m;d=l(s,m,f.h+1/3);g=l(s,m,f.h);m=l(s,m,f.h-1/3)}return new R(d*255<<0,g*255<<0,m*255<<0,f.a)};v.adjustAlpha=function(d){return new R(this.r,this.g,this.b,this.a*d)};r.parse=function(d){d+="";if(~d.indexOf("#")){d=d.match(/^#?(\w{2})(\w{2})(\w{2})(\w{2})?$/);
-return new R(parseInt(d[1],16),parseInt(d[2],16),parseInt(d[3],16),d[4]?parseInt(d[4],16)/255:1)}if(d=d.match(/rgba?\((\d+)\D+(\d+)\D+(\d+)(\D+([\d.]+))?\)/))return new R(parseInt(d[1],10),parseInt(d[2],10),parseInt(d[3],10),d[4]?parseFloat(d[5],10):1)};r.toHSLA=function(d){var f=d.r/255,g=d.g/255,m=d.b/255,s=Math.max(f,g,m),w=Math.min(f,g,m),E,M=(s+w)/2,I;if(s===w)E=w=0;else{I=s-w;w=M>0.5?I/(2-s-w):I/(s+w);switch(s){case f:E=(g-m)/I+(g<m?6:0);break;case g:E=(m-f)/I+2;break;case m:E=(f-g)/I+4;break}E/=
-6}return{h:E,s:w,l:M,a:d.a}};return r}(),fa=Math.PI,Ha=fa/2,Oa=fa/4,Pa=180/fa,Qa=256,za=14,ga=400,ra=ga-50,ha="latitude",ia="longitude",X=0,Y=1,S=2,aa=3,sa=4,ja=5,Z=6;k.OSMBuildings=function(l){function r(a,e){var b={};a/=ka;e/=ka;b[ha]=e<=0?90:e>=1?-90:Pa*(2*Ma(Ja(fa*(1-2*e)))-Ha);b[ia]=(a===1?1:(a%1+1)%1)*360-180;return b}function v(a,e){return a.replace(/\{ *([\w_]+) *\}/g,function(b,c){return e[c]})}function d(a,e){var b=new XMLHttpRequest;b.onreadystatechange=function(){if(b.readyState===4)!b.status||
-b.status<200||b.status>299||b.responseText&&e(JSON.parse(b.responseText))};b.open("GET",a);b.send(null);return b}function f(){if(!(!Aa||O<za)){var a=r(L-z,da-K),e=r(L+Q+z,da+J+K);ta&&ta.abort();ta=d(v(Aa,{w:a[ia],n:a[ha],e:e[ia],s:e[ha],z:O}),g)}}function g(a){var e,b,c,i=[],h,j=h=0;la=za;M(O);ta=null;if(!(!a||a.meta.z!==O)){c=a.meta;b=a.data;if(A&&u&&A.z===c.z){h=A.x-c.x;j=A.y-c.y;a=0;for(e=u.length;a<e;a++)i[a]=u[a][S][0]+h+","+(u[a][S][1]+j)}A=c;u=[];a=0;for(e=b.length;a<e;a++){c=[];if(!(b[a][Y]>
-ra)){h=qa(b[a][S]);if(!(h.length<8)){c[S]=h;c[sa]=H(h);c[X]=xa(b[a][X],ra);c[Y]=b[a][Y];h=c[S][0]+","+c[S][1];c[ja]=!(i&&~i.indexOf(h));c[aa]=[];c[Z]=[];u.push(c)}}}I()}}function m(a,e){var b=[],c,i,h,j,o,n,p,F,x,G=Ba-O;c=0;for(i=a.length;c<i;c++){o=a[c];F=o[Y]>>G;if(!(F>ra)){n=o[S];x=new Ga(n.length);h=0;for(j=n.length-1;h<j;h+=2){p=n[h+1];var T=xa(1,Na(0,0.5-Ka(La(Oa+Ha*n[h]/180))/fa/2));p={x:(p/360+0.5)*ka<<0,y:T*ka<<0};x[h]=p.x;x[h+1]=p.y}x=qa(x);if(!(x.length<8)){j=[];j[S]=x;j[sa]=H(x);j[X]=
-xa(o[X]>>G,ra);j[Y]=F;j[ja]=e;j[aa]=o[aa];j[Z]=[];for(h=0;h<3;h++)if(j[aa][h])j[Z][h]=j[aa][h].adjustAlpha(U)+"";b.push(j)}}}return b}function s(a,e){if(typeof a==="object")E(a,!e);else{var b=ya.documentElement,c=ya.createElement("script");k.jsonpCallback=function(i){delete k.jsonpCallback;b.removeChild(c);E(i,!e)};b.insertBefore(c,b.lastChild).src=a.replace(/\{callback\}/,"jsonpCallback")}}function w(a,e,b){if(b===undefined)b=[];var c,i,h,j=a[0]?a:a.features,o,n,p,F,x,G=e?1:0,T=e?0:1;if(j){c=0;for(a=
-j.length;c<a;c++)w(j[c],e,b);return b}if(a.type==="Feature"){o=a.geometry;c=a.properties}if(o.type==="Polygon")n=[o.coordinates];if(o.type==="MultiPolygon")n=o.coordinates;if(n){e=c.height;if(c.color||c.wallColor)F=R.parse(c.color||c.wallColor);if(c.roofColor)x=R.parse(c.roofColor);c=0;for(a=n.length;c<a;c++){j=n[c][0];p=[];i=o=0;for(h=j.length;i<h;i++){p.push(j[i][G],j[i][T]);o+=e||j[i][2]||0}if(o){i=[];h=S;var t=void 0,q=void 0,B=void 0,V=void 0,ma=0,W=void 0,Ia=void 0;W=0;for(Ia=p.length-3;W<Ia;W+=
-2){t=p[W];q=p[W+1];B=p[W+2];V=p[W+3];ma+=t*V-B*q}if((ma/2>0?"CW":"CCW")==="CW")p=p;else{t=[];for(q=p.length-2;q>=0;q-=2)t.push(p[q],p[q+1]);p=t}i[h]=p;i[X]=o/j.length<<0;i[aa]=[F||null,F?F.adjustLightness(0.8):null,x?x:F?F.adjustLightness(1.2):ca];b.push(i)}}}return b}function E(a,e){if(a){na=w(a,e);la=0;M(O);A={n:90,w:-180,s:-90,e:180,x:0,y:0,z:O};u=m(na,true);I()}else{na=null;N()}}function M(a){var e,b,c;O=a;ka=Qa<<O;U=1-(O-la)*0.3/(Ba-la);Ca=ba.adjustAlpha(U)+"";ua=va.adjustAlpha(U)+"";wa=ca.adjustAlpha(U)+
-"";if(u){a=0;for(e=u.length;a<e;a++){c=u[a];c[Z]=[];for(b=0;b<3;b++)if(c[aa][b])c[Z][b]=c[aa][b].adjustAlpha(U)+""}}}function I(){ea=0;clearInterval(Da);Da=setInterval(function(){ea+=0.1;if(ea>1){clearInterval(Da);ea=1;for(var a=0,e=u.length;a<e;a++)u[a][ja]=0}N()},33)}function N(){y.clearRect(0,0,Q,J);if(A&&u)if(!(O<la||Ea)){var a,e,b,c,i,h,j,o,n,p=L-A.x,F=da-A.y,x=[oa+p,pa+F],G,T,t,q,B,V;u.sort(function(ma,W){return D(W[sa],x)/W[X]-D(ma[sa],x)/ma[X]});a=0;for(e=u.length;a<e;a++){i=u[a];t=false;
-h=i[S];G=[];b=0;for(c=h.length-1;b<c;b+=2){G[b]=o=h[b]-p;G[b+1]=n=h[b+1]-F;t||(t=o>0&&o<Q&&n>0&&n<J)}if(t){b=i[ja]?i[X]*ea:i[X];h=ga/(ga-b);if(i[Y]){b=i[ja]?i[Y]*ea:i[Y];j=ga/(ga-b)}o=[];T=[];b=0;for(c=G.length-3;b<c;b+=2){n=G[b];q=G[b+1];t=G[b+2];B=G[b+3];V=P(n,q,h);T=P(t,B,h);if(i[Y]){q=P(n,q,j);B=P(t,B,j);n=q.x;q=q.y;t=B.x;B=B.y}if((t-n)*(V.y-q)>(V.x-n)*(B-q)){T=[t+0.5,B+0.5,n+0.5,q+0.5,V.x,V.y,T.x,T.y];y.fillStyle=n<t&&q<B||n>t&&q>B?i[Z][1]||ua:i[Z][0]||Ca;$(T)}o[b]=V.x;o[b+1]=V.y}y.fillStyle=
-i[Z][2]||wa;y.strokeStyle=i[Z][1]||ua;$(o,true)}}}}function $(a,e){if(a.length){y.beginPath();y.moveTo(a[0],a[1]);for(var b=2,c=a.length;b<c;b+=2)y.lineTo(a[b],a[b+1]);y.closePath();e&&y.stroke();y.fill()}}function P(a,e,b){return{x:((a-oa)*b+oa<<0)+0.5,y:((e-pa)*b+pa<<0)+0.5}}var Q=0,J=0,z=0,K=0,L=0,da=0,O,ka,ta,C,y,Aa,ba=new R(200,190,180),va=ba.adjustLightness(0.8),ca=ba.adjustLightness(1.2),Ca=ba+"",ua=va+"",wa=ca+"",na,A,u,ea=1,Da,U=1,la=za,Ba=20,oa,pa,Ea;this.setStyle=function(a){a=(a=a)||{};
-if(a.color||a.wallColor){ba=R.parse(a.color||a.wallColor);Ca=ba.adjustAlpha(U)+"";va=ba.adjustLightness(0.8);ua=va.adjustAlpha(U)+"";ca=ba.adjustLightness(1.2);wa=ca.adjustAlpha(U)+""}if(a.roofColor){ca=R.parse(a.roofColor);wa=ca.adjustAlpha(U)+""}N();return this};this.geoJSON=function(a,e){s(a,e);return this};this.setCamOffset=function(a,e){oa=z+a;pa=J+e};this.setMaxZoom=function(a){Ba=a};this.createCanvas=function(a){C=ya.createElement("canvas");C.style.webkitTransform="translate3d(0,0,0)";C.style.imageRendering=
-"optimizeSpeed";C.style.position="absolute";C.style.pointerEvents="none";C.style.left=0;C.style.top=0;a.appendChild(C);y=C.getContext("2d");y.lineCap="round";y.lineJoin="round";y.lineWidth=1;try{y.mozImageSmoothingEnabled=false}catch(e){}return C};this.destroyCanvas=function(){C.parentNode.removeChild(C)};this.loadData=f;this.onMoveEnd=function(){var a=r(L,da),e=r(L+Q,da+J);N();if(A&&(a[ha]>A.n||a[ia]<A.w||e[ha]<A.s||e[ia]>A.e))f()};this.onZoomEnd=function(a){Ea=false;M(a.zoom);if(na){u=m(na);N()}else{N();
-f()}};this.onZoomStart=function(){Ea=true;N()};this.render=N;this.setOrigin=function(a,e){L=a;da=e};this.setSize=function(a,e){Q=a;J=e;z=Q/2<<0;K=J/2<<0;oa=z;pa=J;C.width=Q;C.height=J};this.setZoom=M;Aa=l};k.OSMBuildings.VERSION="0.1.7a";k.OSMBuildings.ATTRIBUTION='&copy; <a href="http://osmbuildings.org">OSM Buildings</a>'})(this);
-OpenLayers.Layer.Buildings=OpenLayers.Class(OpenLayers.Layer,{CLASS_NAME:"OpenLayers.Layer.Buildings",name:"OSM Buildings",attribution:OSMBuildings.ATTRIBUTION,isBaseLayer:false,alwaysInRange:true,dxSum:0,dySum:0,initialize:function(k){k=k||{};k.projection="EPSG:900913";OpenLayers.Layer.prototype.initialize(this.name,k)},setOrigin:function(){var k=this.map.getLonLatFromPixel(new OpenLayers.Pixel(0,0)),D=this.map.resolution,H=this.maxExtent;this.osmb.setOrigin(Math.round((k.lon-H.left)/D),Math.round((H.top-
-k.lat)/D))},setMap:function(k){if(!this.map){OpenLayers.Layer.prototype.setMap(k);this.osmb=new OSMBuildings(this.options.url);this.osmb.createCanvas(this.div);this.osmb.setSize(this.map.size.w,this.map.size.h);this.osmb.setZoom(this.map.zoom);this.setOrigin();this.osmb.loadData()}},removeMap:function(k){this.osmb.destroyCanvas();this.osmb=null;OpenLayers.Layer.prototype.removeMap(k)},onMapResize:function(){OpenLayers.Layer.prototype.onMapResize();this.osmb.onResize({width:this.map.size.w,height:this.map.size.h})},
-moveTo:function(k,D,H){k=OpenLayers.Layer.prototype.moveTo(k,D,H);if(!H){H=parseInt(this.map.layerContainerDiv.style.left,10);var qa=parseInt(this.map.layerContainerDiv.style.top,10);this.div.style.left=-H+"px";this.div.style.top=-qa+"px"}this.setOrigin();this.dySum=this.dxSum=0;this.osmb.setCamOffset(this.dxSum,this.dySum);D?this.osmb.onZoomEnd({zoom:this.map.zoom}):this.osmb.onMoveEnd();return k},moveByPx:function(k,D){this.dxSum+=k;this.dySum+=D;var H=OpenLayers.Layer.prototype.moveByPx(k,D);this.osmb.setCamOffset(this.dxSum,
-this.dySum);this.osmb.render();return H},geoJSON:function(k,D){return this.osmb.geoJSON(k,D)},setStyle:function(k){return this.osmb.setStyle(k)}});
->>>>>>> master

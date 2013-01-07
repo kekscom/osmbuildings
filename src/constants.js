@@ -1,6 +1,5 @@
     // constants, shared to all instances
-    var
-        VERSION = /*<version=*/'0.1.6a'/*>*/,
+    var VERSION = /*<version=*/'0.1.6a'/*>*/,
         ATTRIBUTION = '&copy; <a href="http://osmbuildings.org">OSM Buildings</a>',
 
         PI = Math.PI,
@@ -15,5 +14,7 @@
         MAX_HEIGHT = CAM_Z - 50,
 
         LAT = 'latitude', LON = 'longitude',
-        HEIGHT = 0, MIN_HEIGHT = 1, FOOTPRINT = 2, COLOR = 3, CENTER = 4, IS_NEW = 5, RENDER_COLOR = 6
+        HEIGHT = 0, MIN_HEIGHT = 1, FOOTPRINT = 2, COLOR = 3, CENTER = 4, IS_NEW = 5, RENDER_COLOR = 6,
+
+        TRUE = true, FALSE = false
     ;

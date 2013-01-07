@@ -22,12 +22,12 @@
         }
 
         function onZoomStart(e) {
-            isZooming = true;
+            isZooming = TRUE;
             render(); // effectively clears because of isZooming flag
         }
 
         function onZoomEnd(e) {
-            isZooming = false;
+            isZooming = FALSE;
             setZoom(e.zoom);
 
             if (rawData) {

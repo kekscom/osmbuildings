@@ -179,23 +179,17 @@
                 }
 
                 item = [];
-                item[FOOTPRINT]   = footprint;
-                item[CENTER]      = center(footprint);
-                item[HEIGHT]      = min(oldItem[HEIGHT] >> z, MAX_HEIGHT);
-                item[MIN_HEIGHT]  = minHeight;
-                item[IS_NEW]      = isNew;
-                item[COLOR]       = oldItem[COLOR];
+                item[FOOTPRINT]    = footprint;
+                item[CENTER]       = center(footprint);
+                item[HEIGHT]       = min(oldItem[HEIGHT] >> z, MAX_HEIGHT);
+                item[MIN_HEIGHT]   = minHeight;
+                item[IS_NEW]       = isNew;
+                item[COLOR]        = oldItem[COLOR];
                 item[RENDER_COLOR] = [];
 
                 for (j = 0; j < 3; j++) {
                     if (item[COLOR][j]) {
                         item[RENDER_COLOR][j] = item[COLOR][j].adjustAlpha(zoomAlpha) + '';
-                    }
-                }
-
-                for (j = 0; j < 3; j++) {
-                    if (item[COLOR][j]) {
-                        item[RENDERCOLOR][j] = item[COLOR][j].adjustAlpha(zoomAlpha) + '';
                     }
                 }
 
@@ -315,7 +309,7 @@
                 y: 0,
                 z: zoom
             };
-            data = scaleData(rawData, true);
+            data = scaleData(rawData, TRUE);
 
             fadeIn();
         }
