@@ -37,7 +37,7 @@
     }
 
     function simplify(points) {
-        var sqTolerance = 7,
+        var sqTolerance = 2,
             len = points.length / 2,
             markers = new Uint8Array(len),
 

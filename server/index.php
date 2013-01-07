@@ -25,7 +25,7 @@ $w = $_GET["w"];
 $s = $_GET["s"];
 $e = $_GET["e"];
 
-$Z = (int)$_GET["z"];
+$Z = intval($_GET["z"]);
 $z = $maxZoom - $Z;
 
 $XY = geoToPixel($n, $w, $Z);

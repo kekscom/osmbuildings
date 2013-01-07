@@ -73,6 +73,9 @@
 
             meta = resMeta;
             data = [];
+
+            // var polyCountBefore = 0, polyCountAfter = 0, start = Date.now();
+
             for (i = 0, il = resData.length; i < il; i++) {
                 item = [];
 
@@ -80,7 +83,12 @@
                     continue;
                 }
 
+                // polyCountBefore += resData[i][FOOTPRINT].length;
+
                 footprint = simplify(resData[i][FOOTPRINT]);
+
+                // polyCountAfter += footprint.length;
+
                 if (footprint.length < 8) { // 3 points & end = start (x2)
                     continue;
                 }
@@ -99,6 +107,9 @@
 
                 data.push(item);
             }
+
+            // console.log(polyCountBefore, polyCountAfter, Date.now() - start);
+
             resMeta = resData = keyList = null; // gc
             fadeIn();
         }
