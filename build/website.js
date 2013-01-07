@@ -1,7 +1,7 @@
 
 var
     osmbDir = '..',
-    websiteDir = '../../website'
+    websiteDir = '../../osmb-website'
 ;
 
 //*****************************************************************************
@@ -18,7 +18,7 @@ process.argv.splice(2).forEach(function (item) {
     options[ pairs[0].replace(/^--/, '') ] = pairs.length > 1 ? pairs[1] : true;
 });
 
-//*****************************************************************************
+//*** library *****************************************************************
 
 console.log('building OSM Buildings..');
 exec('node build.js', function (err) {
@@ -36,7 +36,7 @@ exec('node build.js', function (err) {
 // console.log('copying server config..');
 // builder.copy(osmbDir + '/server/config.php', websiteDir + '/server/config.php');'
 
-//*****************************************************************************
+//*** server ******************************************************************
 
 console.log('copying server functions..');
 builder.copy(osmbDir + '/server/functions.php', websiteDir + '/server/functions.php');
@@ -46,7 +46,7 @@ if (!fs.existsSync(websiteDir + '/server/source')) {
 }
 builder.copy(osmbDir + '/server/source/', websiteDir + '/server/source/');
 
-//*****************************************************************************
+//*** examples ****************************************************************
 
 console.log('copying examples..');
 builder.eachFile(osmbDir + '/examples/', function (file) {
@@ -59,7 +59,7 @@ builder.eachFile(osmbDir + '/examples/', function (file) {
 
 builder.copy(osmbDir + '/assets/', websiteDir + '/examples/assets/');
 
-//*****************************************************************************
+//*** documentation ***********************************************************
 
 console.log('copying documentation..');
 builder.eachFile(osmbDir + '/doc/', function (file) {
