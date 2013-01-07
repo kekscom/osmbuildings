@@ -218,7 +218,7 @@ var Color = (function () {
     }
 
     function simplify(points) {
-        var sqTolerance = 7,
+        var sqTolerance = 2,
             len = points.length / 2,
             markers = new Uint8Array(len),
 
@@ -452,6 +452,9 @@ var Color = (function () {
 
             meta = resMeta;
             data = [];
+
+            // var polyCountBefore = 0, polyCountAfter = 0, start = Date.now();
+
             for (i = 0, il = resData.length; i < il; i++) {
                 item = [];
 
@@ -459,7 +462,12 @@ var Color = (function () {
                     continue;
                 }
 
+                // polyCountBefore += resData[i][FOOTPRINT].length;
+
                 footprint = simplify(resData[i][FOOTPRINT]);
+
+                // polyCountAfter += footprint.length;
+
                 if (footprint.length < 8) { // 3 points & end = start (x2)
                     continue;
                 }
@@ -478,6 +486,9 @@ var Color = (function () {
 
                 data.push(item);
             }
+
+            // console.log(polyCountBefore, polyCountAfter, Date.now() - start);
+
             resMeta = resData = keyList = null; // gc
             fadeIn();
         }
