@@ -23,7 +23,7 @@
          * @param h {float} height in (in pixels)
          */
         function cylinder(x, y, r, h, minHeight) {
-            var m = CAM_Z / (CAM_Z - h),
+            var m = camZ / (camZ - h),
                 p = project(x, y, m),
                 _x = p[0],
                 _y = p[1],
@@ -35,7 +35,7 @@
 
             if (minHeight) {
                 var $x = x;
-                m = CAM_Z / (CAM_Z - minHeight),
+                m = camZ / (camZ - minHeight),
                 p = project(x, y, m);
                 x = p[0];
                 y = p[1];
@@ -198,7 +198,7 @@
                     (points[0] + points[2] + points[4] + points[6]) / 4,
                     (points[1] + points[3] + points[5] + points[7]) / 4
                 ],
-                apex = project(center[0], center[1], CAM_Z / (CAM_Z - h))
+                apex = project(center[0], center[1], camZ / (camZ - h))
             ;
 
             var d = 65;
@@ -224,14 +224,14 @@
                     (points[0] + points[2] + points[4] + points[6]) / 4,
                     (points[1] + points[3] + points[5] + points[7]) / 4
                 ],
-                apex = project(center[0], center[1], CAM_Z / (CAM_Z - h))
+                apex = project(center[0], center[1], camZ / (camZ - h))
             ;
             var d = 75;
             //circle(center[0], center[1], d / 2);
-            var apex = project(center[0], center[1], CAM_Z / (CAM_Z));
+            var apex = project(center[0], center[1], camZ / (camZ));
             circle(apex[0], apex[1], d / 2);
 
-            var apex = project(center[0], center[1], CAM_Z / (CAM_Z - d/12));
+            var apex = project(center[0], center[1], camZ / (camZ - d/12));
             circle(apex[0], apex[1], d / 2 * 0.6);
 
             dome(center[0], center[1], 30, 30);
@@ -258,7 +258,7 @@
                 cy += points[i + 1];
             }
 
-            apex = project(cx / num, cy / num, CAM_Z / (CAM_Z - h));
+            apex = project(cx / num, cy / num, camZ / (camZ - h));
 
             for (var i = 0, il = points.length - 3; i < il; i += 2) {
                 var ax = points[i];
@@ -315,9 +315,9 @@
             radius = 40;
 
             var k = radius * KAPPA,
-                mz  = CAM_Z / (CAM_Z - z),
-                mzk = CAM_Z / (CAM_Z - (z + k / 2)),
-                mzr = CAM_Z / (CAM_Z - (z + radius / 2)),
+                mz  = camZ / (camZ - z),
+                mzk = camZ / (camZ - (z + k / 2)),
+                mzr = camZ / (camZ - (z + radius / 2)),
                 a, b, c,
                 apex = project(x, y, mzr)
             ;
