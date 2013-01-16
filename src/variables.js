@@ -27,7 +27,9 @@
 
             minZoom = MIN_ZOOM,
             maxZoom = 20,
-            camX, camY,
+            maxHeight,
+
+            camX, camY, camZ,
 
             isZooming
         ;
