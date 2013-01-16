@@ -168,9 +168,6 @@ var Color = (function () {
         TILE_SIZE = 256,
         MIN_ZOOM = 14, // for buildings data only, GeoJSON should not be affected
 
-        CAM_Z = 400,
-        MAX_HEIGHT = CAM_Z - 50,
-
         LAT = 'latitude', LON = 'longitude',
         HEIGHT = 0, MIN_HEIGHT = 1, FOOTPRINT = 2, COLOR = 3, CENTER = 4, IS_NEW = 5, RENDER_COLOR = 6,
 
@@ -313,7 +310,9 @@ var Color = (function () {
 
             minZoom = MIN_ZOOM,
             maxZoom = 20,
-            camX, camY,
+            maxHeight,
+
+            camX, camY, camZ,
 
             isZooming
         ;
@@ -458,7 +457,7 @@ var Color = (function () {
             for (i = 0, il = resData.length; i < il; i++) {
                 item = [];
 
-                if (resData[i][MIN_HEIGHT] > MAX_HEIGHT) {
+                if (resData[i][MIN_HEIGHT] > maxHeight) {
                     continue;
                 }
 
@@ -475,7 +474,7 @@ var Color = (function () {
                 item[FOOTPRINT] = footprint;
                 item[CENTER] = center(footprint);
 
-                item[HEIGHT] = min(resData[i][HEIGHT], MAX_HEIGHT);
+                item[HEIGHT] = min(resData[i][HEIGHT], maxHeight);
                 item[MIN_HEIGHT] = resData[i][MIN_HEIGHT];
 
                 k = item[FOOTPRINT][0] + ',' + item[FOOTPRINT][1];
@@ -540,7 +539,7 @@ var Color = (function () {
                 // TODO: later on, keep continued' objects in order not to loose them on zoom back in
 
 				minHeight = oldItem[MIN_HEIGHT] >> z;
-                if (minHeight > MAX_HEIGHT) {
+                if (minHeight > maxHeight) {
                     continue;
                 }
 
@@ -558,12 +557,12 @@ var Color = (function () {
                 }
 
                 item = [];
-                item[FOOTPRINT]    = footprint;
-                item[CENTER]       = center(footprint);
-                item[HEIGHT]       = min(oldItem[HEIGHT] >> z, MAX_HEIGHT);
-                item[MIN_HEIGHT]   = minHeight;
-                item[IS_NEW]       = isNew;
-                item[COLOR]        = oldItem[COLOR];
+                item[FOOTPRINT]   = footprint;
+                item[CENTER]      = center(footprint);
+                item[HEIGHT]      = min(oldItem[HEIGHT] >> z, maxHeight);
+                item[MIN_HEIGHT]  = minHeight;
+                item[IS_NEW]      = isNew;
+                item[COLOR]       = oldItem[COLOR];
                 item[RENDER_COLOR] = [];
 
                 for (j = 0; j < 3; j++) {
@@ -702,8 +701,11 @@ var Color = (function () {
             halfHeight = height / 2 << 0;
             camX = halfWidth;
             camY = height;
+            camZ = halfWidth / tan(90 / 2); // adapting cam pos to field of view (90°)
             canvas.width = width;
             canvas.height = height;
+            // TODO: change of maxHeight needs to adjust building heights!
+            maxHeight = camZ - 50;
         }
 
         function setOrigin(x, y) {
@@ -883,12 +885,12 @@ var Color = (function () {
                 // when fading in, use a dynamic height
                 h = item[IS_NEW] ? item[HEIGHT] * fadeFactor : item[HEIGHT];
                 // precalculating projection height scale
-                m = CAM_Z / (CAM_Z - h);
+                m = camZ / (camZ - h);
 
                 // prepare same calculations for min_height if applicable
                 if (item[MIN_HEIGHT]) {
                     h = item[IS_NEW] ? item[MIN_HEIGHT] * fadeFactor : item[MIN_HEIGHT];
-                    n = CAM_Z / (CAM_Z - h);
+                    n = camZ / (camZ - h);
                 }
 
                 roof = []; // typed array would be created each pass and is way too slow
@@ -1008,9 +1010,11 @@ var Color = (function () {
                 p = project(x, y, m),
                 _x = p[0],
                 _y = p[1],
-                p = project(x - r, y, m),
-                _r = _x - p[0]
+                _r
             ;
+
+            p = project(x - r, y, m);
+            _r = _x - p[0];
 
             if (minHeight) {
                 var $x = x;
@@ -1133,10 +1137,6 @@ var Color = (function () {
 
         //*** helpers *********************************************************
 
-//        function circle(x, y, radius, stroke) {
-//            ellipse(x, y, radius*2, radius*2, stroke);
-//        }
-//
 //        function ellipse(x, y, w, h, stroke) {
 //            var
 //                w2 = w / 2, h2 = h / 2,
@@ -1161,8 +1161,6 @@ var Color = (function () {
 //                context.stroke();
 //            }
 //        }
-
-
 
         function line(a, b) {
             context.beginPath();

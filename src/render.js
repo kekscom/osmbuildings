@@ -70,12 +70,12 @@
                 // when fading in, use a dynamic height
                 h = item[IS_NEW] ? item[HEIGHT] * fadeFactor : item[HEIGHT];
                 // precalculating projection height scale
-                m = CAM_Z / (CAM_Z - h);
+                m = camZ / (camZ - h);
 
                 // prepare same calculations for min_height if applicable
                 if (item[MIN_HEIGHT]) {
                     h = item[IS_NEW] ? item[MIN_HEIGHT] * fadeFactor : item[MIN_HEIGHT];
-                    n = CAM_Z / (CAM_Z - h);
+                    n = camZ / (camZ - h);
                 }
 
                 roof = []; // typed array would be created each pass and is way too slow

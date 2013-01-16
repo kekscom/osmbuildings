@@ -79,7 +79,7 @@
             for (i = 0, il = resData.length; i < il; i++) {
                 item = [];
 
-                if (resData[i][MIN_HEIGHT] > MAX_HEIGHT) {
+                if (resData[i][MIN_HEIGHT] > maxHeight) {
                     continue;
                 }
 
@@ -96,7 +96,7 @@
                 item[FOOTPRINT] = footprint;
                 item[CENTER] = center(footprint);
 
-                item[HEIGHT] = min(resData[i][HEIGHT], MAX_HEIGHT);
+                item[HEIGHT] = min(resData[i][HEIGHT], maxHeight);
                 item[MIN_HEIGHT] = resData[i][MIN_HEIGHT];
 
                 k = item[FOOTPRINT][0] + ',' + item[FOOTPRINT][1];
@@ -161,7 +161,7 @@
                 // TODO: later on, keep continued' objects in order not to loose them on zoom back in
 
 				minHeight = oldItem[MIN_HEIGHT] >> z;
-                if (minHeight > MAX_HEIGHT) {
+                if (minHeight > maxHeight) {
                     continue;
                 }
 
@@ -179,12 +179,12 @@
                 }
 
                 item = [];
-                item[FOOTPRINT]    = footprint;
-                item[CENTER]       = center(footprint);
-                item[HEIGHT]       = min(oldItem[HEIGHT] >> z, MAX_HEIGHT);
-                item[MIN_HEIGHT]   = minHeight;
-                item[IS_NEW]       = isNew;
-                item[COLOR]        = oldItem[COLOR];
+                item[FOOTPRINT]   = footprint;
+                item[CENTER]      = center(footprint);
+                item[HEIGHT]      = min(oldItem[HEIGHT] >> z, maxHeight);
+                item[MIN_HEIGHT]  = minHeight;
+                item[IS_NEW]      = isNew;
+                item[COLOR]       = oldItem[COLOR];
                 item[RENDER_COLOR] = [];
 
                 for (j = 0; j < 3; j++) {
