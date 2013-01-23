@@ -701,7 +701,7 @@ var Color = (function () {
             halfHeight = height / 2 << 0;
             camX = halfWidth;
             camY = height;
-            camZ = halfWidth / tan(90 / 2); // adapting cam pos to field of view (90°)
+            camZ = width / tan(90 / 2) << 0; // adapting cam pos to field of view (90°)
             canvas.width = width;
             canvas.height = height;
             // TODO: change of maxHeight needs to adjust building heights!
@@ -975,26 +975,34 @@ var Color = (function () {
                 ((x - camX) * m + camX << 0) + 0.5, // + 0.5: disabling(!) anti alias
                 ((y - camY) * m + camY << 0) + 0.5  // + 0.5: disabling(!) anti alias
             ];
-
         }
+
+//        function project(x1, x2, m) {
+//            return (x1 - x2) * m;
+//        }
 
 
 //****** file: objects.js ******
 
 
         function render() {
+            var p, x, y;
+
             context.clearRect(0, 0, width, height);
             context.strokeStyle = altColorAlpha;
 
-            var p = geoToPixel(52.50700, 13.33300);
-            var x = p.x - originX;
-            var y = p.y - originY;
+
+            p = geoToPixel(52.50700, 13.33300);
+            x = p.x - originX;
+            y = p.y - originY;
             cylinder(x, y, 20, 200);
 
-            var p = geoToPixel(52.50557, 13.33451);
-            var x = p.x - originX;
-            var y = p.y - originY;
-            cylinder(x, y, 30, 150);
+            p = geoToPixel(52.50557, 13.33451);
+            x = p.x - originX;
+            y = p.y - originY;
+            cylinder(x-60, y, 30, 10);
+
+            dome(x, y, 30);
         }
 
         //*** finished methods ************************************************
@@ -1006,19 +1014,16 @@ var Color = (function () {
          * @param h {float} height in (in pixels)
          */
         function cylinder(x, y, r, h, minHeight) {
-            var m = CAM_Z / (CAM_Z - h),
+            var m = camZ / (camZ - h),
                 p = project(x, y, m),
                 _x = p[0],
                 _y = p[1],
-                _r
+                _r = r * m
             ;
-
-            p = project(x - r, y, m);
-            _r = _x - p[0];
 
             if (minHeight) {
                 var $x = x;
-                m = CAM_Z / (CAM_Z - minHeight),
+                m = camZ / (camZ - minHeight),
                 p = project(x, y, m);
                 x = p[0];
                 y = p[1];
@@ -1132,9 +1137,6 @@ var Color = (function () {
         }
 
 
-
-
-
         //*** helpers *********************************************************
 
 //        function ellipse(x, y, w, h, stroke) {
@@ -1171,54 +1173,185 @@ var Color = (function () {
 
         //*********************************************************************
 
-        function drawConeRoof(points) {
-            context.fillStyle = 'rgba(240,0,0,0.25)';
-            context.strokeStyle = altColor.adjustAlpha(zoomAlpha) + '';
-
-            var
-                h = 20,
-                center = [
-                    (points[0] + points[2] + points[4] + points[6]) / 4,
-                    (points[1] + points[3] + points[5] + points[7]) / 4
-                ],
-                apex = project(center[0], center[1], CAM_Z / (CAM_Z - h))
+        function cone(x, y, r, h, minHeight) {
+            // TODO: min height
+            var apex = project(x, y, camZ / (camZ - h)),
+                _x = apex[0],
+                _y = apex[1]
             ;
 
-            var d = 65;
-            circle(center[0], center[1], d / 2);
+            var t = getTangentsFromPoint(x, y, r, _x, _y),
+                tx, ty, ta,
+                isAlt,
+                ax, ay
+            ;
+
+            // draw normal and alternative colored wall segments
+            for (var i = 0; i < 2; i++) {
+                isAlt = !!i;
+                tx = t[i][0];
+                ty = t[i][1];
+                ax = (x - tx) * (isAlt ? 1 : -1);
+                ay = (y - ty) * (isAlt ? 1 : -1);
+                ta = Math.atan2(ay, ax) + (isAlt ? PI : 0);
+
+                // tangent not visible, avoid flickering
+                if (ax < 0) {
+                    continue;
+                }
+
+                context.fillStyle = !isAlt ? wallColorAlpha : altColorAlpha;
+                context.beginPath();
+                context.moveTo(tx, ty);
+                context.arc(x, y, r, ta, HALF_PI, isAlt);
+                context.arc(_x, _y, 0, HALF_PI, ta, !isAlt);
+                context.closePath();
+                context.fill();
+            }
+
+//            circle(x, y, r);
+//
+//            context.beginPath();
+//            context.moveTo(x - r, y);
+//            context.lineTo(_x, _y);
+//            context.lineTo(x + r, y);
+//            context.stroke();
+//
+//            context.beginPath();
+//            context.moveTo(x, y - r);
+//            context.lineTo(_x, _y);
+//            context.lineTo(x, y + r);
+//            context.stroke();
+        }
+
+
+        var KAPPA = 0.5522847498;
+        function dome(x, y, r, h) {
+            if (!h) {
+                h = r;
+            }
+
+            var k = h * KAPPA,
+                g = 1,
+                n = camZ / (camZ - (h - k)),
+                m = camZ / (camZ - h),
+                _r = r * m,
+                _k = _r * KAPPA
+            ;
+
+var apex = project(x, y, m);
+
+            // VERTICAL TANGENT POINTS ON SPHERE:
+            // side view at scenario:
+            // sphere at x/y & radius   => circle at y/camZ & height (+ minHeight)
+            // cam    at camX/camY/camZ => point  at camY/0
+            var t = getTangentsFromPoint(y, camZ, r, camY, 0);
+
+var Y = t[0][0];
+var H = (camZ - t[0][1]);
+
+var p = project(x, Y, camZ / (camZ - H));
+line([x, Y], p);
+debugMarker(p[0], p[1]);
+
+//******************************************************************************
+
+context.fillStyle = roofColorAlpha;
+circle(x, y, r, TRUE);
+
+line([x, y], apex);
+
+//******************************************************************************
+
+var Y = t[1][0];
+var H = (camZ - t[1][1]);
+
+var p = project(x, Y, camZ / (camZ - H));
+line([x, Y], p);
+debugMarker(p[0], p[1]);
+
+line([x, y], [x, Y]);
+line(apex, p);
+
+
+//******************************************************************************
+
+//circle(y, camZ, r, TRUE);
+//debugMarker(camY, 0, '#ff0000');
+//line([t[0][0], t[0][1]], [t[0][2], t[0][3]]);
+//line([t[1][0], t[1][1]], [t[1][2], t[1][3]]);
+
+//******************************************************************************
+
+
+//            context.fillStyle = wallColorAlpha
+//            context.beginPath();
+//            context.arc(apex[0], apex[1], r, 0, 1*PI, TRUE);
+//            context.closePath();
+//            context.stroke();
 
             context.beginPath();
-            context.moveTo(center[0] - d / 2, center[1]);
-            context.lineTo(apex[0], apex[1]);
-            context.lineTo(center[0] + d / 2, center[1]);
-            context.stroke();
 
-            context.beginPath();
-            context.moveTo(center[0], center[1] - d / 2);
-            context.lineTo(apex[0], apex[1]);
-            context.lineTo(center[0], center[1] + d / 2);
+            var a  = project(x - r,  y, g);
+            var _a = project(x - r,  y, n);
+            var _b = project(x - _k, y, m);
+            var b  = project(x,      y, m);
+
+            context.moveTo(a[0], a[1]);
+            context.bezierCurveTo(_a[0], _a[1], _b[0], _b[1], b[0], b[1]);
+
+            var a  = project(x + r, y, g);
+            var _a = project(x + r, y, n);
+            var _b = project(x + _k, y, m);
+            var b  = project(x,     y, m);
+
+            context.moveTo(a[0], a[1]);
+            context.bezierCurveTo(_a[0], _a[1], _b[0], _b[1], b[0], b[1]);
+
+            var a  = project(x, y + r, g);
+            var _a = project(x, y + r, n);
+            var _b = project(x, y + _k, m);
+            var b  = project(x, y,     m);
+
+            context.moveTo(a[0], a[1]);
+            context.bezierCurveTo(_a[0], _a[1], _b[0], _b[1], b[0], b[1]);
+
+            var a  = project(x, y - r, g);
+            var _a = project(x, y - r, n);
+            var _b = project(x, y - _k, m);
+            var b  = project(x, y,     m);
+
+            context.moveTo(a[0], a[1]);
+            context.bezierCurveTo(_a[0], _a[1], _b[0], _b[1], b[0], b[1]);
+
             context.stroke();
         }
 
-        function drawDomeRoof(points, h) {
-            drawShape(points, TRUE);
 
-            var center = [
-                    (points[0] + points[2] + points[4] + points[6]) / 4,
-                    (points[1] + points[3] + points[5] + points[7]) / 4
-                ],
-                apex = project(center[0], center[1], CAM_Z / (CAM_Z - h))
+        function getTangentsFromPoint(x1, y1, r, x2, y2) {
+            var sqd = (x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2);
+
+            var d = sqrt(sqd),
+                vx = (x2 - x1) / d,
+                vy = (y2 - y1) / d,
+                res = [],
+                c = r / d,
+                h, nx, ny
             ;
-            var d = 75;
-            //circle(center[0], center[1], d / 2);
-            var apex = project(center[0], center[1], CAM_Z / (CAM_Z));
-            circle(apex[0], apex[1], d / 2);
 
-            var apex = project(center[0], center[1], CAM_Z / (CAM_Z - d/12));
-            circle(apex[0], apex[1], d / 2 * 0.6);
+            h = sqrt(max(0, 1 - c * c));
+            for (var sign = 1; sign >= -1; sign -= 2) {
+                nx = vx * c - sign * h * vy;
+                ny = vy * c + sign * h * vx;
+                res.push([
+                    x1 + r * nx << 0, y1 + r * ny << 0,
+                    x2, y2
+                ]);
+            }
 
-            dome(center[0], center[1], 30, 30);
+            return res;
         }
+
 
         function drawPyramidalRoof(points, height, strokeRoofs) {
             if (height <= 20) {
@@ -1241,7 +1374,7 @@ var Color = (function () {
                 cy += points[i + 1];
             }
 
-            apex = project(cx / num, cy / num, CAM_Z / (CAM_Z - h));
+            apex = project(cx / num, cy / num, camZ / (camZ - h));
 
             for (var i = 0, il = points.length - 3; i < il; i += 2) {
                 var ax = points[i];
@@ -1281,60 +1414,10 @@ var Color = (function () {
             ], strokeRoofs);
         }
 
-        //*********************************************************************
-
         function prism() {
         }
 
         function pyramid() {
-        }
-
-        function cone() {
-        }
-
-        var KAPPA = 0.5522847498;
-        function dome(x, y, z, radius) {
-            z = 0;
-            radius = 40;
-
-            var k = radius * KAPPA,
-                mz  = CAM_Z / (CAM_Z - z),
-                mzk = CAM_Z / (CAM_Z - (z + k / 2)),
-                mzr = CAM_Z / (CAM_Z - (z + radius / 2)),
-                a, b, c,
-                apex = project(x, y, mzr)
-            ;
-
-            a = project(x-radius, y, mz);
-            b = project(x-radius, y, mzk);
-            c = project(x-k,      y, mzr);
-
-            context.beginPath();
-            context.moveTo(a[0], a[1]);
-            context.bezierCurveTo(b[0], b[1], c[0], c[1], apex[0], apex[1]);
-
-            a = project(x+radius, y, mz);
-            b = project(x+radius, y, mzk);
-            c = project(x+k,      y, mzr);
-
-            context.moveTo(a[0], a[1]);
-            context.bezierCurveTo(b[0], b[1], c[0], c[1], apex[0], apex[1]);
-
-            a = project(x, y-radius, mz);
-            b = project(x, y-radius, mzk);
-            c = project(x, y-k,      mzr);
-
-            context.moveTo(a[0], a[1]);
-            context.bezierCurveTo(b[0], b[1], c[0], c[1], apex[0], apex[1]);
-
-            a = project(x, y+radius, mz);
-            b = project(x, y+radius, mzk);
-            c = project(x, y+k,      mzr);
-
-            context.moveTo(a[0], a[1]);
-            context.bezierCurveTo(b[0], b[1], c[0], c[1], apex[0], apex[1]);
-
-            context.stroke();
         }
 
         function sphere() {
