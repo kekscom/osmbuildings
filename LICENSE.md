@@ -1,4 +1,4 @@
-Copyright (c) 2012, keks.com, Jan Marsch
+Copyright (c) 2013, OSM Buildings, Jan Marsch <mail@osmbuildings.org>
 All rights reserved. 
 
 Redistribution and use in source and binary forms, with or without modification, are 
