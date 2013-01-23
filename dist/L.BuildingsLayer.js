@@ -16,6 +16,7 @@
     // object access shortcuts
     var
         Int32Array = Int32Array || Array,
+        Uint8Array = Uint8Array || Array,
         exp = Math.exp,
         log = Math.log,
         tan = Math.tan,
@@ -168,71 +169,18 @@ var Color = (function () {
         TILE_SIZE = 256,
         MIN_ZOOM = 14, // for buildings data only, GeoJSON should not be affected
 
-        CAM_Z = 400,
-        MAX_HEIGHT = CAM_Z - 50,
-
         LAT = 'latitude', LON = 'longitude',
-        HEIGHT = 0, FOOTPRINT = 1, COLOR = 2, CENTER = 3, IS_NEW = 4, RENDERCOLOR = 5
+        HEIGHT = 0, MIN_HEIGHT = 1, FOOTPRINT = 2, COLOR = 3, CENTER = 4, IS_NEW = 5, RENDER_COLOR = 6
     ;
 
 
 //****** file: geometry.js ******
-
-    function simplify(points) {
-        var cost,
-            curr, prev = [points[0], points[1]], next,
-            newPoints = [points[0], points[1]]
-        ;
-
-        // TODO this is not iterative yet
-        for (var i = 2, il = points.length - 3; i < il; i += 2) {
-            curr = [points[i], points[i + 1]];
-            next = [points[i + 2] || points[0], points[i + 3] || points[1]];
-            cost = collapseCost(prev, curr, next);
-            if (cost > 750) {
-                newPoints.push(curr[0], curr[1]);
-                prev = curr;
-            }
-        }
-
-        if (curr[0] !== points[0] || curr[1] !== points[1]) {
-            newPoints.push(points[0], points[1]);
-        }
-
-        return newPoints;
-    }
-
-    function collapseCost(a, b, c) {
-        var dist = segmentDistance(b, a, c) * 2; // * 2: put more weight in angle
-        var length = distance(a, c);
-        return dist * length;
-    }
 
     function distance(p1, p2) {
         var dx = p1[0] - p2[0],
             dy = p1[1] - p2[1]
         ;
         return dx * dx + dy * dy;
-    }
-
-    function segmentDistance(p, p1, p2) { // square distance from a point to a segment
-        var x = p1[0],
-            y = p1[1],
-            dx = p2[0] - x,
-            dy = p2[1] - y,
-            t
-        ;
-        if (dx !== 0 || dy !== 0) {
-            t = ((p[0] - x) * dx + (p[1] - y) * dy) / (dx * dx + dy * dy);
-            if (t > 1) {
-                x = p2[0];
-                y = p2[1];
-            } else if (t > 0) {
-                x += dx * t;
-                y += dy * t;
-            }
-        }
-        return distance(p, [x, y]);
     }
 
     function center(points) {
@@ -245,6 +193,84 @@ var Color = (function () {
         }
         len = (points.length - 2) * 2;
         return [x / len << 0, y / len << 0];
+    }
+
+    function getSquareSegmentDistance(px, py, p1x, p1y, p2x, p2y) {
+        var dx = p2x - p1x,
+            dy = p2y - p1y,
+            t;
+        if (dx !== 0 || dy !== 0) {
+            t = ((px - p1x) * dx + (py - p1y) * dy) / (dx * dx + dy * dy);
+            if (t > 1) {
+                p1x = p2x;
+                p1y = p2y;
+            } else if (t > 0) {
+                p1x += dx * t;
+                p1y += dy * t;
+            }
+        }
+        dx = px - p1x;
+        dy = py - p1y;
+        return dx * dx + dy * dy;
+    }
+
+    function simplify(points) {
+        var sqTolerance = 2,
+            len = points.length / 2,
+            markers = new Uint8Array(len),
+
+            first = 0,
+            last  = len - 1,
+
+            i,
+            maxSqDist,
+            sqDist,
+            index,
+
+            firstStack = [],
+            lastStack  = [],
+
+            newPoints  = []
+        ;
+
+        markers[first] = markers[last] = 1;
+
+        while (last) {
+            maxSqDist = 0;
+
+            for (i = first + 1; i < last; i++) {
+                sqDist = getSquareSegmentDistance(
+                    points[i     * 2], points[i     * 2 + 1],
+                    points[first * 2], points[first * 2 + 1],
+                    points[last  * 2], points[last  * 2 + 1]
+                );
+                if (sqDist > maxSqDist) {
+                    index = i;
+                    maxSqDist = sqDist;
+                }
+            }
+
+            if (maxSqDist > sqTolerance) {
+                markers[index] = 1;
+
+                firstStack.push(first);
+                lastStack.push(index);
+
+                firstStack.push(index);
+                lastStack.push(last);
+            }
+
+            first = firstStack.pop();
+            last = lastStack.pop();
+        }
+
+        for (i = 0; i < len; i++) {
+            if (markers[i]) {
+                newPoints.push(points[i * 2], points[i * 2 + 1]);
+            }
+        }
+
+        return newPoints;
     }
 
 
@@ -284,7 +310,9 @@ var Color = (function () {
 
             minZoom = MIN_ZOOM,
             maxZoom = 20,
-            camX, camY,
+            maxHeight,
+
+            camX, camY, camZ,
 
             isZooming
         ;
@@ -423,10 +451,22 @@ var Color = (function () {
 
             meta = resMeta;
             data = [];
+
+            // var polyCountBefore = 0, polyCountAfter = 0, start = Date.now();
+
             for (i = 0, il = resData.length; i < il; i++) {
                 item = [];
 
+                if (resData[i][MIN_HEIGHT] > maxHeight) {
+                    continue;
+                }
+
+                // polyCountBefore += resData[i][FOOTPRINT].length;
+
                 footprint = simplify(resData[i][FOOTPRINT]);
+
+                // polyCountAfter += footprint.length;
+
                 if (footprint.length < 8) { // 3 points & end = start (x2)
                     continue;
                 }
@@ -434,15 +474,20 @@ var Color = (function () {
                 item[FOOTPRINT] = footprint;
                 item[CENTER] = center(footprint);
 
-                item[HEIGHT] = min(resData[i][HEIGHT], MAX_HEIGHT);
+                item[HEIGHT] = min(resData[i][HEIGHT], maxHeight);
+                item[MIN_HEIGHT] = resData[i][MIN_HEIGHT];
+
                 k = item[FOOTPRINT][0] + ',' + item[FOOTPRINT][1];
                 item[IS_NEW] = !(keyList && ~keyList.indexOf(k));
 
                 item[COLOR] = [];
-                item[RENDERCOLOR] = [];
+                item[RENDER_COLOR] = [];
 
                 data.push(item);
             }
+
+            // console.log(polyCountBefore, polyCountAfter, Date.now() - start);
+
             resMeta = resData = keyList = null; // gc
             fadeIn();
         }
@@ -483,12 +528,21 @@ var Color = (function () {
                 i, il, j, jl,
                 oldItem, item,
                 coords, p,
+				minHeight,
                 footprint,
                 z = maxZoom - zoom
             ;
 
             for (i = 0, il = data.length; i < il; i++) {
                 oldItem = data[i];
+
+                // TODO: later on, keep continued' objects in order not to loose them on zoom back in
+
+				minHeight = oldItem[MIN_HEIGHT] >> z;
+                if (minHeight > maxHeight) {
+                    continue;
+                }
+
                 coords = oldItem[FOOTPRINT];
                 footprint = new Int32Array(coords.length);
                 for (j = 0, jl = coords.length - 1; j < jl; j += 2) {
@@ -505,14 +559,15 @@ var Color = (function () {
                 item = [];
                 item[FOOTPRINT]   = footprint;
                 item[CENTER]      = center(footprint);
-                item[HEIGHT]      = min(oldItem[HEIGHT] >> z, MAX_HEIGHT);
+                item[HEIGHT]      = min(oldItem[HEIGHT] >> z, maxHeight);
+                item[MIN_HEIGHT]  = minHeight;
                 item[IS_NEW]      = isNew;
                 item[COLOR]       = oldItem[COLOR];
-                item[RENDERCOLOR] = [];
+                item[RENDER_COLOR] = [];
 
                 for (j = 0; j < 3; j++) {
                     if (item[COLOR][j]) {
-                        item[RENDERCOLOR][j] = item[COLOR][j].adjustAlpha(zoomAlpha) + '';
+                        item[RENDER_COLOR][j] = item[COLOR][j].adjustAlpha(zoomAlpha) + '';
                     }
                 }
 
@@ -646,8 +701,11 @@ var Color = (function () {
             halfHeight = height / 2 << 0;
             camX = halfWidth;
             camY = height;
+            camZ = width / tan(90 / 2) << 0; // adapting cam pos to field of view (90°)
             canvas.width = width;
             canvas.height = height;
+            // TODO: change of maxHeight needs to adjust building heights!
+            maxHeight = camZ - 50;
         }
 
         function setOrigin(x, y) {
@@ -676,10 +734,10 @@ roofColorAlpha = roofColor + '';
             if (data) {
                 for (i = 0, il = data.length; i < il; i++) {
                     item = data[i];
-                    item[RENDERCOLOR] = [];
+                    item[RENDER_COLOR] = [];
                     for (j = 0; j < 3; j++) {
                         if (item[COLOR][j]) {
-                            item[RENDERCOLOR][j] = item[COLOR][j].adjustAlpha(zoomAlpha) + '';
+                            item[RENDER_COLOR][j] = item[COLOR][j].adjustAlpha(zoomAlpha) + '';
                         }
                     }
                 }
@@ -1016,6 +1074,121 @@ context.fillRect(0, 0, width, height);
                 context.fillStyle   = item[RENDERCOLOR][2] || roofColorAlpha;
                 context.strokeStyle = item[RENDERCOLOR][1] || altColorAlpha;
                 drawShape(roof, false);
+            }
+        }
+
+        function render() {
+            context.clearRect(0, 0, width, height);
+
+            // data needed for rendering
+            if (!meta || !data) {
+                return;
+            }
+
+            // show buildings in high zoom levels only
+            // avoid rendering during zoom
+            if (zoom < minZoom || isZooming) {
+                return;
+            }
+
+            var
+                i, il, j, jl,
+                item,
+                f, h, m, n,
+                x, y,
+                offX = originX - meta.x,
+                offY = originY - meta.y,
+                sortCam = [camX + offX, camY + offY],
+                footprint, roof, walls,
+                isVisible,
+                ax, ay, bx, by,
+                a, b, _a, _b
+            ;
+
+            data.sort(function (a, b) {
+                return distance(b[CENTER], sortCam) / b[HEIGHT] - distance(a[CENTER], sortCam) / a[HEIGHT];
+            });
+
+            for (i = 0, il = data.length; i < il; i++) {
+                item = data[i];
+
+                isVisible = false;
+                f = item[FOOTPRINT];
+                footprint = []; // typed array would be created each pass and is way too slow
+                for (j = 0, jl = f.length - 1; j < jl; j += 2) {
+                    footprint[j]     = x = (f[j]     - offX);
+                    footprint[j + 1] = y = (f[j + 1] - offY);
+
+                    // checking footprint is sufficient for visibility
+                    if (!isVisible) {
+                        isVisible = (x > 0 && x < width && y > 0 && y < height);
+                    }
+                }
+
+                if (!isVisible) {
+                    continue;
+                }
+
+                // when fading in, use a dynamic height
+                h = item[IS_NEW] ? item[HEIGHT] * fadeFactor : item[HEIGHT];
+                // precalculating projection height scale
+                m = camZ / (camZ - h);
+
+                // prepare same calculations for min_height if applicable
+                if (item[MIN_HEIGHT]) {
+                    h = item[IS_NEW] ? item[MIN_HEIGHT] * fadeFactor : item[MIN_HEIGHT];
+                    n = camZ / (camZ - h);
+                }
+
+                roof = []; // typed array would be created each pass and is way too slow
+                walls = [];
+
+                for (j = 0, jl = footprint.length - 3; j < jl; j += 2) {
+                    ax = footprint[j];
+                    ay = footprint[j + 1];
+                    bx = footprint[j + 2];
+                    by = footprint[j + 3];
+
+                    // project 3d to 2d on extruded footprint
+                    _a = project(ax, ay, m);
+                    _b = project(bx, by, m);
+
+                    if (item[MIN_HEIGHT]) {
+                        a = project(ax, ay, n);
+                        b = project(bx, by, n);
+                        ax = a.x;
+                        ay = a.y;
+                        bx = b.x;
+                        by = b.y;
+                    }
+
+                    // backface culling check
+                    if ((bx - ax) * (_a.y - ay) > (_a.x - ax) * (by - ay)) {
+                        walls = [
+                            bx + 0.5, by + 0.5,
+                            ax + 0.5, ay + 0.5,
+                            _a.x, _a.y,
+                            _b.x, _b.y
+                        ];
+
+                        // depending on direction, set wall shading
+                        if ((ax < bx && ay < by) || (ax > bx && ay > by)) {
+                            context.fillStyle = item[RENDER_COLOR][1] || altColorAlpha;
+                        } else {
+                            context.fillStyle = item[RENDER_COLOR][0] || wallColorAlpha;
+                        }
+
+                        drawShape(walls);
+                    }
+
+                    roof[j]     = _a.x;
+                    roof[j + 1] = _a.y;
+                }
+
+                // fill roof and optionally stroke it
+                context.fillStyle = item[RENDER_COLOR][2] || roofColorAlpha;
+                context.strokeStyle = item[RENDER_COLOR][1] || altColorAlpha;
+                drawShape(roof, true);
             }
         }
 

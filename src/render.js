@@ -257,7 +257,122 @@ context.fillRect(0, 0, width, height);
                 drawShape(roof, false);
             }
         }
+/*
+        function render() {
+            context.clearRect(0, 0, width, height);
 
+            // data needed for rendering
+            if (!meta || !data) {
+                return;
+            }
+
+            // show buildings in high zoom levels only
+            // avoid rendering during zoom
+            if (zoom < minZoom || isZooming) {
+                return;
+            }
+
+            var
+                i, il, j, jl,
+                item,
+                f, h, m, n,
+                x, y,
+                offX = originX - meta.x,
+                offY = originY - meta.y,
+                sortCam = [camX + offX, camY + offY],
+                footprint, roof, walls,
+                isVisible,
+                ax, ay, bx, by,
+                a, b, _a, _b
+            ;
+
+            data.sort(function (a, b) {
+                return distance(b[CENTER], sortCam) / b[HEIGHT] - distance(a[CENTER], sortCam) / a[HEIGHT];
+            });
+
+            for (i = 0, il = data.length; i < il; i++) {
+                item = data[i];
+
+                isVisible = false;
+                f = item[FOOTPRINT];
+                footprint = []; // typed array would be created each pass and is way too slow
+                for (j = 0, jl = f.length - 1; j < jl; j += 2) {
+                    footprint[j]     = x = (f[j]     - offX);
+                    footprint[j + 1] = y = (f[j + 1] - offY);
+
+                    // checking footprint is sufficient for visibility
+                    if (!isVisible) {
+                        isVisible = (x > 0 && x < width && y > 0 && y < height);
+                    }
+                }
+
+                if (!isVisible) {
+                    continue;
+                }
+
+                // when fading in, use a dynamic height
+                h = item[IS_NEW] ? item[HEIGHT] * fadeFactor : item[HEIGHT];
+                // precalculating projection height scale
+                m = camZ / (camZ - h);
+
+                // prepare same calculations for min_height if applicable
+                if (item[MIN_HEIGHT]) {
+                    h = item[IS_NEW] ? item[MIN_HEIGHT] * fadeFactor : item[MIN_HEIGHT];
+                    n = camZ / (camZ - h);
+                }
+
+                roof = []; // typed array would be created each pass and is way too slow
+                walls = [];
+
+                for (j = 0, jl = footprint.length - 3; j < jl; j += 2) {
+                    ax = footprint[j];
+                    ay = footprint[j + 1];
+                    bx = footprint[j + 2];
+                    by = footprint[j + 3];
+
+                    // project 3d to 2d on extruded footprint
+                    _a = project(ax, ay, m);
+                    _b = project(bx, by, m);
+
+                    if (item[MIN_HEIGHT]) {
+                        a = project(ax, ay, n);
+                        b = project(bx, by, n);
+                        ax = a.x;
+                        ay = a.y;
+                        bx = b.x;
+                        by = b.y;
+                    }
+
+                    // backface culling check
+                    if ((bx - ax) * (_a.y - ay) > (_a.x - ax) * (by - ay)) {
+                        walls = [
+                            bx + 0.5, by + 0.5,
+                            ax + 0.5, ay + 0.5,
+                            _a.x, _a.y,
+                            _b.x, _b.y
+                        ];
+
+                        // depending on direction, set wall shading
+                        if ((ax < bx && ay < by) || (ax > bx && ay > by)) {
+                            context.fillStyle = item[RENDER_COLOR][1] || altColorAlpha;
+                        } else {
+                            context.fillStyle = item[RENDER_COLOR][0] || wallColorAlpha;
+                        }
+
+                        drawShape(walls);
+                    }
+
+                    roof[j]     = _a.x;
+                    roof[j + 1] = _a.y;
+                }
+
+                // fill roof and optionally stroke it
+                context.fillStyle = item[RENDER_COLOR][2] || roofColorAlpha;
+                context.strokeStyle = item[RENDER_COLOR][1] || altColorAlpha;
+                drawShape(roof, true);
+            }
+        }
+*/
         function renderX() {
             var algo = 'optimized-anaglyphs';
 

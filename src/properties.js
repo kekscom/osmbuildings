@@ -5,8 +5,11 @@
             halfHeight = height / 2 << 0;
             camX = halfWidth;
             camY = height;
+            camZ = width / tan(90 / 2) << 0; // adapting cam pos to field of view (90°)
             canvas.width = width;
             canvas.height = height;
+            // TODO: change of maxHeight needs to adjust building heights!
+            maxHeight = camZ - 50;
         }
 
         function setOrigin(x, y) {
@@ -35,10 +38,10 @@ roofColorAlpha = roofColor + '';
             if (data) {
                 for (i = 0, il = data.length; i < il; i++) {
                     item = data[i];
-                    item[RENDERCOLOR] = [];
+                    item[RENDER_COLOR] = [];
                     for (j = 0; j < 3; j++) {
                         if (item[COLOR][j]) {
-                            item[RENDERCOLOR][j] = item[COLOR][j].adjustAlpha(zoomAlpha) + '';
+                            item[RENDER_COLOR][j] = item[COLOR][j].adjustAlpha(zoomAlpha) + '';
                         }
                     }
                 }

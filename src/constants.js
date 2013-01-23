@@ -11,9 +11,6 @@
         TILE_SIZE = 256,
         MIN_ZOOM = 14, // for buildings data only, GeoJSON should not be affected
 
-        CAM_Z = 400,
-        MAX_HEIGHT = CAM_Z - 50,
-
         LAT = 'latitude', LON = 'longitude',
-        HEIGHT = 0, FOOTPRINT = 1, COLOR = 2, CENTER = 3, IS_NEW = 4, RENDERCOLOR = 5
+        HEIGHT = 0, MIN_HEIGHT = 1, FOOTPRINT = 2, COLOR = 3, CENTER = 4, IS_NEW = 5, RENDER_COLOR = 6
     ;
