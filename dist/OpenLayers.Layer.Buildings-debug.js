@@ -14,8 +14,7 @@
 //****** file: shortcuts.js ******
 
     // object access shortcuts
-    var
-        Int32Array = Int32Array || Array,
+    var Int32Array = Int32Array || Array,
         Uint8Array = Uint8Array || Array,
         exp = Math.exp,
         log = Math.log,
@@ -157,8 +156,7 @@ var Color = (function () {
 //****** file: constants.js ******
 
     // constants, shared to all instances
-    var
-        VERSION = '0.1.7a',
+    var VERSION = '0.1.7a',
         ATTRIBUTION = '&copy; <a href="http://osmbuildings.org">OSM Buildings</a>',
 
         PI = Math.PI,
@@ -282,8 +280,7 @@ var Color = (function () {
 //****** file: variables.js ******
 
         // private variables, specific to an instance
-        var
-            width = 0, height = 0,
+        var width = 0, height = 0,
             halfWidth = 0, halfHeight = 0,
             originX = 0, originY = 0,
             zoom, size,
@@ -297,10 +294,14 @@ var Color = (function () {
             wallColor = new Color(200, 190, 180),
             altColor = wallColor.adjustLightness(0.8),
             roofColor = wallColor.adjustLightness(1.2),
+            //red: roofColor = new Color(240, 200, 180),
+            //green: roofColor = new Color(210, 240, 220),
 
             wallColorAlpha = wallColor + '',
             altColorAlpha  = altColor + '',
             roofColorAlpha = roofColor + '',
+
+            shadows = false,
 
             rawData,
             meta, data,
@@ -321,7 +322,7 @@ var Color = (function () {
 //****** file: functions.js ******
 
         function createCanvas(parentNode) {
-            canvas = doc.createElement('canvas');
+            canvas = doc.createElement('CANVAS');
             canvas.style.webkitTransform = 'translate3d(0,0,0)'; // turn on hw acceleration
             canvas.style.imageRendering = 'optimizeSpeed';
             canvas.style.position = 'absolute';
@@ -452,7 +453,7 @@ var Color = (function () {
             meta = resMeta;
             data = [];
 
-            // var polyCountBefore = 0, polyCountAfter = 0, start = Date.now();
+            
 
             for (i = 0, il = resData.length; i < il; i++) {
                 item = [];
@@ -461,11 +462,11 @@ var Color = (function () {
                     continue;
                 }
 
-                // polyCountBefore += resData[i][FOOTPRINT].length;
+                
 
                 footprint = simplify(resData[i][FOOTPRINT]);
 
-                // polyCountAfter += footprint.length;
+                
 
                 if (footprint.length < 8) { // 3 points & end = start (x2)
                     continue;
@@ -486,7 +487,7 @@ var Color = (function () {
                 data.push(item);
             }
 
-            // console.log(polyCountBefore, polyCountAfter, Date.now() - start);
+            
 
             resMeta = resData = keyList = null; // gc
             fadeIn();
@@ -692,6 +693,7 @@ var Color = (function () {
             fadeIn();
         }
 
+
 //****** file: properties.js ******
 
         function setSize(w, h) {
@@ -701,7 +703,7 @@ var Color = (function () {
             halfHeight = height / 2 << 0;
             camX = halfWidth;
             camY = height;
-            camZ = halfWidth / tan(90 / 2); // adapting cam pos to field of view (90°)
+            camZ = width / 1.5 / tan(90 / 2) << 0; // adapting cam pos to field of view (90°), 1.5 is an empirical correction factor
             canvas.width = width;
             canvas.height = height;
             // TODO: change of maxHeight needs to adjust building heights!
@@ -761,6 +763,10 @@ var Color = (function () {
             if (style.roofColor) {
                 roofColor = Color.parse(style.roofColor);
                 roofColorAlpha = roofColor.adjustAlpha(zoomAlpha) + '';
+            }
+
+            if (style.shadows !== undefined) {
+                shadows = !!style.shadows;
             }
 
             render();
@@ -830,6 +836,127 @@ var Color = (function () {
             }, 33);
         }
 
+        var sunX, sunY, sunZ;
+
+        function renderShadows() {
+            sunX = camX;
+            sunY = camY * 1.2;
+            sunZ = camZ / 1.5;
+
+            var i, il, j, jl,
+                item,
+                f, h, m, n,
+                x, y,
+                offX = originX - meta.x,
+                offY = originY - meta.y,
+                footprint, roof,
+                mode,
+                isVisible,
+                ax, ay, bx, by,
+                a, b, _a, _b
+            ;
+
+            context.fillStyle = 'rgba(0,0,0,0.4)';
+
+            for (i = 0, il = data.length; i < il; i++) {
+                item = data[i];
+
+                isVisible = false;
+                f = item[FOOTPRINT];
+                footprint = []; // typed array would be created each pass and is way too slow
+                for (j = 0, jl = f.length - 1; j < jl; j += 2) {
+                    footprint[j]     = x = (f[j]     - offX);
+                    footprint[j + 1] = y = (f[j + 1] - offY);
+
+                    // checking footprint is sufficient for visibility
+                    if (!isVisible) {
+                        isVisible = (x > 0 && x < width && y > 0 && y < height);
+                    }
+                }
+
+                if (!isVisible) {
+                    continue;
+                }
+
+                // when fading in, use a dynamic height
+                h = item[IS_NEW] ? item[HEIGHT] * fadeFactor : item[HEIGHT];
+                // precalculating projection height scale
+                m = sunZ / (sunZ - h);
+
+                // prepare same calculations for min_height if applicable
+                if (item[MIN_HEIGHT]) {
+                    h = item[IS_NEW] ? item[MIN_HEIGHT] * fadeFactor : item[MIN_HEIGHT];
+                    n = sunZ / (sunZ - h);
+                }
+
+                if (item[HEIGHT] < 6) {
+                    roof = [];
+                    for (j = 0, jl = footprint.length - 3; j < jl; j += 2) {
+                        ax = footprint[j];
+                        ay = footprint[j + 1];
+                        _a = projectShadow(ax, ay, m);
+
+                        roof[j]     = _a.x;
+                        roof[j + 1] = _a.y;
+                    }
+                    drawShape(roof);
+                    continue;
+                }
+
+                mode = null;
+                context.beginPath();
+
+                for (j = 0, jl = footprint.length - 3; j < jl; j += 2) {
+                    ax = footprint[j];
+                    ay = footprint[j + 1];
+                    bx = footprint[j + 2];
+                    by = footprint[j + 3];
+
+                    _a = projectShadow(ax, ay, m);
+                    _b = projectShadow(bx, by, m);
+
+                    if (item[MIN_HEIGHT]) {
+                        a = projectShadow(ax, ay, n);
+                        b = projectShadow(bx, by, n);
+                        ax = a.x;
+                        ay = a.y;
+                        bx = b.x;
+                        by = b.y;
+                    }
+
+                    if ((bx - ax) * (_a.y - ay) > (_a.x - ax) * (by - ay)) {
+                        if (mode === 1) {
+                            context.lineTo(ax, ay);
+                        }
+                        mode = 0;
+                        if (!j) {
+                            context.moveTo(ax, ay);
+                        }
+                        context.lineTo(bx, by);
+                    } else {
+                        if (mode === 0) {
+                            context.lineTo(_a.x, _a.y);
+                        }
+                        mode = 1;
+                        if (!j) {
+                            context.moveTo(_a.x, _a.y);
+                        }
+                        context.lineTo(_b.x, _b.y);
+                    }
+                }
+
+                context.closePath();
+                context.fill();
+            }
+        }
+
+        function projectShadow(x, y, m) {
+            return {
+                x: (x - sunX) * m + sunX,
+                y: (y - sunY) * m + sunY
+            };
+        }
+
         function render() {
             context.clearRect(0, 0, width, height);
 
@@ -844,15 +971,18 @@ var Color = (function () {
                 return;
             }
 
-            var
-                i, il, j, jl,
+            if (shadows) {
+                renderShadows();
+            }
+
+            var i, il, j, jl,
                 item,
                 f, h, m, n,
                 x, y,
                 offX = originX - meta.x,
                 offY = originY - meta.y,
                 sortCam = [camX + offX, camY + offY],
-                footprint, roof, walls,
+                footprint, roof,
                 isVisible,
                 ax, ay, bx, by,
                 a, b, _a, _b
@@ -894,7 +1024,6 @@ var Color = (function () {
                 }
 
                 roof = []; // typed array would be created each pass and is way too slow
-                walls = [];
 
                 for (j = 0, jl = footprint.length - 3; j < jl; j += 2) {
                     ax = footprint[j];
@@ -917,13 +1046,6 @@ var Color = (function () {
 
                     // backface culling check
                     if ((bx - ax) * (_a.y - ay) > (_a.x - ax) * (by - ay)) {
-                        walls = [
-                            bx + 0.5, by + 0.5,
-                            ax + 0.5, ay + 0.5,
-                            _a.x, _a.y,
-                            _b.x, _b.y
-                        ];
-
                         // depending on direction, set wall shading
                         if ((ax < bx && ay < by) || (ax > bx && ay > by)) {
                             context.fillStyle = item[RENDER_COLOR][1] || altColorAlpha;
@@ -931,17 +1053,21 @@ var Color = (function () {
                             context.fillStyle = item[RENDER_COLOR][0] || wallColorAlpha;
                         }
 
-                        drawShape(walls);
+                        drawShape([
+                            bx + 0.5, by + 0.5,
+                            ax + 0.5, ay + 0.5,
+                            _a.x, _a.y,
+                            _b.x, _b.y
+                        ]);
                     }
-
                     roof[j]     = _a.x;
                     roof[j + 1] = _a.y;
                 }
 
                 // fill roof and optionally stroke it
-                context.fillStyle = item[RENDER_COLOR][2] || roofColorAlpha;
+                context.fillStyle   = item[RENDER_COLOR][2] || roofColorAlpha;
                 context.strokeStyle = item[RENDER_COLOR][1] || altColorAlpha;
-                drawShape(roof, true);
+                drawShape(roof, !shadows);
             }
         }
 

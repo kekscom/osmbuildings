@@ -8,7 +8,7 @@ function geoToPixel($lat, $lon, $zoomLevel) {
     return array("x"=>intval($longitude*$mapSize), "y"=>intval($latitude*$mapSize));
 }
 
-// parse from geometry text, swap llon/lat order
+// parse from geometry text, swap lon/lat order
 function strToPoly($str) {
     global $coordsOrder;
     $coords = explode(",", str_replace(" ", ",", preg_replace("/^[A-Z\(]+|\)+$/", "", $str)));
