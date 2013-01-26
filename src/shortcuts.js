@@ -10,3 +10,15 @@
         max = Math.max,
         doc = global.document
     ;
+
+    /*<debug=*/
+    global.performance = global.performance || {};
+    performance.now = (function() {
+      return performance.now       ||
+             performance.mozNow    ||
+             performance.msNow     ||
+             performance.oNow      ||
+             performance.webkitNow ||
+             function() { return Date.now(); };
+    })();
+    /*>*/

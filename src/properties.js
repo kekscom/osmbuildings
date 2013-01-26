@@ -5,7 +5,7 @@
             halfHeight = height / 2 << 0;
             camX = halfWidth;
             camY = height;
-            camZ = width / tan(90 / 2) << 0; // adapting cam pos to field of view (90°)
+            camZ = width / 1.5 / tan(90 / 2) << 0; // adapting cam pos to field of view (90°), 1.5 is an empirical correction factor
             canvas.width = width;
             canvas.height = height;
             // TODO: change of maxHeight needs to adjust building heights!

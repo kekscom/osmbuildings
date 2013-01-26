@@ -171,7 +171,7 @@ exports.eachFile = function (path, callback) {
 
 exports.setVars = function (str, data) {
     // example: /*<version=*/'0.1.6a'/*>*/
-    return str.replace(/\/\*\<([^=]+)=\*\/('?)([^']*)('?)\/\*\>\*\//g, function(all, key, q1, value, q2) {
+    return str.replace(/\/\*\<([^=]+)=\*\/('?)([^']*)('?)\/\*\>\*\//g, function(unused, key, q1, value, q2) {
         return q1 + (data[key] || value) + q2;
     });
 }

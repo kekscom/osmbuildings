@@ -15,7 +15,25 @@
             }, 33);
         }
 
+        /*<debug=*/
+        var renderStartTime = 0,
+            totalRenderTime = 0,
+            renderIterations = 0;
+
+        function showFPS() {
+            totalRenderTime += (performance.now() - renderStartTime);
+            renderIterations++;
+            if (renderIterations === 9) {
+                console.log('FPS: ' + (333 / (totalRenderTime / renderIterations) << 0));
+                totalRenderTime = 0;
+                renderIterations = 0;
+            }
+        }
+        /*>*/
+
         function render() {
+            /*<debug=*/renderStartTime = performance.now();/*>*/
+
             context.clearRect(0, 0, width, height);
 
             // data needed for rendering
@@ -128,6 +146,8 @@
                 context.strokeStyle = item[RENDER_COLOR][1] || altColorAlpha;
                 drawShape(roof, true);
             }
+
+            /*<debug=*/showFPS();/*>*/
         }
 
         function debugMarker(x, y, color, size) {
