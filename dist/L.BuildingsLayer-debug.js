@@ -25,17 +25,7 @@
         doc = global.document
     ;
 
-    /*<debug=*/
-    global.performance = global.performance || {};
-    performance.now = (function() {
-      return performance.now       ||
-             performance.mozNow    ||
-             performance.msNow     ||
-             performance.oNow      ||
-             performance.webkitNow ||
-             function() { return Date.now(); };
-    })();
-    /*>*/
+    
 
 
 //****** file: Color.js ******
@@ -168,7 +158,7 @@ var Color = (function () {
 //****** file: constants.js ******
 
     // constants, shared to all instances
-    var VERSION = /*<version=*/'0.1.7a'/*>*/,
+    var VERSION = '0.1.7a',
         ATTRIBUTION = '&copy; <a href="http://osmbuildings.org">OSM Buildings</a>',
 
         PI = Math.PI,
@@ -463,10 +453,7 @@ var Color = (function () {
             meta = resMeta;
             data = [];
 
-            /*<debug=*/
-            var polyCountBefore = 0,
-                polyCountAfter = 0;
-            /*>*/
+            
 
             for (i = 0, il = resData.length; i < il; i++) {
                 item = [];
@@ -475,11 +462,11 @@ var Color = (function () {
                     continue;
                 }
 
-                /*<debug=*/polyCountBefore += resData[i][FOOTPRINT].length;/*>*/
+                
 
                 footprint = simplify(resData[i][FOOTPRINT]);
 
-                /*<debug=*/polyCountAfter += footprint.length;/*>*/
+                
 
                 if (footprint.length < 8) { // 3 points & end = start (x2)
                     continue;
@@ -500,7 +487,7 @@ var Color = (function () {
                 data.push(item);
             }
 
-            /*<debug=*/console.log('PolyCount: ', polyCountBefore, ' -> ', polyCountAfter);/*>*/
+            
 
             resMeta = resData = keyList = null; // gc
             fadeIn();
@@ -845,23 +832,10 @@ var Color = (function () {
             }, 33);
         }
 
-        /*<debug=*/
-        var renderStartTime = 0,
-            totalRenderTime = 0,
-            renderIterations = 0;
-        function showFPS() {
-            totalRenderTime += (performance.now() - renderStartTime);
-            renderIterations++;
-            if (renderIterations === 9) {
-                console.log('FPS: ' + (333 / (totalRenderTime / renderIterations) << 0));
-                totalRenderTime = 0;
-                renderIterations = 0;
-            }
-        }
-        /*>*/
+        
 
         function render() {
-            /*<debug=*/renderStartTime = performance.now();/*>*/
+            
 
             context.clearRect(0, 0, width, height);
 
@@ -976,7 +950,7 @@ var Color = (function () {
                 drawShape(roof, true);
             }
 
-            /*<debug=*/showFPS();/*>*/
+            
         }
 
         function debugMarker(x, y, color, size) {

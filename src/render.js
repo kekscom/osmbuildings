@@ -15,7 +15,7 @@
             }, 33);
         }
 
-        /*<debug=*/
+        /*<debug*/
         var renderStartTime = 0,
             totalRenderTime = 0,
             renderIterations = 0;
@@ -31,7 +31,7 @@
         /*>*/
 
         function render() {
-            /*<debug=*/renderStartTime = performance.now();/*>*/
+            /*<debug*/renderStartTime = performance.now();/*>*/
 
             context.clearRect(0, 0, width, height);
 
@@ -146,7 +146,7 @@
                 drawShape(roof, true);
             }
 
-            /*<debug=*/showFPS();/*>*/
+            /*<debug*/showFPS();/*>*/
         }
 
         function debugMarker(x, y, color, size) {
