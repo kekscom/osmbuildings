@@ -19,7 +19,6 @@
         var renderStartTime = 0,
             totalRenderTime = 0,
             renderIterations = 0;
-
         function showFPS() {
             totalRenderTime += (performance.now() - renderStartTime);
             renderIterations++;

@@ -1,6 +1,5 @@
         // private variables, specific to an instance
-        var
-            width = 0, height = 0,
+        var width = 0, height = 0,
             halfWidth = 0, halfHeight = 0,
             originX = 0, originY = 0,
             zoom, size,
@@ -14,6 +13,8 @@
             wallColor = new Color(200, 190, 180),
             altColor = wallColor.adjustLightness(0.8),
             roofColor = wallColor.adjustLightness(1.2),
+            //red: roofColor = new Color(240, 200, 180),
+            //green: roofColor = new Color(210, 240, 220),
 
             wallColorAlpha = wallColor + '',
             altColorAlpha  = altColor + '',

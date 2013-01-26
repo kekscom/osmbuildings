@@ -14,8 +14,7 @@
 //****** file: shortcuts.js ******
 
     // object access shortcuts
-    var
-        Int32Array = Int32Array || Array,
+    var Int32Array = Int32Array || Array,
         Uint8Array = Uint8Array || Array,
         exp = Math.exp,
         log = Math.log,
@@ -25,6 +24,18 @@
         max = Math.max,
         doc = global.document
     ;
+
+    /*<debug=*/
+    global.performance = global.performance || {};
+    performance.now = (function() {
+      return performance.now       ||
+             performance.mozNow    ||
+             performance.msNow     ||
+             performance.oNow      ||
+             performance.webkitNow ||
+             function() { return Date.now(); };
+    })();
+    /*>*/
 
 
 //****** file: Color.js ******
@@ -157,8 +168,7 @@ var Color = (function () {
 //****** file: constants.js ******
 
     // constants, shared to all instances
-    var
-        VERSION = '0.1.7a',
+    var VERSION = /*<version=*/'0.1.7a'/*>*/,
         ATTRIBUTION = '&copy; <a href="http://osmbuildings.org">OSM Buildings</a>',
 
         PI = Math.PI,
@@ -282,8 +292,7 @@ var Color = (function () {
 //****** file: variables.js ******
 
         // private variables, specific to an instance
-        var
-            width = 0, height = 0,
+        var width = 0, height = 0,
             halfWidth = 0, halfHeight = 0,
             originX = 0, originY = 0,
             zoom, size,
@@ -297,6 +306,8 @@ var Color = (function () {
             wallColor = new Color(200, 190, 180),
             altColor = wallColor.adjustLightness(0.8),
             roofColor = wallColor.adjustLightness(1.2),
+            //red: roofColor = new Color(240, 200, 180),
+            //green: roofColor = new Color(210, 240, 220),
 
             wallColorAlpha = wallColor + '',
             altColorAlpha  = altColor + '',
@@ -452,7 +463,10 @@ var Color = (function () {
             meta = resMeta;
             data = [];
 
-            // var polyCountBefore = 0, polyCountAfter = 0, start = Date.now();
+            /*<debug=*/
+            var polyCountBefore = 0,
+                polyCountAfter = 0;
+            /*>*/
 
             for (i = 0, il = resData.length; i < il; i++) {
                 item = [];
@@ -461,11 +475,11 @@ var Color = (function () {
                     continue;
                 }
 
-                // polyCountBefore += resData[i][FOOTPRINT].length;
+                /*<debug=*/polyCountBefore += resData[i][FOOTPRINT].length;/*>*/
 
                 footprint = simplify(resData[i][FOOTPRINT]);
 
-                // polyCountAfter += footprint.length;
+                /*<debug=*/polyCountAfter += footprint.length;/*>*/
 
                 if (footprint.length < 8) { // 3 points & end = start (x2)
                     continue;
@@ -486,7 +500,7 @@ var Color = (function () {
                 data.push(item);
             }
 
-            // console.log(polyCountBefore, polyCountAfter, Date.now() - start);
+            /*<debug=*/console.log('PolyCount: ', polyCountBefore, ' -> ', polyCountAfter);/*>*/
 
             resMeta = resData = keyList = null; // gc
             fadeIn();
@@ -692,6 +706,7 @@ var Color = (function () {
             fadeIn();
         }
 
+
 //****** file: properties.js ******
 
         function setSize(w, h) {
@@ -701,7 +716,7 @@ var Color = (function () {
             halfHeight = height / 2 << 0;
             camX = halfWidth;
             camY = height;
-            camZ = halfWidth / tan(90 / 2); // adapting cam pos to field of view (90°)
+            camZ = width / 1.5 / tan(90 / 2) << 0; // adapting cam pos to field of view (90°), 1.5 is an empirical correction factor
             canvas.width = width;
             canvas.height = height;
             // TODO: change of maxHeight needs to adjust building heights!
@@ -830,7 +845,24 @@ var Color = (function () {
             }, 33);
         }
 
+        /*<debug=*/
+        var renderStartTime = 0,
+            totalRenderTime = 0,
+            renderIterations = 0;
+        function showFPS() {
+            totalRenderTime += (performance.now() - renderStartTime);
+            renderIterations++;
+            if (renderIterations === 9) {
+                console.log('FPS: ' + (333 / (totalRenderTime / renderIterations) << 0));
+                totalRenderTime = 0;
+                renderIterations = 0;
+            }
+        }
+        /*>*/
+
         function render() {
+            /*<debug=*/renderStartTime = performance.now();/*>*/
+
             context.clearRect(0, 0, width, height);
 
             // data needed for rendering
@@ -943,6 +975,8 @@ var Color = (function () {
                 context.strokeStyle = item[RENDER_COLOR][1] || altColorAlpha;
                 drawShape(roof, true);
             }
+
+            /*<debug=*/showFPS();/*>*/
         }
 
         function debugMarker(x, y, color, size) {

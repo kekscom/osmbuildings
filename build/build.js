@@ -68,7 +68,7 @@ function buildCore() {
 
     var js;
     js = config.COPYRIGHT + builder.combine(config.srcFiles);
-    js = builder.setVars(js, { version: config.VERSION });
+    js = builder.setVars(js, { version: config.VERSION }, options.debug);
 
     if (!options.debug) {
         if (!builder.jshint(js, options.debug)) {
