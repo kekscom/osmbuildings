@@ -30,6 +30,150 @@
         }
         /*>*/
 
+        var sunX, sunY, sunZ;
+
+        function renderShadows() {
+            sunX = camX;
+            sunY = camY * 1.2;
+            sunZ = camZ / 1.5;
+
+            var i, il, j, jl,
+                item,
+                f, h, m, n,
+                x, y,
+                offX = originX - meta.x,
+                offY = originY - meta.y,
+                footprint, walls, roof,
+                isVisible,
+                ax, ay, bx, by,
+                a, b, _a, _b
+            ;
+
+            context.fillStyle = 'rgba(0,0,0,0.3)';
+
+            for (i = 0, il = data.length; i < il; i++) {
+                item = data[i];
+
+                isVisible = false;
+                f = item[FOOTPRINT];
+                footprint = []; // typed array would be created each pass and is way too slow
+                for (j = 0, jl = f.length - 1; j < jl; j += 2) {
+                    footprint[j]     = x = (f[j]     - offX);
+                    footprint[j + 1] = y = (f[j + 1] - offY);
+
+                    // checking footprint is sufficient for visibility
+                    if (!isVisible) {
+                        isVisible = (x > 0 && x < width && y > 0 && y < height);
+                    }
+                }
+
+                if (!isVisible) {
+                    continue;
+                }
+
+                // when fading in, use a dynamic height
+                m = item[IS_NEW] ? item[HEIGHT] * fadeFactor : item[HEIGHT];
+                // precalculating projection height scale
+                //m = camZ / (camZ - h);
+
+                // prepare same calculations for min_height if applicable
+                if (item[MIN_HEIGHT]) {
+                    n = item[IS_NEW] ? item[MIN_HEIGHT] * fadeFactor : item[MIN_HEIGHT];
+                    //n = camZ / (camZ - h);
+                }
+
+                walls = [];
+                roof = [];
+
+                for (j = 0, jl = footprint.length - 3; j < jl; j += 2) {
+                    ax = footprint[j];
+                    ay = footprint[j + 1];
+                    bx = footprint[j + 2];
+                    by = footprint[j + 3];
+
+                    // project 3d to 2d on extruded footprint
+                    _a = projectShadow(ax, ay, m);
+                    _b = projectShadow(bx, by, m);
+
+                    if (item[MIN_HEIGHT]) {
+                        a = projectShadow(ax, ay, n);
+                        b = projectShadow(bx, by, n);
+                        ax = a.x;
+                        ay = a.y;
+                        bx = b.x;
+                        by = b.y;
+                    }
+
+                    // backface culling check
+                    if ((bx - ax) * (_a.y - ay) > (_a.x - ax) * (by - ay)) {
+//                        if (!walls.length) {
+//                            walls.unshift(ay + 0.5);
+//                            walls.unshift(ax + 0.5);
+//                            walls.push(_a.x, _a.y);
+//                        }
+//                        walls.unshift(by + 0.5);
+//                        walls.unshift(bx + 0.5);
+//                        walls.push(_b.x, _b.y);
+//                    } else {
+//                        walls.length && drawShadowShape(walls);
+//                        walls = [];
+
+                        drawShape([
+                            bx + 0.5, by + 0.5,
+                            ax + 0.5, ay + 0.5,
+                            _a.x, _a.y,
+                            _b.x, _b.y
+                        ]);
+                    }
+
+                    roof[j]     = _a.x;
+                    roof[j + 1] = _a.y;
+                }
+//                walls.length && drawShape(walls);
+                drawShape(roof);
+            }
+        }
+
+
+
+
+
+
+
+    function combineShadows() {
+        var imgData = context.createImageData(width, height);
+        var pixel = imgData.data;
+        for (var x = 0; x < width; x++) {
+            for (var y = 0; y < height; y++) {
+
+                pixel[ 4 * (y * height + x) + 1] = field.getDensity(x, y) * 255 / 5;
+
+            }
+        }
+        context.putImageData(imgData, 0, 0);
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        function projectShadow(x, y, z) {
+            var m = sunZ / (sunZ - z);
+            return {
+                x: (x - sunX) * m + sunX,
+                y: (y - sunY) * m + sunY
+            };
+        }
+
         function render() {
             /*<debug*/renderStartTime = performance.now();/*>*/
 
@@ -46,15 +190,16 @@
                 return;
             }
 
-            var
-                i, il, j, jl,
+            renderShadows();
+
+            var i, il, j, jl,
                 item,
                 f, h, m, n,
                 x, y,
                 offX = originX - meta.x,
                 offY = originY - meta.y,
                 sortCam = [camX + offX, camY + offY],
-                footprint, roof, walls,
+                footprint, roof,
                 isVisible,
                 ax, ay, bx, by,
                 a, b, _a, _b
@@ -96,7 +241,6 @@
                 }
 
                 roof = []; // typed array would be created each pass and is way too slow
-                walls = [];
 
                 for (j = 0, jl = footprint.length - 3; j < jl; j += 2) {
                     ax = footprint[j];
@@ -119,13 +263,6 @@
 
                     // backface culling check
                     if ((bx - ax) * (_a.y - ay) > (_a.x - ax) * (by - ay)) {
-                        walls = [
-                            bx + 0.5, by + 0.5,
-                            ax + 0.5, ay + 0.5,
-                            _a.x, _a.y,
-                            _b.x, _b.y
-                        ];
-
                         // depending on direction, set wall shading
                         if ((ax < bx && ay < by) || (ax > bx && ay > by)) {
                             context.fillStyle = item[RENDER_COLOR][1] || altColorAlpha;
@@ -133,7 +270,12 @@
                             context.fillStyle = item[RENDER_COLOR][0] || wallColorAlpha;
                         }
 
-                        drawShape(walls);
+                        drawShape([
+                            bx + 0.5, by + 0.5,
+                            ax + 0.5, ay + 0.5,
+                            _a.x, _a.y,
+                            _b.x, _b.y
+                        ]);
                     }
 
                     roof[j]     = _a.x;
