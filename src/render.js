@@ -49,7 +49,7 @@
                 a, b, _a, _b
             ;
 
-            context.fillStyle = 'rgba(0,0,0,0.3)';
+            context.fillStyle = 'rgba(0,0,0,0.4)';
 
             for (i = 0, il = data.length; i < il; i++) {
                 item = data[i];
@@ -133,38 +133,6 @@
                 drawShape(roof);
             }
         }
-
-
-
-
-
-
-
-    function combineShadows() {
-        var imgData = context.createImageData(width, height);
-        var pixel = imgData.data;
-        for (var x = 0; x < width; x++) {
-            for (var y = 0; y < height; y++) {
-
-                pixel[ 4 * (y * height + x) + 1] = field.getDensity(x, y) * 255 / 5;
-
-            }
-        }
-        context.putImageData(imgData, 0, 0);
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
 
         function projectShadow(x, y, z) {
             var m = sunZ / (sunZ - z);

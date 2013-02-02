@@ -335,7 +335,7 @@ var Color = (function () {
 //****** file: functions.js ******
 
         function createCanvas(parentNode) {
-            canvas = doc.createElement('canvas');
+            canvas = doc.createElement('CANVAS');
             canvas.style.webkitTransform = 'translate3d(0,0,0)'; // turn on hw acceleration
             canvas.style.imageRendering = 'optimizeSpeed';
             canvas.style.position = 'absolute';
@@ -882,7 +882,7 @@ var Color = (function () {
                 a, b, _a, _b
             ;
 
-            context.fillStyle = 'rgba(0,0,0,0.3)';
+            context.fillStyle = 'rgba(0,0,0,0.4)';
 
             for (i = 0, il = data.length; i < il; i++) {
                 item = data[i];
@@ -966,38 +966,6 @@ var Color = (function () {
                 drawShape(roof);
             }
         }
-
-
-
-
-
-
-
-    function combineShadows() {
-        var imgData = context.createImageData(width, height);
-        var pixel = imgData.data;
-        for (var x = 0; x < width; x++) {
-            for (var y = 0; y < height; y++) {
-
-                pixel[ 4 * (y * height + x) + 1] = field.getDensity(x, y) * 255 / 5;
-
-            }
-        }
-        context.putImageData(imgData, 0, 0);
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
 
         function projectShadow(x, y, z) {
             var m = sunZ / (sunZ - z);
