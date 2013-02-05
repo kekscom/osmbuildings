@@ -349,10 +349,8 @@ var Color = (function () {
             context.lineJoin = 'round';
             context.lineWidth = 1;
 
-            try {
-                context.mozImageSmoothingEnabled = false;
-            } catch (err) {
-            }
+            context.mozImageSmoothingEnabled = false;
+            context.webkitImageSmoothingEnabled = false;
 
             return canvas;
         }
@@ -886,6 +884,7 @@ var Color = (function () {
 
             for (i = 0, il = data.length; i < il; i++) {
                 item = data[i];
+if (item[HEIGHT] < 6) continue;
 
                 isVisible = false;
                 f = item[FOOTPRINT];
@@ -1061,7 +1060,7 @@ var Color = (function () {
                         bx = b.x;
                         by = b.y;
                     }
-
+if (item[HEIGHT] >= 6) {
                     // backface culling check
                     if ((bx - ax) * (_a.y - ay) > (_a.x - ax) * (by - ay)) {
                         // depending on direction, set wall shading
@@ -1078,15 +1077,26 @@ var Color = (function () {
                             _b.x, _b.y
                         ]);
                     }
-
                     roof[j]     = _a.x;
                     roof[j + 1] = _a.y;
-                }
+} else {
+    roof[j]     = ax;
+    roof[j + 1] = ay;
+}
 
+
+                }
+if (item[HEIGHT] >= 6) {
+                // fill roof and optionally stroke it
+                context.fillStyle = item[RENDER_COLOR][2] || roofColorAlpha;
+                context.strokeStyle = item[RENDER_COLOR][1] || altColorAlpha;
+                drawShape(roof, false);
+} else {
                 // fill roof and optionally stroke it
                 context.fillStyle = item[RENDER_COLOR][2] || roofColorAlpha;
                 context.strokeStyle = item[RENDER_COLOR][1] || altColorAlpha;
                 drawShape(roof, true);
+}
             }
 
             showFPS();
