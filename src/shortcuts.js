@@ -9,18 +9,3 @@
         max = Math.max,
         doc = global.document
     ;
-
-    /*<debug*/
-    var performance = global.performance || {};
-    performance.now = (function () {
-        return performance.now       ||
-            performance.mozNow    ||
-            performance.msNow     ||
-            performance.oNow      ||
-            performance.webkitNow ||
-            function () {
-                return Date.now();
-            }
-        ;
-    })();
-    /*>*/

@@ -25,21 +25,6 @@
         doc = global.document
     ;
 
-    
-    var performance = global.performance || {};
-    performance.now = (function () {
-        return performance.now       ||
-            performance.mozNow    ||
-            performance.msNow     ||
-            performance.oNow      ||
-            performance.webkitNow ||
-            function () {
-                return Date.now();
-            }
-        ;
-    })();
-    
-
 
 //****** file: Color.js ******
 
@@ -349,8 +334,10 @@ var Color = (function () {
             context.lineJoin = 'round';
             context.lineWidth = 1;
 
-            context.mozImageSmoothingEnabled = false;
-            context.webkitImageSmoothingEnabled = false;
+            try {
+                context.mozImageSmoothingEnabled = false;
+            } catch (err) {
+            }
 
             return canvas;
         }
@@ -465,9 +452,6 @@ var Color = (function () {
             data = [];
 
             
-            var polyCountBefore = 0,
-                polyCountAfter = 0;
-            
 
             for (i = 0, il = resData.length; i < il; i++) {
                 item = [];
@@ -476,11 +460,11 @@ var Color = (function () {
                     continue;
                 }
 
-                polyCountBefore += resData[i][FOOTPRINT].length;
+                
 
                 footprint = simplify(resData[i][FOOTPRINT]);
 
-                polyCountAfter += footprint.length;
+                
 
                 if (footprint.length < 8) { // 3 points & end = start (x2)
                     continue;
@@ -501,7 +485,7 @@ var Color = (function () {
                 data.push(item);
             }
 
-            console.log('PolyCount: ' + polyCountBefore + ' => ' + polyCountAfter);
+            
 
             resMeta = resData = keyList = null; // gc
             fadeIn();
@@ -846,21 +830,6 @@ var Color = (function () {
             }, 33);
         }
 
-        
-        var renderStartTime = 0,
-            totalRenderTime = 0,
-            renderIterations = 0;
-        function showFPS() {
-            totalRenderTime += (performance.now() - renderStartTime);
-            renderIterations++;
-            if (renderIterations === 9) {
-                console.log('FPS: ' + (333 / (totalRenderTime / renderIterations) << 0));
-                totalRenderTime = 0;
-                renderIterations = 0;
-            }
-        }
-        
-
         var sunX, sunY, sunZ;
 
         function renderShadows() {
@@ -874,7 +843,8 @@ var Color = (function () {
                 x, y,
                 offX = originX - meta.x,
                 offY = originY - meta.y,
-                footprint, walls, roof,
+                footprint, roof,
+                mode,
                 isVisible,
                 ax, ay, bx, by,
                 a, b, _a, _b
@@ -884,7 +854,6 @@ var Color = (function () {
 
             for (i = 0, il = data.length; i < il; i++) {
                 item = data[i];
-if (item[HEIGHT] < 6) continue;
 
                 isVisible = false;
                 f = item[FOOTPRINT];
@@ -904,18 +873,32 @@ if (item[HEIGHT] < 6) continue;
                 }
 
                 // when fading in, use a dynamic height
-                m = item[IS_NEW] ? item[HEIGHT] * fadeFactor : item[HEIGHT];
+                h = item[IS_NEW] ? item[HEIGHT] * fadeFactor : item[HEIGHT];
                 // precalculating projection height scale
-                //m = camZ / (camZ - h);
+                m = sunZ / (sunZ - h);
 
                 // prepare same calculations for min_height if applicable
                 if (item[MIN_HEIGHT]) {
-                    n = item[IS_NEW] ? item[MIN_HEIGHT] * fadeFactor : item[MIN_HEIGHT];
-                    //n = camZ / (camZ - h);
+                    h = item[IS_NEW] ? item[MIN_HEIGHT] * fadeFactor : item[MIN_HEIGHT];
+                    n = sunZ / (sunZ - h);
                 }
 
-                walls = [];
-                roof = [];
+                if (item[HEIGHT] < 6) {
+                    roof = [];
+                    for (j = 0, jl = footprint.length - 3; j < jl; j += 2) {
+                        ax = footprint[j];
+                        ay = footprint[j + 1];
+                        _a = projectShadow(ax, ay, m);
+
+                        roof[j]     = _a.x;
+                        roof[j + 1] = _a.y;
+                    }
+                    drawShape(roof);
+                    continue;
+                }
+
+                mode = null;
+                context.beginPath();
 
                 for (j = 0, jl = footprint.length - 3; j < jl; j += 2) {
                     ax = footprint[j];
@@ -923,7 +906,6 @@ if (item[HEIGHT] < 6) continue;
                     bx = footprint[j + 2];
                     by = footprint[j + 3];
 
-                    // project 3d to 2d on extruded footprint
                     _a = projectShadow(ax, ay, m);
                     _b = projectShadow(bx, by, m);
 
@@ -936,38 +918,33 @@ if (item[HEIGHT] < 6) continue;
                         by = b.y;
                     }
 
-                    // backface culling check
                     if ((bx - ax) * (_a.y - ay) > (_a.x - ax) * (by - ay)) {
-//                        if (!walls.length) {
-//                            walls.unshift(ay + 0.5);
-//                            walls.unshift(ax + 0.5);
-//                            walls.push(_a.x, _a.y);
-//                        }
-//                        walls.unshift(by + 0.5);
-//                        walls.unshift(bx + 0.5);
-//                        walls.push(_b.x, _b.y);
-//                    } else {
-//                        walls.length && drawShadowShape(walls);
-//                        walls = [];
-
-                        drawShape([
-                            bx + 0.5, by + 0.5,
-                            ax + 0.5, ay + 0.5,
-                            _a.x, _a.y,
-                            _b.x, _b.y
-                        ]);
+                        if (mode === 1) {
+                            context.lineTo(ax, ay);
+                        }
+                        mode = 0;
+                        if (!j) {
+                            context.moveTo(ax, ay);
+                        }
+                        context.lineTo(bx, by);
+                    } else {
+                        if (mode === 0) {
+                            context.lineTo(_a.x, _a.y);
+                        }
+                        mode = 1;
+                        if (!j) {
+                            context.moveTo(_a.x, _a.y);
+                        }
+                        context.lineTo(_b.x, _b.y);
                     }
-
-                    roof[j]     = _a.x;
-                    roof[j + 1] = _a.y;
                 }
-//                walls.length && drawShape(walls);
-                drawShape(roof);
+
+                context.closePath();
+                context.fill();
             }
         }
 
-        function projectShadow(x, y, z) {
-            var m = sunZ / (sunZ - z);
+        function projectShadow(x, y, m) {
             return {
                 x: (x - sunX) * m + sunX,
                 y: (y - sunY) * m + sunY
@@ -975,8 +952,6 @@ if (item[HEIGHT] < 6) continue;
         }
 
         function render() {
-            renderStartTime = performance.now();
-
             context.clearRect(0, 0, width, height);
 
             // data needed for rendering
@@ -1060,7 +1035,7 @@ if (item[HEIGHT] < 6) continue;
                         bx = b.x;
                         by = b.y;
                     }
-if (item[HEIGHT] >= 6) {
+
                     // backface culling check
                     if ((bx - ax) * (_a.y - ay) > (_a.x - ax) * (by - ay)) {
                         // depending on direction, set wall shading
@@ -1079,27 +1054,13 @@ if (item[HEIGHT] >= 6) {
                     }
                     roof[j]     = _a.x;
                     roof[j + 1] = _a.y;
-} else {
-    roof[j]     = ax;
-    roof[j + 1] = ay;
-}
-
-
                 }
-if (item[HEIGHT] >= 6) {
-                // fill roof and optionally stroke it
-                context.fillStyle = item[RENDER_COLOR][2] || roofColorAlpha;
-                context.strokeStyle = item[RENDER_COLOR][1] || altColorAlpha;
-                drawShape(roof, false);
-} else {
-                // fill roof and optionally stroke it
-                context.fillStyle = item[RENDER_COLOR][2] || roofColorAlpha;
-                context.strokeStyle = item[RENDER_COLOR][1] || altColorAlpha;
-                drawShape(roof, true);
-}
-            }
 
-            showFPS();
+                // fill roof and optionally stroke it
+                context.fillStyle   = item[RENDER_COLOR][2] || roofColorAlpha;
+                context.strokeStyle = item[RENDER_COLOR][1] || altColorAlpha;
+                drawShape(roof);
+            }
         }
 
         function debugMarker(x, y, color, size) {
