@@ -3,16 +3,17 @@
 <head>
 	<title>OSM Buildings - Performance Tests</title>
 	<meta http-equiv="content-type" content="text/html; charset=utf-8">
-	<style>
+    <style>
+    html, body {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        overflow: hidden;
+    }
 	canvas {
-		width: 800px;
-		height: 600px;
-		border: 1px solid #cc0000;
-		-webkit-transform:translate3d(0,0,0);
-	}
-	#console {
-		font-family: monospace;
-        white-space: pre;
+		width: 100%;
+		height: 100%;
+		-webkit-transform: translate3d(0,0,0);
 	}
 	</style>
 	<script src="benchmark/performance.js"></script>
@@ -20,17 +21,9 @@
 
 <body>
 	<canvas></canvas>
-	<div id="console"></div>
 
 	<script>
-	var output = document.querySelector('#console');
-	var log = function (txt) {
-		output.innerHTML += txt + '<br>';
-	}
-
-	//*************************************************************************
-
-	var width = 800, height = 600;
+	var width = innerWidth, height = innerHeight;
 	var canvas = document.querySelector('canvas');
 	var context = canvas.getContext('2d');
 
@@ -43,21 +36,12 @@
 
 	//*************************************************************************
 
-// OK Flache Gebäude nicht zeichnen
-// OK Bei flachen Gebäuden nur das Dach zeichnen, fixiert
-// OK Bei flachen Gebäuden nur das Dach zeichnen
-// OK Bei flachen Gebäuden den Grundriss und das Dach zeichnen
-// Bei flachen Gebäuden keinen Schatten zeichnen
-// OK Keine Dachlinie zeichnen
-// Wenn Schatten, dann keine Dachlinie zeichnen
-// OK Keine alternative Wandschattierung + keine Sortierung
-// OK Flächen kombinieren
-
-// Simplifikation?
+// Simplification?
 // Viewport Margin? => data amount
 // buffering (hidden canvas)
 // test 3d anaglyph
 // RequestAnimationFrame
+// check effect of fill area size and alpha amount
 
 	//*************************************************************************
 
@@ -66,12 +50,16 @@
 		roofColorAlpha = 'rgba(220, 210, 200, 0.7)',
 		camX = width/2,
 		camY = height,
-		camZ = height;
+		camZ = height,
+        sunX, sunY, sunZ,
+        flatHeight = 20;
 
     var HEIGHT = 0, FOOTPRINT = 1, CENTER = 2;
 
-	var rawData = [], footprint;
-	for (var i = 0, il = 150; i < il; i++) {
+	var rawData = [], footprint,
+        numBuildings = width * height / 3000 << 0;
+
+	for (var i = 0; i < numBuildings; i++) {
 		rawData[i] = [];
 	    footprint = [];
 	    footprint[0] = Perf.random(0, width);
@@ -88,25 +76,54 @@
 		footprint[10] = footprint[0];
 		footprint[11] = footprint[1];
 
-		rawData[i][HEIGHT] = i < 60 ? Perf.random(5, 20) : Perf.random(20, 50);
+		rawData[i][HEIGHT] = i < 60 ? Perf.random(5, flatHeight) : Perf.random(flatHeight, 50);
 		rawData[i][FOOTPRINT] = footprint;
 		rawData[i][CENTER] = center(footprint);
 	}
 
+// just a single test building
+//
+//    rawData = [];
+//
+//    footprint = [];
+//    footprint[0] = width / 2 << 0;
+//    footprint[1] = height / 2 << 0;
+//
+//    footprint[10] = footprint[0] + 100;
+//    footprint[11] = footprint[1] + 50;
+//
+//    footprint[8] = footprint[0] + 400;
+//    footprint[9] = footprint[1] - 100;
+//
+//    footprint[6] = footprint[0] + 200;
+//    footprint[7] = footprint[1] - 200;
+//
+//    footprint[4] = footprint[0] + 100;
+//    footprint[5] = footprint[1] - 150;
+//
+//    footprint[2] = footprint[0] + 200;
+//    footprint[3] = footprint[1] - 100;
+//
+//    footprint[12] = footprint[0];
+//    footprint[13] = footprint[1];
+//
+//    rawData[0] = [];
+//    rawData[0][HEIGHT] = 80;
+//    rawData[0][FOOTPRINT] = footprint;
+//    rawData[0][CENTER] = center(footprint);
+
 	//*************************************************************************
 
-    var sunX, sunY, sunZ;
-
-    function renderShadows() {
+    function renderShadows(options) {
         sunX = camX;
         sunY = camY * 1.2;
         sunZ = camZ / 1.5;
 
         var i, il, j, jl,
-            item,
-            f, m, n,
+            item, isFlat,
+            f, m,
             x, y,
-            footprint, roof,
+            footprint, roof, mode,
             isVisible,
             ax, ay, bx, by,
             _a, _b
@@ -116,6 +133,15 @@
 
         for (i = 0, il = rawData.length; i < il; i++) {
             item = rawData[i];
+            isFlat = item[HEIGHT] < flatHeight;
+
+            if (isFlat && (options & SKIP_FLAT)) {
+                continue;
+            }
+
+            if (isFlat && (options & FLAT_NO_SHADOWS)) {
+                continue;
+            }
 
             isVisible = false;
             f = item[FOOTPRINT];
@@ -135,30 +161,76 @@
 
             m = item[HEIGHT];
 
-            roof = [];
+            if (isFlat && (options & FLAT_SIMPLE_SHADOWS)) {
+                roof = [];
+                for (j = 0, jl = footprint.length - 3; j < jl; j += 2) {
+                    ax = footprint[j];
+                    ay = footprint[j + 1];
+                    _a = projectShadow(ax, ay, m);
+                    roof[j]     = _a.x;
+                    roof[j + 1] = _a.y;
+                }
+                drawShape(roof);
+            } else if (options & COMBINED_SHADOWS) {
+                mode = null;
+                context.beginPath();
 
-            for (j = 0, jl = footprint.length - 3; j < jl; j += 2) {
-                ax = footprint[j];
-                ay = footprint[j + 1];
-                bx = footprint[j + 2];
-                by = footprint[j + 3];
+                for (j = 0, jl = footprint.length - 3; j < jl; j += 2) {
+                    ax = footprint[j];
+                    ay = footprint[j + 1];
+                    bx = footprint[j + 2];
+                    by = footprint[j + 3];
 
-                _a = projectShadow(ax, ay, m);
-                _b = projectShadow(bx, by, m);
+                    _a = projectShadow(ax, ay, m);
+                    _b = projectShadow(bx, by, m);
 
-                if ((bx - ax) * (_a.y - ay) > (_a.x - ax) * (by - ay)) {
-                    drawShape([
-                        bx + 0.5, by + 0.5,
-                        ax + 0.5, ay + 0.5,
-                        _a.x, _a.y,
-                        _b.x, _b.y
-                    ]);
+                    if ((bx - ax) * (_a.y - ay) > (_a.x - ax) * (by - ay)) {
+                        if (mode === 1) {
+                            context.lineTo(ax, ay);
+                        }
+                        mode = 0;
+                        if (!j) {
+                            context.moveTo(ax, ay);
+                        }
+                        context.lineTo(bx, by);
+                    } else {
+                        if (mode === 0) {
+                            context.lineTo(_a.x, _a.y);
+                        }
+                        mode = 1;
+                        if (!j) {
+                            context.moveTo(_a.x, _a.y);
+                        }
+                        context.lineTo(_b.x, _b.y);
+                    }
                 }
 
-                roof[j]     = _a.x;
-                roof[j + 1] = _a.y;
+                context.closePath();
+                context.fill();
+            } else {
+                roof = [];
+                for (j = 0, jl = footprint.length - 3; j < jl; j += 2) {
+                    ax = footprint[j];
+                    ay = footprint[j + 1];
+                    bx = footprint[j + 2];
+                    by = footprint[j + 3];
+
+                    _a = projectShadow(ax, ay, m);
+                    _b = projectShadow(bx, by, m);
+
+                    if ((bx - ax) * (_a.y - ay) > (_a.x - ax) * (by - ay)) {
+                        drawShape([
+                            bx + 0.5, by + 0.5,
+                            ax + 0.5, ay + 0.5,
+                            _a.x, _a.y,
+                            _b.x, _b.y
+                        ]);
+                    }
+                    roof[j]     = _a.x;
+                    roof[j + 1] = _a.y;
+                }
+                drawShape(roof);
             }
-            drawShape(roof);
         }
     }
 
@@ -175,8 +247,7 @@
 
 		var i, il, j, jl,
             data = [],
-			item,
-            isFlat,
+			item, isFlat,
 			f, h, m,
 			x, y,
 			sortCam = [camX, camY],
@@ -191,7 +262,7 @@
         }
 
         if (options & DRAW_SHADOWS) {
-            renderShadows();
+            renderShadows(options);
         }
 
 		if (options & SHADE_WALLS) {
@@ -206,9 +277,9 @@
 
 		for (i = 0, il = data.length; i < il; i++) {
 			item = data[i];
-            isFlat = item[HEIGHT] < 20;
+            isFlat = item[HEIGHT] < flatHeight;
 
-			if (isFlat && (options & FLAT_SKIP)) {
+			if (isFlat && (options & SKIP_FLAT)) {
 				continue;
 			}
 
@@ -300,7 +371,7 @@
 			}
 
             if (isFlat && (options & FLAT_DRAW_GROUND)) {
-        		context.fillStyle = altColorAlpha;
+        		context.fillStyle = wallColorAlpha;
                 drawShape(ground, false);
             }
 
@@ -358,48 +429,75 @@
 	var COMBINE_FACES = 1,
 		SHADE_WALLS = 2,
 		STROKE_ROOFS = 4,
-		FLAT_SKIP = 8,
+		SKIP_FLAT = 8,
 		FLAT_NO_PERSPECTIVE = 16,
 		FLAT_NO_WALLS = 32,
 		FLAT_DRAW_GROUND = 64,
-        DRAW_SHADOWS = 128;
+        DRAW_SHADOWS = 128,
+        FLAT_NO_SHADOWS = 256,
+        FLAT_SIMPLE_SHADOWS = 512,
+        COMBINED_SHADOWS = 1024;
 
-	var perf = new Perf('Render performance tests', 300);
+	var perf = new Perf(numBuildings, 500, 'URL');
 
-	perf.add('default', function () {
+	perf.add('no strokes, no shading, no shadows', function () {
 		render();
 	});
 
-	perf.add('combined faces', function () {
+	perf.add('combine walls', function () {
 		render(COMBINE_FACES);
 	});
 
-	perf.add('shaded walls', function () {
+	perf.add('shade walls', function () {
 		render(SHADE_WALLS);
 	});
 
-	perf.add('stroked roofs', function () {
+	perf.add('stroke roofs', function () {
 		render(STROKE_ROOFS);
 	});
 
-	perf.add('skip flat (should be filtered in advance)', function () {
-		render(FLAT_SKIP);
+	perf.add('skip flat', function () {
+		render(SKIP_FLAT);
 	});
 
-	perf.add('flat, only roofs, fixed', function () {
+	perf.add('flat without walls, fixed roofs', function () {
 		render(FLAT_NO_PERSPECTIVE | FLAT_NO_WALLS);
 	});
 
-    perf.add('flat, only roofs', function () {
+    perf.add('flat without walls', function () {
 		render(FLAT_NO_WALLS);
 	});
 
-	perf.add('flat, roofs and ground', function () {
+	perf.add('flat without walls, ground in wall color', function () {
 		render(FLAT_NO_WALLS | FLAT_DRAW_GROUND);
 	});
 
-	perf.add('draw shadows', function () {
+	perf.add('shadows', function () {
 		render(DRAW_SHADOWS);
+	});
+
+	perf.add('combined shadows', function () {
+		render(DRAW_SHADOWS | COMBINED_SHADOWS);
+	});
+
+	perf.add('shadows, flat with roof as shadow', function () {
+		render(DRAW_SHADOWS | FLAT_SIMPLE_SHADOWS);
+	});
+
+	perf.add('shadows, flat without shadows', function () {
+		render(DRAW_SHADOWS | FLAT_NO_SHADOWS);
+	});
+
+	perf.add('shading, combined shadows', function () {
+		render(SHADE_WALLS | DRAW_SHADOWS | COMBINED_SHADOWS);
+	});
+
+	perf.add('shading, combined shadows, flat with roof as shadow', function () {
+		render(SHADE_WALLS | DRAW_SHADOWS | COMBINED_SHADOWS | FLAT_SIMPLE_SHADOWS);
+	});
+
+	perf.add('shading, combined shadows, flat without shadow', function () {
+		render(SHADE_WALLS | DRAW_SHADOWS | SKIP_FLAT);
 	});
 
 	perf.run();
