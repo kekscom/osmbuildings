@@ -5,7 +5,6 @@
             context.clearRect(0, 0, width, height);
             context.strokeStyle = altColorAlpha;
 
-
             p = geoToPixel(52.50700, 13.33300);
             x = p.x - originX;
             y = p.y - originY;
@@ -30,8 +29,8 @@
         function cylinder(x, y, r, h, minHeight) {
             var m = camZ / (camZ - h),
                 p = project(x, y, m),
-                _x = p[0],
-                _y = p[1],
+                _x = p.x,
+                _y = p.y,
                 _r = r * m
             ;
 
@@ -39,10 +38,10 @@
                 var $x = x;
                 m = camZ / (camZ - minHeight),
                 p = project(x, y, m);
-                x = p[0];
-                y = p[1];
+                x = p.x;
+                y = p.y;
                 p = project($x - r, y, m);
-                r = x - p[0];
+                r = x - p.x;
             }
 
             var t = getTangents(x, y, r, _x, _y, _r), // common tangents for ground and roof circle
@@ -190,8 +189,8 @@
         function cone(x, y, r, h, minHeight) {
             // TODO: min height
             var apex = project(x, y, camZ / (camZ - h)),
-                _x = apex[0],
-                _y = apex[1]
+                _x = apex.x,
+                _y = apex.y
             ;
 
             var t = getTangentsFromPoint(x, y, r, _x, _y),
@@ -265,15 +264,15 @@ var Y = t[0][0];
 var H = (camZ - t[0][1]);
 
 var p = project(x, Y, camZ / (camZ - H));
-line([x, Y], p);
-debugMarker(p[0], p[1]);
+line([x, Y], [p.x, p.y]);
+debugMarker(p.x, p.y);
 
 //******************************************************************************
 
 context.fillStyle = roofColorAlpha;
 circle(x, y, r, TRUE);
 
-line([x, y], apex);
+line([x, y], [apex.x, apex.y]);
 
 //******************************************************************************
 
@@ -281,11 +280,11 @@ var Y = t[1][0];
 var H = (camZ - t[1][1]);
 
 var p = project(x, Y, camZ / (camZ - H));
-line([x, Y], p);
-debugMarker(p[0], p[1]);
+line([x, Y], [p.x, p.y]);
+debugMarker(p.x, p.y);
 
 line([x, y], [x, Y]);
-line(apex, p);
+line([apex.x, apex.y], [p.x, p.y]);
 
 
 //******************************************************************************
@@ -300,7 +299,7 @@ line(apex, p);
 
 //            context.fillStyle = wallColorAlpha
 //            context.beginPath();
-//            context.arc(apex[0], apex[1], r, 0, 1*PI, TRUE);
+//            context.arc(apex.x, apex.y, r, 0, 1*PI, TRUE);
 //            context.closePath();
 //            context.stroke();
 
@@ -311,8 +310,8 @@ line(apex, p);
             var _b = project(x - _k, y, m);
             var b  = project(x,      y, m);
 
-            context.moveTo(a[0], a[1]);
-            context.bezierCurveTo(_a[0], _a[1], _b[0], _b[1], b[0], b[1]);
+            context.moveTo(a.x, a[1]);
+            context.bezierCurveTo(_a.x, _a.y, _b.x, _b.y, b.x, b.y);
 
             var a  = project(x + r, y, g);
             var _a = project(x + r, y, n);
@@ -320,7 +319,7 @@ line(apex, p);
             var b  = project(x,     y, m);
 
             context.moveTo(a[0], a[1]);
-            context.bezierCurveTo(_a[0], _a[1], _b[0], _b[1], b[0], b[1]);
+            context.bezierCurveTo(_a.x, _a.y, _b.x, _b.y, b.x, b.y);
 
             var a  = project(x, y + r, g);
             var _a = project(x, y + r, n);
@@ -328,7 +327,7 @@ line(apex, p);
             var b  = project(x, y,     m);
 
             context.moveTo(a[0], a[1]);
-            context.bezierCurveTo(_a[0], _a[1], _b[0], _b[1], b[0], b[1]);
+            context.bezierCurveTo(_a.x, _a.y, _b.x, _b.y, b.x, b.y);
 
             var a  = project(x, y - r, g);
             var _a = project(x, y - r, n);
@@ -336,7 +335,7 @@ line(apex, p);
             var b  = project(x, y,     m);
 
             context.moveTo(a[0], a[1]);
-            context.bezierCurveTo(_a[0], _a[1], _b[0], _b[1], b[0], b[1]);
+            context.bezierCurveTo(_a.x, _a.y, _b.x, _b.y, b.x, b.y);
 
             context.stroke();
         }
@@ -406,7 +405,7 @@ line(apex, p);
                 drawShape([
                     points[i],     points[i + 1],
                     points[i + 2], points[i + 3],
-                    apex[0], apex[1]
+                    apex.x, apex.y
                 ], strokeRoofs);
             }
 
@@ -424,7 +423,7 @@ line(apex, p);
             drawShape([
                 points[i], points[i + 1],
                 points[0], points[1],
-                apex[0], apex[1]
+                apex.x, apex.y
             ], strokeRoofs);
         }
 
