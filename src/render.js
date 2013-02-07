@@ -233,8 +233,8 @@
                         }
 
                         drawShape([
-                            bx + 0.5, by + 0.5,
-                            ax + 0.5, ay + 0.5,
+                            bx, by,
+                            ax, ay,
                             _a.x, _a.y,
                             _b.x, _b.y
                         ]);
@@ -277,7 +277,7 @@
 
         function project(x, y, m) {
             return {
-                x: ((x - camX) * m + camX << 0) + 0.5, // + 0.5: disabling(!) anti alias
-                y: ((y - camY) * m + camY << 0) + 0.5  // + 0.5: disabling(!) anti alias
+                x: ((x - camX) * m + camX << 0),
+                y: ((y - camY) * m + camY << 0)
             };
         }
