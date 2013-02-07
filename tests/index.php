@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>OSM Buildings</title>
+    <title>OSM Buildings - Sandbox</title>
     <meta http-equiv="content-type" content="text/html; charset=utf-8">
     <style type="text/css">
     html, body {

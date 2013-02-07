@@ -13,10 +13,14 @@
             wallColor = new Color(200, 190, 180),
             altColor = wallColor.adjustLightness(0.8),
             roofColor = wallColor.adjustLightness(1.2),
+            //red: roofColor = new Color(240, 200, 180),
+            //green: roofColor = new Color(210, 240, 220),
 
             wallColorAlpha = wallColor + '',
             altColorAlpha  = altColor + '',
             roofColorAlpha = roofColor + '',
+
+            shadows = false,
 
             rawData,
             meta, data,

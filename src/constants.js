@@ -1,5 +1,5 @@
     // constants, shared to all instances
-    var VERSION = /*<version=*/'0.1.6a'/*>*/,
+    var VERSION = /*<version=*/'0.1.7a'/*>*/,
         ATTRIBUTION = '&copy; <a href="http://osmbuildings.org">OSM Buildings</a>',
 
         PI = Math.PI,
