@@ -67,5 +67,9 @@
                 roofColorAlpha = roofColor.adjustAlpha(zoomAlpha) + '';
             }
 
+            if (style.shadows !== undefined) {
+                shadows = !!style.shadows;
+            }
+
             render();
         }

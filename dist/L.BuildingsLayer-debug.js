@@ -301,6 +301,8 @@ var Color = (function () {
             altColorAlpha  = altColor + '',
             roofColorAlpha = roofColor + '',
 
+            shadows = false,
+
             rawData,
             meta, data,
 
@@ -763,6 +765,10 @@ var Color = (function () {
                 roofColorAlpha = roofColor.adjustAlpha(zoomAlpha) + '';
             }
 
+            if (style.shadows !== undefined) {
+                shadows = !!style.shadows;
+            }
+
             render();
         }
 
@@ -965,7 +971,9 @@ var Color = (function () {
                 return;
             }
 
-            renderShadows();
+            if (shadows) {
+                renderShadows();
+            }
 
             var i, il, j, jl,
                 item,
@@ -1059,7 +1067,7 @@ var Color = (function () {
                 // fill roof and optionally stroke it
                 context.fillStyle   = item[RENDER_COLOR][2] || roofColorAlpha;
                 context.strokeStyle = item[RENDER_COLOR][1] || altColorAlpha;
-                drawShape(roof);
+                drawShape(roof, !shadows);
             }
         }
 

@@ -20,6 +20,8 @@
             altColorAlpha  = altColor + '',
             roofColorAlpha = roofColor + '',
 
+            shadows = false,
+
             rawData,
             meta, data,
 

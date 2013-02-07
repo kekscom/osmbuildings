@@ -150,7 +150,9 @@
                 return;
             }
 
-            renderShadows();
+            if (shadows) {
+                renderShadows();
+            }
 
             var i, il, j, jl,
                 item,
@@ -244,7 +246,7 @@
                 // fill roof and optionally stroke it
                 context.fillStyle   = item[RENDER_COLOR][2] || roofColorAlpha;
                 context.strokeStyle = item[RENDER_COLOR][1] || altColorAlpha;
-                drawShape(roof);
+                drawShape(roof, !shadows);
             }
         }
 
