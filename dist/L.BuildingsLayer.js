@@ -1,23 +1,1386 @@
-(function(j){function I(q,w){var B=q[0]-w[0],e=q[1]-w[1];return B*B+e*e}function Ka(q){for(var w=0,B=0,e=0,h=q.length-3;e<h;e+=2){w+=q[e];B+=q[e+1]}q=(q.length-2)*2;return[w/q<<0,B/q<<0]}function La(q){var w=q.length/2,B=new Ma(w),e=0,h=w-1,k,r,x,C,J=[],O=[],M=[];for(B[e]=B[h]=1;h;){r=0;for(k=e+1;k<h;k++){x=q[k*2];var sa=q[k*2+1],P=q[e*2],F=q[e*2+1],fa=q[h*2],$=q[h*2+1],A=fa-P,y=$-F,Q=void 0;if(A!==0||y!==0){Q=((x-P)*A+(sa-F)*y)/(A*A+y*y);if(Q>1){P=fa;F=$}else if(Q>0){P+=A*Q;F+=y*Q}}A=x-P;y=sa-F;
-x=A*A+y*y;if(x>r){C=k;r=x}}if(r>2){B[C]=1;J.push(e);O.push(C);J.push(C);O.push(h)}e=J.pop();h=O.pop()}for(k=0;k<w;k++)B[k]&&M.push(q[k*2],q[k*2+1]);return M}var Na=Na||Array,Ma=Ma||Array,Ra=Math.exp,Sa=Math.log,Oa=Math.tan,Ta=Math.atan,ya=Math.min,Ua=Math.max,za=j.document,T=function(){function q(e,h,k){if(k<0)k+=1;if(k>1)k-=1;if(k<1/6)return e+(h-e)*6*k;if(k<0.5)return h;if(k<2/3)return e+(h-e)*(2/3-k)*6;return e}function w(e,h,k,r){this.r=e;this.g=h;this.b=k;this.a=arguments.length<4?1:r}var B=
-w.prototype;B.toString=function(){return"rgba("+[this.r<<0,this.g<<0,this.b<<0,this.a.toFixed(2)].join(",")+")"};B.adjustLightness=function(e){var h=T.toHSLA(this);h.l*=e;h.l=Math.min(1,Math.max(0,h.l));var k,r;if(h.s===0)e=k=r=h.l;else{r=h.l<0.5?h.l*(1+h.s):h.l+h.s-h.l*h.s;var x=2*h.l-r;e=q(x,r,h.h+1/3);k=q(x,r,h.h);r=q(x,r,h.h-1/3)}return new T(e*255<<0,k*255<<0,r*255<<0,h.a)};B.adjustAlpha=function(e){return new T(this.r,this.g,this.b,this.a*e)};w.parse=function(e){e+="";if(~e.indexOf("#")){e=
-e.match(/^#?(\w{2})(\w{2})(\w{2})(\w{2})?$/);return new T(parseInt(e[1],16),parseInt(e[2],16),parseInt(e[3],16),e[4]?parseInt(e[4],16)/255:1)}if(e=e.match(/rgba?\((\d+)\D+(\d+)\D+(\d+)(\D+([\d.]+))?\)/))return new T(parseInt(e[1],10),parseInt(e[2],10),parseInt(e[3],10),e[4]?parseFloat(e[5],10):1)};w.toHSLA=function(e){var h=e.r/255,k=e.g/255,r=e.b/255,x=Math.max(h,k,r),C=Math.min(h,k,r),J,O=(x+C)/2,M;if(x===C)J=C=0;else{M=x-C;C=O>0.5?M/(2-x-C):M/(x+C);switch(x){case h:J=(k-r)/M+(k<r?6:0);break;case k:J=
-(r-h)/M+2;break;case r:J=(h-k)/M+4;break}J/=6}return{h:J,s:C,l:O,a:e.a}};return w}(),ja=Math.PI,Pa=ja/2,Va=ja/4,Wa=180/ja,Xa=256,Aa=14,ka="latitude",la="longitude",N=0,K=1,R=2,X=3,ta=4,aa=5,W=6;j.OSMBuildings=function(q){function w(a,d){var b={};a/=ma;d/=ma;b[ka]=d<=0?90:d>=1?-90:Wa*(2*Ta(Ra(ja*(1-2*d)))-Pa);b[la]=(a===1?1:(a%1+1)%1)*360-180;return b}function B(a,d){return a.replace(/\{ *([\w_]+) *\}/g,function(b,c){return d[c]})}function e(a,d){var b=new XMLHttpRequest;b.onreadystatechange=function(){if(b.readyState===
-4)!b.status||b.status<200||b.status>299||b.responseText&&d(JSON.parse(b.responseText))};b.open("GET",a);b.send(null);return b}function h(){if(!(!Ba||S<Aa)){var a=w(ba-Q,ca-Ca),d=w(ba+A+Q,ca+y+Ca);ua&&ua.abort();ua=e(B(Ba,{w:a[la],n:a[ka],e:d[la],s:d[ka],z:S}),k)}}function k(a){var d,b,c,f=[],g,m=g=0;na=Aa;O(S);ua=null;if(!(!a||a.meta.z!==S)){c=a.meta;b=a.data;if(D&&z&&D.z===c.z){g=D.x-c.x;m=D.y-c.y;a=0;for(d=z.length;a<d;a++)f[a]=z[a][R][0]+g+","+(z[a][R][1]+m)}D=c;z=[];a=0;for(d=b.length;a<d;a++){c=
-[];if(!(b[a][K]>oa)){g=La(b[a][R]);if(!(g.length<8)){c[R]=g;c[ta]=Ka(g);c[N]=ya(b[a][N],oa);c[K]=b[a][K];g=c[R][0]+","+c[R][1];c[aa]=!(f&&~f.indexOf(g));c[X]=[];c[W]=[];z.push(c)}}}M()}}function r(a,d){var b=[],c,f,g,m,l,i,s,E,p,v=Da-S;c=0;for(f=a.length;c<f;c++){l=a[c];E=l[K]>>v;if(!(E>oa)){i=l[R];p=new Na(i.length);g=0;for(m=i.length-1;g<m;g+=2){s=i[g+1];var n=ya(1,Ua(0,0.5-Sa(Oa(Va+Pa*i[g]/180))/ja/2));s={x:(s/360+0.5)*ma<<0,y:n*ma<<0};p[g]=s.x;p[g+1]=s.y}p=La(p);if(!(p.length<8)){m=[];m[R]=p;
-m[ta]=Ka(p);m[N]=ya(l[N]>>v,oa);m[K]=E;m[aa]=d;m[X]=l[X];m[W]=[];for(g=0;g<3;g++)if(m[X][g])m[W][g]=m[X][g].adjustAlpha(U)+"";b.push(m)}}}return b}function x(a,d){if(typeof a==="object")J(a,!d);else{var b=za.documentElement,c=za.createElement("script");j.jsonpCallback=function(f){delete j.jsonpCallback;b.removeChild(c);J(f,!d)};b.insertBefore(c,b.lastChild).src=a.replace(/\{callback\}/,"jsonpCallback")}}function C(a,d,b){if(b===undefined)b=[];var c,f,g,m=a[0]?a:a.features,l,i,s,E,p,v=d?1:0,n=d?0:
-1;if(m){c=0;for(a=m.length;c<a;c++)C(m[c],d,b);return b}if(a.type==="Feature"){l=a.geometry;c=a.properties}if(l.type==="Polygon")i=[l.coordinates];if(l.type==="MultiPolygon")i=l.coordinates;if(i){d=c.height;if(c.color||c.wallColor)E=T.parse(c.color||c.wallColor);if(c.roofColor)p=T.parse(c.roofColor);c=0;for(a=i.length;c<a;c++){m=i[c][0];s=[];f=l=0;for(g=m.length;f<g;f++){s.push(m[f][v],m[f][n]);l+=d||m[f][2]||0}if(l){f=[];g=R;var t=void 0,o=void 0,G=void 0,ga=void 0,pa=0,V=void 0,Qa=void 0;V=0;for(Qa=
-s.length-3;V<Qa;V+=2){t=s[V];o=s[V+1];G=s[V+2];ga=s[V+3];pa+=t*ga-G*o}if((pa/2>0?"CW":"CCW")==="CW")s=s;else{t=[];for(o=s.length-2;o>=0;o-=2)t.push(s[o],s[o+1]);s=t}f[g]=s;f[N]=l/m.length<<0;f[X]=[E||null,E?E.adjustLightness(0.8):null,p?p:E?E.adjustLightness(1.2):da];b.push(f)}}}return b}function J(a,d){if(a){qa=C(a,d);na=0;O(S);D={n:90,w:-180,s:-90,e:180,x:0,y:0,z:S};z=r(qa,true);M()}else{qa=null;F()}}function O(a){var d,b,c;S=a;ma=Xa<<S;U=1-(S-na)*0.3/(Da-na);Ea=Y.adjustAlpha(U)+"";va=wa.adjustAlpha(U)+
-"";xa=da.adjustAlpha(U)+"";if(z){a=0;for(d=z.length;a<d;a++){c=z[a];c[W]=[];for(b=0;b<3;b++)if(c[X][b])c[W][b]=c[X][b].adjustAlpha(U)+""}}}function M(){Z=0;clearInterval(Fa);Fa=setInterval(function(){Z+=0.1;if(Z>1){clearInterval(Fa);Z=1;for(var a=0,d=z.length;a<d;a++)z[a][aa]=0}F()},33)}function sa(){Ga=ha;Ha=ia*1.2;ra=ea/1.5;var a,d,b,c,f,g,m,l,i,s=ba-D.x,E=ca-D.y,p,v,n,t,o,G;u.fillStyle="rgba(0,0,0,0.4)";a=0;for(d=z.length;a<d;a++){f=z[a];v=false;g=f[R];p=[];b=0;for(c=g.length-1;b<c;b+=2){p[b]=
-l=g[b]-s;p[b+1]=i=g[b+1]-E;v||(v=l>0&&l<A&&i>0&&i<y)}if(v){b=f[aa]?f[N]*Z:f[N];g=ra/(ra-b);if(f[K]){b=f[aa]?f[K]*Z:f[K];m=ra/(ra-b)}if(f[N]<6){f=[];b=0;for(c=p.length-3;b<c;b+=2){l=p[b];n=p[b+1];i=P(l,n,g);f[b]=i.x;f[b+1]=i.y}fa(f)}else{v=null;u.beginPath();b=0;for(c=p.length-3;b<c;b+=2){l=p[b];n=p[b+1];t=p[b+2];o=p[b+3];i=P(l,n,g);G=P(t,o,g);if(f[K]){n=P(l,n,m);o=P(t,o,m);l=n.x;n=n.y;t=o.x;o=o.y}if((t-l)*(i.y-n)>(i.x-l)*(o-n)){v===1&&u.lineTo(l,n);v=0;b||u.moveTo(l,n);u.lineTo(t,o)}else{v===0&&u.lineTo(i.x,
-i.y);v=1;b||u.moveTo(i.x,i.y);u.lineTo(G.x,G.y)}}u.closePath();u.fill()}}}}function P(a,d,b){return{x:(a-Ga)*b+Ga,y:(d-Ha)*b+Ha}}function F(){u.clearRect(0,0,A,y);if(D&&z)if(!(S<na||Ia)){Ja&&sa();var a,d,b,c,f,g,m,l,i,s=ba-D.x,E=ca-D.y,p=[ha+s,ia+E],v,n,t,o,G,ga;z.sort(function(pa,V){return I(V[ta],p)/V[N]-I(pa[ta],p)/pa[N]});a=0;for(d=z.length;a<d;a++){f=z[a];n=false;g=f[R];v=[];b=0;for(c=g.length-1;b<c;b+=2){v[b]=l=g[b]-s;v[b+1]=i=g[b+1]-E;n||(n=l>0&&l<A&&i>0&&i<y)}if(n){b=f[aa]?f[N]*Z:f[N];g=ea/
-(ea-b);if(f[K]){b=f[aa]?f[K]*Z:f[K];m=ea/(ea-b)}l=[];b=0;for(c=v.length-3;b<c;b+=2){i=v[b];t=v[b+1];n=v[b+2];o=v[b+3];G=$(i,t,g);ga=$(n,o,g);if(f[K]){t=$(i,t,m);o=$(n,o,m);i=t.x;t=t.y;n=o.x;o=o.y}if((n-i)*(G.y-t)>(G.x-i)*(o-t)){u.fillStyle=i<n&&t<o||i>n&&t>o?f[W][1]||va:f[W][0]||Ea;fa([n+0.5,o+0.5,i+0.5,t+0.5,G.x,G.y,ga.x,ga.y])}l[b]=G.x;l[b+1]=G.y}u.fillStyle=f[W][2]||xa;u.strokeStyle=f[W][1]||va;fa(l,!Ja)}}}}function fa(a,d){if(a.length){u.beginPath();u.moveTo(a[0],a[1]);for(var b=2,c=a.length;b<
-c;b+=2)u.lineTo(a[b],a[b+1]);u.closePath();d&&u.stroke();u.fill()}}function $(a,d,b){return{x:((a-ha)*b+ha<<0)+0.5,y:((d-ia)*b+ia<<0)+0.5}}var A=0,y=0,Q=0,Ca=0,ba=0,ca=0,S,ma,ua,H,u,Ba,Y=new T(200,190,180),wa=Y.adjustLightness(0.8),da=Y.adjustLightness(1.2),Ea=Y+"",va=wa+"",xa=da+"",Ja=false,qa,D,z,Z=1,Fa,U=1,na=Aa,Da=20,oa,ha,ia,ea,Ia,Ga,Ha,ra;this.setStyle=function(a){a=(a=a)||{};if(a.color||a.wallColor){Y=T.parse(a.color||a.wallColor);Ea=Y.adjustAlpha(U)+"";wa=Y.adjustLightness(0.8);va=wa.adjustAlpha(U)+
-"";da=Y.adjustLightness(1.2);xa=da.adjustAlpha(U)+""}if(a.roofColor){da=T.parse(a.roofColor);xa=da.adjustAlpha(U)+""}if(a.shadows!==undefined)Ja=!!a.shadows;F();return this};this.geoJSON=function(a,d){x(a,d);return this};this.setCamOffset=function(a,d){ha=Q+a;ia=y+d};this.setMaxZoom=function(a){Da=a};this.createCanvas=function(a){H=za.createElement("CANVAS");H.style.webkitTransform="translate3d(0,0,0)";H.style.imageRendering="optimizeSpeed";H.style.position="absolute";H.style.pointerEvents="none";
-H.style.left=0;H.style.top=0;a.appendChild(H);u=H.getContext("2d");u.lineCap="round";u.lineJoin="round";u.lineWidth=1;try{u.mozImageSmoothingEnabled=false}catch(d){}return H};this.destroyCanvas=function(){H.parentNode.removeChild(H)};this.loadData=h;this.onMoveEnd=function(){var a=w(ba,ca),d=w(ba+A,ca+y);F();if(D&&(a[ka]>D.n||a[la]<D.w||d[ka]<D.s||d[la]>D.e))h()};this.onZoomEnd=function(a){Ia=false;O(a.zoom);if(qa){z=r(qa);F()}else{F();h()}};this.onZoomStart=function(){Ia=true;F()};this.render=F;
-this.setOrigin=function(a,d){ba=a;ca=d};this.setSize=function(a,d){A=a;y=d;Q=A/2<<0;Ca=y/2<<0;ha=Q;ia=y;ea=A/1.5/Oa(45)<<0;H.width=A;H.height=y;oa=ea-50};this.setZoom=O;Ba=q};j.OSMBuildings.VERSION="0.1.7a";j.OSMBuildings.ATTRIBUTION='&copy; <a href="http://osmbuildings.org">OSM Buildings</a>'})(this);
-L.BuildingsLayer=L.Class.extend({map:null,osmb:null,canvas:null,blockMoveEvent:null,lastX:0,lastY:0,initialize:function(j){L.Util.setOptions(this,j)},onMove:function(){var j=L.DomUtil.getPosition(this.map._mapPane);this.osmb.setCamOffset(this.lastX-j.x,this.lastY-j.y);this.osmb.render()},onMoveEnd:function(){if(this.blockMoveEvent)this.blockMoveEvent=false;else{var j=L.DomUtil.getPosition(this.map._mapPane),I=this.map.getPixelOrigin();this.lastX=j.x;this.lastY=j.y;this.canvas.style.left=-j.x+"px";
-this.canvas.style.top=-j.y+"px";this.osmb.setCamOffset(0,0);this.osmb.setSize(this.map._size.x,this.map._size.y);this.osmb.setOrigin(I.x-j.x,I.y-j.y);this.osmb.onMoveEnd()}},onZoomStart:function(){this.osmb.onZoomStart()},onZoomEnd:function(){var j=L.DomUtil.getPosition(this.map._mapPane),I=this.map.getPixelOrigin();this.osmb.setOrigin(I.x-j.x,I.y-j.y);this.osmb.onZoomEnd({zoom:this.map._zoom});this.blockMoveEvent=true},addTo:function(j){j.addLayer(this);return this},onAdd:function(j){this.map=j;
-this.osmb=new OSMBuildings(this.options.url);this.canvas=this.osmb.createCanvas(this.map._panes.overlayPane);this.osmb.maxZoom=this.map._layersMaxZoom;j=L.DomUtil.getPosition(this.map._mapPane);var I=this.map.getPixelOrigin();this.osmb.setSize(this.map._size.x,this.map._size.y);this.osmb.setOrigin(I.x-j.x,I.y-j.y);this.osmb.setZoom(this.map._zoom);this.canvas.style.left=-j.x+"px";this.canvas.style.top=-j.y+"px";this.map.on({move:this.onMove,moveend:this.onMoveEnd,zoomstart:this.onZoomStart,zoomend:this.onZoomEnd},
-this);if(this.map.options.zoomAnimation)this.canvas.className="leaflet-zoom-animated";this.map.attributionControl.addAttribution(OSMBuildings.ATTRIBUTION);this.osmb.loadData();this.osmb.render()},onRemove:function(j){j.attributionControl.removeAttribution(OSMBuildings.ATTRIBUTION);j.off({move:this.onMove,moveend:this.onMoveEnd,zoomstart:this.onZoomStart,zoomend:this.onZoomEnd},this);this.canvas=this.osmb.destroyCanvas();this.osmb=this.map=null},geoJSON:function(j,I){return this.osmb.geoJSON(j,I)},
-setStyle:function(j){return this.osmb.setStyle(j)}});
+/**
+ * Copyright (C) 2012 OSM Buildings, Jan Marsch
+ * A leightweight JavaScript library for visualizing 3D building geometry on interactive maps.
+ * @osmbuildings, http://osmbuildings.org
+ */
+//****** file: prefix.js ******
+
+/*jshint bitwise:false */
+
+(function (global) {
+    'use strict';
+
+
+//****** file: shortcuts.js ******
+
+    // object access shortcuts
+    var Int32Array = Int32Array || Array,
+        Uint8Array = Uint8Array || Array,
+        exp = Math.exp,
+        log = Math.log,
+        tan = Math.tan,
+        atan = Math.atan,
+        min = Math.min,
+        max = Math.max,
+        doc = global.document
+    ;
+
+
+//****** file: Color.js ******
+
+/*jshint white:false */
+
+var Color = (function () {
+
+    function hsla2rgb(hsla) {
+        var r, g, b;
+
+        if (hsla.s === 0) {
+            r = g = b = hsla.l; // achromatic
+        } else {
+            var
+                q = hsla.l < 0.5 ? hsla.l * (1 + hsla.s) : hsla.l + hsla.s - hsla.l * hsla.s,
+                p = 2 * hsla.l - q
+            ;
+            r = hue2rgb(p, q, hsla.h + 1 / 3);
+            g = hue2rgb(p, q, hsla.h);
+            b = hue2rgb(p, q, hsla.h - 1 / 3);
+        }
+        return new Color(
+            r * 255 << 0,
+            g * 255 << 0,
+            b * 255 << 0,
+            hsla.a
+        );
+    }
+
+    function hue2rgb(p, q, t) {
+        if (t < 0) {
+            t += 1;
+        }
+        if (t > 1) {
+            t -= 1;
+        }
+        if (t < 1 / 6) {
+            return p + (q - p) * 6 * t;
+        }
+        if (t < 1 / 2) {
+            return q;
+        }
+        if (t < 2 / 3) {
+            return p + (q - p) * (2 / 3 - t) * 6;
+        }
+        return p;
+    }
+
+    function C(r, g, b, a) {
+        this.r = r;
+        this.g = g;
+        this.b = b;
+        this.a = arguments.length < 4 ? 1 : a;
+    }
+
+    var proto = C.prototype;
+
+    proto.toString = function () {
+        return 'rgba(' + [this.r << 0, this.g << 0, this.b << 0, this.a.toFixed(2)].join(',') + ')';
+    };
+
+    proto.adjustLightness = function (l) {
+        var hsla = Color.toHSLA(this);
+        hsla.l *= l;
+        hsla.l = Math.min(1, Math.max(0, hsla.l));
+        return hsla2rgb(hsla);
+    };
+
+    proto.adjustAlpha = function (a) {
+        return new Color(this.r, this.g, this.b, this.a * a);
+    };
+
+    C.parse = function (str) {
+        var m;
+        str += '';
+        if (~str.indexOf('#')) {
+            m = str.match(/^#?(\w{2})(\w{2})(\w{2})(\w{2})?$/);
+            return new Color(
+                parseInt(m[1], 16),
+                parseInt(m[2], 16),
+                parseInt(m[3], 16),
+                m[4] ? parseInt(m[4], 16) / 255 : 1
+            );
+        }
+
+        m = str.match(/rgba?\((\d+)\D+(\d+)\D+(\d+)(\D+([\d.]+))?\)/);
+        if (m) {
+             return new Color(
+                parseInt(m[1], 10),
+                parseInt(m[2], 10),
+                parseInt(m[3], 10),
+                m[4] ? parseFloat(m[5], 10) : 1
+            );
+        }
+    };
+
+    C.toHSLA = function (rgba) {
+        var
+            r = rgba.r / 255,
+            g = rgba.g / 255,
+            b = rgba.b / 255,
+            max = Math.max(r, g, b), min = Math.min(r, g, b),
+            h, s, l = (max + min) / 2,
+            d
+        ;
+
+        if (max === min) {
+            h = s = 0; // achromatic
+        } else {
+            d = max - min;
+            s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+            switch (max) {
+                case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+                case g: h = (b - r) / d + 2; break;
+                case b: h = (r - g) / d + 4; break;
+            }
+            h /= 6;
+        }
+
+        return { h: h, s: s, l: l, a: rgba.a };
+    };
+
+    return C;
+
+}());
+
+/*jshint white:true */
+
+//****** file: constants.js ******
+
+    // constants, shared to all instances
+    var VERSION = '0.1.7a',
+        ATTRIBUTION = '&copy; <a href="http://osmbuildings.org">OSM Buildings</a>',
+
+        PI = Math.PI,
+        HALF_PI = PI / 2,
+        QUARTER_PI = PI / 4,
+        RAD = 180 / PI,
+
+        TILE_SIZE = 256,
+        MIN_ZOOM = 14, // for buildings data only, GeoJSON should not be affected
+
+        LAT = 'latitude', LON = 'longitude',
+        HEIGHT = 0, MIN_HEIGHT = 1, FOOTPRINT = 2, COLOR = 3, CENTER = 4, IS_NEW = 5, RENDER_COLOR = 6
+    ;
+
+
+//****** file: geometry.js ******
+
+    function distance(p1, p2) {
+        var dx = p1[0] - p2[0],
+            dy = p1[1] - p2[1]
+        ;
+        return dx * dx + dy * dy;
+    }
+
+    function center(points) {
+        var len,
+            x = 0, y = 0
+        ;
+        for (var i = 0, il = points.length - 3; i < il; i += 2) {
+            x += points[i];
+            y += points[i + 1];
+        }
+        len = (points.length - 2) * 2;
+        return [x / len << 0, y / len << 0];
+    }
+
+    function getSquareSegmentDistance(px, py, p1x, p1y, p2x, p2y) {
+        var dx = p2x - p1x,
+            dy = p2y - p1y,
+            t;
+        if (dx !== 0 || dy !== 0) {
+            t = ((px - p1x) * dx + (py - p1y) * dy) / (dx * dx + dy * dy);
+            if (t > 1) {
+                p1x = p2x;
+                p1y = p2y;
+            } else if (t > 0) {
+                p1x += dx * t;
+                p1y += dy * t;
+            }
+        }
+        dx = px - p1x;
+        dy = py - p1y;
+        return dx * dx + dy * dy;
+    }
+
+    function simplify(points) {
+        var sqTolerance = 2,
+            len = points.length / 2,
+            markers = new Uint8Array(len),
+
+            first = 0,
+            last  = len - 1,
+
+            i,
+            maxSqDist,
+            sqDist,
+            index,
+
+            firstStack = [],
+            lastStack  = [],
+
+            newPoints  = []
+        ;
+
+        markers[first] = markers[last] = 1;
+
+        while (last) {
+            maxSqDist = 0;
+
+            for (i = first + 1; i < last; i++) {
+                sqDist = getSquareSegmentDistance(
+                    points[i     * 2], points[i     * 2 + 1],
+                    points[first * 2], points[first * 2 + 1],
+                    points[last  * 2], points[last  * 2 + 1]
+                );
+                if (sqDist > maxSqDist) {
+                    index = i;
+                    maxSqDist = sqDist;
+                }
+            }
+
+            if (maxSqDist > sqTolerance) {
+                markers[index] = 1;
+
+                firstStack.push(first);
+                lastStack.push(index);
+
+                firstStack.push(index);
+                lastStack.push(last);
+            }
+
+            first = firstStack.pop();
+            last = lastStack.pop();
+        }
+
+        for (i = 0; i < len; i++) {
+            if (markers[i]) {
+                newPoints.push(points[i * 2], points[i * 2 + 1]);
+            }
+        }
+
+        return newPoints;
+    }
+
+
+//****** file: prefix.class.js ******
+
+    global.OSMBuildings = function (u) {
+
+
+//****** file: variables.js ******
+
+        // private variables, specific to an instance
+        var width = 0, height = 0,
+            halfWidth = 0, halfHeight = 0,
+            originX = 0, originY = 0,
+            zoom, size,
+
+            req,
+
+            canvas, context,
+
+            url,
+
+            wallColor = new Color(200, 190, 180),
+            altColor = wallColor.adjustLightness(0.8),
+            roofColor = wallColor.adjustLightness(1.2),
+            //red: roofColor = new Color(240, 200, 180),
+            //green: roofColor = new Color(210, 240, 220),
+
+            wallColorAlpha = wallColor + '',
+            altColorAlpha  = altColor + '',
+            roofColorAlpha = roofColor + '',
+
+            shadowColorAlpha = 'rgba(0, 0, 0, 0.2)',
+
+            shadows = false,
+
+            rawData,
+            meta, data,
+
+            fadeFactor = 1, fadeTimer,
+            zoomAlpha = 1,
+
+            minZoom = MIN_ZOOM,
+            maxZoom = 20,
+            maxHeight,
+
+            camX, camY, camZ,
+
+            isZooming
+        ;
+
+
+//****** file: functions.js ******
+
+        function createCanvas(parentNode) {
+            canvas = doc.createElement('CANVAS');
+            canvas.style.webkitTransform = 'translate3d(0,0,0)'; // turn on hw acceleration
+            canvas.style.imageRendering = 'optimizeSpeed';
+            canvas.style.position = 'absolute';
+            canvas.style.pointerEvents = 'none';
+            canvas.style.left = 0;
+            canvas.style.top = 0;
+            parentNode.appendChild(canvas);
+
+            context = canvas.getContext('2d');
+            context.lineCap = 'round';
+            context.lineJoin = 'round';
+            context.lineWidth = 1;
+
+            try {
+                context.mozImageSmoothingEnabled = false;
+            } catch (err) {
+            }
+
+            return canvas;
+        }
+
+        function destroyCanvas() {
+            canvas.parentNode.removeChild(canvas);
+        }
+
+        function pixelToGeo(x, y) {
+            var res = {};
+            x /= size;
+            y /= size;
+            res[LAT] = y <= 0  ? 90 : y >= 1 ? -90 : RAD * (2 * atan(exp(PI * (1 - 2 * y))) - HALF_PI),
+            res[LON] = (x === 1 ?  1 : (x % 1 + 1) % 1) * 360 - 180;
+            return res;
+        }
+
+        function geoToPixel(lat, lon) {
+            var latitude = min(1, max(0, 0.5 - (log(tan(QUARTER_PI + HALF_PI * lat / 180)) / PI) / 2)),
+                longitude = lon / 360 + 0.5
+            ;
+            return {
+                x: longitude * size << 0,
+                y: latitude  * size << 0
+            };
+        }
+
+
+
+var m = Math, sin = m.sin, cos = Math.cos, rad = m.PI / 180;
+
+var dayMs = 1000 * 60 * 60 * 24,
+	J1970 = 2440588,
+	J2000 = 2451545,
+	M0    = rad * 357.5291,
+	M1    = rad * 0.98560028,
+	J0    = 0.0009,
+	J1    = 0.0053,
+	J2    = -0.0069,
+	C1    = rad * 1.9148,
+	C2    = rad * 0.0200,
+	C3    = rad * 0.0003,
+	P     = rad * 102.9372,
+	e     = rad * 23.45,
+	th0   = rad * 280.1600,
+	th1   = rad * 360.9856235;
+
+function dateToJulianDate(date) { return date.valueOf() / dayMs - 0.5 + J1970; }
+function getSolarMeanAnomaly(Js) { return M0 + M1 * (Js - J2000); }
+function getEquationOfCenter(M) { return C1 * sin(M) + C2 * sin(2 * M) + C3 * sin(3 * M); }
+function getEclipticLongitude(M, C) { return M + P + C + m.PI; }
+function getSunDeclination(Ls) { return m.asin(sin(Ls) * sin(e)); }
+function getRightAscension(Ls) { return m.atan2(sin(Ls) * cos(e), cos(Ls)); }
+function getSiderealTime(J, lw) { return th0 + th1 * (J - J2000) - lw; }
+function getAzimuth(H, phi, d) { return m.atan2(sin(H), cos(H) * sin(phi) - m.tan(d) * cos(phi)); }
+function getAltitude(H, phi, d) { return m.asin(sin(phi) * sin(d) + cos(phi) * cos(d) * cos(H)); }
+
+var getSunPosition = function (date, lat, lng) {
+	var lw  = rad * -lng,
+		phi = rad * lat,
+		J   = dateToJulianDate(date),
+		M   = getSolarMeanAnomaly(J),
+		C   = getEquationOfCenter(M),
+		Ls  = getEclipticLongitude(M, C),
+		d   = getSunDeclination(Ls),
+		a   = getRightAscension(Ls),
+		th  = getSiderealTime(J, lw),
+		H   = th - a;
+
+	return {
+		azimuth:  getAzimuth(H,  phi, d),
+		altitude: getAltitude(H, phi, d)
+	};
+};
+
+
+        function template(str, data) {
+            return str.replace(/\{ *([\w_]+) *\}/g, function (x, key) {
+                return data[key];
+            });
+        }
+
+
+//****** file: data.js ******
+
+        function xhr(url, callback) {
+            var x = new XMLHttpRequest();
+            x.onreadystatechange = function () {
+                if (x.readyState !== 4) {
+                    return;
+                }
+                if (!x.status || x.status < 200 || x.status > 299) {
+                    return;
+                }
+                if (x.responseText) {
+                    callback(JSON.parse(x.responseText));
+                }
+            };
+            x.open('GET', url);
+            x.send(null);
+            return x;
+        }
+
+        function loadData() {
+            if (!url || zoom < MIN_ZOOM) {
+                return;
+            }
+
+            // create bounding box of double viewport size
+            var nw = pixelToGeo(originX         - halfWidth, originY          - halfHeight),
+                se = pixelToGeo(originX + width + halfWidth, originY + height + halfHeight)
+            ;
+
+            if (req) {
+                req.abort();
+            }
+            req = xhr(template(url, {
+                w: nw[LON],
+                n: nw[LAT],
+                e: se[LON],
+                s: se[LAT],
+                z: zoom
+            }), onDataLoaded);
+        }
+
+        function onDataLoaded(res) {
+            var i, il,
+                resData, resMeta,
+                keyList = [], k,
+                offX = 0, offY = 0,
+                item,
+                footprint
+            ;
+
+            minZoom = MIN_ZOOM;
+            setZoom(zoom); // recalculating all zoom related variables
+            req = null;
+
+            // no response or response not matching current zoom (too old response)
+            if (!res || res.meta.z !== zoom) {
+                return;
+            }
+
+            resMeta = res.meta;
+            resData = res.data;
+
+            // offset between old and new data set
+            if (meta && data && meta.z === resMeta.z) {
+                offX = meta.x - resMeta.x;
+                offY = meta.y - resMeta.y;
+
+                // identify already present buildings to fade in new ones
+                for (i = 0, il = data.length; i < il; i++) {
+                    // id key: x,y of first point - good enough
+                    keyList[i] = (data[i][FOOTPRINT][0] + offX) + ',' + (data[i][FOOTPRINT][1] + offY);
+                }
+            }
+
+            meta = resMeta;
+            data = [];
+
+            
+            var polyCountBefore = 0,
+                polyCountAfter = 0;
+            
+
+            for (i = 0, il = resData.length; i < il; i++) {
+                item = [];
+
+                if (resData[i][MIN_HEIGHT] > maxHeight) {
+                    continue;
+                }
+
+                polyCountBefore += resData[i][FOOTPRINT].length;
+
+                footprint = simplify(resData[i][FOOTPRINT]);
+
+                polyCountAfter += footprint.length;
+
+                if (footprint.length < 8) { // 3 points & end = start (x2)
+                    continue;
+                }
+
+                item[FOOTPRINT] = footprint;
+                item[CENTER] = center(footprint);
+
+                item[HEIGHT] = min(resData[i][HEIGHT], maxHeight);
+                item[MIN_HEIGHT] = resData[i][MIN_HEIGHT];
+
+                k = item[FOOTPRINT][0] + ',' + item[FOOTPRINT][1];
+                item[IS_NEW] = !(keyList && ~keyList.indexOf(k));
+
+                item[COLOR] = [];
+                item[RENDER_COLOR] = [];
+
+                data.push(item);
+            }
+
+            console.log('PolyCount: ' + polyCountBefore + ' => ' + polyCountAfter);
+
+            resMeta = resData = keyList = null; // gc
+            fadeIn();
+        }
+
+        // detect polygon winding direction: clockwise or counter clockwise
+        function getPolygonWinding(points) {
+            var x1, y1, x2, y2,
+                a = 0,
+                i, il
+            ;
+            for (i = 0, il = points.length - 3; i < il; i += 2) {
+                x1 = points[i];
+                y1 = points[i + 1];
+                x2 = points[i + 2];
+                y2 = points[i + 3];
+                a += x1 * y2 - x2 * y1;
+            }
+            return (a / 2) > 0 ? 'CW' : 'CCW';
+        }
+
+        // make polygon winding clockwise. This is needed for proper backface culling on client side.
+        function makeClockwiseWinding(points) {
+            var winding = getPolygonWinding(points);
+            if (winding === 'CW') {
+                return points;
+            }
+            var revPoints = [];
+            for (var i = points.length - 2; i >= 0; i -= 2) {
+                revPoints.push(points[i], points[i + 1]);
+            }
+            return revPoints;
+        }
+
+        function scaleData(data, isNew) {
+            var res = [],
+                i, il, j, jl,
+                oldItem, item,
+                coords, p,
+				minHeight,
+                footprint,
+                z = maxZoom - zoom
+            ;
+
+            for (i = 0, il = data.length; i < il; i++) {
+                oldItem = data[i];
+
+                // TODO: later on, keep continued' objects in order not to loose them on zoom back in
+
+				minHeight = oldItem[MIN_HEIGHT] >> z;
+                if (minHeight > maxHeight) {
+                    continue;
+                }
+
+                coords = oldItem[FOOTPRINT];
+                footprint = new Int32Array(coords.length);
+                for (j = 0, jl = coords.length - 1; j < jl; j += 2) {
+                    p = geoToPixel(coords[j], coords[j + 1]);
+                    footprint[j]     = p.x;
+                    footprint[j + 1] = p.y;
+                }
+
+                footprint = simplify(footprint);
+                if (footprint.length < 8) { // 3 points & end = start (x2)
+                    continue;
+                }
+
+                item = [];
+                item[FOOTPRINT]   = footprint;
+                item[CENTER]      = center(footprint);
+                item[HEIGHT]      = min(oldItem[HEIGHT] >> z, maxHeight);
+                item[MIN_HEIGHT]  = minHeight;
+                item[IS_NEW]      = isNew;
+                item[COLOR]       = oldItem[COLOR];
+                item[RENDER_COLOR] = [];
+
+                for (j = 0; j < 3; j++) {
+                    if (item[COLOR][j]) {
+                        item[RENDER_COLOR][j] = item[COLOR][j].adjustAlpha(zoomAlpha) + '';
+                    }
+                }
+
+                res.push(item);
+            }
+
+            return res;
+        }
+
+        function geoJSON(url, isLatLon) {
+            if (typeof url === 'object') {
+                setData(url, !isLatLon);
+                return;
+            }
+            var
+                el = doc.documentElement,
+                callback = 'jsonpCallback',
+                script = doc.createElement('script')
+            ;
+            global[callback] = function (res) {
+                delete global[callback];
+                el.removeChild(script);
+                setData(res, !isLatLon);
+            };
+            el.insertBefore(script, el.lastChild).src = url.replace(/\{callback\}/, callback);
+        }
+
+        function parseGeoJSON(json, isLonLat, res) {
+            if (res === undefined) {
+                res = [];
+            }
+
+            var i, il,
+                j, jl,
+                features = json[0] ? json : json.features,
+                geometry, polygons, coords, properties,
+                footprint, heightSum,
+                propHeight, propWallColor, propRoofColor,
+                lat = isLonLat ? 1 : 0,
+                lon = isLonLat ? 0 : 1,
+                alt = 2,
+                item
+            ;
+
+            if (features) {
+                for (i = 0, il = features.length; i < il; i++) {
+                    parseGeoJSON(features[i], isLonLat, res);
+                }
+                return res;
+            }
+
+            if (json.type === 'Feature') {
+                geometry = json.geometry;
+                properties = json.properties;
+            }
+        //      else geometry = json
+
+            if (geometry.type === 'Polygon') {
+                polygons = [geometry.coordinates];
+            }
+            if (geometry.type === 'MultiPolygon') {
+                polygons = geometry.coordinates;
+            }
+
+            if (polygons) {
+                propHeight = properties.height;
+                if (properties.color || properties.wallColor) {
+                    propWallColor = Color.parse(properties.color || properties.wallColor);
+                }
+                if (properties.roofColor) {
+                    propRoofColor = Color.parse(properties.roofColor);
+                }
+
+                for (i = 0, il = polygons.length; i < il; i++) {
+                    coords = polygons[i][0];
+                    footprint = [];
+                    heightSum = 0;
+                    for (j = 0, jl = coords.length; j < jl; j++) {
+                        footprint.push(coords[j][lat], coords[j][lon]);
+                        heightSum += propHeight || coords[j][alt] || 0;
+                    }
+
+                    if (heightSum) {
+                        item = [];
+                        item[FOOTPRINT] = makeClockwiseWinding(footprint);
+                        item[HEIGHT]    = heightSum / coords.length << 0;
+                        item[COLOR] = [
+                            propWallColor || null,
+                            propWallColor ? propWallColor.adjustLightness(0.8) : null,
+                            propRoofColor ? propRoofColor : propWallColor ? propWallColor.adjustLightness(1.2) : roofColor
+                        ];
+                        res.push(item);
+                    }
+                }
+            }
+            return res;
+        }
+
+        function setData(json, isLonLat) {
+            if (!json) {
+                rawData = null;
+                render(); // effectively clears
+                return;
+            }
+
+            rawData = parseGeoJSON(json, isLonLat);
+            minZoom = 0;
+            setZoom(zoom); // recalculating all zoom related variables
+
+            meta = {
+                n: 90,
+                w: -180,
+                s: -90,
+                e: 180,
+                x: 0,
+                y: 0,
+                z: zoom
+            };
+            data = scaleData(rawData, true);
+
+            fadeIn();
+        }
+
+
+//****** file: properties.js ******
+
+        function setSize(w, h) {
+            width  = w;
+            height = h;
+            halfWidth  = width / 2 << 0;
+            halfHeight = height / 2 << 0;
+            camX = halfWidth;
+            camY = height;
+            camZ = width / 1.5 / tan(90 / 2) << 0; // adapting cam pos to field of view (90°), 1.5 is an empirical correction factor
+            canvas.width = width;
+            canvas.height = height;
+            // TODO: change of maxHeight needs to adjust building heights!
+            maxHeight = camZ - 50;
+        }
+
+        function setOrigin(x, y) {
+            originX = x;
+            originY = y;
+        }
+
+        function setZoom(z) {
+            var i, il, j,
+                item
+            ;
+
+            zoom = z;
+            size = TILE_SIZE << zoom;
+
+            zoomAlpha = 1 - (zoom - minZoom) * 0.3 / (maxZoom - minZoom);
+
+            wallColorAlpha = wallColor.adjustAlpha(zoomAlpha) + '';
+            altColorAlpha  = altColor.adjustAlpha(zoomAlpha) + '';
+            roofColorAlpha = roofColor.adjustAlpha(zoomAlpha) + '';
+
+            if (data) {
+                for (i = 0, il = data.length; i < il; i++) {
+                    item = data[i];
+                    item[RENDER_COLOR] = [];
+                    for (j = 0; j < 3; j++) {
+                        if (item[COLOR][j]) {
+                            item[RENDER_COLOR][j] = item[COLOR][j].adjustAlpha(zoomAlpha) + '';
+                        }
+                    }
+                }
+            }
+        }
+
+        function setCam(x, y) {
+            camX = x;
+            camY = y;
+        }
+
+        function setStyle(style) {
+            style = style || {};
+            if (style.color || style.wallColor) {
+                wallColor = Color.parse(style.color || style.wallColor);
+                wallColorAlpha = wallColor.adjustAlpha(zoomAlpha) + '';
+
+                altColor = wallColor.adjustLightness(0.8);
+                altColorAlpha = altColor.adjustAlpha(zoomAlpha) + '';
+
+                roofColor = wallColor.adjustLightness(1.2);
+                roofColorAlpha = roofColor.adjustAlpha(zoomAlpha) + '';
+            }
+
+            if (style.roofColor) {
+                roofColor = Color.parse(style.roofColor);
+                roofColorAlpha = roofColor.adjustAlpha(zoomAlpha) + '';
+            }
+
+            if (style.shadows !== undefined) {
+                shadows = !!style.shadows;
+            }
+
+            render();
+        }
+
+
+//****** file: events.js ******
+
+        function onResize(e) {
+            setSize(e.width, e.height);
+            render();
+            loadData();
+        }
+
+        function onMove(e) {
+            setOrigin(e.x, e.y);
+            render();
+        }
+
+        function onMoveEnd(e) {
+            var
+                nw = pixelToGeo(originX,         originY),
+                se = pixelToGeo(originX + width, originY + height)
+            ;
+            render();
+            // check, whether viewport is still within loaded data bounding box
+            if (meta && (nw[LAT] > meta.n || nw[LON] < meta.w || se[LAT] < meta.s || se[LON] > meta.e)) {
+                loadData();
+            }
+        }
+
+        function onZoomStart(e) {
+            isZooming = true;
+            render(); // effectively clears because of isZooming flag
+        }
+
+        function onZoomEnd(e) {
+            isZooming = false;
+            setZoom(e.zoom);
+
+            if (rawData) {
+                data = scaleData(rawData);
+                render();
+            } else {
+                render();
+                loadData();
+            }
+        }
+
+
+//****** file: render.js ******
+
+        function fadeIn() {
+            fadeFactor = 0;
+            clearInterval(fadeTimer);
+            fadeTimer = setInterval(function () {
+                fadeFactor += 0.5 * 0.2; // amount * easing
+                if (fadeFactor > 1) {
+                    clearInterval(fadeTimer);
+                    fadeFactor = 1;
+                    // unset 'already present' marker
+                    for (var i = 0, il = data.length; i < il; i++) {
+                        data[i][IS_NEW] = 0;
+                    }
+                }
+                render();
+            }, 33);
+        }
+
+        var sunX, sunY, sunZ;
+
+        function createShadows() {
+            var i, il, j, jl,
+                item,
+                f, h, m, n,
+                x, y,
+                offX = originX - meta.x,
+                offY = originY - meta.y,
+                footprint, grounds = [],
+                mode,
+                isVisible,
+                ax, ay, bx, by,
+                a, b, _a, _b
+            ;
+
+            context.fillStyle = shadowColorAlpha;
+
+            var dateTime = new Date('2013-02-09 08:30:00'),
+                center = pixelToGeo(originX + halfWidth, originY + halfHeight),
+                sunPos = getSunPosition(dateTime, center.latitude, center.longitude);
+
+            // console.log(sunPos.azimuth * RAD + 180, sunPos.altitude * RAD);
+
+            if (sunPos.altitude < 0) {
+                context.fillRect(0, 0, width, height);
+                return;
+            }
+
+            sunX = camX;
+            sunY = 50000;
+            sunZ = 2 * sunY * Math.tan(sunPos.altitude);
+
+            for (i = 0, il = data.length; i < il; i++) {
+                item = data[i];
+
+                isVisible = false;
+                f = item[FOOTPRINT];
+                footprint = []; // typed array would be created each pass and is way too slow
+                for (j = 0, jl = f.length - 1; j < jl; j += 2) {
+                    footprint[j]     = x = (f[j]     - offX);
+                    footprint[j + 1] = y = (f[j + 1] - offY);
+
+                    // checking footprint is sufficient for visibility
+                    if (!isVisible) {
+                        isVisible = (x > 0 && x < width && y > 0 && y < height);
+                    }
+                }
+
+                if (!isVisible) {
+                    continue;
+                }
+
+                // when fading in, use a dynamic height
+                h = item[IS_NEW] ? item[HEIGHT] * fadeFactor : item[HEIGHT];
+                // precalculating projection height scale
+                m = sunZ / (sunZ - h);
+
+                // prepare same calculations for min_height if applicable
+                if (item[MIN_HEIGHT]) {
+                    h = item[IS_NEW] ? item[MIN_HEIGHT] * fadeFactor : item[MIN_HEIGHT];
+                    n = sunZ / (sunZ - h);
+                }
+
+                mode = null;
+                context.beginPath();
+
+                for (j = 0, jl = footprint.length - 3; j < jl; j += 2) {
+                    ax = footprint[j];
+                    ay = footprint[j + 1];
+                    bx = footprint[j + 2];
+                    by = footprint[j + 3];
+
+                    _a = projectShadow(ax, ay, m);
+                    _b = projectShadow(bx, by, m);
+
+                    if (item[MIN_HEIGHT]) {
+                        a = projectShadow(ax, ay, n);
+                        b = projectShadow(bx, by, n);
+                        ax = a.x;
+                        ay = a.y;
+                        bx = b.x;
+                        by = b.y;
+                    }
+
+                    if ((bx - ax) * (_a.y - ay) > (_a.x - ax) * (by - ay)) {
+                        if (mode === 1) {
+                            context.lineTo(ax, ay);
+                        }
+                        mode = 0;
+                        if (!j) {
+                            context.moveTo(ax, ay);
+                        }
+                        context.lineTo(bx, by);
+                    } else {
+                        if (mode === 0) {
+                            context.lineTo(_a.x, _a.y);
+                        }
+                        mode = 1;
+                        if (!j) {
+                            context.moveTo(_a.x, _a.y);
+                        }
+                        context.lineTo(_b.x, _b.y);
+                    }
+                }
+
+                context.closePath();
+                context.fill();
+
+                var g = [];
+                for (j = 0, jl = footprint.length - 3; j < jl; j += 2) {
+                    ax = footprint[j];
+                    ay = footprint[j + 1];
+                    g[j]     = ax;
+                    g[j + 1] = ay;
+                }
+                grounds.push(g);
+            }
+
+            context.fillStyle = 'rgb(250,240,230)';
+            for (i = 0, il = grounds.length; i < il; i++) {
+                drawShape(grounds[i]);
+            }
+        }
+
+        var shadowBuffer = new Image();
+        var bufferIsFilled = false;
+
+        function renderShadows() {
+            if (!bufferIsFilled) {
+                createShadows();
+                var imgData = context.getImageData(0, 0, width, height);
+                var r, g, a;
+                for (var i = 0, il = imgData.data.length; i < il; i+= 4) {
+                    r = imgData.data[i + 0];
+                    g = imgData.data[i + 1];
+                    a = imgData.data[i + 3];
+                    if (r > g) {
+                        imgData.data[i + 3] = 256 - a;
+                    } else
+                    if (a) {
+                        imgData.data[i + 3] = 0.2 * 256;
+                    }
+
+                }
+                context.putImageData(imgData, 0, 0);
+
+                shadowBuffer.src = canvas.toDataURL();
+                bufferIsFilled = true;
+                return;
+            }
+            context.drawImage(shadowBuffer, 0, 0, width, height);
+        }
+
+
+        function projectShadow(x, y, m) {
+            return {
+                x: (x - sunX) * m + sunX,
+                y: (y - sunY) * m + sunY
+            };
+        }
+
+        function render() {
+            context.clearRect(0, 0, width, height);
+
+            // data needed for rendering
+            if (!meta || !data) {
+                return;
+            }
+
+            // show buildings in high zoom levels only
+            // avoid rendering during zoom
+            if (zoom < minZoom || isZooming) {
+                return;
+            }
+
+            if (shadows) {
+                renderShadows();
+            }
+
+            var i, il, j, jl,
+                item,
+                f, h, m, n,
+                x, y,
+                offX = originX - meta.x,
+                offY = originY - meta.y,
+                sortCam = [camX + offX, camY + offY],
+                footprint, roof,
+                isVisible,
+                ax, ay, bx, by,
+                a, b, _a, _b
+            ;
+
+            data.sort(function (a, b) {
+                return distance(b[CENTER], sortCam) / b[HEIGHT] - distance(a[CENTER], sortCam) / a[HEIGHT];
+            });
+
+            for (i = 0, il = data.length; i < il; i++) {
+                item = data[i];
+
+                isVisible = false;
+                f = item[FOOTPRINT];
+                footprint = []; // typed array would be created each pass and is way too slow
+                for (j = 0, jl = f.length - 1; j < jl; j += 2) {
+                    footprint[j]     = x = (f[j]     - offX);
+                    footprint[j + 1] = y = (f[j + 1] - offY);
+
+                    // checking footprint is sufficient for visibility
+                    if (!isVisible) {
+                        isVisible = (x > 0 && x < width && y > 0 && y < height);
+                    }
+                }
+
+                if (!isVisible) {
+                    continue;
+                }
+
+                // when fading in, use a dynamic height
+                h = item[IS_NEW] ? item[HEIGHT] * fadeFactor : item[HEIGHT];
+                // precalculating projection height scale
+                m = camZ / (camZ - h);
+
+                // prepare same calculations for min_height if applicable
+                if (item[MIN_HEIGHT]) {
+                    h = item[IS_NEW] ? item[MIN_HEIGHT] * fadeFactor : item[MIN_HEIGHT];
+                    n = camZ / (camZ - h);
+                }
+
+                roof = []; // typed array would be created each pass and is way too slow
+
+                for (j = 0, jl = footprint.length - 3; j < jl; j += 2) {
+                    ax = footprint[j];
+                    ay = footprint[j + 1];
+                    bx = footprint[j + 2];
+                    by = footprint[j + 3];
+
+                    // project 3d to 2d on extruded footprint
+                    _a = project(ax, ay, m);
+                    _b = project(bx, by, m);
+
+                    if (item[MIN_HEIGHT]) {
+                        a = project(ax, ay, n);
+                        b = project(bx, by, n);
+                        ax = a.x;
+                        ay = a.y;
+                        bx = b.x;
+                        by = b.y;
+                    }
+
+                    // backface culling check
+                    if ((bx - ax) * (_a.y - ay) > (_a.x - ax) * (by - ay)) {
+                        // depending on direction, set wall shading
+                        if ((ax < bx && ay < by) || (ax > bx && ay > by)) {
+                            context.fillStyle = item[RENDER_COLOR][1] || altColorAlpha;
+                        } else {
+                            context.fillStyle = item[RENDER_COLOR][0] || wallColorAlpha;
+                        }
+
+                        drawShape([
+                            bx, by,
+                            ax, ay,
+                            _a.x, _a.y,
+                            _b.x, _b.y
+                        ]);
+                    }
+                    roof[j]     = _a.x;
+                    roof[j + 1] = _a.y;
+                }
+
+                // fill roof and optionally stroke it
+                context.fillStyle   = item[RENDER_COLOR][2] || roofColorAlpha;
+                context.strokeStyle = item[RENDER_COLOR][1] || altColorAlpha;
+                drawShape(roof, true);
+            }
+        }
+
+        function debugMarker(x, y, color, size) {
+            context.fillStyle = color || '#ffcc00';
+            context.beginPath();
+            context.arc(x, y, size || 3, 0, PI * 2, true);
+            context.closePath();
+            context.fill();
+        }
+
+        function drawShape(points, stroke) {
+            if (!points.length) {
+                return;
+            }
+
+            context.beginPath();
+            context.moveTo(points[0], points[1]);
+            for (var i = 2, il = points.length; i < il; i += 2) {
+                context.lineTo(points[i], points[i + 1]);
+            }
+            context.closePath();
+            if (stroke) {
+                context.stroke();
+            }
+            context.fill();
+        }
+
+        function project(x, y, m) {
+            return {
+                x: ((x - camX) * m + camX << 0),
+                y: ((y - camY) * m + camY << 0)
+            };
+        }
+
+
+//****** file: public.js ******
+
+        this.setStyle = function (style) {
+            setStyle(style);
+            return this;
+        };
+
+        this.geoJSON = function (url, isLatLon) {
+            geoJSON(url, isLatLon);
+            return this;
+        };
+
+        this.setCamOffset = function (x, y) {
+            camX = halfWidth + x;
+            camY = height    + y;
+        };
+
+        this.setMaxZoom = function (z) {
+            maxZoom = z;
+        };
+
+        this.createCanvas  = createCanvas;
+        this.destroyCanvas = destroyCanvas;
+        this.loadData      = loadData;
+        this.onMoveEnd     = onMoveEnd;
+        this.onZoomEnd     = onZoomEnd;
+        this.onZoomStart   = onZoomStart;
+        this.render        = render;
+        this.setOrigin     = setOrigin;
+        this.setSize       = setSize;
+        this.setZoom       = setZoom;
+
+
+//****** file: suffix.class.js ******
+
+        url = u;
+    };
+
+    global.OSMBuildings.VERSION = VERSION;
+    global.OSMBuildings.ATTRIBUTION = ATTRIBUTION;
+
+
+//****** file: suffix.js ******
+
+}(this));
+
+/*jshint bitwise:true */
+
+//****** file: Leaflet.js ******
+
+L.BuildingsLayer = L.Class.extend({
+
+    map: null,
+    osmb: null,
+    canvas: null,
+
+    blockMoveEvent: null, // needed as Leaflet fires moveend and zoomend together
+
+    lastX: 0,
+    lastY: 0,
+
+    initialize: function (options) {
+        options = L.Util.setOptions(this, options);
+    },
+
+    onMove: function () {
+        var mp = L.DomUtil.getPosition(this.map._mapPane);
+        this.osmb.setCamOffset(
+            this.lastX - mp.x,
+            this.lastY - mp.y
+        );
+        this.osmb.render();
+    },
+
+    onMoveEnd: function () {
+        if (this.blockMoveEvent) {
+            this.blockMoveEvent = false;
+            return;
+        }
+
+        var
+            mp = L.DomUtil.getPosition(this.map._mapPane),
+            po = this.map.getPixelOrigin()
+        ;
+
+        this.lastX = mp.x;
+        this.lastY = mp.y;
+        this.canvas.style.left = -mp.x + 'px';
+        this.canvas.style.top  = -mp.y + 'px';
+        this.osmb.setCamOffset(0, 0);
+
+        this.osmb.setSize(this.map._size.x, this.map._size.y); // in case this is triggered by resize
+        this.osmb.setOrigin(po.x - mp.x, po.y - mp.y);
+        this.osmb.onMoveEnd();
+    },
+
+    onZoomStart: function () {
+        this.osmb.onZoomStart();
+    },
+
+    onZoomEnd: function () {
+        var
+            mp = L.DomUtil.getPosition(this.map._mapPane),
+            po = this.map.getPixelOrigin()
+        ;
+        this.osmb.setOrigin(po.x - mp.x, po.y - mp.y);
+        this.osmb.onZoomEnd({ zoom: this.map._zoom });
+        this.blockMoveEvent = true;
+    },
+
+    addTo: function (map) {
+        map.addLayer(this);
+        return this;
+    },
+
+    onAdd: function (map) {
+        this.map = map;
+        this.osmb = new OSMBuildings(this.options.url);
+
+        this.canvas = this.osmb.createCanvas(this.map._panes.overlayPane);
+        this.osmb.maxZoom = this.map._layersMaxZoom;
+
+        var
+            mp = L.DomUtil.getPosition(this.map._mapPane),
+            po = this.map.getPixelOrigin()
+        ;
+
+        this.osmb.setSize(this.map._size.x, this.map._size.y);
+        this.osmb.setOrigin(po.x - mp.x, po.y - mp.y);
+        this.osmb.setZoom(this.map._zoom);
+
+        this.canvas.style.left = -mp.x + 'px';
+        this.canvas.style.top  = -mp.y + 'px';
+
+        this.map.on({
+            move: this.onMove,
+            moveend: this.onMoveEnd,
+            zoomstart: this.onZoomStart,
+            zoomend: this.onZoomEnd
+        }, this);
+
+//        var onZoom = function (opt) {
+//            var
+//                scale = this.map.getZoomScale(opt.zoom),
+//                offset = this.map._getCenterOffset(opt.center).divideBy(1 - 1 / scale),
+//                viewportPos = this.map.containerPointToLayerPoint(this.map.getSize().multiplyBy(-1)),
+//                origin = viewportPos.add(offset).round()
+//            ;
+//
+//            this.canvas.style[L.DomUtil.TRANSFORM] = L.DomUtil.getTranslateString((origin.multiplyBy(-1).add(L.DomUtil.getPosition(this.map._mapPane).multiplyBy(-1)).multiplyBy(scale).add(origin))) + ' scale(' + scale + ') ';
+//            this.canvas.style.border = "3px solid red";
+//            isZooming = true;
+//        };
+
+        if (this.map.options.zoomAnimation) {
+            this.canvas.className = 'leaflet-zoom-animated';
+//          this.map.on('zoomanim', onZoom);
+        }
+
+        this.map.attributionControl.addAttribution(OSMBuildings.ATTRIBUTION);
+
+        this.osmb.loadData();
+        this.osmb.render(); // in case of for re-adding this layer
+    },
+
+    onRemove: function (map) {
+        map.attributionControl.removeAttribution(OSMBuildings.ATTRIBUTION);
+
+        map.off({
+            move: this.onMove,
+            moveend: this.onMoveEnd,
+            zoomstart: this.onZoomStart,
+            zoomend: this.onZoomEnd
+        }, this);
+
+        this.canvas = this.osmb.destroyCanvas();
+        this.map = null;
+        this.osmb = null;
+    },
+
+    geoJSON: function (url, isLatLon) {
+        return this.osmb.geoJSON(url, isLatLon);
+    },
+
+    setStyle: function (style)  {
+        return this.osmb.setStyle(style);
+    }
+});
+

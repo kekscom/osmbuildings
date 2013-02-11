@@ -301,6 +301,8 @@ var Color = (function () {
             altColorAlpha  = altColor + '',
             roofColorAlpha = roofColor + '',
 
+            shadowColorAlpha = 'rgba(0, 0, 0, 0.2)',
+
             shadows = false,
 
             rawData,
@@ -358,8 +360,7 @@ var Color = (function () {
         }
 
         function geoToPixel(lat, lon) {
-            var
-                latitude = min(1, max(0, 0.5 - (log(tan(QUARTER_PI + HALF_PI * lat / 180)) / PI) / 2)),
+            var latitude = min(1, max(0, 0.5 - (log(tan(QUARTER_PI + HALF_PI * lat / 180)) / PI) / 2)),
                 longitude = lon / 360 + 0.5
             ;
             return {
@@ -367,6 +368,55 @@ var Color = (function () {
                 y: latitude  * size << 0
             };
         }
+
+
+
+var m = Math, sin = m.sin, cos = Math.cos, rad = m.PI / 180;
+
+var dayMs = 1000 * 60 * 60 * 24,
+	J1970 = 2440588,
+	J2000 = 2451545,
+	M0    = rad * 357.5291,
+	M1    = rad * 0.98560028,
+	J0    = 0.0009,
+	J1    = 0.0053,
+	J2    = -0.0069,
+	C1    = rad * 1.9148,
+	C2    = rad * 0.0200,
+	C3    = rad * 0.0003,
+	P     = rad * 102.9372,
+	e     = rad * 23.45,
+	th0   = rad * 280.1600,
+	th1   = rad * 360.9856235;
+
+function dateToJulianDate(date) { return date.valueOf() / dayMs - 0.5 + J1970; }
+function getSolarMeanAnomaly(Js) { return M0 + M1 * (Js - J2000); }
+function getEquationOfCenter(M) { return C1 * sin(M) + C2 * sin(2 * M) + C3 * sin(3 * M); }
+function getEclipticLongitude(M, C) { return M + P + C + m.PI; }
+function getSunDeclination(Ls) { return m.asin(sin(Ls) * sin(e)); }
+function getRightAscension(Ls) { return m.atan2(sin(Ls) * cos(e), cos(Ls)); }
+function getSiderealTime(J, lw) { return th0 + th1 * (J - J2000) - lw; }
+function getAzimuth(H, phi, d) { return m.atan2(sin(H), cos(H) * sin(phi) - m.tan(d) * cos(phi)); }
+function getAltitude(H, phi, d) { return m.asin(sin(phi) * sin(d) + cos(phi) * cos(d) * cos(H)); }
+
+var getSunPosition = function (date, lat, lng) {
+	var lw  = rad * -lng,
+		phi = rad * lat,
+		J   = dateToJulianDate(date),
+		M   = getSolarMeanAnomaly(J),
+		C   = getEquationOfCenter(M),
+		Ls  = getEclipticLongitude(M, C),
+		d   = getSunDeclination(Ls),
+		a   = getRightAscension(Ls),
+		th  = getSiderealTime(J, lw),
+		H   = th - a;
+
+	return {
+		azimuth:  getAzimuth(H,  phi, d),
+		altitude: getAltitude(H, phi, d)
+	};
+};
+
 
         function template(str, data) {
             return str.replace(/\{ *([\w_]+) *\}/g, function (x, key) {
@@ -399,11 +449,12 @@ var Color = (function () {
             if (!url || zoom < MIN_ZOOM) {
                 return;
             }
-            var
-                // create bounding box of double viewport size
-                nw = pixelToGeo(originX         - halfWidth, originY          - halfHeight),
+
+            // create bounding box of double viewport size
+            var nw = pixelToGeo(originX         - halfWidth, originY          - halfHeight),
                 se = pixelToGeo(originX + width + halfWidth, originY + height + halfHeight)
             ;
+
             if (req) {
                 req.abort();
             }
@@ -417,8 +468,7 @@ var Color = (function () {
         }
 
         function onDataLoaded(res) {
-            var
-                i, il,
+            var i, il,
                 resData, resMeta,
                 keyList = [], k,
                 offX = 0, offY = 0,
@@ -454,6 +504,9 @@ var Color = (function () {
             data = [];
 
             
+            var polyCountBefore = 0,
+                polyCountAfter = 0;
+            
 
             for (i = 0, il = resData.length; i < il; i++) {
                 item = [];
@@ -462,11 +515,11 @@ var Color = (function () {
                     continue;
                 }
 
-                
+                polyCountBefore += resData[i][FOOTPRINT].length;
 
                 footprint = simplify(resData[i][FOOTPRINT]);
 
-                
+                polyCountAfter += footprint.length;
 
                 if (footprint.length < 8) { // 3 points & end = start (x2)
                     continue;
@@ -487,7 +540,7 @@ var Color = (function () {
                 data.push(item);
             }
 
-            
+            console.log('PolyCount: ' + polyCountBefore + ' => ' + polyCountAfter);
 
             resMeta = resData = keyList = null; // gc
             fadeIn();
@@ -495,8 +548,7 @@ var Color = (function () {
 
         // detect polygon winding direction: clockwise or counter clockwise
         function getPolygonWinding(points) {
-            var
-                x1, y1, x2, y2,
+            var x1, y1, x2, y2,
                 a = 0,
                 i, il
             ;
@@ -524,8 +576,7 @@ var Color = (function () {
         }
 
         function scaleData(data, isNew) {
-            var
-                res = [],
+            var res = [],
                 i, il, j, jl,
                 oldItem, item,
                 coords, p,
@@ -601,8 +652,7 @@ var Color = (function () {
                 res = [];
             }
 
-            var
-                i, il,
+            var i, il,
                 j, jl,
                 features = json[0] ? json : json.features,
                 geometry, polygons, coords, properties,
@@ -838,25 +888,36 @@ var Color = (function () {
 
         var sunX, sunY, sunZ;
 
-        function renderShadows() {
-            sunX = camX;
-            sunY = camY * 1.2;
-            sunZ = camZ / 1.5;
-
+        function createShadows() {
             var i, il, j, jl,
                 item,
                 f, h, m, n,
                 x, y,
                 offX = originX - meta.x,
                 offY = originY - meta.y,
-                footprint, roof,
+                footprint, grounds = [],
                 mode,
                 isVisible,
                 ax, ay, bx, by,
                 a, b, _a, _b
             ;
 
-            context.fillStyle = 'rgba(0,0,0,0.4)';
+            context.fillStyle = shadowColorAlpha;
+
+            var dateTime = new Date('2013-02-09 08:30:00'),
+                center = pixelToGeo(originX + halfWidth, originY + halfHeight),
+                sunPos = getSunPosition(dateTime, center.latitude, center.longitude);
+
+            // console.log(sunPos.azimuth * RAD + 180, sunPos.altitude * RAD);
+
+            if (sunPos.altitude < 0) {
+                context.fillRect(0, 0, width, height);
+                return;
+            }
+
+            sunX = camX;
+            sunY = 50000;
+            sunZ = 2 * sunY * Math.tan(sunPos.altitude);
 
             for (i = 0, il = data.length; i < il; i++) {
                 item = data[i];
@@ -887,20 +948,6 @@ var Color = (function () {
                 if (item[MIN_HEIGHT]) {
                     h = item[IS_NEW] ? item[MIN_HEIGHT] * fadeFactor : item[MIN_HEIGHT];
                     n = sunZ / (sunZ - h);
-                }
-
-                if (item[HEIGHT] < 6) {
-                    roof = [];
-                    for (j = 0, jl = footprint.length - 3; j < jl; j += 2) {
-                        ax = footprint[j];
-                        ay = footprint[j + 1];
-                        _a = projectShadow(ax, ay, m);
-
-                        roof[j]     = _a.x;
-                        roof[j + 1] = _a.y;
-                    }
-                    drawShape(roof);
-                    continue;
                 }
 
                 mode = null;
@@ -947,8 +994,52 @@ var Color = (function () {
 
                 context.closePath();
                 context.fill();
+
+                var g = [];
+                for (j = 0, jl = footprint.length - 3; j < jl; j += 2) {
+                    ax = footprint[j];
+                    ay = footprint[j + 1];
+                    g[j]     = ax;
+                    g[j + 1] = ay;
+                }
+                grounds.push(g);
+            }
+
+            context.fillStyle = 'rgb(250,240,230)';
+            for (i = 0, il = grounds.length; i < il; i++) {
+                drawShape(grounds[i]);
             }
         }
+
+        var shadowBuffer = new Image();
+        var bufferIsFilled = false;
+
+        function renderShadows() {
+            if (!bufferIsFilled) {
+                createShadows();
+                var imgData = context.getImageData(0, 0, width, height);
+                var r, g, a;
+                for (var i = 0, il = imgData.data.length; i < il; i+= 4) {
+                    r = imgData.data[i + 0];
+                    g = imgData.data[i + 1];
+                    a = imgData.data[i + 3];
+                    if (r > g) {
+                        imgData.data[i + 3] = 256 - a;
+                    } else
+                    if (a) {
+                        imgData.data[i + 3] = 0.2 * 256;
+                    }
+
+                }
+                context.putImageData(imgData, 0, 0);
+
+                shadowBuffer.src = canvas.toDataURL();
+                bufferIsFilled = true;
+                return;
+            }
+            context.drawImage(shadowBuffer, 0, 0, width, height);
+        }
+
 
         function projectShadow(x, y, m) {
             return {
@@ -1054,8 +1145,8 @@ var Color = (function () {
                         }
 
                         drawShape([
-                            bx + 0.5, by + 0.5,
-                            ax + 0.5, ay + 0.5,
+                            bx, by,
+                            ax, ay,
                             _a.x, _a.y,
                             _b.x, _b.y
                         ]);
@@ -1067,7 +1158,7 @@ var Color = (function () {
                 // fill roof and optionally stroke it
                 context.fillStyle   = item[RENDER_COLOR][2] || roofColorAlpha;
                 context.strokeStyle = item[RENDER_COLOR][1] || altColorAlpha;
-                drawShape(roof, !shadows);
+                drawShape(roof, true);
             }
         }
 
@@ -1098,8 +1189,8 @@ var Color = (function () {
 
         function project(x, y, m) {
             return {
-                x: ((x - camX) * m + camX << 0) + 0.5, // + 0.5: disabling(!) anti alias
-                y: ((y - camY) * m + camY << 0) + 0.5  // + 0.5: disabling(!) anti alias
+                x: ((x - camX) * m + camX << 0),
+                y: ((y - camY) * m + camY << 0)
             };
         }
 
