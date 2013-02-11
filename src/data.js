@@ -20,11 +20,12 @@
             if (!url || zoom < MIN_ZOOM) {
                 return;
             }
-            var
-                // create bounding box of double viewport size
-                nw = pixelToGeo(originX         - halfWidth, originY          - halfHeight),
+
+            // create bounding box of double viewport size
+            var nw = pixelToGeo(originX         - halfWidth, originY          - halfHeight),
                 se = pixelToGeo(originX + width + halfWidth, originY + height + halfHeight)
             ;
+
             if (req) {
                 req.abort();
             }
@@ -38,8 +39,7 @@
         }
 
         function onDataLoaded(res) {
-            var
-                i, il,
+            var i, il,
                 resData, resMeta,
                 keyList = [], k,
                 offX = 0, offY = 0,
@@ -119,8 +119,7 @@
 
         // detect polygon winding direction: clockwise or counter clockwise
         function getPolygonWinding(points) {
-            var
-                x1, y1, x2, y2,
+            var x1, y1, x2, y2,
                 a = 0,
                 i, il
             ;
@@ -148,8 +147,7 @@
         }
 
         function scaleData(data, isNew) {
-            var
-                res = [],
+            var res = [],
                 i, il, j, jl,
                 oldItem, item,
                 coords, p,
@@ -225,8 +223,7 @@
                 res = [];
             }
 
-            var
-                i, il,
+            var i, il,
                 j, jl,
                 features = json[0] ? json : json.features,
                 geometry, polygons, coords, properties,

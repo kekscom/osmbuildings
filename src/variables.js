@@ -20,6 +20,8 @@
             altColorAlpha  = altColor + '',
             roofColorAlpha = roofColor + '',
 
+            shadowColorAlpha = 'rgba(0, 0, 0, 0.2)',
+
             shadows = false,
 
             rawData,

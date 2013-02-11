@@ -17,25 +17,36 @@
 
         var sunX, sunY, sunZ;
 
-        function renderShadows() {
-            sunX = camX;
-            sunY = camY * 1.2;
-            sunZ = camZ / 1.5;
-
+        function createShadows() {
             var i, il, j, jl,
                 item,
                 f, h, m, n,
                 x, y,
                 offX = originX - meta.x,
                 offY = originY - meta.y,
-                footprint, roof,
+                footprint, grounds = [],
                 mode,
                 isVisible,
                 ax, ay, bx, by,
                 a, b, _a, _b
             ;
 
-            context.fillStyle = 'rgba(0,0,0,0.4)';
+            context.fillStyle = shadowColorAlpha;
+
+            var dateTime = new Date('2013-02-09 08:30:00'),
+                center = pixelToGeo(originX + halfWidth, originY + halfHeight),
+                sunPos = getSunPosition(dateTime, center.latitude, center.longitude);
+
+            // console.log(sunPos.azimuth * RAD + 180, sunPos.altitude * RAD);
+
+            if (sunPos.altitude < 0) {
+                context.fillRect(0, 0, width, height);
+                return;
+            }
+
+            sunX = camX;
+            sunY = 50000;
+            sunZ = 2 * sunY * Math.tan(sunPos.altitude);
 
             for (i = 0, il = data.length; i < il; i++) {
                 item = data[i];
@@ -66,20 +77,6 @@
                 if (item[MIN_HEIGHT]) {
                     h = item[IS_NEW] ? item[MIN_HEIGHT] * fadeFactor : item[MIN_HEIGHT];
                     n = sunZ / (sunZ - h);
-                }
-
-                if (item[HEIGHT] < 6) {
-                    roof = [];
-                    for (j = 0, jl = footprint.length - 3; j < jl; j += 2) {
-                        ax = footprint[j];
-                        ay = footprint[j + 1];
-                        _a = projectShadow(ax, ay, m);
-
-                        roof[j]     = _a.x;
-                        roof[j + 1] = _a.y;
-                    }
-                    drawShape(roof);
-                    continue;
                 }
 
                 mode = null;
@@ -126,8 +123,52 @@
 
                 context.closePath();
                 context.fill();
+
+                var g = [];
+                for (j = 0, jl = footprint.length - 3; j < jl; j += 2) {
+                    ax = footprint[j];
+                    ay = footprint[j + 1];
+                    g[j]     = ax;
+                    g[j + 1] = ay;
+                }
+                grounds.push(g);
+            }
+
+            context.fillStyle = 'rgb(250,240,230)';
+            for (i = 0, il = grounds.length; i < il; i++) {
+                drawShape(grounds[i]);
             }
         }
+
+        var shadowBuffer = new Image();
+        var bufferIsFilled = false;
+
+        function renderShadows() {
+            if (!bufferIsFilled) {
+                createShadows();
+                var imgData = context.getImageData(0, 0, width, height);
+                var r, g, a;
+                for (var i = 0, il = imgData.data.length; i < il; i+= 4) {
+                    r = imgData.data[i + 0];
+                    g = imgData.data[i + 1];
+                    a = imgData.data[i + 3];
+                    if (r > g) {
+                        imgData.data[i + 3] = 256 - a;
+                    } else
+                    if (a) {
+                        imgData.data[i + 3] = 0.2 * 256;
+                    }
+
+                }
+                context.putImageData(imgData, 0, 0);
+
+                shadowBuffer.src = canvas.toDataURL();
+                bufferIsFilled = true;
+                return;
+            }
+            context.drawImage(shadowBuffer, 0, 0, width, height);
+        }
+
 
         function projectShadow(x, y, m) {
             return {
@@ -233,8 +274,8 @@
                         }
 
                         drawShape([
-                            bx + 0.5, by + 0.5,
-                            ax + 0.5, ay + 0.5,
+                            bx, by,
+                            ax, ay,
                             _a.x, _a.y,
                             _b.x, _b.y
                         ]);
@@ -246,7 +287,7 @@
                 // fill roof and optionally stroke it
                 context.fillStyle   = item[RENDER_COLOR][2] || roofColorAlpha;
                 context.strokeStyle = item[RENDER_COLOR][1] || altColorAlpha;
-                drawShape(roof, !shadows);
+                drawShape(roof, true);
             }
         }
 
@@ -277,7 +318,7 @@
 
         function project(x, y, m) {
             return {
-                x: ((x - camX) * m + camX << 0) + 0.5, // + 0.5: disabling(!) anti alias
-                y: ((y - camY) * m + camY << 0) + 0.5  // + 0.5: disabling(!) anti alias
+                x: ((x - camX) * m + camX << 0),
+                y: ((y - camY) * m + camY << 0)
             };
         }

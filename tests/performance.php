@@ -114,10 +114,10 @@
 
 	//*************************************************************************
 
-    function renderShadows(options) {
+    function createShadows(options) {
         sunX = camX;
-        sunY = camY * 1.2;
-        sunZ = camZ / 1.5;
+        sunY = 3000;
+        sunZ = 500;
 
         var i, il, j, jl,
             item, isFlat,
@@ -128,6 +128,8 @@
             ax, ay, bx, by,
             _a, _b
         ;
+
+        var grounds = [];
 
         context.fillStyle = 'rgba(0,0,0,0.4)';
 
@@ -231,7 +233,56 @@
                 }
                 drawShape(roof);
             }
+
+            var g = [];
+            for (j = 0, jl = footprint.length - 3; j < jl; j += 2) {
+                ax = footprint[j];
+                ay = footprint[j + 1];
+                g[j]     = ax;
+                g[j + 1] = ay;
+            }
+            grounds.push(g);
         }
+
+        context.fillStyle = 'rgb(128,128,128)';
+        for (i = 0, il = grounds.length; i < il; i++) {
+            drawShape(grounds[i]);
+        }
+    }
+
+    var shadowBuffer = new Image();
+    var bufferIsFilled = false;
+
+    function renderShadows() {
+        if (!bufferIsFilled) {
+            createShadows();
+            var imgData = context.getImageData(0, 0, width, height);
+            var r, g, b, a;
+            for (var i = 0, il = imgData.data.length; i < il; i+= 4) {
+                r = imgData.data[i + 0];
+                g = imgData.data[i + 1];
+                b = imgData.data[i + 2];
+
+                a = imgData.data[i + 3];
+//console.log(r, g, b, a)
+                if (r > 100) {
+                    imgData.data[i + 0] = 0;
+                    imgData.data[i + 1] = 0;
+                    imgData.data[i + 2] = 0;
+                    imgData.data[i + 3] = 0;
+                } else if (a > 100) {
+                    imgData.data[i + 3] = 100;
+                }
+
+            }
+            context.putImageData(imgData, 0, 0);
+
+
+            shadowBuffer.src = canvas.toDataURL();
+            bufferIsFilled = true;
+            return;
+        }
+        context.drawImage(shadowBuffer, 0, 0, width, height);
     }
 
     function projectShadow(x, y, z) {
@@ -443,7 +494,7 @@
 	perf.add('no strokes, no shading, no shadows', function () {
 		render();
 	});
-
+/*
 	perf.add('combine walls', function () {
 		render(COMBINE_FACES);
 	});
@@ -471,6 +522,7 @@
 	perf.add('flat without walls, ground in wall color', function () {
 		render(FLAT_NO_WALLS | FLAT_DRAW_GROUND);
 	});
+*/
 
 	perf.add('shadows', function () {
 		render(DRAW_SHADOWS);
@@ -488,16 +540,16 @@
 		render(DRAW_SHADOWS | FLAT_NO_SHADOWS);
 	});
 
-	perf.add('shading, combined shadows', function () {
-		render(SHADE_WALLS | DRAW_SHADOWS | COMBINED_SHADOWS);
-	});
-
 	perf.add('shading, combined shadows, flat with roof as shadow', function () {
 		render(SHADE_WALLS | DRAW_SHADOWS | COMBINED_SHADOWS | FLAT_SIMPLE_SHADOWS);
 	});
 
 	perf.add('shading, combined shadows, flat without shadow', function () {
 		render(SHADE_WALLS | DRAW_SHADOWS | SKIP_FLAT);
+	});
+
+	perf.add('shading, combined shadows', function () {
+		render(SHADE_WALLS | DRAW_SHADOWS | COMBINED_SHADOWS);
 	});
 
 	perf.run();
