@@ -10,14 +10,15 @@
         }
 
         function onMoveEnd(e) {
-            var
-                nw = pixelToGeo(originX,         originY),
+            var nw = pixelToGeo(originX,         originY),
                 se = pixelToGeo(originX + width, originY + height)
             ;
             render();
             // check, whether viewport is still within loaded data bounding box
             if (meta && (nw[LAT] > meta.n || nw[LON] < meta.w || se[LAT] < meta.s || se[LON] > meta.e)) {
                 loadData();
+            } else {
+                shadowBuffer = null;
             }
         }
 
@@ -30,8 +31,9 @@
             isZooming = false;
             setZoom(e.zoom);
 
-            if (rawData) {
+            if (rawData) { // GeoJSON
                 data = scaleData(rawData);
+                shadowBuffer = null;
                 render();
             } else {
                 render();

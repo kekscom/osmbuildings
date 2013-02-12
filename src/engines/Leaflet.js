@@ -28,10 +28,8 @@ L.BuildingsLayer = L.Class.extend({
             return;
         }
 
-        var
-            mp = L.DomUtil.getPosition(this.map._mapPane),
-            po = this.map.getPixelOrigin()
-        ;
+        var mp = L.DomUtil.getPosition(this.map._mapPane),
+            po = this.map.getPixelOrigin();
 
         this.lastX = mp.x;
         this.lastY = mp.y;
@@ -49,10 +47,9 @@ L.BuildingsLayer = L.Class.extend({
     },
 
     onZoomEnd: function () {
-        var
-            mp = L.DomUtil.getPosition(this.map._mapPane),
-            po = this.map.getPixelOrigin()
-        ;
+        var mp = L.DomUtil.getPosition(this.map._mapPane),
+            po = this.map.getPixelOrigin();
+
         this.osmb.setOrigin(po.x - mp.x, po.y - mp.y);
         this.osmb.onZoomEnd({ zoom: this.map._zoom });
         this.blockMoveEvent = true;

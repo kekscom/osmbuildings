@@ -27,9 +27,10 @@
 
             zoomAlpha = 1 - (zoom - minZoom) * 0.3 / (maxZoom - minZoom);
 
-            wallColorAlpha = wallColor.adjustAlpha(zoomAlpha) + '';
-            altColorAlpha  = altColor.adjustAlpha(zoomAlpha) + '';
-            roofColorAlpha = roofColor.adjustAlpha(zoomAlpha) + '';
+            wallColorAlpha   = wallColor.adjustAlpha(zoomAlpha) + '';
+            altColorAlpha    = altColor.adjustAlpha(zoomAlpha) + '';
+            roofColorAlpha   = roofColor.adjustAlpha(zoomAlpha) + '';
+            shadowColorAlpha = shadowColor.adjustAlpha(zoomAlpha) + '';
 
             if (data) {
                 for (i = 0, il = data.length; i < il; i++) {
