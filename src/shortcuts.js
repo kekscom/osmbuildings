@@ -9,3 +9,9 @@
         max = Math.max,
         doc = global.document
     ;
+
+    /*<debug*/
+    if (!global.console) {
+        console = { log: function() {} }
+    }
+    /*>*/

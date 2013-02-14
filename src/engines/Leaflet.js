@@ -125,11 +125,17 @@ L.BuildingsLayer = L.Class.extend({
         this.osmb = null;
     },
 
+    // TODO: ugly exposings here
+
     geoJSON: function (url, isLatLon) {
         return this.osmb.geoJSON(url, isLatLon);
     },
 
     setStyle: function (style)  {
         return this.osmb.setStyle(style);
+    },
+
+    setDate: function (date)  {
+        return this.osmb.setDate(date);
     }
 });

@@ -25,6 +25,8 @@
         doc = global.document
     ;
 
+    
+
 
 //****** file: Color.js ******
 
@@ -168,7 +170,10 @@ var Color = (function () {
         MIN_ZOOM = 14, // for buildings data only, GeoJSON should not be affected
 
         LAT = 'latitude', LON = 'longitude',
+
+        // TODO: this is for non min height supporting backends
         HEIGHT = 0, MIN_HEIGHT = 1, FOOTPRINT = 2, COLOR = 3, CENTER = 4, IS_NEW = 5, RENDER_COLOR = 6
+        //HEIGHT = 0, FOOTPRINT = 1, COLOR = 2, CENTER = 3, IS_NEW = 4, RENDER_COLOR = 5, MIN_HEIGHT = 6
     ;
 
 
@@ -296,14 +301,14 @@ var Color = (function () {
             roofColor = wallColor.adjustLightness(1.2),
             //red: roofColor = new Color(240, 200, 180),
             //green: roofColor = new Color(210, 240, 220),
+            shadowColor = new Color(0, 0, 0, 0.4),
 
             wallColorAlpha = wallColor + '',
             altColorAlpha  = altColor + '',
             roofColorAlpha = roofColor + '',
+            shadowColorAlpha = shadowColor + '',
 
-            shadowColorAlpha = 'rgba(0, 0, 0, 0.2)',
-
-            shadows = false,
+            shadows = true,
 
             rawData,
             meta, data,
@@ -368,55 +373,6 @@ var Color = (function () {
                 y: latitude  * size << 0
             };
         }
-
-
-
-var m = Math, sin = m.sin, cos = Math.cos, rad = m.PI / 180;
-
-var dayMs = 1000 * 60 * 60 * 24,
-	J1970 = 2440588,
-	J2000 = 2451545,
-	M0    = rad * 357.5291,
-	M1    = rad * 0.98560028,
-	J0    = 0.0009,
-	J1    = 0.0053,
-	J2    = -0.0069,
-	C1    = rad * 1.9148,
-	C2    = rad * 0.0200,
-	C3    = rad * 0.0003,
-	P     = rad * 102.9372,
-	e     = rad * 23.45,
-	th0   = rad * 280.1600,
-	th1   = rad * 360.9856235;
-
-function dateToJulianDate(date) { return date.valueOf() / dayMs - 0.5 + J1970; }
-function getSolarMeanAnomaly(Js) { return M0 + M1 * (Js - J2000); }
-function getEquationOfCenter(M) { return C1 * sin(M) + C2 * sin(2 * M) + C3 * sin(3 * M); }
-function getEclipticLongitude(M, C) { return M + P + C + m.PI; }
-function getSunDeclination(Ls) { return m.asin(sin(Ls) * sin(e)); }
-function getRightAscension(Ls) { return m.atan2(sin(Ls) * cos(e), cos(Ls)); }
-function getSiderealTime(J, lw) { return th0 + th1 * (J - J2000) - lw; }
-function getAzimuth(H, phi, d) { return m.atan2(sin(H), cos(H) * sin(phi) - m.tan(d) * cos(phi)); }
-function getAltitude(H, phi, d) { return m.asin(sin(phi) * sin(d) + cos(phi) * cos(d) * cos(H)); }
-
-var getSunPosition = function (date, lat, lng) {
-	var lw  = rad * -lng,
-		phi = rad * lat,
-		J   = dateToJulianDate(date),
-		M   = getSolarMeanAnomaly(J),
-		C   = getEquationOfCenter(M),
-		Ls  = getEclipticLongitude(M, C),
-		d   = getSunDeclination(Ls),
-		a   = getRightAscension(Ls),
-		th  = getSiderealTime(J, lw),
-		H   = th - a;
-
-	return {
-		azimuth:  getAzimuth(H,  phi, d),
-		altitude: getAltitude(H, phi, d)
-	};
-};
-
 
         function template(str, data) {
             return str.replace(/\{ *([\w_]+) *\}/g, function (x, key) {
@@ -504,9 +460,6 @@ var getSunPosition = function (date, lat, lng) {
             data = [];
 
             
-            var polyCountBefore = 0,
-                polyCountAfter = 0;
-            
 
             for (i = 0, il = resData.length; i < il; i++) {
                 item = [];
@@ -515,11 +468,11 @@ var getSunPosition = function (date, lat, lng) {
                     continue;
                 }
 
-                polyCountBefore += resData[i][FOOTPRINT].length;
+                
 
                 footprint = simplify(resData[i][FOOTPRINT]);
 
-                polyCountAfter += footprint.length;
+                
 
                 if (footprint.length < 8) { // 3 points & end = start (x2)
                     continue;
@@ -540,7 +493,7 @@ var getSunPosition = function (date, lat, lng) {
                 data.push(item);
             }
 
-            console.log('PolyCount: ' + polyCountBefore + ' => ' + polyCountAfter);
+            
 
             resMeta = resData = keyList = null; // gc
             fadeIn();
@@ -775,9 +728,10 @@ var getSunPosition = function (date, lat, lng) {
 
             zoomAlpha = 1 - (zoom - minZoom) * 0.3 / (maxZoom - minZoom);
 
-            wallColorAlpha = wallColor.adjustAlpha(zoomAlpha) + '';
-            altColorAlpha  = altColor.adjustAlpha(zoomAlpha) + '';
-            roofColorAlpha = roofColor.adjustAlpha(zoomAlpha) + '';
+            wallColorAlpha   = wallColor.adjustAlpha(zoomAlpha) + '';
+            altColorAlpha    = altColor.adjustAlpha(zoomAlpha) + '';
+            roofColorAlpha   = roofColor.adjustAlpha(zoomAlpha) + '';
+            shadowColorAlpha = shadowColor.adjustAlpha(zoomAlpha) + '';
 
             if (data) {
                 for (i = 0, il = data.length; i < il; i++) {
@@ -837,10 +791,10 @@ var getSunPosition = function (date, lat, lng) {
         }
 
         function onMoveEnd(e) {
-            var
-                nw = pixelToGeo(originX,         originY),
+            var nw = pixelToGeo(originX,         originY),
                 se = pixelToGeo(originX + width, originY + height)
             ;
+            shadowBuffer = null;
             render();
             // check, whether viewport is still within loaded data bounding box
             if (meta && (nw[LAT] > meta.n || nw[LON] < meta.w || se[LAT] < meta.s || se[LON] > meta.e)) {
@@ -857,8 +811,9 @@ var getSunPosition = function (date, lat, lng) {
             isZooming = false;
             setZoom(e.zoom);
 
-            if (rawData) {
+            if (rawData) { // GeoJSON
                 data = scaleData(rawData);
+                shadowBuffer = null;
                 render();
             } else {
                 render();
@@ -867,26 +822,46 @@ var getSunPosition = function (date, lat, lng) {
         }
 
 
-//****** file: render.js ******
+//****** file: shadows.js ******
 
-        function fadeIn() {
-            fadeFactor = 0;
-            clearInterval(fadeTimer);
-            fadeTimer = setInterval(function () {
-                fadeFactor += 0.5 * 0.2; // amount * easing
-                if (fadeFactor > 1) {
-                    clearInterval(fadeTimer);
-                    fadeFactor = 1;
-                    // unset 'already present' marker
-                    for (var i = 0, il = data.length; i < il; i++) {
-                        data[i][IS_NEW] = 0;
-                    }
-                }
-                render();
-            }, 33);
+
+        var sunX, sunY, sunZ,
+            shadowOriginX, shadowOriginY,
+            shadowBuffer,
+            dateTime;
+
+
+        function setDate(date) {
+            if (!date) {
+                return;
+            }
+
+            var center = pixelToGeo(originX + halfWidth, originY + halfHeight),
+                sunPos = getSunPosition(date, center.latitude, center.longitude);
+
+            //console.log(date, sunPos.azimuth * RAD + 180, sunPos.altitude * RAD);
+
+            if (sunPos.altitude < 0) {
+                return;
+            }
+
+            sunX = camX;
+            sunY = 50000;
+            sunZ = 2 * sunY * tan(sunPos.altitude);
+
+            shadowBuffer = null;
+            render();
         }
 
-        var sunX, sunY, sunZ;
+        function drawShadows() {
+            if (!shadowBuffer) {
+                createShadows();
+                shadowOriginX = originX;
+                shadowOriginY = originY;
+                return;
+            }
+            context.drawImage(shadowBuffer, shadowOriginX - originX, shadowOriginY - originY);
+        }
 
         function createShadows() {
             var i, il, j, jl,
@@ -895,29 +870,15 @@ var getSunPosition = function (date, lat, lng) {
                 x, y,
                 offX = originX - meta.x,
                 offY = originY - meta.y,
-                footprint, grounds = [],
+                footprint,
                 mode,
                 isVisible,
                 ax, ay, bx, by,
-                a, b, _a, _b
+                a, b, _a, _b,
+                grounds = []
             ;
 
             context.fillStyle = shadowColorAlpha;
-
-            var dateTime = new Date('2013-02-09 08:30:00'),
-                center = pixelToGeo(originX + halfWidth, originY + halfHeight),
-                sunPos = getSunPosition(dateTime, center.latitude, center.longitude);
-
-            // console.log(sunPos.azimuth * RAD + 180, sunPos.altitude * RAD);
-
-            if (sunPos.altitude < 0) {
-                context.fillRect(0, 0, width, height);
-                return;
-            }
-
-            sunX = camX;
-            sunY = 50000;
-            sunZ = 2 * sunY * Math.tan(sunPos.altitude);
 
             for (i = 0, il = data.length; i < il; i++) {
                 item = data[i];
@@ -929,7 +890,7 @@ var getSunPosition = function (date, lat, lng) {
                     footprint[j]     = x = (f[j]     - offX);
                     footprint[j + 1] = y = (f[j + 1] - offY);
 
-                    // checking footprint is sufficient for visibility
+                    // TODO: checking footprint is sufficient for visibility - NOT ANYMORE!
                     if (!isVisible) {
                         isVisible = (x > 0 && x < width && y > 0 && y < height);
                     }
@@ -939,14 +900,17 @@ var getSunPosition = function (date, lat, lng) {
                     continue;
                 }
 
+                // TODO: check, whether this works
                 // when fading in, use a dynamic height
-                h = item[IS_NEW] ? item[HEIGHT] * fadeFactor : item[HEIGHT];
+                //h = item[IS_NEW] ? item[HEIGHT] * fadeFactor : item[HEIGHT];
+                h = item[HEIGHT];
                 // precalculating projection height scale
                 m = sunZ / (sunZ - h);
 
                 // prepare same calculations for min_height if applicable
                 if (item[MIN_HEIGHT]) {
-                    h = item[IS_NEW] ? item[MIN_HEIGHT] * fadeFactor : item[MIN_HEIGHT];
+                    //h = item[IS_NEW] ? item[MIN_HEIGHT] * fadeFactor : item[MIN_HEIGHT];
+                    h = item[MIN_HEIGHT];
                     n = sunZ / (sunZ - h);
                 }
 
@@ -995,57 +959,122 @@ var getSunPosition = function (date, lat, lng) {
                 context.closePath();
                 context.fill();
 
-                var g = [];
-                for (j = 0, jl = footprint.length - 3; j < jl; j += 2) {
-                    ax = footprint[j];
-                    ay = footprint[j + 1];
-                    g[j]     = ax;
-                    g[j + 1] = ay;
-                }
-                grounds.push(g);
+                // store footprint
+        //        g = [];
+        //        for (j = 0, jl = footprint.length - 2; j < jl; j++) {
+        //            g[j] = footprint[j];
+        //        }
+        //        grounds.push(g);
+                grounds.push(footprint);
             }
 
-            context.fillStyle = 'rgb(250,240,230)';
+            // draw all footprints in a different color for later filtering
+
+            context.fillStyle = wallColorAlpha;
             for (i = 0, il = grounds.length; i < il; i++) {
                 drawShape(grounds[i]);
             }
+
+            filterShadows();
+            shadowBuffer = new Image();
+            shadowBuffer.src = canvas.toDataURL();
         }
 
-        var shadowBuffer = new Image();
-        var bufferIsFilled = false;
+        function filterShadows() {
+            var buffer = context.getImageData(0, 0, width, height),
+                pixels = buffer.data,
+                shadowAlpha = Color.parse(shadowColorAlpha).a * 255 <<0,
+                maxAlpha = 255,
+                r, a;
 
-        function renderShadows() {
-            if (!bufferIsFilled) {
-                createShadows();
-                var imgData = context.getImageData(0, 0, width, height);
-                var r, g, a;
-                for (var i = 0, il = imgData.data.length; i < il; i+= 4) {
-                    r = imgData.data[i + 0];
-                    g = imgData.data[i + 1];
-                    a = imgData.data[i + 3];
-                    if (r > g) {
-                        imgData.data[i + 3] = 256 - a;
-                    } else
-                    if (a) {
-                        imgData.data[i + 3] = 0.2 * 256;
-                    }
-
+            for (var i = 0, il = pixels.length; i < il; i += 4) {
+                r = pixels[i + 0];
+                a = pixels[i + 3];
+                // make everything with color and maximum alpha fully transparent
+                if (r && a >= maxAlpha) {
+                    pixels[i + 3] = 0;
+                } else
+                // reduce higher alpha values to max shadow color alpha
+                // this removes dark overlapping areas in shadows but keeps all anti aliasing
+                if (a > shadowAlpha) {
+                    pixels[i + 3] = shadowAlpha;
                 }
-                context.putImageData(imgData, 0, 0);
-
-                shadowBuffer.src = canvas.toDataURL();
-                bufferIsFilled = true;
-                return;
             }
-            context.drawImage(shadowBuffer, 0, 0, width, height);
-        }
 
+            context.putImageData(buffer, 0, 0);
+        }
 
         function projectShadow(x, y, m) {
             return {
                 x: (x - sunX) * m + sunX,
                 y: (y - sunY) * m + sunY
             };
+        }
+
+        var sin = Math.sin, cos = Math.cos, rad = PI / 180,
+            dayMs = 1000 * 60 * 60 * 24,
+            J1970 = 2440588,
+            J2000 = 2451545,
+            M0    = rad * 357.5291,
+            M1    = rad * 0.98560028,
+            J0    = 0.0009,
+            J1    = 0.0053,
+            J2    = -0.0069,
+            C1    = rad * 1.9148,
+            C2    = rad * 0.0200,
+            C3    = rad * 0.0003,
+            P     = rad * 102.9372,
+            e     = rad * 23.45,
+            th0   = rad * 280.1600,
+            th1   = rad * 360.9856235;
+
+        function dateToJulianDate(date) { return date.valueOf() / dayMs - 0.5 + J1970; }
+        function getSolarMeanAnomaly(Js) { return M0 + M1 * (Js - J2000); }
+        function getEquationOfCenter(M) { return C1 * sin(M) + C2 * sin(2 * M) + C3 * sin(3 * M); }
+        function getEclipticLongitude(M, C) { return M + P + C + PI; }
+        function getSunDeclination(Ls) { return Math.asin(sin(Ls) * sin(e)); }
+        function getRightAscension(Ls) { return Math.atan2(sin(Ls) * cos(e), cos(Ls)); }
+        function getSiderealTime(J, lw) { return th0 + th1 * (J - J2000) - lw; }
+        function getAzimuth(H, phi, d) { return Math.atan2(sin(H), cos(H) * sin(phi) - Math.tan(d) * cos(phi)); }
+        function getAltitude(H, phi, d) { return Math.asin(sin(phi) * sin(d) + cos(phi) * cos(d) * cos(H)); }
+
+        function getSunPosition(date, lat, lng) {
+            var lw  = rad * -lng,
+                phi = rad * lat,
+                J   = dateToJulianDate(date),
+                M   = getSolarMeanAnomaly(J),
+                C   = getEquationOfCenter(M),
+                Ls  = getEclipticLongitude(M, C),
+                d   = getSunDeclination(Ls),
+                a   = getRightAscension(Ls),
+                th  = getSiderealTime(J, lw),
+                H   = th - a;
+
+            return {
+                azimuth:  getAzimuth(H,  phi, d),
+                altitude: getAltitude(H, phi, d)
+            };
+        }
+
+
+//****** file: render.js ******
+
+        function fadeIn() {
+            fadeFactor = 0;
+            shadowBuffer = null;
+            clearInterval(fadeTimer);
+            fadeTimer = setInterval(function () {
+                fadeFactor += 0.5 * 0.2; // amount * easing
+                if (fadeFactor > 1) {
+                    clearInterval(fadeTimer);
+                    fadeFactor = 1;
+                    // unset 'already present' marker
+                    for (var i = 0, il = data.length; i < il; i++) {
+                        data[i][IS_NEW] = 0;
+                    }
+                }
+                render();
+            }, 33);
         }
 
         function render() {
@@ -1063,7 +1092,7 @@ var getSunPosition = function (date, lat, lng) {
             }
 
             if (shadows) {
-                renderShadows();
+                drawShadows();
             }
 
             var i, il, j, jl,
@@ -1226,6 +1255,7 @@ var getSunPosition = function (date, lat, lng) {
         this.setOrigin     = setOrigin;
         this.setSize       = setSize;
         this.setZoom       = setZoom;
+        this.setDate       = setDate;
 
 
 //****** file: suffix.class.js ******
@@ -1275,10 +1305,8 @@ L.BuildingsLayer = L.Class.extend({
             return;
         }
 
-        var
-            mp = L.DomUtil.getPosition(this.map._mapPane),
-            po = this.map.getPixelOrigin()
-        ;
+        var mp = L.DomUtil.getPosition(this.map._mapPane),
+            po = this.map.getPixelOrigin();
 
         this.lastX = mp.x;
         this.lastY = mp.y;
@@ -1296,10 +1324,9 @@ L.BuildingsLayer = L.Class.extend({
     },
 
     onZoomEnd: function () {
-        var
-            mp = L.DomUtil.getPosition(this.map._mapPane),
-            po = this.map.getPixelOrigin()
-        ;
+        var mp = L.DomUtil.getPosition(this.map._mapPane),
+            po = this.map.getPixelOrigin();
+
         this.osmb.setOrigin(po.x - mp.x, po.y - mp.y);
         this.osmb.onZoomEnd({ zoom: this.map._zoom });
         this.blockMoveEvent = true;
@@ -1375,12 +1402,18 @@ L.BuildingsLayer = L.Class.extend({
         this.osmb = null;
     },
 
+    // TODO: ugly exposings here
+
     geoJSON: function (url, isLatLon) {
         return this.osmb.geoJSON(url, isLatLon);
     },
 
     setStyle: function (style)  {
         return this.osmb.setStyle(style);
+    },
+
+    setDate: function (date)  {
+        return this.osmb.setDate(date);
     }
 });
 

@@ -27,3 +27,4 @@
         this.setOrigin     = setOrigin;
         this.setSize       = setSize;
         this.setZoom       = setZoom;
+        this.setDate       = setDate;

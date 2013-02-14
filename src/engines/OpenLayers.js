@@ -89,11 +89,17 @@ OpenLayers.Layer.Buildings = OpenLayers.Class(OpenLayers.Layer, {
         return result;
     },
 
+    // TODO: ugly exposings here
+
     geoJSON: function (url, isLatLon) {
         return this.osmb.geoJSON(url, isLatLon);
     },
 
     setStyle: function (style)  {
         return this.osmb.setStyle(style);
+    },
+
+    setDate: function (date)  {
+        return this.osmb.setDate(date);
     }
 });

@@ -1,6 +1,6 @@
         function fadeIn() {
-shadowBuffer = null;
             fadeFactor = 0;
+            shadowBuffer = null;
             clearInterval(fadeTimer);
             fadeTimer = setInterval(function () {
                 fadeFactor += 0.5 * 0.2; // amount * easing

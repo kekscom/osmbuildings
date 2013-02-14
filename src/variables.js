@@ -22,7 +22,7 @@
             roofColorAlpha = roofColor + '',
             shadowColorAlpha = shadowColor + '',
 
-            shadows = false,
+            shadows = true,
 
             rawData,
             meta, data,
