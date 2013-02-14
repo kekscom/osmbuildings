@@ -13,12 +13,11 @@
             var nw = pixelToGeo(originX,         originY),
                 se = pixelToGeo(originX + width, originY + height)
             ;
+            shadowBuffer = null;
             render();
             // check, whether viewport is still within loaded data bounding box
             if (meta && (nw[LAT] > meta.n || nw[LON] < meta.w || se[LAT] < meta.s || se[LON] > meta.e)) {
                 loadData();
-            } else {
-                shadowBuffer = null;
             }
         }
 

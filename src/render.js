@@ -1,4 +1,5 @@
         function fadeIn() {
+shadowBuffer = null;
             fadeFactor = 0;
             clearInterval(fadeTimer);
             fadeTimer = setInterval(function () {
@@ -10,9 +11,6 @@
                     for (var i = 0, il = data.length; i < il; i++) {
                         data[i][IS_NEW] = 0;
                     }
-                }
-                if (fadeFactor === 1) {
-                    shadowBuffer = null;
                 }
                 render();
             }, 33);
