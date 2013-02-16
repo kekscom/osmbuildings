@@ -1,29 +1,31 @@
 
-        var sunX, sunY, sunZ,
-            shadowOriginX, shadowOriginY,
+        var shadowOriginX, shadowOriginY,
             shadowBuffer,
-            dateTime;
+            dateTime = new Date();
 
+        var xRel;
+        var yRel;
 
         function setDate(date) {
+            var center, sun, len;
+
+            shadowBuffer = null;
+
             if (!date) {
                 return;
             }
 
-            var center = pixelToGeo(originX + halfWidth, originY + halfHeight),
-                sunPos = getSunPosition(date, center.latitude, center.longitude);
+            center = pixelToGeo(originX + halfWidth, originY + halfHeight),
+            sun = getSunPosition(date, center.latitude, center.longitude);
 
-            //console.log(date, sunPos.azimuth * RAD + 180, sunPos.altitude * RAD);
-
-            if (sunPos.altitude < 0) {
+            if (sun.altitude <= 0) {
                 return;
             }
 
-            sunX = camX;
-            sunY = 50000;
-            sunZ = 2 * sunY * tan(sunPos.altitude);
+            len = 1 / tan(sun.altitude);
+            xRel = cos(sun.azimuth) * len;
+            yRel = sin(sun.azimuth) * len;
 
-            shadowBuffer = null;
             render();
         }
 
@@ -40,7 +42,7 @@
         function createShadows() {
             var i, il, j, jl,
                 item,
-                f, h, m, n,
+                f, h,
                 x, y,
                 offX = originX - meta.x,
                 offY = originY - meta.y,
@@ -78,14 +80,11 @@
                 // when fading in, use a dynamic height
                 //h = item[IS_NEW] ? item[HEIGHT] * fadeFactor : item[HEIGHT];
                 h = item[HEIGHT];
-                // precalculating projection height scale
-                m = sunZ / (sunZ - h);
 
                 // prepare same calculations for min_height if applicable
                 if (item[MIN_HEIGHT]) {
                     //h = item[IS_NEW] ? item[MIN_HEIGHT] * fadeFactor : item[MIN_HEIGHT];
                     h = item[MIN_HEIGHT];
-                    n = sunZ / (sunZ - h);
                 }
 
                 mode = null;
@@ -97,12 +96,12 @@
                     bx = footprint[j + 2];
                     by = footprint[j + 3];
 
-                    _a = projectShadow(ax, ay, m);
-                    _b = projectShadow(bx, by, m);
+                    _a = projectShadow(ax, ay, h);
+                    _b = projectShadow(bx, by, h);
 
                     if (item[MIN_HEIGHT]) {
-                        a = projectShadow(ax, ay, n);
-                        b = projectShadow(bx, by, n);
+                        a = projectShadow(ax, ay, h);
+                        b = projectShadow(bx, by, h);
                         ax = a.x;
                         ay = a.y;
                         bx = b.x;
@@ -133,12 +132,6 @@
                 context.closePath();
                 context.fill();
 
-                // store footprint
-        //        g = [];
-        //        for (j = 0, jl = footprint.length - 2; j < jl; j++) {
-        //            g[j] = footprint[j];
-        //        }
-        //        grounds.push(g);
                 grounds.push(footprint);
             }
 
@@ -152,6 +145,13 @@
             filterShadows();
             shadowBuffer = new Image();
             shadowBuffer.src = canvas.toDataURL();
+        }
+
+        function projectShadow(x, y, h) {
+            return {
+                x: x + xRel * h,
+                y: y + yRel * h
+            };
         }
 
         function filterShadows() {
@@ -178,43 +178,35 @@
             context.putImageData(buffer, 0, 0);
         }
 
-        function projectShadow(x, y, m) {
-            return {
-                x: (x - sunX) * m + sunX,
-                y: (y - sunY) * m + sunY
-            };
-        }
-
-        var sin = Math.sin, cos = Math.cos, rad = PI / 180,
-            dayMs = 1000 * 60 * 60 * 24,
+        var dayMs = 1000 * 60 * 60 * 24,
             J1970 = 2440588,
             J2000 = 2451545,
-            M0    = rad * 357.5291,
-            M1    = rad * 0.98560028,
+            M0    = 357.5291 / RAD,
+            M1    = 0.98560028 / RAD,
             J0    = 0.0009,
             J1    = 0.0053,
             J2    = -0.0069,
-            C1    = rad * 1.9148,
-            C2    = rad * 0.0200,
-            C3    = rad * 0.0003,
-            P     = rad * 102.9372,
-            e     = rad * 23.45,
-            th0   = rad * 280.1600,
-            th1   = rad * 360.9856235;
+            C1    = 1.9148 / RAD,
+            C2    = 0.0200 / RAD,
+            C3    = 0.0003 / RAD,
+            P     = 102.9372 / RAD,
+            e     = 23.45 / RAD,
+            th0   = 280.1600 / RAD,
+            th1   = 360.9856235 / RAD;
 
         function dateToJulianDate(date) { return date.valueOf() / dayMs - 0.5 + J1970; }
         function getSolarMeanAnomaly(Js) { return M0 + M1 * (Js - J2000); }
         function getEquationOfCenter(M) { return C1 * sin(M) + C2 * sin(2 * M) + C3 * sin(3 * M); }
         function getEclipticLongitude(M, C) { return M + P + C + PI; }
-        function getSunDeclination(Ls) { return Math.asin(sin(Ls) * sin(e)); }
-        function getRightAscension(Ls) { return Math.atan2(sin(Ls) * cos(e), cos(Ls)); }
+        function getSunDeclination(Ls) { return asin(sin(Ls) * sin(e)); }
+        function getRightAscension(Ls) { return atan2(sin(Ls) * cos(e), cos(Ls)); }
         function getSiderealTime(J, lw) { return th0 + th1 * (J - J2000) - lw; }
-        function getAzimuth(H, phi, d) { return Math.atan2(sin(H), cos(H) * sin(phi) - Math.tan(d) * cos(phi)); }
-        function getAltitude(H, phi, d) { return Math.asin(sin(phi) * sin(d) + cos(phi) * cos(d) * cos(H)); }
+        function getAzimuth(H, phi, d) { return atan2(sin(H), cos(H) * sin(phi) - tan(d) * cos(phi)); }
+        function getAltitude(H, phi, d) { return asin(sin(phi) * sin(d) + cos(phi) * cos(d) * cos(H)); }
 
         function getSunPosition(date, lat, lng) {
-            var lw  = rad * -lng,
-                phi = rad * lat,
+            var lw  = -lng / RAD,
+                phi = lat / RAD,
                 J   = dateToJulianDate(date),
                 M   = getSolarMeanAnomaly(J),
                 C   = getEquationOfCenter(M),
@@ -225,7 +217,7 @@
                 H   = th - a;
 
             return {
-                azimuth:  getAzimuth(H,  phi, d),
-                altitude: getAltitude(H, phi, d)
+                altitude: getAltitude(H, phi, d),
+                azimuth:  getAzimuth(H,  phi, d) - PI/2 // origin: north
             };
         }

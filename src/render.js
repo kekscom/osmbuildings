@@ -130,14 +130,6 @@
             }
         }
 
-        function debugMarker(x, y, color, size) {
-            context.fillStyle = color || '#ffcc00';
-            context.beginPath();
-            context.arc(x, y, size || 3, 0, PI * 2, true);
-            context.closePath();
-            context.fill();
-        }
-
         function drawShape(points, stroke) {
             if (!points.length) {
                 return;
@@ -160,4 +152,21 @@
                 x: ((x - camX) * m + camX << 0),
                 y: ((y - camY) * m + camY << 0)
             };
+        }
+
+        function debugMarker(x, y, color, size) {
+            context.fillStyle = color || '#ffcc00';
+            context.beginPath();
+            context.arc(x, y, size || 3, 0, PI * 2, true);
+            context.closePath();
+            context.fill();
+        }
+
+        function debugLine(ax, ay, bx, by, color, size) {
+            context.strokeStyle = color || '#ff0000';
+            context.beginPath();
+            context.moveTo(ax, ay);
+            context.lineTo(bx, by);
+            context.closePath();
+            context.stroke();
         }
