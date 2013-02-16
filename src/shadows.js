@@ -218,6 +218,6 @@
 
             return {
                 altitude: getAltitude(H, phi, d),
-                azimuth:  getAzimuth(H,  phi, d) - PI/2 // origin: north
+                azimuth:  getAzimuth(H,  phi, d) - PI / 2 // origin: north
             };
         }
