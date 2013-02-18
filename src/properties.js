@@ -25,7 +25,7 @@
             zoom = z;
             size = TILE_SIZE << zoom;
 
-            zoomAlpha = 1 - (zoom - minZoom) * 0.3 / (maxZoom - minZoom);
+            zoomAlpha = 1 - fromRange(zoom, minZoom, maxZoom, 0, 0.3);
 
             wallColorAlpha   = wallColor.adjustAlpha(zoomAlpha) + '';
             altColorAlpha    = altColor.adjustAlpha(zoomAlpha) + '';

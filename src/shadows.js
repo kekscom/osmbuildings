@@ -1,42 +1,52 @@
 
         var shadowOriginX, shadowOriginY,
             shadowBuffer,
-            dateTime = new Date();
-
-        var xRel;
-        var yRel;
+            shadowAlpha = 1,
+            shadowLength = -1,
+            shadowX = 0, shadowY = 0;
 
         function setDate(date) {
-            var center, sun, len;
-
-            shadowBuffer = null;
+            var center, sunPos;
 
             if (!date) {
                 return;
             }
 
             center = pixelToGeo(originX + halfWidth, originY + halfHeight),
-            sun = getSunPosition(date, center.latitude, center.longitude);
+            sunPos = getSunPosition(date, center.latitude, center.longitude);
 
-            if (sun.altitude <= 0) {
-                return;
+            if (sunPos.altitude <= 0) {
+                shadowLength = -1;
+                shadowAlpha = fromRange(-sunPos.altitude, 0, 1, 0.1, 0.8);
+            } else {
+                shadowLength = 1 / tan(sunPos.altitude);
+                shadowAlpha = 0.4 / shadowLength;
+                shadowX = cos(sunPos.azimuth) * shadowLength;
+                shadowY = sin(sunPos.azimuth) * shadowLength;
             }
 
-            len = 1 / tan(sun.altitude);
-            xRel = cos(sun.azimuth) * len;
-            yRel = sin(sun.azimuth) * len;
+            shadowColor.a = shadowAlpha;
+            shadowColorAlpha = shadowColor + '';
 
+            shadowBuffer = null;
             render();
         }
 
         function drawShadows() {
-            if (!shadowBuffer) {
-                createShadows();
-                shadowOriginX = originX;
-                shadowOriginY = originY;
+            if (shadowLength === -1) {
+                context.fillStyle = shadowColorAlpha;
+                context.fillRect(0, 0, width, height);
                 return;
             }
-            context.drawImage(shadowBuffer, shadowOriginX - originX, shadowOriginY - originY);
+
+            if (shadowBuffer) {
+                context.drawImage(shadowBuffer, shadowOriginX - originX, shadowOriginY - originY);
+                return;
+            }
+
+            createShadows();
+            shadowOriginX = originX;
+            shadowOriginY = originY;
         }
 
         function createShadows() {
@@ -149,15 +159,15 @@
 
         function projectShadow(x, y, h) {
             return {
-                x: x + xRel * h,
-                y: y + yRel * h
+                x: x + shadowX * h,
+                y: y + shadowY * h
             };
         }
 
         function filterShadows() {
             var buffer = context.getImageData(0, 0, width, height),
                 pixels = buffer.data,
-                shadowAlpha = Color.parse(shadowColorAlpha).a * 255 <<0,
+                blendAlpha = shadowAlpha * 255 <<0,
                 maxAlpha = 255,
                 r, a;
 
@@ -170,15 +180,15 @@
                 } else
                 // reduce higher alpha values to max shadow color alpha
                 // this removes dark overlapping areas in shadows but keeps all anti aliasing
-                if (a > shadowAlpha) {
-                    pixels[i + 3] = shadowAlpha;
+                if (a > blendAlpha) {
+                    pixels[i + 3] = blendAlpha;
                 }
             }
 
             context.putImageData(buffer, 0, 0);
         }
 
-        var dayMs = 1000 * 60 * 60 * 24,
+        var dayMS = 1000 * 60 * 60 * 24,
             J1970 = 2440588,
             J2000 = 2451545,
             M0    = 357.5291 / RAD,
@@ -194,15 +204,15 @@
             th0   = 280.1600 / RAD,
             th1   = 360.9856235 / RAD;
 
-        function dateToJulianDate(date) { return date.valueOf() / dayMs - 0.5 + J1970; }
-        function getSolarMeanAnomaly(Js) { return M0 + M1 * (Js - J2000); }
-        function getEquationOfCenter(M) { return C1 * sin(M) + C2 * sin(2 * M) + C3 * sin(3 * M); }
+        function dateToJulianDate(date) {     return date.valueOf() / dayMS - 0.5 + J1970; }
+        function getSolarMeanAnomaly(Js) {    return M0 + M1 * (Js - J2000); }
+        function getEquationOfCenter(M) {     return C1 * sin(M) + C2 * sin(2 * M) + C3 * sin(3 * M); }
         function getEclipticLongitude(M, C) { return M + P + C + PI; }
-        function getSunDeclination(Ls) { return asin(sin(Ls) * sin(e)); }
-        function getRightAscension(Ls) { return atan2(sin(Ls) * cos(e), cos(Ls)); }
-        function getSiderealTime(J, lw) { return th0 + th1 * (J - J2000) - lw; }
-        function getAzimuth(H, phi, d) { return atan2(sin(H), cos(H) * sin(phi) - tan(d) * cos(phi)); }
-        function getAltitude(H, phi, d) { return asin(sin(phi) * sin(d) + cos(phi) * cos(d) * cos(H)); }
+        function getSunDeclination(Ls) {      return asin(sin(Ls) * sin(e)); }
+        function getRightAscension(Ls) {      return atan2(sin(Ls) * cos(e), cos(Ls)); }
+        function getSiderealTime(J, lw) {     return th0 + th1 * (J - J2000) - lw; }
+        function getAzimuth(H, phi, d) {      return atan2(sin(H), cos(H) * sin(phi) - tan(d) * cos(phi)); }
+        function getAltitude(H, phi, d) {     return asin(sin(phi) * sin(d) + cos(phi) * cos(d) * cos(H)); }
 
         function getSunPosition(date, lat, lng) {
             var lw  = -lng / RAD,

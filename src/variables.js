@@ -15,7 +15,7 @@
             roofColor = wallColor.adjustLightness(1.2),
             //red: roofColor = new Color(240, 200, 180),
             //green: roofColor = new Color(210, 240, 220),
-            shadowColor = new Color(0, 0, 0, 0.4),
+            shadowColor = new Color(0, 0, 0),
 
             wallColorAlpha = wallColor + '',
             altColorAlpha  = altColor + '',

@@ -15,7 +15,7 @@
     #map {
         height: 100%;
     }
-   </style>
+    </style>
     <link rel="stylesheet" href="leaflet-0.4.5/leaflet.css">
     <script src="leaflet-0.4.5/leaflet.js"></script>
 	<script><?php
@@ -50,8 +50,47 @@
 <body>
     <div id="map"></div>
 
-    <input type="range" id="hours" min="0" max="23" style="position:absolute;left:20px;bottom:20px;z-index:1000;">
-    <input type="range" id="months" min="0" max="11" style="position:absolute;right:20px;bottom:20px;z-index:1000;">
+    <style>
+    .datetime {
+        position: relative;
+        bottom: 140px;
+        width: 300px;
+        margin: auto;
+        background-color: rgba(255,255,255,0.4);
+        font-size: 10pt;
+        font-family: Helvetica, Arial, sans-serif;
+        padding: 10px;
+    }
+    .datetime label {
+        display: block;
+        width: 100%;
+        height: 20px;
+    }
+    .datetime input {
+        width: 100%;
+        height: 30px;
+        margin-bottom: 10px;
+        background-color: transparent;
+    }
+
+    @media screen and (orientation: portrait) and (max-device-width: 960px) {
+        .datetime {
+            -webkit-transform: scale(2);
+            bottom: 360px;
+        }
+        .datetime input {
+            height: 50px;
+        }
+    }
+    </style>
+
+    <div class="datetime">
+        <label for="time">Time: </label>
+        <input id="time" type="range" min="0" max="95">
+
+        <label for="date">Date: </label>
+        <input id="date" type="range" min="0" max="23">
+    </div>
 
     <script>
     var map = new L.Map('map').setView([52.50557421662625, 13.334510922431944], 17); // Berlin
@@ -61,26 +100,44 @@
     </script>
 
     <script>
-    var hRange = document.querySelector('#hours');
-    var MRange = document.querySelector('#months');
+    var timeRange = document.querySelector('#time');
+    var timeRangeLabel = document.querySelector('*[for=time]');
+
+    var dateRange = document.querySelector('#date');
+    var dateRangeLabel = document.querySelector('*[for=date]');
+
     var date = new Date();
+
     var Y = date.getFullYear(),
         M = date.getMonth(),
-        D = 15,
+        D = date.getDate() < 15 ? 1 : 15,
         h = date.getHours(),
-        m = 0;
+        m = date.getMinutes() % 4 * 15;
 
-    hRange.value = h;
-    MRange.value = M;
+    timeRange.value = h;
+    dateRange.value = M;
+    changeDate();
 
-    hRange.addEventListener('change', function () {
-        h = this.value;
+    function pad(v) {
+        return (v < 10 ? '0' : '') + v;
+    }
+
+    function changeDate() {
+        timeRangeLabel.innerText = 'Time: ' + pad(h) + ':' + pad(m);
+        dateRangeLabel.innerText = 'Date: ' + Y + '-' + pad(M+1) + '-' + pad(D);
         osmb.setDate(new Date(Y, M, D, h, m));
+    }
+
+    timeRange.addEventListener('change', function () {
+        h = this.value / 4 <<0;
+        m = this.value % 4 * 15;
+        changeDate();
     }, false);
 
-    MRange.addEventListener('change', function () {
-        M = this.value;
-        osmb.setDate(new Date(Y, M, D, h, m));
+    dateRange.addEventListener('change', function () {
+        M = this.value / 2 <<0;
+        D = this.value % 2 ? 15 : 1;
+        changeDate();
     }, false);
     </script>
 </body>

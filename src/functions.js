@@ -49,3 +49,10 @@
                 return data[key];
             });
         }
+
+        function fromRange(sVal, sMin, sMax, dMin, dMax) {
+            sVal = min(max(sVal, sMin), sMax);
+            var rel = (sVal - sMin) / (sMax - sMin),
+                range = dMax - dMin;
+            return min(max(dMin + rel * range, dMin), dMax);
+        }
