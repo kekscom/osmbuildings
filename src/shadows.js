@@ -33,12 +33,6 @@
         }
 
         function drawShadows() {
-            if (shadowLength === -1) {
-                context.fillStyle = shadowColorAlpha;
-                context.fillRect(0, 0, width, height);
-                return;
-            }
-
             if (shadowBuffer) {
                 context.drawImage(shadowBuffer, shadowOriginX - originX, shadowOriginY - originY);
                 return;

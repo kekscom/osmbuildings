@@ -871,12 +871,6 @@ var Color = (function () {
         }
 
         function drawShadows() {
-            if (shadowLength === -1) {
-                context.fillStyle = shadowColorAlpha;
-                context.fillRect(0, 0, width, height);
-                return;
-            }
-
             if (shadowBuffer) {
                 context.drawImage(shadowBuffer, shadowOriginX - originX, shadowOriginY - originY);
                 return;
@@ -1105,7 +1099,7 @@ var Color = (function () {
                 return;
             }
 
-            if (shadows) {
+            if (shadows && shadowLength > -1) {
                 drawShadows();
             }
 
@@ -1202,6 +1196,11 @@ var Color = (function () {
                 context.fillStyle   = item[RENDER_COLOR][2] || roofColorAlpha;
                 context.strokeStyle = item[RENDER_COLOR][1] || altColorAlpha;
                 drawShape(roof, true);
+            }
+
+            if (shadows && shadowLength === -1) {
+                context.fillStyle = shadowColorAlpha;
+                context.fillRect(0, 0, width, height);
             }
         }
 

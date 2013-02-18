@@ -30,7 +30,7 @@
                 return;
             }
 
-            if (shadows) {
+            if (shadows && shadowLength > -1) {
                 drawShadows();
             }
 
@@ -127,6 +127,11 @@
                 context.fillStyle   = item[RENDER_COLOR][2] || roofColorAlpha;
                 context.strokeStyle = item[RENDER_COLOR][1] || altColorAlpha;
                 drawShape(roof, true);
+            }
+
+            if (shadows && shadowLength === -1) {
+                context.fillStyle = shadowColorAlpha;
+                context.fillRect(0, 0, width, height);
             }
         }
 
