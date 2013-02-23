@@ -1,6 +1,6 @@
 <img src="http://osmbuildings.org/assets/images/logo.png"/>
 
-OSM Buildings is a JavaScript library for visualizing 3D OSM building data on interactive maps.
+OSM Buildings is a JavaScript library for visualizing 3D OSM building geometry on interactive maps.
 
 The library consists of client JavaScript files, an optional server side PHP script and a MySQL / PostGIS databases.
 Everything should be seen as alpha state, all components are likely to change extensively.
@@ -20,7 +20,7 @@ http://osmbuildings.org/examples.php
 
 ## Files
 
-Release version 0.1.7a https://github.com/kekscom/osmbuildings/tree/v0.1.7a<br>
+Release version 0.1.8a https://github.com/kekscom/osmbuildings/tree/v0.1.8a<br>
 Latest development https://github.com/kekscom/osmbuildings
 
 

@@ -3,12 +3,12 @@ var srcPath = '../src';
 var dstPath = '../dist';
 
 exports.COPYRIGHT = '/**\n' +
-                    ' * Copyright (C) 2012 OSM Buildings, Jan Marsch\n' +
+                    ' * Copyright (C) 2013 OSM Buildings, Jan Marsch\n' +
                     ' * A leightweight JavaScript library for visualizing 3D building geometry on interactive maps.\n' +
                     ' * @osmbuildings, http://osmbuildings.org\n' +
                     ' */\n';
 
-exports.VERSION = '0.1.7a';
+exports.VERSION = '0.1.8a';
 
 exports.srcFiles = [
     srcPath + '/prefix.js',

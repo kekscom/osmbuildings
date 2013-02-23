@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2012 OSM Buildings, Jan Marsch
+ * Copyright (C) 2013 OSM Buildings, Jan Marsch
  * A leightweight JavaScript library for visualizing 3D building geometry on interactive maps.
  * @osmbuildings, http://osmbuildings.org
  */
@@ -163,7 +163,7 @@ var Color = (function () {
 //****** file: constants.js ******
 
     // constants, shared to all instances
-    var VERSION = '0.1.7a',
+    var VERSION = '0.1.8a',
         ATTRIBUTION = '&copy; <a href="http://osmbuildings.org">OSM Buildings</a>',
 
         PI = Math.PI,

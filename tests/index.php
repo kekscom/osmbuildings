@@ -16,8 +16,8 @@
         height: 100%;
     }
     </style>
-    <link rel="stylesheet" href="leaflet-0.4.5/leaflet.css">
-    <script src="leaflet-0.4.5/leaflet.js"></script>
+    <link rel="stylesheet" href="leaflet-0.5.1/leaflet.css">
+    <script src="leaflet-0.5.1/leaflet.js"></script>
 	<script><?php
 	$srcPath = "../src";
 	$srcFiles = array(
