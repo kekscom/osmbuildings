@@ -7,9 +7,8 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <link rel="stylesheet" href="../assets/styles.css">
 
-    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.4.5/leaflet.css">
-    <!--[if lte IE 8]><link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.4.5/leaflet.ie.css" /><![endif]-->
-    <script src="http://cdn.leafletjs.com/leaflet-0.4.5/leaflet.js"></script>
+    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.5.1/leaflet.css">
+    <script src="http://cdn.leafletjs.com/leaflet-0.5.1/leaflet.js"></script>
 
     <link rel="stylesheet" href="../examples/js/highlight/github.css">
     <script src="../examples/js/highlight/highlight.pack.js"></script>
@@ -39,7 +38,7 @@
 
         <h2>Data Conversion</h2>
 
-        <p>As PostGIS seems to be much more popular for handling geometry, there is now a data conversion script in using Node.js.
+        <p>As PostGIS is much more capable of handling geometry, there is now a data conversion script in using Node.js.
         Requirements are a working Node.js installation and the node-postgres module (install the module with <code>npm install pg</code>).
         Then have a look into /server/data/convert.js and change database, table, output settings.<br>
         Run the conversion with <code>node convert.js</code></p>

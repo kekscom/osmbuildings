@@ -17,8 +17,7 @@ for (var i in arguments) {
 
 //*****************************************************************************
 
-var
-    pgUsername       = config['pg-username']        || 'postgres',       // your postgres user name
+var pgUsername       = config['pg-username']        || 'postgres',       // your postgres user name
     pgPassword       = config['pg-password']        || '',               // your postgres user password
     pgHost           = config['pg-host']            || 'localhost:5432', // your postgres host and optionally port
     pgDatabase       = config['pg-database']        || 'postgis20',      // your postgres database name
@@ -37,8 +36,7 @@ var
 
 //*****************************************************************************
 
-var
-    fs = require('fs'),
+var fs = require('fs'),
     pg = require('pg')
 ;
 
@@ -77,9 +75,9 @@ var BulkInsert = function(handle, query, limit, callback) {
     this.add = function(record) {
         queue.push(record.join(','));
         if (queue.length > limit) {
-            this.flush()
+            this.flush();
         }
-    }
+    };
     this.flush = function() {
         var sql = query.replace('{values}', '\n('+ queue.join('),\n(') +')');
         if (handle.path && handle.writable) {
@@ -91,7 +89,7 @@ var BulkInsert = function(handle, query, limit, callback) {
             handle.query(sql, callback);
         }
         queue = [];
-    }
+    };
 };
 
 //*****************************************************************************
