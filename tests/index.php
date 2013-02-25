@@ -72,16 +72,6 @@
         margin-bottom: 10px;
         background-color: transparent;
     }
-
-    @media screen and (orientation: portrait) and (max-device-width: 960px) {
-        .datetime {
-            -webkit-transform: scale(2);
-            bottom: 360px;
-        }
-        .datetime input {
-            height: 50px;
-        }
-    }
     </style>
 
     <div class="datetime">
@@ -108,14 +98,16 @@
 
     var date = new Date();
 
-    var Y = date.getFullYear(),
+    var timeScale = 4,
+		dateScale = 2,
+		Y = date.getFullYear(),
         M = date.getMonth(),
         D = date.getDate() < 15 ? 1 : 15,
         h = date.getHours(),
         m = date.getMinutes() % 4 * 15;
 
-    timeRange.value = h;
-    dateRange.value = M;
+	timeRange.value = h * timeScale;
+    dateRange.value = M * dateScale;
     changeDate();
 
     function pad(v) {
@@ -129,14 +121,14 @@
     }
 
     timeRange.addEventListener('change', function () {
-        h = this.value / 4 <<0;
-        m = this.value % 4 * 15;
+        h = this.value / timeScale <<0;
+        m = this.value % timeScale * 15;
         changeDate();
     }, false);
 
     dateRange.addEventListener('change', function () {
-        M = this.value / 2 <<0;
-        D = this.value % 2 ? 15 : 1;
+        M = this.value / dateScale <<0;
+        D = this.value % dateScale ? 15 : 1;
         changeDate();
     }, false);
     </script>
