@@ -841,17 +841,21 @@ var Color = (function () {
             shadowBuffer,
             shadowAlpha = 1,
             shadowLength = -1,
-            shadowX = 0, shadowY = 0;
+            shadowX = 0, shadowY = 0,
+            shadowDateTime;
 
-        function setDate(date) {
+        function setDate(dateTime) {
             var center, sunPos;
 
-            if (!date) {
+            shadowDateTime = dateTime;
+            shadowBuffer = null;
+
+            if (!shadowDateTime) {
                 return;
             }
 
             center = pixelToGeo(originX + halfWidth, originY + halfHeight),
-            sunPos = getSunPosition(date, center.latitude, center.longitude);
+            sunPos = getSunPosition(shadowDateTime, center.latitude, center.longitude);
 
             if (sunPos.altitude <= 0) {
                 shadowLength = -1;
@@ -866,11 +870,14 @@ var Color = (function () {
             shadowColor.a = shadowAlpha;
             shadowColorAlpha = shadowColor + '';
 
-            shadowBuffer = null;
             render();
         }
 
         function drawShadows() {
+            if (!shadowDateTime) {
+                setDate(new Date());
+            }
+
             if (shadowBuffer) {
                 context.drawImage(shadowBuffer, shadowOriginX - originX, shadowOriginY - originY);
                 return;

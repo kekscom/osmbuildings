@@ -12,7 +12,5 @@
 
         LAT = 'latitude', LON = 'longitude',
 
-        // TODO: this is for non min height supporting backends
         HEIGHT = 0, MIN_HEIGHT = 1, FOOTPRINT = 2, COLOR = 3, CENTER = 4, IS_NEW = 5, RENDER_COLOR = 6
-        //HEIGHT = 0, FOOTPRINT = 1, COLOR = 2, CENTER = 3, IS_NEW = 4, RENDER_COLOR = 5, MIN_HEIGHT = 6
     ;
