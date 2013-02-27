@@ -176,9 +176,7 @@ var Color = (function () {
 
         LAT = 'latitude', LON = 'longitude',
 
-        // TODO: this is for non min height supporting backends
         HEIGHT = 0, MIN_HEIGHT = 1, FOOTPRINT = 2, COLOR = 3, CENTER = 4, IS_NEW = 5, RENDER_COLOR = 6
-        //HEIGHT = 0, FOOTPRINT = 1, COLOR = 2, CENTER = 3, IS_NEW = 4, RENDER_COLOR = 5, MIN_HEIGHT = 6
     ;
 
 
@@ -841,21 +839,17 @@ var Color = (function () {
             shadowBuffer,
             shadowAlpha = 1,
             shadowLength = -1,
-            shadowX = 0, shadowY = 0,
-            shadowDateTime;
+            shadowX = 0, shadowY = 0;
 
-        function setDate(dateTime) {
+        function setDate(date) {
             var center, sunPos;
 
-            shadowDateTime = dateTime;
-            shadowBuffer = null;
-
-            if (!shadowDateTime) {
+            if (!date) {
                 return;
             }
 
             center = pixelToGeo(originX + halfWidth, originY + halfHeight),
-            sunPos = getSunPosition(shadowDateTime, center.latitude, center.longitude);
+            sunPos = getSunPosition(date, center.latitude, center.longitude);
 
             if (sunPos.altitude <= 0) {
                 shadowLength = -1;
@@ -870,14 +864,11 @@ var Color = (function () {
             shadowColor.a = shadowAlpha;
             shadowColorAlpha = shadowColor + '';
 
+            shadowBuffer = null;
             render();
         }
 
         function drawShadows() {
-            if (!shadowDateTime) {
-                setDate(new Date());
-            }
-
             if (shadowBuffer) {
                 context.drawImage(shadowBuffer, shadowOriginX - originX, shadowOriginY - originY);
                 return;
