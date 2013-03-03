@@ -30,10 +30,6 @@
                 return;
             }
 
-            if (shadows.enabled) {
-                shadows.render();
-            }
-
             var i, il, j, jl,
                 item,
                 f, h, m, n,
@@ -50,6 +46,10 @@
             data.sort(function (a, b) {
                 return distance(b[CENTER], sortCam) / b[HEIGHT] - distance(a[CENTER], sortCam) / a[HEIGHT];
             });
+
+            if (shadows.enabled && shadows.length) {
+                shadows.render();
+            }
 
             for (i = 0, il = data.length; i < il; i++) {
                 item = data[i];

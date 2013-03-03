@@ -19,8 +19,6 @@ var shadows = {
             return;
         }
 
-console.log('creates buffer')
-
         this.originX = originX;
         this.originY = originY;
 
@@ -164,19 +162,13 @@ console.log('creates buffer')
         if (!this.length) {
             return;
         }
-
-//        if (!this.buffer) {
-//            this.create();
-//            return;
-//        }
-console.log('should draw buffer')
         context.drawImage(this.buffer, this.originX-originX, this.originY-originY);
     },
 
     setSun: function (sun) {
         if (sun.altitude <= 0) {
             this.length = 0;
-            this.sunAlpha = fromRange(-sun.altitude, 0, 1, 0.1, 0.8);
+            this.sunAlpha = fromRange(-sun.altitude, 0, 1, 0.2, 0.7);
         } else {
             this.length = 1 / tan(sun.altitude);
             this.sunAlpha = 0.4 / this.length;

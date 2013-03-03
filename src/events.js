@@ -1,41 +1,41 @@
-        function onResize(e) {
-            setSize(e.width, e.height);
-            render();
-            loadData();
-        }
+function onResize(e) {
+    setSize(e.width, e.height);
+    render();
+    loadData();
+}
 
-        function onMove(e) {
-            setOrigin(e.x, e.y);
-            render();
-        }
+function onMove(e) {
+    setOrigin(e.x, e.y);
+    render();
+}
 
-        function onMoveEnd(e) {
-            var nw = pixelToGeo(originX,         originY),
-                se = pixelToGeo(originX + width, originY + height)
-            ;
-            shadows.create();
-            render();
-            // check, whether viewport is still within loaded data bounding box
-            if (meta && (nw[LAT] > meta.n || nw[LON] < meta.w || se[LAT] < meta.s || se[LON] > meta.e)) {
-                loadData();
-            }
-        }
+function onMoveEnd(e) {
+    var nw = pixelToGeo(originX,         originY),
+        se = pixelToGeo(originX + width, originY + height)
+    ;
+    shadows.create();
+    render();
+    // check, whether viewport is still within loaded data bounding box
+    if (meta && (nw[LAT] > meta.n || nw[LON] < meta.w || se[LAT] < meta.s || se[LON] > meta.e)) {
+        loadData();
+    }
+}
 
-        function onZoomStart(e) {
-            isZooming = true;
-            render(); // effectively clears because of isZooming flag
-        }
+function onZoomStart(e) {
+    isZooming = true;
+    render(); // effectively clears because of isZooming flag
+}
 
-        function onZoomEnd(e) {
-            isZooming = false;
-            setZoom(e.zoom);
+function onZoomEnd(e) {
+    isZooming = false;
+    setZoom(e.zoom);
 
-            if (rawData) { // GeoJSON
-                data = scaleData(rawData);
-                shadows.create();
-                render();
-            } else {
-                render();
-                loadData();
-            }
-        }
+    if (rawData) { // GeoJSON
+        data = scaleData(rawData);
+        shadows.create();
+        render();
+    } else {
+        render();
+        loadData();
+    }
+}

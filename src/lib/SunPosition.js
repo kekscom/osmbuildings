@@ -5,10 +5,9 @@ var getSunPosition = (function () {
         cos = m.cos,
         tan = m.tan,
         asin = m.asin,
-        atan2 = m.atan2
+        atan2 = m.atan2,
         PI = m.PI,
-        RAD = 180 / PI
-    ;
+        RAD = 180 / PI;
 
     var dayMS = 1000 * 60 * 60 * 24,
         J1970 = 2440588,
@@ -49,5 +48,5 @@ var getSunPosition = (function () {
             altitude: getAltitude(H, phi, d),
             azimuth:  getAzimuth(H,  phi, d) - PI / 2 // origin: north
         };
-    }
+    };
 })();
