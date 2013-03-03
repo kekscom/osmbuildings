@@ -24,6 +24,7 @@
 		$srcPath . "/prefix.js",
 		$srcPath . "/shortcuts.js",
 		$srcPath . "/lib/Color.js",
+        $srcPath . "/lib/SunPosition.js",
 		$srcPath . "/constants.js",
 		$srcPath . "/geometry.js",
 			$srcPath . "/prefix.class.js",

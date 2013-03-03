@@ -1,6 +1,6 @@
         function fadeIn() {
             fadeFactor = 0;
-            shadowBuffer = null;
+            shadows.create();
             clearInterval(fadeTimer);
             fadeTimer = setInterval(function () {
                 fadeFactor += 0.5 * 0.2; // amount * easing
@@ -30,8 +30,8 @@
                 return;
             }
 
-            if (shadows && shadowLength > -1) {
-                drawShadows();
+            if (shadows.enabled) {
+                shadows.render();
             }
 
             var i, il, j, jl,
@@ -127,11 +127,6 @@
                 context.fillStyle   = item[RENDER_COLOR][2] || roofColorAlpha;
                 context.strokeStyle = item[RENDER_COLOR][1] || altColorAlpha;
                 drawShape(roof, true);
-            }
-
-            if (shadows && shadowLength === -1) {
-                context.fillStyle = shadowColorAlpha;
-                context.fillRect(0, 0, width, height);
             }
         }
 

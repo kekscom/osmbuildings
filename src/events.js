@@ -13,7 +13,7 @@
             var nw = pixelToGeo(originX,         originY),
                 se = pixelToGeo(originX + width, originY + height)
             ;
-            shadowBuffer = null;
+            shadows.create();
             render();
             // check, whether viewport is still within loaded data bounding box
             if (meta && (nw[LAT] > meta.n || nw[LON] < meta.w || se[LAT] < meta.s || se[LON] > meta.e)) {
@@ -32,7 +32,7 @@
 
             if (rawData) { // GeoJSON
                 data = scaleData(rawData);
-                shadowBuffer = null;
+                shadows.create();
                 render();
             } else {
                 render();

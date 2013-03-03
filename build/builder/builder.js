@@ -47,7 +47,7 @@ var jshintOptions = {
 
 	"eqeqeq": true,
 	"trailing": true,
-	"white": true,
+	"white": false,
 	"smarttabs": true
 };
 

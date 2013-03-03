@@ -17,6 +17,11 @@
             maxZoom = z;
         };
 
+        this.setDate = function (date) {
+            setDate(date);
+            return this;
+        };
+
         this.createCanvas  = createCanvas;
         this.destroyCanvas = destroyCanvas;
         this.loadData      = loadData;
@@ -27,4 +32,3 @@
         this.setOrigin     = setOrigin;
         this.setSize       = setSize;
         this.setZoom       = setZoom;
-        this.setDate       = setDate;
