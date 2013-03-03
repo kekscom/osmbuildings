@@ -1,5 +1,6 @@
 ALTER TABLE `buildings` ADD `min_height` INT(3) DEFAULT NULL AFTER `height`;
-ALTER TABLE `buildings` CHANGE region region_id INT(8) UNSIGNED NOT NULL;
+ALTER TABLE `buildings` CHANGE `region` `region_id` INT(8) UNSIGNED NOT NULL;
+ALTER TABLE `buildings` DROP KEY `height`;
 
 CREATE TABLE IF NOT EXISTS `regions` (
   `id` int(8) UNSIGNED NOT NULL AUTO_INCREMENT,
