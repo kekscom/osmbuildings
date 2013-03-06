@@ -21,6 +21,7 @@ class Source_Mysql extends Source_Abstract {
             FROM
                 {$this->_options['table']}
             WHERE
+                deleted IS NULL AND
                 MBRINTERSECTS(GEOMFROMTEXT('%s'), footprint)
             ORDER BY
                 height
