@@ -1,9 +1,6 @@
 # Changelog
 
-## latest
-
-
-## v0.1.8a @ 2013-02-25
+## v0.1.8a release candidate NOT STABLE YET @ 2013-03-06
 
 - improved simplification algorithm, inspired by Vladimir Agafonkin (http://mourner.github.com/simplify-js)
 - directional wall shading added
