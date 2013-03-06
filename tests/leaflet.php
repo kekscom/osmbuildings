@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>OSM Buildings - Release</title>
+    <title>OSM Buildings - Leaflet</title>
     <meta http-equiv="content-type" content="text/html; charset=utf-8">
 	<style>
 	body {

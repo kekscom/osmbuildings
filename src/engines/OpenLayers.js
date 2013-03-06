@@ -36,7 +36,7 @@ OpenLayers.Layer.Buildings = OpenLayers.Class(OpenLayers.Layer, {
         if (!this.map) {
             OpenLayers.Layer.prototype.setMap(map);
             this.osmb = new OSMBuildings(this.options.url);
-            this.osmb.createCanvas(this.div);
+            this.osmb.createContainer(this.div);
             this.osmb.setSize(this.map.size.w, this.map.size.h);
             this.osmb.setZoom(this.map.zoom);
             this.setOrigin();
@@ -45,7 +45,7 @@ OpenLayers.Layer.Buildings = OpenLayers.Class(OpenLayers.Layer, {
     },
 
     removeMap: function (map) {
-        this.osmb.destroyCanvas();
+        this.osmb.destroyContainer();
         this.osmb = null;
         OpenLayers.Layer.prototype.removeMap(map);
     },

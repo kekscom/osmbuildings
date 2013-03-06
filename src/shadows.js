@@ -1,17 +1,33 @@
 var shadows = {
     enabled: true,
-    originX: 0,
-    originY: 0,
-    buffer: new Image(),
+    canvas: null,
+    context: null,
     color: new Color(0, 0, 0),
     colorStr: this.color + '',
-    sunAlpha: 1,
+    alpha: 1,
     length: 0,
     directionX: 0,
     directionY: 0,
 
-    create: function () {
+    init: function (container) {
+        this.canvas = createCanvas(container);
+        this.context = this.canvas.getContext('2d');
+    },
+
+    render: function () {
+        var context = this.context;
+
+        context.clearRect(0, 0, width, height);
+
+        if (!this.enabled) {
+            return;
+        }
+
         if (!meta || !data) {
+            return;
+        }
+
+        if (zoom < minZoom || isZooming) {
             return;
         }
 
@@ -33,19 +49,19 @@ var shadows = {
             grounds = []
         ;
 
-        context.fillStyle = this.colorStr;
+        context.beginPath();
 
         for (i = 0, il = data.length; i < il; i++) {
             item = data[i];
 
             isVisible = false;
             f = item[FOOTPRINT];
-            footprint = []; // typed array would be created each pass and is way too slow
+            footprint = [];
             for (j = 0, jl = f.length - 1; j < jl; j += 2) {
                 footprint[j]     = x = (f[j]     - offX);
                 footprint[j + 1] = y = (f[j + 1] - offY);
 
-                // TODO: checking footprint is sufficient for visibility - NOT ANYMORE!
+                // TODO: checking footprint is sufficient for visibility - NOT VALID FOR SHADOWS!
                 if (!isVisible) {
                     isVisible = (x > 0 && x < width && y > 0 && y < height);
                 }
@@ -57,17 +73,15 @@ var shadows = {
 
             // TODO: check, whether this works
             // when fading in, use a dynamic height
-            //h = item[IS_NEW] ? item[HEIGHT] * fadeFactor : item[HEIGHT];
-            h = item[HEIGHT];
+            h = item[IS_NEW] ? item[HEIGHT] * fadeFactor : item[HEIGHT];
 
             // prepare same calculations for min_height if applicable
             if (item[MIN_HEIGHT]) {
-                //h = item[IS_NEW] ? item[MIN_HEIGHT] * fadeFactor : item[MIN_HEIGHT];
-                h = item[MIN_HEIGHT];
+                h = item[IS_NEW] ? item[MIN_HEIGHT] * fadeFactor : item[MIN_HEIGHT];
             }
 
             mode = null;
-            context.beginPath();
+
             for (j = 0, jl = footprint.length - 3; j < jl; j += 2) {
                 ax = footprint[j];
                 ay = footprint[j + 1];
@@ -108,21 +122,29 @@ var shadows = {
             }
 
             context.closePath();
-            context.fill();
 
             grounds.push(footprint);
         }
 
-        // draw all footprints in a different color for later filtering
-        context.fillStyle = wallColorAlpha;
-        for (i = 0, il = grounds.length; i < il; i++) {
-            drawShape(grounds[i]);
-        }
+        context.fillStyle = this.colorStr;
+        context.fill();
 
-//        this.filter();
-  //      this.buffer.src = canvas.toDataURL();
-    //    this.originX = originX;
-      //  this.originY = originY;
+        // now draw all the footprints as negative clipping mask
+        context.globalCompositeOperation = 'destination-out';
+        context.beginPath();
+        var points;
+        for (i = 0, il = grounds.length; i < il; i++) {
+            points = grounds[i];
+            context.moveTo(points[0], points[1]);
+            for (j = 2, jl = points.length; j < jl; j += 2) {
+                context.lineTo(points[j], points[j + 1]);
+            }
+            context.lineTo(points[0], points[1]);
+            context.closePath();
+        }
+        context.fillStyle = '#00ff00';
+        context.fill();
+        context.globalCompositeOperation = 'source-over';
     },
 
     project: function (x, y, h) {
@@ -132,52 +154,39 @@ var shadows = {
         };
     },
 
-    filter: function () {
-        var buffer = context.getImageData(0, 0, width, height),
-            pixels = buffer.data,
-            blendAlpha = this.sunAlpha * 255 <<0,
-            maxAlpha = 255,
-            r, a;
-
-        for (var i = 0, il = pixels.length; i < il; i += 4) {
-            r = pixels[i + 0];
-            a = pixels[i + 3];
-            // make everything with color and maximum alpha fully transparent
-            if (r && a >= maxAlpha) {
-                pixels[i + 3] = 0;
-            } else
-            // reduce higher alpha values to max shadow color alpha
-            // this removes dark overlapping areas in shadows but keeps all anti aliasing
-            if (a > blendAlpha) {
-                pixels[i + 3] = blendAlpha;
-            }
-        }
-
-        context.putImageData(buffer, 0, 0);
+    setAlpha: function(alpha) {
+        this.colorStr = this.color.adjustAlpha(alpha) + '';
+        this.render();
     },
 
-    render: function () {
-        if (this.enabled && this.length) {
-          //  this.create();
-            context.drawImage(this.buffer, 0, 0);
-//          context.drawImage(this.buffer, this.originX-originX, this.originY-originY);
-        }
+    setEnabled: function (flag) {
+        this.enabled = !!flag;
+        this.render();
     },
 
     setSun: function (sun) {
         if (sun.altitude <= 0) {
             this.length = 0;
-            this.sunAlpha = fromRange(-sun.altitude, 0, 1, 0.2, 0.7);
+            this.alpha = fromRange(-sun.altitude, 0, 1, 0.2, 0.7);
         } else {
             this.length = 1 / tan(sun.altitude);
-            this.sunAlpha = 0.4 / this.length;
+            this.alpha = 0.4 / this.length;
             this.directionX = cos(sun.azimuth) * this.length;
             this.directionY = sin(sun.azimuth) * this.length;
         }
 
-        this.color.a = this.sunAlpha;
+        this.color.a = this.alpha;
         this.colorStr = this.color + '';
 
-        this.create();
+        this.render();
+    },
+
+    setSize: function (w, h) {
+        this.canvas.width = w;
+        this.canvas.height = h;
+    },
+
+    destroy: function () {
+        this.canvas.parentNode.removeChild(this.canvas);
     }
 };

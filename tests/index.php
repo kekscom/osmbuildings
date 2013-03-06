@@ -97,7 +97,8 @@
     var dateRange = document.querySelector('#date');
     var dateRangeLabel = document.querySelector('*[for=date]');
 
-    var date = new Date();
+    // var date = new Date();
+    var date = new Date(2013, 2, 15, 10, 30);
 
     var timeScale = 4,
 		dateScale = 2,

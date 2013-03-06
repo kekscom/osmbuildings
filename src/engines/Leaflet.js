@@ -2,7 +2,7 @@ L.BuildingsLayer = L.Class.extend({
 
     map: null,
     osmb: null,
-    canvas: null,
+    container: null,
 
     blockMoveEvent: null, // needed as Leaflet fires moveend and zoomend together
 
@@ -33,8 +33,8 @@ L.BuildingsLayer = L.Class.extend({
 
         this.lastX = mp.x;
         this.lastY = mp.y;
-        this.canvas.style.left = -mp.x + 'px';
-        this.canvas.style.top  = -mp.y + 'px';
+        this.container.style.left = -mp.x + 'px';
+        this.container.style.top  = -mp.y + 'px';
         this.osmb.setCamOffset(0, 0);
 
         this.osmb.setSize(this.map._size.x, this.map._size.y); // in case this is triggered by resize
@@ -64,7 +64,7 @@ L.BuildingsLayer = L.Class.extend({
         this.map = map;
         this.osmb = new OSMBuildings(this.options.url);
 
-        this.canvas = this.osmb.createCanvas(this.map._panes.overlayPane);
+        this.container = this.osmb.createContainer(this.map._panes.overlayPane);
         this.osmb.maxZoom = this.map._layersMaxZoom;
 
         var
@@ -76,8 +76,8 @@ L.BuildingsLayer = L.Class.extend({
         this.osmb.setOrigin(po.x - mp.x, po.y - mp.y);
         this.osmb.setZoom(this.map._zoom);
 
-        this.canvas.style.left = -mp.x + 'px';
-        this.canvas.style.top  = -mp.y + 'px';
+        this.container.style.left = -mp.x + 'px';
+        this.container.style.top  = -mp.y + 'px';
 
         this.map.on({
             move: this.onMove,
@@ -94,15 +94,15 @@ L.BuildingsLayer = L.Class.extend({
 //                origin = viewportPos.add(offset).round()
 //            ;
 //
-//            this.canvas.style[L.DomUtil.TRANSFORM] = L.DomUtil.getTranslateString((origin.multiplyBy(-1).add(L.DomUtil.getPosition(this.map._mapPane).multiplyBy(-1)).multiplyBy(scale).add(origin))) + ' scale(' + scale + ') ';
-//            this.canvas.style.border = "3px solid red";
+//            this.container.style[L.DomUtil.TRANSFORM] = L.DomUtil.getTranslateString((origin.multiplyBy(-1).add(L.DomUtil.getPosition(this.map._mapPane).multiplyBy(-1)).multiplyBy(scale).add(origin))) + ' scale(' + scale + ') ';
+//            this.container.style.border = "3px solid red";
 //            isZooming = true;
 //        };
 
-        if (this.map.options.zoomAnimation) {
-            this.canvas.className = 'leaflet-zoom-animated';
-//          this.map.on('zoomanim', onZoom);
-        }
+//        if (this.map.options.zoomAnimation) {
+//            this.container.className = 'leaflet-zoom-animated';
+//            this.map.on('zoomanim', onZoom);
+//        }
 
         this.map.attributionControl.addAttribution(OSMBuildings.ATTRIBUTION);
 
@@ -120,7 +120,7 @@ L.BuildingsLayer = L.Class.extend({
             zoomend: this.onZoomEnd
         }, this);
 
-        this.canvas = this.osmb.destroyCanvas();
+        this.container = this.osmb.destroyContainer();
         this.map = null;
         this.osmb = null;
     },

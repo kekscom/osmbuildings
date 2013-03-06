@@ -13,7 +13,7 @@ function onMoveEnd(e) {
     var nw = pixelToGeo(originX,         originY),
         se = pixelToGeo(originX + width, originY + height)
     ;
-    shadows.create();
+    shadows.render();
     render();
     // check, whether viewport is still within loaded data bounding box
     if (meta && (nw[LAT] > meta.n || nw[LON] < meta.w || se[LAT] < meta.s || se[LON] > meta.e)) {
@@ -23,6 +23,7 @@ function onMoveEnd(e) {
 
 function onZoomStart(e) {
     isZooming = true;
+    shadows.render();
     render(); // effectively clears because of isZooming flag
 }
 
@@ -32,7 +33,6 @@ function onZoomEnd(e) {
 
     if (rawData) { // GeoJSON
         data = scaleData(rawData);
-        shadows.create();
         render();
     } else {
         render();

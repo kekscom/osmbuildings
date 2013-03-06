@@ -347,7 +347,7 @@ var width = 0, height = 0,
 
     req,
 
-    canvas, context,
+    container, canvas, context,
 
     url,
 
@@ -378,15 +378,17 @@ var width = 0, height = 0,
 
 //****** file: functions.js ******
 
-        function createCanvas(parentNode) {
+        function createContainer(parentNode) {
+            container = doc.createElement('DIV');
+            container.style.pointerEvents = 'none';
+            container.style.position = 'absolute';
+            container.style.left = 0;
+            container.style.top = 0;
+
             canvas = doc.createElement('CANVAS');
             canvas.style.webkitTransform = 'translate3d(0,0,0)'; // turn on hw acceleration
             canvas.style.imageRendering = 'optimizeSpeed';
-            canvas.style.position = 'absolute';
-            canvas.style.pointerEvents = 'none';
-            canvas.style.left = 0;
-            canvas.style.top = 0;
-            parentNode.appendChild(canvas);
+            container.appendChild(canvas);
 
             context = canvas.getContext('2d');
             context.lineCap = 'round';
@@ -398,10 +400,11 @@ var width = 0, height = 0,
             } catch (err) {
             }
 
-            return canvas;
+            parentNode.appendChild(container);
+            return container;
         }
 
-        function destroyCanvas() {
+        function destroyContainer() {
             canvas.parentNode.removeChild(canvas);
         }
 
@@ -440,318 +443,318 @@ var width = 0, height = 0,
 
 //****** file: data.js ******
 
-        function xhr(url, callback) {
-            var x = new XMLHttpRequest();
-            x.onreadystatechange = function () {
-                if (x.readyState !== 4) {
-                    return;
-                }
-                if (!x.status || x.status < 200 || x.status > 299) {
-                    return;
-                }
-                if (x.responseText) {
-                    callback(JSON.parse(x.responseText));
-                }
-            };
-            x.open('GET', url);
-            x.send(null);
-            return x;
+function xhr(url, callback) {
+    var x = new XMLHttpRequest();
+    x.onreadystatechange = function () {
+        if (x.readyState !== 4) {
+            return;
+        }
+        if (!x.status || x.status < 200 || x.status > 299) {
+            return;
+        }
+        if (x.responseText) {
+            callback(JSON.parse(x.responseText));
+        }
+    };
+    x.open('GET', url);
+    x.send(null);
+    return x;
+}
+
+function loadData() {
+    if (!url || zoom < MIN_ZOOM) {
+        return;
+    }
+
+    // create bounding box of double viewport size
+    var nw = pixelToGeo(originX         - halfWidth, originY          - halfHeight),
+        se = pixelToGeo(originX + width + halfWidth, originY + height + halfHeight)
+    ;
+
+    if (req) {
+        req.abort();
+    }
+    req = xhr(template(url, {
+        w: nw[LON],
+        n: nw[LAT],
+        e: se[LON],
+        s: se[LAT],
+        z: zoom
+    }), onDataLoaded);
+}
+
+function onDataLoaded(res) {
+    var i, il,
+        resData, resMeta,
+        keyList = [], k,
+        offX = 0, offY = 0,
+        item,
+        footprint
+    ;
+
+    minZoom = MIN_ZOOM;
+    setZoom(zoom); // recalculating all zoom related variables
+    req = null;
+
+    // no response or response not matching current zoom (too old response)
+    if (!res || res.meta.z !== zoom) {
+        return;
+    }
+
+    resMeta = res.meta;
+    resData = res.data;
+
+    // offset between old and new data set
+    if (meta && data && meta.z === resMeta.z) {
+        offX = meta.x - resMeta.x;
+        offY = meta.y - resMeta.y;
+
+        // identify already present buildings to fade in new ones
+        for (i = 0, il = data.length; i < il; i++) {
+            // id key: x,y of first point - good enough
+            keyList[i] = (data[i][FOOTPRINT][0] + offX) + ',' + (data[i][FOOTPRINT][1] + offY);
+        }
+    }
+
+    meta = resMeta;
+    data = [];
+
+    
+
+    for (i = 0, il = resData.length; i < il; i++) {
+        item = [];
+
+        if (resData[i][MIN_HEIGHT] > maxHeight) {
+            continue;
         }
 
-        function loadData() {
-            if (!url || zoom < MIN_ZOOM) {
-                return;
-            }
+        
 
-            // create bounding box of double viewport size
-            var nw = pixelToGeo(originX         - halfWidth, originY          - halfHeight),
-                se = pixelToGeo(originX + width + halfWidth, originY + height + halfHeight)
-            ;
+        footprint = simplify(resData[i][FOOTPRINT]);
 
-            if (req) {
-                req.abort();
-            }
-            req = xhr(template(url, {
-                w: nw[LON],
-                n: nw[LAT],
-                e: se[LON],
-                s: se[LAT],
-                z: zoom
-            }), onDataLoaded);
+        
+
+        if (footprint.length < 8) { // 3 points & end = start (x2)
+            continue;
         }
 
-        function onDataLoaded(res) {
-            var i, il,
-                resData, resMeta,
-                keyList = [], k,
-                offX = 0, offY = 0,
-                item,
-                footprint
-            ;
+        item[FOOTPRINT] = footprint;
+        item[CENTER] = center(footprint);
 
-            minZoom = MIN_ZOOM;
-            setZoom(zoom); // recalculating all zoom related variables
-            req = null;
+        item[HEIGHT] = min(resData[i][HEIGHT], maxHeight);
+        item[MIN_HEIGHT] = resData[i][MIN_HEIGHT];
 
-            // no response or response not matching current zoom (too old response)
-            if (!res || res.meta.z !== zoom) {
-                return;
+        k = item[FOOTPRINT][0] + ',' + item[FOOTPRINT][1];
+        item[IS_NEW] = !(keyList && ~keyList.indexOf(k));
+
+        item[COLOR] = [];
+        item[RENDER_COLOR] = [];
+
+        data.push(item);
+    }
+
+    
+
+    resMeta = resData = keyList = null; // gc
+    fadeIn();
+}
+
+// detect polygon winding direction: clockwise or counter clockwise
+function getPolygonWinding(points) {
+    var x1, y1, x2, y2,
+        a = 0,
+        i, il
+    ;
+    for (i = 0, il = points.length - 3; i < il; i += 2) {
+        x1 = points[i];
+        y1 = points[i + 1];
+        x2 = points[i + 2];
+        y2 = points[i + 3];
+        a += x1 * y2 - x2 * y1;
+    }
+    return (a / 2) > 0 ? 'CW' : 'CCW';
+}
+
+// make polygon winding clockwise. This is needed for proper backface culling on client side.
+function makeClockwiseWinding(points) {
+    var winding = getPolygonWinding(points);
+    if (winding === 'CW') {
+        return points;
+    }
+    var revPoints = [];
+    for (var i = points.length - 2; i >= 0; i -= 2) {
+        revPoints.push(points[i], points[i + 1]);
+    }
+    return revPoints;
+}
+
+function scaleData(data, isNew) {
+    var res = [],
+        i, il, j, jl,
+        oldItem, item,
+        coords, p,
+        minHeight,
+        footprint,
+        z = maxZoom - zoom
+    ;
+
+    for (i = 0, il = data.length; i < il; i++) {
+        oldItem = data[i];
+
+        // TODO: later on, keep continued' objects in order not to loose them on zoom back in
+
+        minHeight = oldItem[MIN_HEIGHT] >> z;
+        if (minHeight > maxHeight) {
+            continue;
+        }
+
+        coords = oldItem[FOOTPRINT];
+        footprint = new Int32Array(coords.length);
+        for (j = 0, jl = coords.length - 1; j < jl; j += 2) {
+            p = geoToPixel(coords[j], coords[j + 1]);
+            footprint[j]     = p.x;
+            footprint[j + 1] = p.y;
+        }
+
+        footprint = simplify(footprint);
+        if (footprint.length < 8) { // 3 points & end = start (x2)
+            continue;
+        }
+
+        item = [];
+        item[FOOTPRINT]   = footprint;
+        item[CENTER]      = center(footprint);
+        item[HEIGHT]      = min(oldItem[HEIGHT] >> z, maxHeight);
+        item[MIN_HEIGHT]  = minHeight;
+        item[IS_NEW]      = isNew;
+        item[COLOR]       = oldItem[COLOR];
+        item[RENDER_COLOR] = [];
+
+        for (j = 0; j < 3; j++) {
+            if (item[COLOR][j]) {
+                item[RENDER_COLOR][j] = item[COLOR][j].adjustAlpha(zoomAlpha) + '';
+            }
+        }
+
+        res.push(item);
+    }
+
+    return res;
+}
+
+function geoJSON(url, isLatLon) {
+    if (typeof url === 'object') {
+        setData(url, !isLatLon);
+        return;
+    }
+    var
+        el = doc.documentElement,
+        callback = 'jsonpCallback',
+        script = doc.createElement('script')
+    ;
+    global[callback] = function (res) {
+        delete global[callback];
+        el.removeChild(script);
+        setData(res, !isLatLon);
+    };
+    el.insertBefore(script, el.lastChild).src = url.replace(/\{callback\}/, callback);
+}
+
+function parseGeoJSON(json, isLonLat, res) {
+    if (res === undefined) {
+        res = [];
+    }
+
+    var i, il,
+        j, jl,
+        features = json[0] ? json : json.features,
+        geometry, polygons, coords, properties,
+        footprint, heightSum,
+        propHeight, propWallColor, propRoofColor,
+        lat = isLonLat ? 1 : 0,
+        lon = isLonLat ? 0 : 1,
+        alt = 2,
+        item
+    ;
+
+    if (features) {
+        for (i = 0, il = features.length; i < il; i++) {
+            parseGeoJSON(features[i], isLonLat, res);
+        }
+        return res;
+    }
+
+    if (json.type === 'Feature') {
+        geometry = json.geometry;
+        properties = json.properties;
+    }
+//      else geometry = json
+
+    if (geometry.type === 'Polygon') {
+        polygons = [geometry.coordinates];
+    }
+    if (geometry.type === 'MultiPolygon') {
+        polygons = geometry.coordinates;
+    }
+
+    if (polygons) {
+        propHeight = properties.height;
+        if (properties.color || properties.wallColor) {
+            propWallColor = Color.parse(properties.color || properties.wallColor);
+        }
+        if (properties.roofColor) {
+            propRoofColor = Color.parse(properties.roofColor);
+        }
+
+        for (i = 0, il = polygons.length; i < il; i++) {
+            coords = polygons[i][0];
+            footprint = [];
+            heightSum = 0;
+            for (j = 0, jl = coords.length; j < jl; j++) {
+                footprint.push(coords[j][lat], coords[j][lon]);
+                heightSum += propHeight || coords[j][alt] || 0;
             }
 
-            resMeta = res.meta;
-            resData = res.data;
-
-            // offset between old and new data set
-            if (meta && data && meta.z === resMeta.z) {
-                offX = meta.x - resMeta.x;
-                offY = meta.y - resMeta.y;
-
-                // identify already present buildings to fade in new ones
-                for (i = 0, il = data.length; i < il; i++) {
-                    // id key: x,y of first point - good enough
-                    keyList[i] = (data[i][FOOTPRINT][0] + offX) + ',' + (data[i][FOOTPRINT][1] + offY);
-                }
-            }
-
-            meta = resMeta;
-            data = [];
-
-            
-
-            for (i = 0, il = resData.length; i < il; i++) {
+            if (heightSum) {
                 item = [];
-
-                if (resData[i][MIN_HEIGHT] > maxHeight) {
-                    continue;
-                }
-
-                
-
-                footprint = simplify(resData[i][FOOTPRINT]);
-
-                
-
-                if (footprint.length < 8) { // 3 points & end = start (x2)
-                    continue;
-                }
-
-                item[FOOTPRINT] = footprint;
-                item[CENTER] = center(footprint);
-
-                item[HEIGHT] = min(resData[i][HEIGHT], maxHeight);
-                item[MIN_HEIGHT] = resData[i][MIN_HEIGHT];
-
-                k = item[FOOTPRINT][0] + ',' + item[FOOTPRINT][1];
-                item[IS_NEW] = !(keyList && ~keyList.indexOf(k));
-
-                item[COLOR] = [];
-                item[RENDER_COLOR] = [];
-
-                data.push(item);
-            }
-
-            
-
-            resMeta = resData = keyList = null; // gc
-            fadeIn();
-        }
-
-        // detect polygon winding direction: clockwise or counter clockwise
-        function getPolygonWinding(points) {
-            var x1, y1, x2, y2,
-                a = 0,
-                i, il
-            ;
-            for (i = 0, il = points.length - 3; i < il; i += 2) {
-                x1 = points[i];
-                y1 = points[i + 1];
-                x2 = points[i + 2];
-                y2 = points[i + 3];
-                a += x1 * y2 - x2 * y1;
-            }
-            return (a / 2) > 0 ? 'CW' : 'CCW';
-        }
-
-        // make polygon winding clockwise. This is needed for proper backface culling on client side.
-        function makeClockwiseWinding(points) {
-            var winding = getPolygonWinding(points);
-            if (winding === 'CW') {
-                return points;
-            }
-            var revPoints = [];
-            for (var i = points.length - 2; i >= 0; i -= 2) {
-                revPoints.push(points[i], points[i + 1]);
-            }
-            return revPoints;
-        }
-
-        function scaleData(data, isNew) {
-            var res = [],
-                i, il, j, jl,
-                oldItem, item,
-                coords, p,
-				minHeight,
-                footprint,
-                z = maxZoom - zoom
-            ;
-
-            for (i = 0, il = data.length; i < il; i++) {
-                oldItem = data[i];
-
-                // TODO: later on, keep continued' objects in order not to loose them on zoom back in
-
-				minHeight = oldItem[MIN_HEIGHT] >> z;
-                if (minHeight > maxHeight) {
-                    continue;
-                }
-
-                coords = oldItem[FOOTPRINT];
-                footprint = new Int32Array(coords.length);
-                for (j = 0, jl = coords.length - 1; j < jl; j += 2) {
-                    p = geoToPixel(coords[j], coords[j + 1]);
-                    footprint[j]     = p.x;
-                    footprint[j + 1] = p.y;
-                }
-
-                footprint = simplify(footprint);
-                if (footprint.length < 8) { // 3 points & end = start (x2)
-                    continue;
-                }
-
-                item = [];
-                item[FOOTPRINT]   = footprint;
-                item[CENTER]      = center(footprint);
-                item[HEIGHT]      = min(oldItem[HEIGHT] >> z, maxHeight);
-                item[MIN_HEIGHT]  = minHeight;
-                item[IS_NEW]      = isNew;
-                item[COLOR]       = oldItem[COLOR];
-                item[RENDER_COLOR] = [];
-
-                for (j = 0; j < 3; j++) {
-                    if (item[COLOR][j]) {
-                        item[RENDER_COLOR][j] = item[COLOR][j].adjustAlpha(zoomAlpha) + '';
-                    }
-                }
-
+                item[FOOTPRINT] = makeClockwiseWinding(footprint);
+                item[HEIGHT]    = heightSum / coords.length << 0;
+                item[COLOR] = [
+                    propWallColor || null,
+                    propWallColor ? propWallColor.adjustLightness(0.8) : null,
+                    propRoofColor ? propRoofColor : propWallColor ? propWallColor.adjustLightness(1.2) : roofColor
+                ];
                 res.push(item);
             }
-
-            return res;
         }
+    }
+    return res;
+}
 
-        function geoJSON(url, isLatLon) {
-            if (typeof url === 'object') {
-                setData(url, !isLatLon);
-                return;
-            }
-            var
-                el = doc.documentElement,
-                callback = 'jsonpCallback',
-                script = doc.createElement('script')
-            ;
-            global[callback] = function (res) {
-                delete global[callback];
-                el.removeChild(script);
-                setData(res, !isLatLon);
-            };
-            el.insertBefore(script, el.lastChild).src = url.replace(/\{callback\}/, callback);
-        }
+function setData(json, isLonLat) {
+    if (!json) {
+        rawData = null;
+        render(); // effectively clears
+        return;
+    }
 
-        function parseGeoJSON(json, isLonLat, res) {
-            if (res === undefined) {
-                res = [];
-            }
+    rawData = parseGeoJSON(json, isLonLat);
+    minZoom = 0;
+    setZoom(zoom); // recalculating all zoom related variables
 
-            var i, il,
-                j, jl,
-                features = json[0] ? json : json.features,
-                geometry, polygons, coords, properties,
-                footprint, heightSum,
-                propHeight, propWallColor, propRoofColor,
-                lat = isLonLat ? 1 : 0,
-                lon = isLonLat ? 0 : 1,
-                alt = 2,
-                item
-            ;
+    meta = {
+        n: 90,
+        w: -180,
+        s: -90,
+        e: 180,
+        x: 0,
+        y: 0,
+        z: zoom
+    };
+    data = scaleData(rawData, true);
 
-            if (features) {
-                for (i = 0, il = features.length; i < il; i++) {
-                    parseGeoJSON(features[i], isLonLat, res);
-                }
-                return res;
-            }
-
-            if (json.type === 'Feature') {
-                geometry = json.geometry;
-                properties = json.properties;
-            }
-        //      else geometry = json
-
-            if (geometry.type === 'Polygon') {
-                polygons = [geometry.coordinates];
-            }
-            if (geometry.type === 'MultiPolygon') {
-                polygons = geometry.coordinates;
-            }
-
-            if (polygons) {
-                propHeight = properties.height;
-                if (properties.color || properties.wallColor) {
-                    propWallColor = Color.parse(properties.color || properties.wallColor);
-                }
-                if (properties.roofColor) {
-                    propRoofColor = Color.parse(properties.roofColor);
-                }
-
-                for (i = 0, il = polygons.length; i < il; i++) {
-                    coords = polygons[i][0];
-                    footprint = [];
-                    heightSum = 0;
-                    for (j = 0, jl = coords.length; j < jl; j++) {
-                        footprint.push(coords[j][lat], coords[j][lon]);
-                        heightSum += propHeight || coords[j][alt] || 0;
-                    }
-
-                    if (heightSum) {
-                        item = [];
-                        item[FOOTPRINT] = makeClockwiseWinding(footprint);
-                        item[HEIGHT]    = heightSum / coords.length << 0;
-                        item[COLOR] = [
-                            propWallColor || null,
-                            propWallColor ? propWallColor.adjustLightness(0.8) : null,
-                            propRoofColor ? propRoofColor : propWallColor ? propWallColor.adjustLightness(1.2) : roofColor
-                        ];
-                        res.push(item);
-                    }
-                }
-            }
-            return res;
-        }
-
-        function setData(json, isLonLat) {
-            if (!json) {
-                rawData = null;
-                render(); // effectively clears
-                return;
-            }
-
-            rawData = parseGeoJSON(json, isLonLat);
-            minZoom = 0;
-            setZoom(zoom); // recalculating all zoom related variables
-
-            meta = {
-                n: 90,
-                w: -180,
-                s: -90,
-                e: 180,
-                x: 0,
-                y: 0,
-                z: zoom
-            };
-            data = scaleData(rawData, true);
-
-            fadeIn();
-        }
+    fadeIn();
+}
 
 
 //****** file: properties.js ******
@@ -764,8 +767,10 @@ function setSize(w, h) {
     camX = halfWidth;
     camY = height;
     camZ = width / 1.5 / tan(90 / 2) << 0; // adapting cam pos to field of view (90°), 1.5 is an empirical correction factor
-    canvas.width = width;
-    canvas.height = height;
+    container.width = width;
+    container.height = height;
+    canvas.width = '100%';
+    canvas.height = '100%';
     // TODO: change of maxHeight needs to adjust building heights!
     maxHeight = camZ - 50;
 }
@@ -842,47 +847,47 @@ function setDate(date) {
 
 //****** file: events.js ******
 
-        function onResize(e) {
-            setSize(e.width, e.height);
-            render();
-            loadData();
-        }
+function onResize(e) {
+    setSize(e.width, e.height);
+    render();
+    loadData();
+}
 
-        function onMove(e) {
-            setOrigin(e.x, e.y);
-            render();
-        }
+function onMove(e) {
+    setOrigin(e.x, e.y);
+    render();
+}
 
-        function onMoveEnd(e) {
-            var nw = pixelToGeo(originX,         originY),
-                se = pixelToGeo(originX + width, originY + height)
-            ;
-            shadows.create();
-            render();
-            // check, whether viewport is still within loaded data bounding box
-            if (meta && (nw[LAT] > meta.n || nw[LON] < meta.w || se[LAT] < meta.s || se[LON] > meta.e)) {
-                loadData();
-            }
-        }
+function onMoveEnd(e) {
+    var nw = pixelToGeo(originX,         originY),
+        se = pixelToGeo(originX + width, originY + height)
+    ;
+    shadows.create();
+    render();
+    // check, whether viewport is still within loaded data bounding box
+    if (meta && (nw[LAT] > meta.n || nw[LON] < meta.w || se[LAT] < meta.s || se[LON] > meta.e)) {
+        loadData();
+    }
+}
 
-        function onZoomStart(e) {
-            isZooming = true;
-            render(); // effectively clears because of isZooming flag
-        }
+function onZoomStart(e) {
+    isZooming = true;
+    render(); // effectively clears because of isZooming flag
+}
 
-        function onZoomEnd(e) {
-            isZooming = false;
-            setZoom(e.zoom);
+function onZoomEnd(e) {
+    isZooming = false;
+    setZoom(e.zoom);
 
-            if (rawData) { // GeoJSON
-                data = scaleData(rawData);
-                shadows.create();
-                render();
-            } else {
-                render();
-                loadData();
-            }
-        }
+    if (rawData) { // GeoJSON
+        data = scaleData(rawData);
+        shadows.create();
+        render();
+    } else {
+        render();
+        loadData();
+    }
+}
 
 
 //****** file: shadows.js ******
@@ -907,11 +912,6 @@ var shadows = {
         if (!this.length) {
             return;
         }
-
-console.log('creates buffer');
-
-        this.originX = originX;
-        this.originY = originY;
 
         var i, il, j, jl,
             item,
@@ -939,7 +939,7 @@ console.log('creates buffer');
                 footprint[j]     = x = (f[j]     - offX);
                 footprint[j + 1] = y = (f[j + 1] - offY);
 
-                // TODO: checking footprint is sufficient for visibility - NOT ANYMORE!
+                // TODO: checking footprint is sufficient for visibility - NOT VALID FOR SHADOWS!
                 if (!isVisible) {
                     isVisible = (x > 0 && x < width && y > 0 && y < height);
                 }
@@ -962,7 +962,6 @@ console.log('creates buffer');
 
             mode = null;
             context.beginPath();
-
             for (j = 0, jl = footprint.length - 3; j < jl; j += 2) {
                 ax = footprint[j];
                 ay = footprint[j + 1];
@@ -1015,7 +1014,12 @@ console.log('creates buffer');
         }
 
         this.filter();
+        this.buffer.onload = function () {
+            render();
+        };
         this.buffer.src = canvas.toDataURL();
+        this.originX = originX;
+        this.originY = originY;
     },
 
     project: function (x, y, h) {
@@ -1050,22 +1054,15 @@ console.log('creates buffer');
     },
 
     render: function () {
-        if (!this.length) {
-            return;
+        if (this.enabled && this.length) {
+          context.drawImage(this.buffer, this.originX-originX, this.originY-originY);
         }
-
-//        if (!this.buffer) {
-//            this.create();
-//            return;
-//        }
-console.log('should draw buffer');
-        context.drawImage(this.buffer, this.originX-originX, this.originY-originY);
     },
 
     setSun: function (sun) {
         if (sun.altitude <= 0) {
             this.length = 0;
-            this.sunAlpha = fromRange(-sun.altitude, 0, 1, 0.1, 0.8);
+            this.sunAlpha = fromRange(-sun.altitude, 0, 1, 0.2, 0.7);
         } else {
             this.length = 1 / tan(sun.altitude);
             this.sunAlpha = 0.4 / this.length;
@@ -1082,178 +1079,176 @@ console.log('should draw buffer');
 
 //****** file: render.js ******
 
-        function fadeIn() {
-            fadeFactor = 0;
-            shadows.create();
+function fadeIn() {
+    fadeFactor = 0;
+    shadows.create();
+    clearInterval(fadeTimer);
+    fadeTimer = setInterval(function () {
+        fadeFactor += 0.5 * 0.2; // amount * easing
+        if (fadeFactor > 1) {
             clearInterval(fadeTimer);
-            fadeTimer = setInterval(function () {
-                fadeFactor += 0.5 * 0.2; // amount * easing
-                if (fadeFactor > 1) {
-                    clearInterval(fadeTimer);
-                    fadeFactor = 1;
-                    // unset 'already present' marker
-                    for (var i = 0, il = data.length; i < il; i++) {
-                        data[i][IS_NEW] = 0;
-                    }
-                }
-                render();
-            }, 33);
+            fadeFactor = 1;
+            // unset 'already present' marker
+            for (var i = 0, il = data.length; i < il; i++) {
+                data[i][IS_NEW] = 0;
+            }
+        }
+        render();
+    }, 33);
+}
+
+function render() {
+    context.clearRect(0, 0, width, height);
+
+    // data needed for rendering
+    if (!meta || !data) {
+        return;
+    }
+
+    // show buildings in high zoom levels only
+    // avoid rendering during zoom
+    if (zoom < minZoom || isZooming) {
+        return;
+    }
+
+    var i, il, j, jl,
+        item,
+        f, h, m, n,
+        x, y,
+        offX = originX - meta.x,
+        offY = originY - meta.y,
+        sortCam = [camX + offX, camY + offY],
+        footprint, roof,
+        isVisible,
+        ax, ay, bx, by,
+        a, b, _a, _b
+    ;
+
+    shadows.render();
+
+    data.sort(function (a, b) {
+        return distance(b[CENTER], sortCam) / b[HEIGHT] - distance(a[CENTER], sortCam) / a[HEIGHT];
+    });
+
+    for (i = 0, il = data.length; i < il; i++) {
+        item = data[i];
+
+        isVisible = false;
+        f = item[FOOTPRINT];
+        footprint = []; // typed array would be created each pass and is way too slow
+        for (j = 0, jl = f.length - 1; j < jl; j += 2) {
+            footprint[j]     = x = (f[j]     - offX);
+            footprint[j + 1] = y = (f[j + 1] - offY);
+
+            // checking footprint is sufficient for visibility
+            if (!isVisible) {
+                isVisible = (x > 0 && x < width && y > 0 && y < height);
+            }
         }
 
-        function render() {
-            context.clearRect(0, 0, width, height);
+        if (!isVisible) {
+            continue;
+        }
 
-            // data needed for rendering
-            if (!meta || !data) {
-                return;
+        // when fading in, use a dynamic height
+        h = item[IS_NEW] ? item[HEIGHT] * fadeFactor : item[HEIGHT];
+        // precalculating projection height scale
+        m = camZ / (camZ - h);
+
+        // prepare same calculations for min_height if applicable
+        if (item[MIN_HEIGHT]) {
+            h = item[IS_NEW] ? item[MIN_HEIGHT] * fadeFactor : item[MIN_HEIGHT];
+            n = camZ / (camZ - h);
+        }
+
+        roof = []; // typed array would be created each pass and is way too slow
+
+        for (j = 0, jl = footprint.length - 3; j < jl; j += 2) {
+            ax = footprint[j];
+            ay = footprint[j + 1];
+            bx = footprint[j + 2];
+            by = footprint[j + 3];
+
+            // project 3d to 2d on extruded footprint
+            _a = project(ax, ay, m);
+            _b = project(bx, by, m);
+
+            if (item[MIN_HEIGHT]) {
+                a = project(ax, ay, n);
+                b = project(bx, by, n);
+                ax = a.x;
+                ay = a.y;
+                bx = b.x;
+                by = b.y;
             }
 
-            // show buildings in high zoom levels only
-            // avoid rendering during zoom
-            if (zoom < minZoom || isZooming) {
-                return;
-            }
-
-            if (shadows.enabled) {
-                shadows.render();
-            }
-
-            var i, il, j, jl,
-                item,
-                f, h, m, n,
-                x, y,
-                offX = originX - meta.x,
-                offY = originY - meta.y,
-                sortCam = [camX + offX, camY + offY],
-                footprint, roof,
-                isVisible,
-                ax, ay, bx, by,
-                a, b, _a, _b
-            ;
-
-            data.sort(function (a, b) {
-                return distance(b[CENTER], sortCam) / b[HEIGHT] - distance(a[CENTER], sortCam) / a[HEIGHT];
-            });
-
-            for (i = 0, il = data.length; i < il; i++) {
-                item = data[i];
-
-                isVisible = false;
-                f = item[FOOTPRINT];
-                footprint = []; // typed array would be created each pass and is way too slow
-                for (j = 0, jl = f.length - 1; j < jl; j += 2) {
-                    footprint[j]     = x = (f[j]     - offX);
-                    footprint[j + 1] = y = (f[j + 1] - offY);
-
-                    // checking footprint is sufficient for visibility
-                    if (!isVisible) {
-                        isVisible = (x > 0 && x < width && y > 0 && y < height);
-                    }
-                }
-
-                if (!isVisible) {
-                    continue;
-                }
-
-                // when fading in, use a dynamic height
-                h = item[IS_NEW] ? item[HEIGHT] * fadeFactor : item[HEIGHT];
-                // precalculating projection height scale
-                m = camZ / (camZ - h);
-
-                // prepare same calculations for min_height if applicable
-                if (item[MIN_HEIGHT]) {
-                    h = item[IS_NEW] ? item[MIN_HEIGHT] * fadeFactor : item[MIN_HEIGHT];
-                    n = camZ / (camZ - h);
-                }
-
-                roof = []; // typed array would be created each pass and is way too slow
-
-                for (j = 0, jl = footprint.length - 3; j < jl; j += 2) {
-                    ax = footprint[j];
-                    ay = footprint[j + 1];
-                    bx = footprint[j + 2];
-                    by = footprint[j + 3];
-
-                    // project 3d to 2d on extruded footprint
-                    _a = project(ax, ay, m);
-                    _b = project(bx, by, m);
-
-                    if (item[MIN_HEIGHT]) {
-                        a = project(ax, ay, n);
-                        b = project(bx, by, n);
-                        ax = a.x;
-                        ay = a.y;
-                        bx = b.x;
-                        by = b.y;
-                    }
-
-                    // backface culling check
-                    if ((bx - ax) * (_a.y - ay) > (_a.x - ax) * (by - ay)) {
-                        // depending on direction, set wall shading
-                        if ((ax < bx && ay < by) || (ax > bx && ay > by)) {
-                            context.fillStyle = item[RENDER_COLOR][1] || altColorAlpha;
-                        } else {
-                            context.fillStyle = item[RENDER_COLOR][0] || wallColorAlpha;
-                        }
-
-                        drawShape([
-                            bx, by,
-                            ax, ay,
-                            _a.x, _a.y,
-                            _b.x, _b.y
-                        ]);
-                    }
-                    roof[j]     = _a.x;
-                    roof[j + 1] = _a.y;
+            // backface culling check
+            if ((bx - ax) * (_a.y - ay) > (_a.x - ax) * (by - ay)) {
+                // depending on direction, set wall shading
+                if ((ax < bx && ay < by) || (ax > bx && ay > by)) {
+                    context.fillStyle = item[RENDER_COLOR][1] || altColorAlpha;
+                } else {
+                    context.fillStyle = item[RENDER_COLOR][0] || wallColorAlpha;
                 }
 
-                // fill roof and optionally stroke it
-                context.fillStyle   = item[RENDER_COLOR][2] || roofColorAlpha;
-                context.strokeStyle = item[RENDER_COLOR][1] || altColorAlpha;
-                drawShape(roof, true);
+                drawShape([
+                    bx, by,
+                    ax, ay,
+                    _a.x, _a.y,
+                    _b.x, _b.y
+                ]);
             }
+            roof[j]     = _a.x;
+            roof[j + 1] = _a.y;
         }
 
-        function drawShape(points, stroke) {
-            if (!points.length) {
-                return;
-            }
+        // fill roof and optionally stroke it
+        context.fillStyle   = item[RENDER_COLOR][2] || roofColorAlpha;
+        context.strokeStyle = item[RENDER_COLOR][1] || altColorAlpha;
+        drawShape(roof, true);
+    }
+}
 
-            context.beginPath();
-            context.moveTo(points[0], points[1]);
-            for (var i = 2, il = points.length; i < il; i += 2) {
-                context.lineTo(points[i], points[i + 1]);
-            }
-            context.closePath();
-            if (stroke) {
-                context.stroke();
-            }
-            context.fill();
-        }
+function drawShape(points, stroke) {
+    if (!points.length) {
+        return;
+    }
 
-        function project(x, y, m) {
-            return {
-                x: ((x - camX) * m + camX << 0),
-                y: ((y - camY) * m + camY << 0)
-            };
-        }
+    context.beginPath();
+    context.moveTo(points[0], points[1]);
+    for (var i = 2, il = points.length; i < il; i += 2) {
+        context.lineTo(points[i], points[i + 1]);
+    }
+    context.closePath();
+    if (stroke) {
+        context.stroke();
+    }
+    context.fill();
+}
 
-        function debugMarker(x, y, color, size) {
-            context.fillStyle = color || '#ffcc00';
-            context.beginPath();
-            context.arc(x, y, size || 3, 0, PI * 2, true);
-            context.closePath();
-            context.fill();
-        }
+function project(x, y, m) {
+    return {
+        x: ((x - camX) * m + camX << 0),
+        y: ((y - camY) * m + camY << 0)
+    };
+}
 
-        function debugLine(ax, ay, bx, by, color, size) {
-            context.strokeStyle = color || '#ff0000';
-            context.beginPath();
-            context.moveTo(ax, ay);
-            context.lineTo(bx, by);
-            context.closePath();
-            context.stroke();
-        }
+function debugMarker(x, y, color, size) {
+    context.fillStyle = color || '#ffcc00';
+    context.beginPath();
+    context.arc(x, y, size || 3, 0, PI * 2, true);
+    context.closePath();
+    context.fill();
+}
+
+function debugLine(ax, ay, bx, by, color, size) {
+    context.strokeStyle = color || '#ff0000';
+    context.beginPath();
+    context.moveTo(ax, ay);
+    context.lineTo(bx, by);
+    context.closePath();
+    context.stroke();
+}
 
 //****** file: public.js ******
 
@@ -1281,16 +1276,16 @@ console.log('should draw buffer');
             return this;
         };
 
-        this.createCanvas  = createCanvas;
-        this.destroyCanvas = destroyCanvas;
-        this.loadData      = loadData;
-        this.onMoveEnd     = onMoveEnd;
-        this.onZoomEnd     = onZoomEnd;
-        this.onZoomStart   = onZoomStart;
-        this.render        = render;
-        this.setOrigin     = setOrigin;
-        this.setSize       = setSize;
-        this.setZoom       = setZoom;
+        this.createContainer  = createContainer;
+        this.destroyContainer = destroyContainer;
+        this.loadData         = loadData;
+        this.onMoveEnd        = onMoveEnd;
+        this.onZoomEnd        = onZoomEnd;
+        this.onZoomStart      = onZoomStart;
+        this.render           = render;
+        this.setOrigin        = setOrigin;
+        this.setSize          = setSize;
+        this.setZoom          = setZoom;
 
 
 //****** file: suffix.class.js ******
@@ -1348,7 +1343,7 @@ OpenLayers.Layer.Buildings = OpenLayers.Class(OpenLayers.Layer, {
         if (!this.map) {
             OpenLayers.Layer.prototype.setMap(map);
             this.osmb = new OSMBuildings(this.options.url);
-            this.osmb.createCanvas(this.div);
+            this.osmb.createContainer(this.div);
             this.osmb.setSize(this.map.size.w, this.map.size.h);
             this.osmb.setZoom(this.map.zoom);
             this.setOrigin();
@@ -1357,7 +1352,7 @@ OpenLayers.Layer.Buildings = OpenLayers.Class(OpenLayers.Layer, {
     },
 
     removeMap: function (map) {
-        this.osmb.destroyCanvas();
+        this.osmb.destroyContainer();
         this.osmb = null;
         OpenLayers.Layer.prototype.removeMap(map);
     },
