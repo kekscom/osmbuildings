@@ -19,9 +19,6 @@ var shadows = {
             return;
         }
 
-        this.originX = originX;
-        this.originY = originY;
-
         var i, il, j, jl,
             item,
             f, h,
@@ -71,7 +68,6 @@ var shadows = {
 
             mode = null;
             context.beginPath();
-
             for (j = 0, jl = footprint.length - 3; j < jl; j += 2) {
                 ax = footprint[j];
                 ay = footprint[j + 1];
@@ -123,8 +119,10 @@ var shadows = {
             drawShape(grounds[i]);
         }
 
-        this.filter();
-        this.buffer.src = canvas.toDataURL();
+//        this.filter();
+  //      this.buffer.src = canvas.toDataURL();
+    //    this.originX = originX;
+      //  this.originY = originY;
     },
 
     project: function (x, y, h) {
@@ -159,10 +157,11 @@ var shadows = {
     },
 
     render: function () {
-        if (!this.length) {
-            return;
+        if (this.enabled && this.length) {
+          //  this.create();
+            context.drawImage(this.buffer, 0, 0);
+//          context.drawImage(this.buffer, this.originX-originX, this.originY-originY);
         }
-        context.drawImage(this.buffer, this.originX-originX, this.originY-originY);
     },
 
     setSun: function (sun) {
