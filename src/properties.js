@@ -75,9 +75,3 @@ function setStyle(style) {
 
     render();
 }
-
-function setDate(date) {
-    var center = pixelToGeo(originX + halfWidth, originY + halfHeight);
-    shadows.setSun(getSunPosition(date, center.latitude, center.longitude));
-    render();
-}

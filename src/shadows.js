@@ -164,7 +164,10 @@ var shadows = {
         this.render();
     },
 
-    setSun: function (sun) {
+    setDate: function (date) {
+        var center = pixelToGeo(originX + halfWidth, originY + halfHeight);
+        var sun = getSunPosition(date, center.latitude, center.longitude);
+
         if (sun.altitude <= 0) {
             this.length = 0;
             this.alpha = fromRange(-sun.altitude, 0, 1, 0.2, 0.7);

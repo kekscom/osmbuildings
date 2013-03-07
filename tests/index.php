@@ -88,6 +88,7 @@
 //  var map = new L.Map('map').setView([55.82116684213355, 37.61263847351074], 17); // Moscow
     new L.TileLayer('http://otile1.mqcdn.com/tiles/1.0.0/map/{z}/{x}/{y}.jpg', { maxZoom: 17 }).addTo(map);
     var osmb = new L.BuildingsLayer({ url: '../server/?w={w}&n={n}&e={e}&s={s}&z={z}' }).addTo(map);
+    L.control.layers({}, { Buildings: osmb }).addTo(map);
     </script>
 
     <script>

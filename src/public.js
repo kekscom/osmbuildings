@@ -18,9 +18,10 @@
         };
 
         this.setDate = function (date) {
-            setDate(date);
+            shadows.setDate(date);
             return this;
         };
+
 
         this.createContainer  = createContainer;
         this.destroyContainer = destroyContainer;
@@ -28,7 +29,7 @@
         this.onMoveEnd        = onMoveEnd;
         this.onZoomEnd        = onZoomEnd;
         this.onZoomStart      = onZoomStart;
-        this.render           = render;
         this.setOrigin        = setOrigin;
         this.setSize          = setSize;
         this.setZoom          = setZoom;
+        this.render           = render;

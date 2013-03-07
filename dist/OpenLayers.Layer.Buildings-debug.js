@@ -378,67 +378,80 @@ var width = 0, height = 0,
 
 //****** file: functions.js ******
 
-        function createContainer(parentNode) {
-            container = doc.createElement('DIV');
-            container.style.pointerEvents = 'none';
-            container.style.position = 'absolute';
-            container.style.left = 0;
-            container.style.top = 0;
+function createCanvas(container) {
+    var canvas = doc.createElement('CANVAS');
+    canvas.style.webkitTransform = 'translate3d(0,0,0)'; // turn on hw acceleration
+    canvas.style.imageRendering = 'optimizeSpeed';
+    canvas.style.position = 'absolute';
+    canvas.style.left = 0;
+    canvas.style.top = 0;
+    container.appendChild(canvas);
 
-            canvas = doc.createElement('CANVAS');
-            canvas.style.webkitTransform = 'translate3d(0,0,0)'; // turn on hw acceleration
-            canvas.style.imageRendering = 'optimizeSpeed';
-            container.appendChild(canvas);
+    var context = canvas.getContext('2d');
+    context.lineCap = 'round';
+    context.lineJoin = 'round';
+    context.lineWidth = 1;
 
-            context = canvas.getContext('2d');
-            context.lineCap = 'round';
-            context.lineJoin = 'round';
-            context.lineWidth = 1;
+    try {
+        context.mozImageSmoothingEnabled = false;
+    } catch (err) {
+    }
 
-            try {
-                context.mozImageSmoothingEnabled = false;
-            } catch (err) {
-            }
+    return canvas;
+}
 
-            parentNode.appendChild(container);
-            return container;
-        }
+function createContainer(parentNode) {
+    container = doc.createElement('DIV');
+    container.style.pointerEvents = 'none';
+    container.style.position = 'absolute';
+    container.style.left = 0;
+    container.style.top = 0;
 
-        function destroyContainer() {
-            canvas.parentNode.removeChild(canvas);
-        }
+    shadows.init(container);
 
-        function pixelToGeo(x, y) {
-            var res = {};
-            x /= size;
-            y /= size;
-            res[LAT] = y <= 0  ? 90 : y >= 1 ? -90 : RAD * (2 * atan(exp(PI * (1 - 2 * y))) - HALF_PI),
-            res[LON] = (x === 1 ?  1 : (x % 1 + 1) % 1) * 360 - 180;
-            return res;
-        }
+    canvas = createCanvas(container);
+    context = canvas.getContext('2d');
 
-        function geoToPixel(lat, lon) {
-            var latitude = min(1, max(0, 0.5 - (log(tan(QUARTER_PI + HALF_PI * lat / 180)) / PI) / 2)),
-                longitude = lon / 360 + 0.5
-            ;
-            return {
-                x: longitude * size << 0,
-                y: latitude  * size << 0
-            };
-        }
+    parentNode.appendChild(container);
+    return container;
+}
 
-        function template(str, data) {
-            return str.replace(/\{ *([\w_]+) *\}/g, function (x, key) {
-                return data[key];
-            });
-        }
+function destroyContainer() {
+//    shadows.destroy();
+    container.parentNode.removeChild(container);
+}
 
-        function fromRange(sVal, sMin, sMax, dMin, dMax) {
-            sVal = min(max(sVal, sMin), sMax);
-            var rel = (sVal - sMin) / (sMax - sMin),
-                range = dMax - dMin;
-            return min(max(dMin + rel * range, dMin), dMax);
-        }
+function pixelToGeo(x, y) {
+    var res = {};
+    x /= size;
+    y /= size;
+    res[LAT] = y <= 0  ? 90 : y >= 1 ? -90 : RAD * (2 * atan(exp(PI * (1 - 2 * y))) - HALF_PI),
+    res[LON] = (x === 1 ?  1 : (x % 1 + 1) % 1) * 360 - 180;
+    return res;
+}
+
+function geoToPixel(lat, lon) {
+    var latitude = min(1, max(0, 0.5 - (log(tan(QUARTER_PI + HALF_PI * lat / 180)) / PI) / 2)),
+        longitude = lon / 360 + 0.5
+    ;
+    return {
+        x: longitude * size << 0,
+        y: latitude  * size << 0
+    };
+}
+
+function template(str, data) {
+    return str.replace(/\{ *([\w_]+) *\}/g, function (x, key) {
+        return data[key];
+    });
+}
+
+function fromRange(sVal, sMin, sMax, dMin, dMax) {
+    sVal = min(max(sVal, sMin), sMax);
+    var rel = (sVal - sMin) / (sMax - sMin),
+        range = dMax - dMin;
+    return min(max(dMin + rel * range, dMin), dMax);
+}
 
 
 //****** file: data.js ******
@@ -767,10 +780,9 @@ function setSize(w, h) {
     camX = halfWidth;
     camY = height;
     camZ = width / 1.5 / tan(90 / 2) << 0; // adapting cam pos to field of view (90°), 1.5 is an empirical correction factor
-    container.width = width;
-    container.height = height;
-    canvas.width = '100%';
-    canvas.height = '100%';
+    shadows.setSize(width, height);
+    canvas.width = width;
+    canvas.height = height;
     // TODO: change of maxHeight needs to adjust building heights!
     maxHeight = camZ - 50;
 }
@@ -793,7 +805,7 @@ function setZoom(z) {
     wallColorAlpha   = wallColor.adjustAlpha(zoomAlpha) + '';
     altColorAlpha    = altColor.adjustAlpha(zoomAlpha) + '';
     roofColorAlpha   = roofColor.adjustAlpha(zoomAlpha) + '';
-    shadows.colorStr = shadows.color.adjustAlpha(zoomAlpha) + '';
+    shadows.setAlpha(zoomAlpha);
 
     if (data) {
         for (i = 0, il = data.length; i < il; i++) {
@@ -832,15 +844,9 @@ function setStyle(style) {
     }
 
     if (style.shadows !== undefined) {
-        shadows.enabled = !!style.shadows;
+        shadows.setEnabled(style.shadows);
     }
 
-    render();
-}
-
-function setDate(date) {
-    var center = pixelToGeo(originX + halfWidth, originY + halfHeight);
-    shadows.setSun(getSunPosition(date, center.latitude, center.longitude));
     render();
 }
 
@@ -853,6 +859,7 @@ function onResize(e) {
     loadData();
 }
 
+// no engine is using that
 function onMove(e) {
     setOrigin(e.x, e.y);
     render();
@@ -862,7 +869,7 @@ function onMoveEnd(e) {
     var nw = pixelToGeo(originX,         originY),
         se = pixelToGeo(originX + width, originY + height)
     ;
-    shadows.create();
+    shadows.render();
     render();
     // check, whether viewport is still within loaded data bounding box
     if (meta && (nw[LAT] > meta.n || nw[LON] < meta.w || se[LAT] < meta.s || se[LON] > meta.e)) {
@@ -872,6 +879,7 @@ function onMoveEnd(e) {
 
 function onZoomStart(e) {
     isZooming = true;
+    shadows.render();
     render(); // effectively clears because of isZooming flag
 }
 
@@ -881,7 +889,6 @@ function onZoomEnd(e) {
 
     if (rawData) { // GeoJSON
         data = scaleData(rawData);
-        shadows.create();
         render();
     } else {
         render();
@@ -894,18 +901,35 @@ function onZoomEnd(e) {
 
 var shadows = {
     enabled: true,
-    originX: 0,
-    originY: 0,
-    buffer: new Image(),
+    canvas: null,
+    context: null,
     color: new Color(0, 0, 0),
     colorStr: this.color + '',
-    sunAlpha: 1,
+    alpha: 1,
     length: 0,
     directionX: 0,
     directionY: 0,
 
-    create: function () {
+    init: function (container) {
+        this.canvas = createCanvas(container);
+        this.context = this.canvas.getContext('2d');
+    },
+
+    render: function () {
+        var context = this.context;
+
+        context.clearRect(0, 0, width, height);
+console.log('length:', this.length);
+
+        if (!this.enabled) {
+            return;
+        }
+
         if (!meta || !data) {
+            return;
+        }
+
+        if (zoom < minZoom || isZooming) {
             return;
         }
 
@@ -927,14 +951,14 @@ var shadows = {
             grounds = []
         ;
 
-        context.fillStyle = this.colorStr;
+        context.beginPath();
 
         for (i = 0, il = data.length; i < il; i++) {
             item = data[i];
 
             isVisible = false;
             f = item[FOOTPRINT];
-            footprint = []; // typed array would be created each pass and is way too slow
+            footprint = [];
             for (j = 0, jl = f.length - 1; j < jl; j += 2) {
                 footprint[j]     = x = (f[j]     - offX);
                 footprint[j + 1] = y = (f[j + 1] - offY);
@@ -951,17 +975,15 @@ var shadows = {
 
             // TODO: check, whether this works
             // when fading in, use a dynamic height
-            //h = item[IS_NEW] ? item[HEIGHT] * fadeFactor : item[HEIGHT];
-            h = item[HEIGHT];
+            h = item[IS_NEW] ? item[HEIGHT] * fadeFactor : item[HEIGHT];
 
             // prepare same calculations for min_height if applicable
             if (item[MIN_HEIGHT]) {
-                //h = item[IS_NEW] ? item[MIN_HEIGHT] * fadeFactor : item[MIN_HEIGHT];
-                h = item[MIN_HEIGHT];
+                h = item[IS_NEW] ? item[MIN_HEIGHT] * fadeFactor : item[MIN_HEIGHT];
             }
 
             mode = null;
-            context.beginPath();
+
             for (j = 0, jl = footprint.length - 3; j < jl; j += 2) {
                 ax = footprint[j];
                 ay = footprint[j + 1];
@@ -1002,24 +1024,29 @@ var shadows = {
             }
 
             context.closePath();
-            context.fill();
 
             grounds.push(footprint);
         }
 
-        // draw all footprints in a different color for later filtering
-        context.fillStyle = wallColorAlpha;
-        for (i = 0, il = grounds.length; i < il; i++) {
-            drawShape(grounds[i]);
-        }
+        context.fillStyle = this.colorStr;
+        context.fill();
 
-        this.filter();
-        this.buffer.onload = function () {
-            render();
-        };
-        this.buffer.src = canvas.toDataURL();
-        this.originX = originX;
-        this.originY = originY;
+        // now draw all the footprints as negative clipping mask
+        context.globalCompositeOperation = 'destination-out';
+        context.beginPath();
+        var points;
+        for (i = 0, il = grounds.length; i < il; i++) {
+            points = grounds[i];
+            context.moveTo(points[0], points[1]);
+            for (j = 2, jl = points.length; j < jl; j += 2) {
+                context.lineTo(points[j], points[j + 1]);
+            }
+            context.lineTo(points[0], points[1]);
+            context.closePath();
+        }
+        context.fillStyle = '#00ff00';
+        context.fill();
+        context.globalCompositeOperation = 'source-over';
     },
 
     project: function (x, y, h) {
@@ -1029,60 +1056,51 @@ var shadows = {
         };
     },
 
-    filter: function () {
-        var buffer = context.getImageData(0, 0, width, height),
-            pixels = buffer.data,
-            blendAlpha = this.sunAlpha * 255 <<0,
-            maxAlpha = 255,
-            r, a;
-
-        for (var i = 0, il = pixels.length; i < il; i += 4) {
-            r = pixels[i + 0];
-            a = pixels[i + 3];
-            // make everything with color and maximum alpha fully transparent
-            if (r && a >= maxAlpha) {
-                pixels[i + 3] = 0;
-            } else
-            // reduce higher alpha values to max shadow color alpha
-            // this removes dark overlapping areas in shadows but keeps all anti aliasing
-            if (a > blendAlpha) {
-                pixels[i + 3] = blendAlpha;
-            }
-        }
-
-        context.putImageData(buffer, 0, 0);
+    setAlpha: function(alpha) {
+        this.colorStr = this.color.adjustAlpha(alpha) + '';
+        this.render();
     },
 
-    render: function () {
-        if (this.enabled && this.length) {
-          context.drawImage(this.buffer, this.originX-originX, this.originY-originY);
-        }
+    setEnabled: function (flag) {
+        this.enabled = !!flag;
+        this.render();
     },
 
-    setSun: function (sun) {
+    setDate: function (date) {
+        var center = pixelToGeo(originX + halfWidth, originY + halfHeight);
+        var sun = getSunPosition(date, center.latitude, center.longitude);
+
         if (sun.altitude <= 0) {
             this.length = 0;
-            this.sunAlpha = fromRange(-sun.altitude, 0, 1, 0.2, 0.7);
+            this.alpha = fromRange(-sun.altitude, 0, 1, 0.2, 0.7);
         } else {
             this.length = 1 / tan(sun.altitude);
-            this.sunAlpha = 0.4 / this.length;
+            this.alpha = 0.4 / this.length;
             this.directionX = cos(sun.azimuth) * this.length;
             this.directionY = sin(sun.azimuth) * this.length;
         }
 
-        this.color.a = this.sunAlpha;
+        this.color.a = this.alpha;
         this.colorStr = this.color + '';
 
-        this.create();
+        this.render();
+    },
+
+    setSize: function (w, h) {
+        this.canvas.width = w;
+        this.canvas.height = h;
+    },
+
+    destroy: function () {
+        this.canvas.parentNode.removeChild(this.canvas);
     }
 };
 
 //****** file: render.js ******
 
 function fadeIn() {
-    fadeFactor = 0;
-    shadows.create();
     clearInterval(fadeTimer);
+    fadeFactor = 0;
     fadeTimer = setInterval(function () {
         fadeFactor += 0.5 * 0.2; // amount * easing
         if (fadeFactor > 1) {
@@ -1093,6 +1111,7 @@ function fadeIn() {
                 data[i][IS_NEW] = 0;
             }
         }
+        shadows.render();
         render();
     }, 33);
 }
@@ -1123,8 +1142,6 @@ function render() {
         ax, ay, bx, by,
         a, b, _a, _b
     ;
-
-    shadows.render();
 
     data.sort(function (a, b) {
         return distance(b[CENTER], sortCam) / b[HEIGHT] - distance(a[CENTER], sortCam) / a[HEIGHT];
@@ -1272,9 +1289,10 @@ function debugLine(ax, ay, bx, by, color, size) {
         };
 
         this.setDate = function (date) {
-            setDate(date);
+            shadows.setDate(date);
             return this;
         };
+
 
         this.createContainer  = createContainer;
         this.destroyContainer = destroyContainer;
@@ -1282,10 +1300,10 @@ function debugLine(ax, ay, bx, by, color, size) {
         this.onMoveEnd        = onMoveEnd;
         this.onZoomEnd        = onZoomEnd;
         this.onZoomStart      = onZoomStart;
-        this.render           = render;
         this.setOrigin        = setOrigin;
         this.setSize          = setSize;
         this.setZoom          = setZoom;
+        this.render           = render;
 
 
 //****** file: suffix.class.js ******

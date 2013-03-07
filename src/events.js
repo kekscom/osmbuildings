@@ -4,6 +4,7 @@ function onResize(e) {
     loadData();
 }
 
+// TODO: cleanup, no engine is using that
 function onMove(e) {
     setOrigin(e.x, e.y);
     render();

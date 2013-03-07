@@ -67,10 +67,8 @@ L.BuildingsLayer = L.Class.extend({
         this.container = this.osmb.createContainer(this.map._panes.overlayPane);
         this.osmb.maxZoom = this.map._layersMaxZoom;
 
-        var
-            mp = L.DomUtil.getPosition(this.map._mapPane),
-            po = this.map.getPixelOrigin()
-        ;
+        var mp = L.DomUtil.getPosition(this.map._mapPane),
+            po = this.map.getPixelOrigin();
 
         this.osmb.setSize(this.map._size.x, this.map._size.y);
         this.osmb.setOrigin(po.x - mp.x, po.y - mp.y);
@@ -125,7 +123,7 @@ L.BuildingsLayer = L.Class.extend({
         this.osmb = null;
     },
 
-    // TODO: ugly exposings here
+    // TODO: refactor those ugly exposings
 
     geoJSON: function (url, isLatLon) {
         return this.osmb.geoJSON(url, isLatLon);
