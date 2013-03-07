@@ -39,6 +39,7 @@
     );
     var osmb = new OpenLayers.Layer.Buildings({ url: '../server/?w={w}&n={n}&e={e}&s={s}&z={z}' });
     map.addLayer(osmb);
+    osmb.setDate(new Date(2013, 2, 15, 10, 30));
     </script>
 </body>
 </html>

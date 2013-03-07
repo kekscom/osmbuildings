@@ -859,7 +859,7 @@ function onResize(e) {
     loadData();
 }
 
-// no engine is using that
+// TODO: cleanup, no engine is using that
 function onMove(e) {
     setOrigin(e.x, e.y);
     render();
@@ -919,7 +919,6 @@ var shadows = {
         var context = this.context;
 
         context.clearRect(0, 0, width, height);
-console.log('length:', this.length);
 
         if (!this.enabled) {
             return;
@@ -1347,8 +1346,7 @@ OpenLayers.Layer.Buildings = OpenLayers.Class(OpenLayers.Layer, {
     },
 
     setOrigin: function () {
-        var
-            origin = this.map.getLonLatFromPixel(new OpenLayers.Pixel(0, 0)),
+        var origin = this.map.getLonLatFromPixel(new OpenLayers.Pixel(0, 0)),
             res = this.map.resolution,
             ext = this.maxExtent,
             x = Math.round((origin.lon - ext.left) / res),
@@ -1360,18 +1358,19 @@ OpenLayers.Layer.Buildings = OpenLayers.Class(OpenLayers.Layer, {
     setMap: function (map) {
         if (!this.map) {
             OpenLayers.Layer.prototype.setMap(map);
-            this.osmb = new OSMBuildings(this.options.url);
-            this.osmb.createContainer(this.div);
-            this.osmb.setSize(this.map.size.w, this.map.size.h);
-            this.osmb.setZoom(this.map.zoom);
-            this.setOrigin();
-            this.osmb.loadData();
         }
+        if (!this.osmb) {
+            this.osmb = new OSMBuildings(this.options.url);
+            this.container = this.osmb.createContainer(this.div);
+        }
+        this.osmb.setSize(this.map.size.w, this.map.size.h);
+        this.osmb.setZoom(this.map.zoom);
+        this.setOrigin();
+        this.osmb.loadData();
     },
 
     removeMap: function (map) {
-        this.osmb.destroyContainer();
-        this.osmb = null;
+        this.container.parentNode.removeChild(this.container);
         OpenLayers.Layer.prototype.removeMap(map);
     },
 
@@ -1414,7 +1413,7 @@ OpenLayers.Layer.Buildings = OpenLayers.Class(OpenLayers.Layer, {
         return result;
     },
 
-    // TODO: ugly exposings here
+    // TODO: refactor these ugly bindings
 
     geoJSON: function (url, isLatLon) {
         return this.osmb.geoJSON(url, isLatLon);

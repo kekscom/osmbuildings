@@ -859,7 +859,7 @@ function onResize(e) {
     loadData();
 }
 
-// no engine is using that
+// TODO: cleanup, no engine is using that
 function onMove(e) {
     setOrigin(e.x, e.y);
     render();
@@ -919,7 +919,6 @@ var shadows = {
         var context = this.context;
 
         context.clearRect(0, 0, width, height);
-console.log('length:', this.length);
 
         if (!this.enabled) {
             return;
@@ -1387,10 +1386,14 @@ L.BuildingsLayer = L.Class.extend({
 
     onAdd: function (map) {
         this.map = map;
-        this.osmb = new OSMBuildings(this.options.url);
-
-        this.container = this.osmb.createContainer(this.map._panes.overlayPane);
-        this.osmb.maxZoom = this.map._layersMaxZoom;
+        var parentNode = this.map._panes.overlayPane;
+        if (this.osmb) {
+            parentNode.appendChild(this.container);
+        } else {
+            this.osmb = new OSMBuildings(this.options.url);
+            this.container = this.osmb.createContainer(parentNode);
+            this.osmb.maxZoom = this.map._layersMaxZoom;
+        }
 
         var mp = L.DomUtil.getPosition(this.map._mapPane),
             po = this.map.getPixelOrigin();
@@ -1443,12 +1446,10 @@ L.BuildingsLayer = L.Class.extend({
             zoomend: this.onZoomEnd
         }, this);
 
-        this.container = this.osmb.destroyContainer();
-        this.map = null;
-        this.osmb = null;
+        this.container.parentNode.removeChild(this.container);
     },
 
-    // TODO: refactor those ugly exposings
+    // TODO: refactor these ugly bindings
 
     geoJSON: function (url, isLatLon) {
         return this.osmb.geoJSON(url, isLatLon);
