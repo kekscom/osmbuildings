@@ -2,6 +2,7 @@
 
 ## v0.1.8a release candidate NOT STABLE YET @ 2013-03-07
 
+- on layer removal, engine is not destroyed anymore
 - introduced multiple rendering layers
 - improved simplification algorithm, inspired by Vladimir Agafonkin (http://mourner.github.com/simplify-js)
 - directional wall shading added

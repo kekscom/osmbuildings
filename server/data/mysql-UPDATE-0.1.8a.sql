@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS `regions` (
   `bbox` polygon NOT NULL,
   `num_buildings` INT(16) UNSIGNED NOT NULL,
   `name` VARCHAR(255) NOT NULL,
-  `date_created` datetime NOT NULL,
+  `date_created` DATE NOT NULL,
   PRIMARY KEY (`id`),
-  KEY `bbox` (`bbox`(32))
+  SPATIAL KEY `bbox` (`bbox`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
