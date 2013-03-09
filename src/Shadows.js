@@ -1,33 +1,48 @@
-var shadows = {
-    enabled: true,
-    canvas: null,
+var Shadows = {
+
     context: null,
     color: new Color(0, 0, 0),
     colorStr: this.color + '',
+    date: null,
     alpha: 1,
     length: 0,
     directionX: 0,
     directionY: 0,
 
-    init: function (container) {
-        this.canvas = createCanvas(container);
-        this.context = this.canvas.getContext('2d');
+    init: function (context) {
+        this.context = context;
+        this.setDate(new Date().setHours(10)); // => render()
     },
 
     render: function () {
-        var context = this.context;
+        var context = this.context,
+            center, sun, length, alpha, colorStr;
 
         context.clearRect(0, 0, width, height);
 
-        if (!this.enabled ||
-            // data needed for rendering
-            !meta || !data ||
+        // data needed for rendering
+        if (!meta || !data ||
             // show on high zoom levels only and avoid rendering during zoom
-            zoom < minZoom || isZooming ||
-            // there has to be a shadow length
-            !this.length) {
+            zoom < minZoom || isZooming) {
             return;
         }
+
+        // TODO: at some point, calculate this just on demand
+        center = pixelToGeo(originX + halfWidth, originY + halfHeight);
+        sun = getSunPosition(this.date, center.latitude, center.longitude);
+
+        if (sun.altitude <= 0) {
+            return;
+        }
+
+        length = 1 / tan(sun.altitude);
+        alpha = 0.4 / length;
+        this.directionX = cos(sun.azimuth) * length;
+        this.directionY = sin(sun.azimuth) * length;
+
+        // TODO: maybe introduce Color.setAlpha()
+        this.color.a = alpha;
+        colorStr = this.color + '';
 
         var i, il, j, jl,
             item,
@@ -35,14 +50,13 @@ var shadows = {
             x, y,
             offX = originX - meta.x,
             offY = originY - meta.y,
-            flatMaxHeight = flat.maxHeight,
             footprint,
             mode,
             isVisible,
             ax, ay, bx, by,
             a, b, _a, _b,
             points,
-            allFootprints = [], flatFootprints = []
+            allFootprints = []
         ;
 
         context.beginPath();
@@ -68,8 +82,7 @@ var shadows = {
             }
 
             // when fading in, use a dynamic height
-            // flatMaxHeight check added, in order to instantly show flat shadows
-            h = item[IS_NEW] && item[HEIGHT] > flatMaxHeight ? item[HEIGHT] * fadeFactor : item[HEIGHT];
+            h = item[IS_NEW] ? item[HEIGHT] * fadeFactor : item[HEIGHT];
 
             // prepare same calculations for min_height if applicable
             if (item[MIN_HEIGHT]) {
@@ -119,15 +132,10 @@ var shadows = {
 
             context.closePath();
 
-            // flat footprints don't need to be cut out, will be handled separately
-            if (item[HEIGHT] > flatMaxHeight) {
-                allFootprints.push(footprint);
-            } else {
-                flatFootprints.push(footprint);
-            }
+            allFootprints.push(footprint);
         }
 
-        context.fillStyle = this.colorStr;
+        context.fillStyle = colorStr;
         context.fill();
 
         // now draw all the footprints as negative clipping mask
@@ -145,8 +153,6 @@ var shadows = {
         context.fillStyle = '#00ff00';
         context.fill();
         context.globalCompositeOperation = 'source-over';
-
-        flat.renderWalls(context, flatFootprints);
     },
 
     project: function (x, y, h) {
@@ -156,38 +162,8 @@ var shadows = {
         };
     },
 
-    setAlpha: function(alpha) {
-        this.colorStr = this.color.adjustAlpha(alpha) + '';
+    setDate: function(date) {
+        this.date = date;
         this.render();
-    },
-
-    setEnabled: function (flag) {
-        this.enabled = !!flag;
-        this.render();
-    },
-
-    setDate: function (date) {
-        var center = pixelToGeo(originX + halfWidth, originY + halfHeight);
-        var sun = getSunPosition(date, center.latitude, center.longitude);
-
-        if (sun.altitude <= 0) {
-            this.length = 0;
-            this.alpha = fromRange(-sun.altitude, 0, 1, 0.2, 0.7);
-        } else {
-            this.length = 1 / tan(sun.altitude);
-            this.alpha = 0.4 / this.length;
-            this.directionX = cos(sun.azimuth) * this.length;
-            this.directionY = sin(sun.azimuth) * this.length;
-        }
-
-        this.color.a = this.alpha;
-        this.colorStr = this.color + '';
-
-        this.render();
-    },
-
-    setSize: function (w, h) {
-        this.canvas.width = w;
-        this.canvas.height = h;
     }
 };

@@ -56,3 +56,22 @@ Huge gain for methods on desktop browsers vs. Safari (mobile).
 Will stay a bit until mobile catches up.
 Finally, Safari 6 mobile beats it too.
 http://jsperf.com/osmb-method-vs-function
+
+
+## Considerations for further performance improvement
+
+degrade instantly, increase slowly (tage average score of a few passes)
+
+### FADE IN
+- NO_STROKES
+- NO_SHADING
+- NO_SHADOWS_SCALE
+- NO_SCALE
+
+### MOVE
+
+### STATIC
+- NO_STROKES
+- NO_SHADING
+- NO_FLAT
+- NO_SHADOWS

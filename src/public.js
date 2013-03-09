@@ -18,11 +18,14 @@
         };
 
         this.setDate = function (date) {
-            shadows.setDate(date);
+            Shadows.setDate(date);
             return this;
         };
 
-        this.appendTo    = appendTo;
+        this.appendTo = function (parentNode) {
+            return Layers.init(parentNode);
+        };
+
         this.loadData    = loadData;
         this.onMoveEnd   = onMoveEnd;
         this.onZoomEnd   = onZoomEnd;

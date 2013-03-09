@@ -6,10 +6,7 @@ function setSize(w, h) {
     camX = halfWidth;
     camY = height;
     camZ = width / 1.5 / tan(90 / 2) << 0; // adapting cam pos to field of view (90°), 1.5 is an empirical correction factor
-    shadows.setSize(width, height);
-    flat.setSize(width, height);
-    canvas.width = width;
-    canvas.height = height;
+    Layers.setSize(width, height);
     // TODO: change of maxHeight needs to adjust building heights!
     maxHeight = camZ - 50;
 }
@@ -29,10 +26,9 @@ function setZoom(z) {
 
     zoomAlpha = 1 - fromRange(zoom, minZoom, maxZoom, 0, 0.4);
 
-    wallColorAlpha   = wallColor.adjustAlpha(zoomAlpha) + '';
-    altColorAlpha    = altColor.adjustAlpha(zoomAlpha) + '';
-    roofColorAlpha   = roofColor.adjustAlpha(zoomAlpha) + '';
-    shadows.setAlpha(zoomAlpha);
+    wallColorAlpha = wallColor.adjustAlpha(zoomAlpha) + '';
+    altColorAlpha  = altColor.adjustAlpha(zoomAlpha) + '';
+    roofColorAlpha = roofColor.adjustAlpha(zoomAlpha) + '';
 
     if (data) {
         for (i = 0, il = data.length; i < il; i++) {
@@ -70,9 +66,5 @@ function setStyle(style) {
         roofColorAlpha = roofColor.adjustAlpha(zoomAlpha) + '';
     }
 
-    if (style.shadows !== undefined) {
-        shadows.setEnabled(style.shadows);
-    }
-
-    render();
+    renderAll();
 }
