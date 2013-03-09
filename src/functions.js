@@ -20,7 +20,7 @@ function createCanvas(container) {
     return canvas;
 }
 
-function createContainer(parentNode) {
+function appendTo(parentNode) {
     container = doc.createElement('DIV');
     container.style.pointerEvents = 'none';
     container.style.position = 'absolute';
@@ -28,17 +28,13 @@ function createContainer(parentNode) {
     container.style.top = 0;
 
     shadows.init(container);
+    flat.init(container);
 
     canvas = createCanvas(container);
     context = canvas.getContext('2d');
 
     parentNode.appendChild(container);
     return container;
-}
-
-function destroyContainer() {
-//    shadows.destroy();
-    container.parentNode.removeChild(container);
 }
 
 function pixelToGeo(x, y) {

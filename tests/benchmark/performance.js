@@ -1,7 +1,7 @@
 function Perf(numItems, numIterations, url) {
 	this.tests = [];
     this.numItems = numItems;
-	this.numIterations = navigator.userAgent.toLowerCase().indexOf('mobile') > -1 ? numIterations / 20 <<0 : numIterations;
+	this.numIterations = navigator.userAgent.toLowerCase().indexOf('mobile') > -1 ? numIterations / 10 <<0 : numIterations;
     this.url = url;
     this.results = [];
     this.baseTime = 0;

@@ -1,9 +1,28 @@
+
+var quickRender = false;
+
+// degrade instantly, increase slowly (average of 10 renders)
+
+// * FADE IN *
+//   NO_STROKES
+//   NO_SHADING
+//   NO_SHADOWS_SCALE
+//   NO_SCALE
+
+// * MOVE *
+
+// * STATIC *
+//   NO_STROKES
+//   NO_SHADING
+//   NO_FLAT
+//   NO_SHADOWS
+
 function fadeIn() {
     clearInterval(fadeTimer);
     fadeFactor = 0;
     fadeTimer = setInterval(function () {
         fadeFactor += 0.5 * 0.2; // amount * easing
-        if (fadeFactor > 1) {
+        if (fadeFactor > 1 /*|| quickRender*/ ) {
             clearInterval(fadeTimer);
             fadeFactor = 1;
             // unset 'already present' marker
@@ -17,16 +36,16 @@ function fadeIn() {
 }
 
 function render() {
+// var start = Date.now();
+
     context.clearRect(0, 0, width, height);
 
-    // data needed for rendering
-    if (!meta || !data) {
-        return;
-    }
+    flat.render();
 
-    // show buildings in high zoom levels only
-    // avoid rendering during zoom
-    if (zoom < minZoom || isZooming) {
+    // data needed for rendering
+    if (!meta || !data ||
+        // show on high zoom levels only and avoid rendering during zoom
+        zoom < minZoom || isZooming) {
         return;
     }
 
@@ -43,12 +62,17 @@ function render() {
         a, b, _a, _b
     ;
 
+    // TODO: flat is drawn separetely, data has to be split
     data.sort(function (a, b) {
         return distance(b[CENTER], sortCam) / b[HEIGHT] - distance(a[CENTER], sortCam) / a[HEIGHT];
     });
 
     for (i = 0, il = data.length; i < il; i++) {
         item = data[i];
+
+        if (item[HEIGHT] <= flat.maxHeight) {
+            continue;
+        }
 
         isVisible = false;
         f = item[FOOTPRINT];
@@ -124,6 +148,15 @@ function render() {
         context.strokeStyle = item[RENDER_COLOR][1] || altColorAlpha;
         drawShape(roof, true);
     }
+
+//    var renderTime = Date.now()-start;
+//    console.log(renderTime, quickRender);
+//    if (renderTime > 50) {
+//        quickRender = true;
+//    }
+//    if (renderTime < 25) {
+//        quickRender = false;
+//    }
 }
 
 function drawShape(points, stroke) {

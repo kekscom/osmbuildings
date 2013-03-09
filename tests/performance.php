@@ -494,7 +494,7 @@
 	perf.add('no strokes, no shading, no shadows', function () {
 		render();
 	});
-/*
+
 	perf.add('combine walls', function () {
 		render(COMBINE_FACES);
 	});
@@ -522,7 +522,6 @@
 	perf.add('flat without walls, ground in wall color', function () {
 		render(FLAT_NO_WALLS | FLAT_DRAW_GROUND);
 	});
-*/
 
 	perf.add('shadows', function () {
 		render(DRAW_SHADOWS);

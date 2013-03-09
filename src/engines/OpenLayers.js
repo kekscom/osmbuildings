@@ -37,7 +37,7 @@ OpenLayers.Layer.Buildings = OpenLayers.Class(OpenLayers.Layer, {
         }
         if (!this.osmb) {
             this.osmb = new OSMBuildings(this.options.url);
-            this.container = this.osmb.createContainer(this.div);
+            this.container = this.osmb.appendTo(this.div);
         }
         this.osmb.setSize(this.map.size.w, this.map.size.h);
         this.osmb.setZoom(this.map.zoom);

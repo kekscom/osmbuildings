@@ -22,14 +22,12 @@
             return this;
         };
 
-
-        this.createContainer  = createContainer;
-        this.destroyContainer = destroyContainer;
-        this.loadData         = loadData;
-        this.onMoveEnd        = onMoveEnd;
-        this.onZoomEnd        = onZoomEnd;
-        this.onZoomStart      = onZoomStart;
-        this.setOrigin        = setOrigin;
-        this.setSize          = setSize;
-        this.setZoom          = setZoom;
-        this.render           = render;
+        this.appendTo    = appendTo;
+        this.loadData    = loadData;
+        this.onMoveEnd   = onMoveEnd;
+        this.onZoomEnd   = onZoomEnd;
+        this.onZoomStart = onZoomStart;
+        this.setOrigin   = setOrigin;
+        this.setSize     = setSize;
+        this.setZoom     = setZoom;
+        this.render      = render;

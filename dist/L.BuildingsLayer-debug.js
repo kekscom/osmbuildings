@@ -400,7 +400,7 @@ function createCanvas(container) {
     return canvas;
 }
 
-function createContainer(parentNode) {
+function appendTo(parentNode) {
     container = doc.createElement('DIV');
     container.style.pointerEvents = 'none';
     container.style.position = 'absolute';
@@ -408,17 +408,13 @@ function createContainer(parentNode) {
     container.style.top = 0;
 
     shadows.init(container);
+    flat.init(container);
 
     canvas = createCanvas(container);
     context = canvas.getContext('2d');
 
     parentNode.appendChild(container);
     return container;
-}
-
-function destroyContainer() {
-//    shadows.destroy();
-    container.parentNode.removeChild(container);
 }
 
 function pixelToGeo(x, y) {
@@ -781,6 +777,7 @@ function setSize(w, h) {
     camY = height;
     camZ = width / 1.5 / tan(90 / 2) << 0; // adapting cam pos to field of view (90°), 1.5 is an empirical correction factor
     shadows.setSize(width, height);
+    flat.setSize(width, height);
     canvas.width = width;
     canvas.height = height;
     // TODO: change of maxHeight needs to adjust building heights!
@@ -800,7 +797,7 @@ function setZoom(z) {
     zoom = z;
     size = TILE_SIZE << zoom;
 
-    zoomAlpha = 1 - fromRange(zoom, minZoom, maxZoom, 0, 0.3);
+    zoomAlpha = 1 - fromRange(zoom, minZoom, maxZoom, 0, 0.4);
 
     wallColorAlpha   = wallColor.adjustAlpha(zoomAlpha) + '';
     altColorAlpha    = altColor.adjustAlpha(zoomAlpha) + '';
@@ -920,19 +917,13 @@ var shadows = {
 
         context.clearRect(0, 0, width, height);
 
-        if (!this.enabled) {
-            return;
-        }
-
-        if (!meta || !data) {
-            return;
-        }
-
-        if (zoom < minZoom || isZooming) {
-            return;
-        }
-
-        if (!this.length) {
+        if (!this.enabled ||
+            // data needed for rendering
+            !meta || !data ||
+            // show on high zoom levels only and avoid rendering during zoom
+            zoom < minZoom || isZooming ||
+            // there has to be a shadow length
+            !this.length) {
             return;
         }
 
@@ -942,12 +933,14 @@ var shadows = {
             x, y,
             offX = originX - meta.x,
             offY = originY - meta.y,
+            flatMaxHeight = flat.maxHeight,
             footprint,
             mode,
             isVisible,
             ax, ay, bx, by,
             a, b, _a, _b,
-            grounds = []
+            points,
+            allFootprints = [], flatFootprints = []
         ;
 
         context.beginPath();
@@ -972,9 +965,9 @@ var shadows = {
                 continue;
             }
 
-            // TODO: check, whether this works
             // when fading in, use a dynamic height
-            h = item[IS_NEW] ? item[HEIGHT] * fadeFactor : item[HEIGHT];
+            // flatMaxHeight check added, in order to instantly show flat shadows
+            h = item[IS_NEW] && item[HEIGHT] > flatMaxHeight ? item[HEIGHT] * fadeFactor : item[HEIGHT];
 
             // prepare same calculations for min_height if applicable
             if (item[MIN_HEIGHT]) {
@@ -1024,7 +1017,12 @@ var shadows = {
 
             context.closePath();
 
-            grounds.push(footprint);
+            // flat footprints don't need to be cut out, will be handled separately
+            if (item[HEIGHT] > flatMaxHeight) {
+                allFootprints.push(footprint);
+            } else {
+                flatFootprints.push(footprint);
+            }
         }
 
         context.fillStyle = this.colorStr;
@@ -1033,9 +1031,8 @@ var shadows = {
         // now draw all the footprints as negative clipping mask
         context.globalCompositeOperation = 'destination-out';
         context.beginPath();
-        var points;
-        for (i = 0, il = grounds.length; i < il; i++) {
-            points = grounds[i];
+        for (i = 0, il = allFootprints.length; i < il; i++) {
+            points = allFootprints[i];
             context.moveTo(points[0], points[1]);
             for (j = 2, jl = points.length; j < jl; j += 2) {
                 context.lineTo(points[j], points[j + 1]);
@@ -1046,6 +1043,8 @@ var shadows = {
         context.fillStyle = '#00ff00';
         context.fill();
         context.globalCompositeOperation = 'source-over';
+
+        flat.renderWalls(context, flatFootprints);
     },
 
     project: function (x, y, h) {
@@ -1088,21 +1087,158 @@ var shadows = {
     setSize: function (w, h) {
         this.canvas.width = w;
         this.canvas.height = h;
-    },
-
-    destroy: function () {
-        this.canvas.parentNode.removeChild(this.canvas);
     }
 };
 
+//****** file: flat.js ******
+
+var flat = {
+    enabled: true,
+    canvas: null,
+    context: null,
+    maxHeight: 8,
+
+    init: function (container) {
+        this.canvas = createCanvas(container);
+        this.canvas.id = 'flat';
+        this.context = this.canvas.getContext('2d');
+    },
+
+    render: function () {
+        var context = this.context;
+
+        context.clearRect(0, 0, width, height);
+
+        if (!this.enabled ||
+            // data needed for rendering
+            !meta || !data ||
+            // show on high zoom levels only and avoid rendering during zoom
+            zoom < minZoom || isZooming) {
+            return;
+        }
+
+        var i, il, j, jl,
+            item,
+            f, m,
+            x, y,
+            offX = originX - meta.x,
+            offY = originY - meta.y,
+            footprint,
+            isVisible,
+            ax, ay, _a
+        ;
+
+        // precalculating projection height scale
+        m = camZ / (camZ - this.maxHeight);
+
+        context.beginPath();
+
+        for (i = 0, il = data.length; i < il; i++) {
+            item = data[i];
+
+            if (item[HEIGHT] > this.maxHeight) {
+                continue;
+            }
+
+            isVisible = false;
+            f = item[FOOTPRINT];
+            footprint = [];
+            for (j = 0, jl = f.length - 1; j < jl; j += 2) {
+                footprint[j]     = x = (f[j]     - offX);
+                footprint[j + 1] = y = (f[j + 1] - offY);
+
+                // checking footprint is sufficient for visibility
+                if (!isVisible) {
+                    isVisible = (x > 0 && x < width && y > 0 && y < height);
+                }
+            }
+
+            if (!isVisible) {
+                continue;
+            }
+
+            for (j = 0, jl = footprint.length - 3; j < jl; j += 2) {
+                ax = footprint[j];
+                ay = footprint[j + 1];
+
+                // project 3d to 2d on extruded footprint
+                _a = project(ax, ay, m);
+                if (!j) {
+                    context.moveTo(_a.x, _a.y);
+                } else {
+                    context.lineTo(_a.x, _a.y);
+                }
+            }
+
+            context.closePath();
+        }
+
+        context.fillStyle   = item[RENDER_COLOR][2] || roofColorAlpha;
+        context.strokeStyle = item[RENDER_COLOR][1] || altColorAlpha;
+
+        context.stroke();
+        context.fill();
+    },
+
+    // TODO: footprints could be kept internally, but drawing order matters. So shadows is providing them for now.
+    renderWalls: function (context, footprints) {
+        if (!this.enabled) {
+            return;
+        }
+
+        var points,
+            i, il,
+            j, jl;
+
+        // draw footprints in order to simulate walls
+        context.beginPath();
+        for (i = 0, il = footprints.length; i < il; i++) {
+            points = footprints[i];
+            context.moveTo(points[0], points[1]);
+            for (j = 2, jl = points.length; j < jl; j += 2) {
+                context.lineTo(points[j], points[j + 1]);
+            }
+            context.lineTo(points[0], points[1]);
+            context.closePath();
+        }
+        context.fillStyle = wallColorAlpha;
+        context.fill();
+    },
+
+    setSize: function (w, h) {
+        this.canvas.width = w;
+        this.canvas.height = h;
+    }
+};
+
+
 //****** file: render.js ******
+
+
+var quickRender = false;
+
+// degrade instantly, increase slowly (average of 10 renders)
+
+// * FADE IN *
+//   NO_STROKES
+//   NO_SHADING
+//   NO_SHADOWS_SCALE
+//   NO_SCALE
+
+// * MOVE *
+
+// * STATIC *
+//   NO_STROKES
+//   NO_SHADING
+//   NO_FLAT
+//   NO_SHADOWS
 
 function fadeIn() {
     clearInterval(fadeTimer);
     fadeFactor = 0;
     fadeTimer = setInterval(function () {
         fadeFactor += 0.5 * 0.2; // amount * easing
-        if (fadeFactor > 1) {
+        if (fadeFactor > 1 /*|| quickRender*/ ) {
             clearInterval(fadeTimer);
             fadeFactor = 1;
             // unset 'already present' marker
@@ -1116,16 +1252,16 @@ function fadeIn() {
 }
 
 function render() {
+// var start = Date.now();
+
     context.clearRect(0, 0, width, height);
 
-    // data needed for rendering
-    if (!meta || !data) {
-        return;
-    }
+    flat.render();
 
-    // show buildings in high zoom levels only
-    // avoid rendering during zoom
-    if (zoom < minZoom || isZooming) {
+    // data needed for rendering
+    if (!meta || !data ||
+        // show on high zoom levels only and avoid rendering during zoom
+        zoom < minZoom || isZooming) {
         return;
     }
 
@@ -1142,12 +1278,17 @@ function render() {
         a, b, _a, _b
     ;
 
+    // TODO: flat is drawn separetely, data has to be split
     data.sort(function (a, b) {
         return distance(b[CENTER], sortCam) / b[HEIGHT] - distance(a[CENTER], sortCam) / a[HEIGHT];
     });
 
     for (i = 0, il = data.length; i < il; i++) {
         item = data[i];
+
+        if (item[HEIGHT] <= flat.maxHeight) {
+            continue;
+        }
 
         isVisible = false;
         f = item[FOOTPRINT];
@@ -1223,6 +1364,15 @@ function render() {
         context.strokeStyle = item[RENDER_COLOR][1] || altColorAlpha;
         drawShape(roof, true);
     }
+
+//    var renderTime = Date.now()-start;
+//    console.log(renderTime, quickRender);
+//    if (renderTime > 50) {
+//        quickRender = true;
+//    }
+//    if (renderTime < 25) {
+//        quickRender = false;
+//    }
 }
 
 function drawShape(points, stroke) {
@@ -1292,17 +1442,15 @@ function debugLine(ax, ay, bx, by, color, size) {
             return this;
         };
 
-
-        this.createContainer  = createContainer;
-        this.destroyContainer = destroyContainer;
-        this.loadData         = loadData;
-        this.onMoveEnd        = onMoveEnd;
-        this.onZoomEnd        = onZoomEnd;
-        this.onZoomStart      = onZoomStart;
-        this.setOrigin        = setOrigin;
-        this.setSize          = setSize;
-        this.setZoom          = setZoom;
-        this.render           = render;
+        this.appendTo    = appendTo;
+        this.loadData    = loadData;
+        this.onMoveEnd   = onMoveEnd;
+        this.onZoomEnd   = onZoomEnd;
+        this.onZoomStart = onZoomStart;
+        this.setOrigin   = setOrigin;
+        this.setSize     = setSize;
+        this.setZoom     = setZoom;
+        this.render      = render;
 
 
 //****** file: suffix.class.js ******
@@ -1391,7 +1539,7 @@ L.BuildingsLayer = L.Class.extend({
             parentNode.appendChild(this.container);
         } else {
             this.osmb = new OSMBuildings(this.options.url);
-            this.container = this.osmb.createContainer(parentNode);
+            this.container = this.osmb.appendTo(parentNode);
             this.osmb.maxZoom = this.map._layersMaxZoom;
         }
 

@@ -7,6 +7,7 @@ function setSize(w, h) {
     camY = height;
     camZ = width / 1.5 / tan(90 / 2) << 0; // adapting cam pos to field of view (90°), 1.5 is an empirical correction factor
     shadows.setSize(width, height);
+    flat.setSize(width, height);
     canvas.width = width;
     canvas.height = height;
     // TODO: change of maxHeight needs to adjust building heights!
@@ -26,7 +27,7 @@ function setZoom(z) {
     zoom = z;
     size = TILE_SIZE << zoom;
 
-    zoomAlpha = 1 - fromRange(zoom, minZoom, maxZoom, 0, 0.3);
+    zoomAlpha = 1 - fromRange(zoom, minZoom, maxZoom, 0, 0.4);
 
     wallColorAlpha   = wallColor.adjustAlpha(zoomAlpha) + '';
     altColorAlpha    = altColor.adjustAlpha(zoomAlpha) + '';

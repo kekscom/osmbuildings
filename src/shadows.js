@@ -19,19 +19,13 @@ var shadows = {
 
         context.clearRect(0, 0, width, height);
 
-        if (!this.enabled) {
-            return;
-        }
-
-        if (!meta || !data) {
-            return;
-        }
-
-        if (zoom < minZoom || isZooming) {
-            return;
-        }
-
-        if (!this.length) {
+        if (!this.enabled ||
+            // data needed for rendering
+            !meta || !data ||
+            // show on high zoom levels only and avoid rendering during zoom
+            zoom < minZoom || isZooming ||
+            // there has to be a shadow length
+            !this.length) {
             return;
         }
 
@@ -41,12 +35,14 @@ var shadows = {
             x, y,
             offX = originX - meta.x,
             offY = originY - meta.y,
+            flatMaxHeight = flat.maxHeight,
             footprint,
             mode,
             isVisible,
             ax, ay, bx, by,
             a, b, _a, _b,
-            grounds = []
+            points,
+            allFootprints = [], flatFootprints = []
         ;
 
         context.beginPath();
@@ -71,9 +67,9 @@ var shadows = {
                 continue;
             }
 
-            // TODO: check, whether this works
             // when fading in, use a dynamic height
-            h = item[IS_NEW] ? item[HEIGHT] * fadeFactor : item[HEIGHT];
+            // flatMaxHeight check added, in order to instantly show flat shadows
+            h = item[IS_NEW] && item[HEIGHT] > flatMaxHeight ? item[HEIGHT] * fadeFactor : item[HEIGHT];
 
             // prepare same calculations for min_height if applicable
             if (item[MIN_HEIGHT]) {
@@ -123,7 +119,12 @@ var shadows = {
 
             context.closePath();
 
-            grounds.push(footprint);
+            // flat footprints don't need to be cut out, will be handled separately
+            if (item[HEIGHT] > flatMaxHeight) {
+                allFootprints.push(footprint);
+            } else {
+                flatFootprints.push(footprint);
+            }
         }
 
         context.fillStyle = this.colorStr;
@@ -132,9 +133,8 @@ var shadows = {
         // now draw all the footprints as negative clipping mask
         context.globalCompositeOperation = 'destination-out';
         context.beginPath();
-        var points;
-        for (i = 0, il = grounds.length; i < il; i++) {
-            points = grounds[i];
+        for (i = 0, il = allFootprints.length; i < il; i++) {
+            points = allFootprints[i];
             context.moveTo(points[0], points[1]);
             for (j = 2, jl = points.length; j < jl; j += 2) {
                 context.lineTo(points[j], points[j + 1]);
@@ -145,6 +145,8 @@ var shadows = {
         context.fillStyle = '#00ff00';
         context.fill();
         context.globalCompositeOperation = 'source-over';
+
+        flat.renderWalls(context, flatFootprints);
     },
 
     project: function (x, y, h) {
@@ -187,9 +189,5 @@ var shadows = {
     setSize: function (w, h) {
         this.canvas.width = w;
         this.canvas.height = h;
-    },
-
-    destroy: function () {
-        this.canvas.parentNode.removeChild(this.canvas);
     }
 };

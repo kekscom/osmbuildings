@@ -67,7 +67,7 @@ L.BuildingsLayer = L.Class.extend({
             parentNode.appendChild(this.container);
         } else {
             this.osmb = new OSMBuildings(this.options.url);
-            this.container = this.osmb.createContainer(parentNode);
+            this.container = this.osmb.appendTo(parentNode);
             this.osmb.maxZoom = this.map._layersMaxZoom;
         }
 

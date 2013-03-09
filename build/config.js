@@ -24,6 +24,7 @@ exports.srcFiles = [
         srcPath + '/properties.js',
         srcPath + '/events.js',
         srcPath + '/shadows.js',
+        srcPath + '/flat.js',
         srcPath + '/render.js',
         srcPath + '/public.js',
         srcPath + '/suffix.class.js',
