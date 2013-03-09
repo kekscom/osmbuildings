@@ -1,6 +1,6 @@
-var shadows = {
+var Shadows = {
+
     enabled: true,
-    canvas: null,
     context: null,
     color: new Color(0, 0, 0),
     colorStr: this.color + '',
@@ -9,9 +9,8 @@ var shadows = {
     directionX: 0,
     directionY: 0,
 
-    init: function (container) {
-        this.canvas = createCanvas(container);
-        this.context = this.canvas.getContext('2d');
+    setContext: function (context) {
+        this.context = context;
     },
 
     render: function () {
@@ -35,14 +34,13 @@ var shadows = {
             x, y,
             offX = originX - meta.x,
             offY = originY - meta.y,
-            flatMaxHeight = flat.maxHeight,
             footprint,
             mode,
             isVisible,
             ax, ay, bx, by,
             a, b, _a, _b,
             points,
-            allFootprints = [], flatFootprints = []
+            allFootprints = []
         ;
 
         context.beginPath();
@@ -68,8 +66,7 @@ var shadows = {
             }
 
             // when fading in, use a dynamic height
-            // flatMaxHeight check added, in order to instantly show flat shadows
-            h = item[IS_NEW] && item[HEIGHT] > flatMaxHeight ? item[HEIGHT] * fadeFactor : item[HEIGHT];
+            h = item[IS_NEW] ? item[HEIGHT] * fadeFactor : item[HEIGHT];
 
             // prepare same calculations for min_height if applicable
             if (item[MIN_HEIGHT]) {
@@ -119,12 +116,7 @@ var shadows = {
 
             context.closePath();
 
-            // flat footprints don't need to be cut out, will be handled separately
-            if (item[HEIGHT] > flatMaxHeight) {
-                allFootprints.push(footprint);
-            } else {
-                flatFootprints.push(footprint);
-            }
+            allFootprints.push(footprint);
         }
 
         context.fillStyle = this.colorStr;
@@ -145,8 +137,6 @@ var shadows = {
         context.fillStyle = '#00ff00';
         context.fill();
         context.globalCompositeOperation = 'source-over';
-
-        flat.renderWalls(context, flatFootprints);
     },
 
     project: function (x, y, h) {
@@ -184,10 +174,5 @@ var shadows = {
         this.colorStr = this.color + '';
 
         this.render();
-    },
-
-    setSize: function (w, h) {
-        this.canvas.width = w;
-        this.canvas.height = h;
     }
 };

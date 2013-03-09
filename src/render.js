@@ -1,28 +1,11 @@
 
-var quickRender = false;
-
-// degrade instantly, increase slowly (average of 10 renders)
-
-// * FADE IN *
-//   NO_STROKES
-//   NO_SHADING
-//   NO_SHADOWS_SCALE
-//   NO_SCALE
-
-// * MOVE *
-
-// * STATIC *
-//   NO_STROKES
-//   NO_SHADING
-//   NO_FLAT
-//   NO_SHADOWS
-
 function fadeIn() {
     clearInterval(fadeTimer);
     fadeFactor = 0;
+    FlatBuildings.render();
     fadeTimer = setInterval(function () {
         fadeFactor += 0.5 * 0.2; // amount * easing
-        if (fadeFactor > 1 /*|| quickRender*/ ) {
+        if (fadeFactor > 1) {
             clearInterval(fadeTimer);
             fadeFactor = 1;
             // unset 'already present' marker
@@ -30,17 +13,13 @@ function fadeIn() {
                 data[i][IS_NEW] = 0;
             }
         }
-        shadows.render();
+        Shadows.render();
         render();
     }, 33);
 }
 
 function render() {
-// var start = Date.now();
-
     context.clearRect(0, 0, width, height);
-
-    flat.render();
 
     // data needed for rendering
     if (!meta || !data ||
@@ -55,6 +34,7 @@ function render() {
         x, y,
         offX = originX - meta.x,
         offY = originY - meta.y,
+        flatMaxHeight = FlatBuildings.getMaxHeight(),
         sortCam = [camX + offX, camY + offY],
         footprint, roof,
         isVisible,
@@ -62,7 +42,7 @@ function render() {
         a, b, _a, _b
     ;
 
-    // TODO: flat is drawn separetely, data has to be split
+    // TODO: FlatBuildings are drawn separetely, data has to be split
     data.sort(function (a, b) {
         return distance(b[CENTER], sortCam) / b[HEIGHT] - distance(a[CENTER], sortCam) / a[HEIGHT];
     });
@@ -70,7 +50,7 @@ function render() {
     for (i = 0, il = data.length; i < il; i++) {
         item = data[i];
 
-        if (item[HEIGHT] <= flat.maxHeight) {
+        if (item[HEIGHT] <= flatMaxHeight) {
             continue;
         }
 
@@ -148,15 +128,6 @@ function render() {
         context.strokeStyle = item[RENDER_COLOR][1] || altColorAlpha;
         drawShape(roof, true);
     }
-
-//    var renderTime = Date.now()-start;
-//    console.log(renderTime, quickRender);
-//    if (renderTime > 50) {
-//        quickRender = true;
-//    }
-//    if (renderTime < 25) {
-//        quickRender = false;
-//    }
 }
 
 function drawShape(points, stroke) {

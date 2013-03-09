@@ -6,7 +6,7 @@ var width = 0, height = 0,
 
     req,
 
-    container, canvas, context,
+    context,
 
     url,
 
