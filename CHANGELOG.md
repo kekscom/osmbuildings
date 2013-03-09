@@ -2,15 +2,15 @@
 
 ## v0.1.8a release candidate NOT STABLE YET @ 2013-03-07
 
-- on layer removal, engine is not destroyed anymore
+- on layer removal from map, OSM Buildings is not destroyed anymore
 - introduced multiple rendering layers
 - improved simplification algorithm, inspired by Vladimir Agafonkin (http://mourner.github.com/simplify-js)
-- directional wall shading added
 - initial version of objects draw order (farthest first, lower first)
-- color / style table handling improved
-- `min_height` support added (requires backend change)
+- directional wall shading added
 - building shadows added
 - shadow date / time dependency added, inspired by Vladimir Agafonkin /https://github.com/mourner/suncalc)
+- `min_height` support added (requires backend change)
+- color / style table handling improved
 - rendering tests added
 - successful tests with LeafletJS 0.5.1
 - recommendation: reduce building `$heightScale` in backend server config down to 1.2

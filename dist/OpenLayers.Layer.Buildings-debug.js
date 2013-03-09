@@ -1177,31 +1177,13 @@ var FlatBuildings = {
 //****** file: render.js ******
 
 
-// var quickRender = false;
-
-// degrade instantly, increase slowly (average of 10 renders)
-
-// * FADE IN *
-//   NO_STROKES
-//   NO_SHADING
-//   NO_SHADOWS_SCALE
-//   NO_SCALE
-
-// * MOVE *
-
-// * STATIC *
-//   NO_STROKES
-//   NO_SHADING
-//   NO_FLAT
-//   NO_SHADOWS
-
 function fadeIn() {
     clearInterval(fadeTimer);
     fadeFactor = 0;
     FlatBuildings.render();
     fadeTimer = setInterval(function () {
         fadeFactor += 0.5 * 0.2; // amount * easing
-        if (fadeFactor > 1 /*|| quickRender*/ ) {
+        if (fadeFactor > 1) {
             clearInterval(fadeTimer);
             fadeFactor = 1;
             // unset 'already present' marker
@@ -1215,8 +1197,6 @@ function fadeIn() {
 }
 
 function render() {
-// var start = Date.now();
-
     context.clearRect(0, 0, width, height);
 
     // data needed for rendering
@@ -1326,15 +1306,6 @@ function render() {
         context.strokeStyle = item[RENDER_COLOR][1] || altColorAlpha;
         drawShape(roof, true);
     }
-
-//    var renderTime = Date.now()-start;
-//    console.log(renderTime, quickRender);
-//    if (renderTime > 50) {
-//        quickRender = true;
-//    }
-//    if (renderTime < 25) {
-//        quickRender = false;
-//    }
 }
 
 function drawShape(points, stroke) {
@@ -1377,6 +1348,7 @@ function debugLine(ax, ay, bx, by, color, size) {
     context.closePath();
     context.stroke();
 }
+
 
 //****** file: public.js ******
 
