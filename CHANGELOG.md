@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.1.8a release candidate NOT STABLE YET @ 2013-03-07
+## v0.1.8a @ 2013-03-10
 
 - on layer removal from map, OSM Buildings is not destroyed anymore
 - introduced multiple rendering layers
