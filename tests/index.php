@@ -86,9 +86,12 @@
     </div>
 
     <script>
-    var map = new L.Map('map').setView([52.50557421662625, 13.334510922431944], 17); // Berlin
-//  var map = new L.Map('map').setView([55.82116684213355, 37.61263847351074], 17); // Moscow
+//  var map = new L.Map('map').setView([52.50557, 13.33451], 17); // Berlin Ku'Damm
+    var map = new L.Map('map').setView([52.52079, 13.40882], 17); // Berlin Fernsehturm
+//  var map = new L.Map('map').setView([55.82116, 37.61263], 17); // Moscow
     new L.TileLayer('http://otile1.mqcdn.com/tiles/1.0.0/map/{z}/{x}/{y}.jpg', { maxZoom: 18 }).addTo(map);
+//  new L.TileLayer('http://{s}.tiles.mapbox.com/v3/osmbuildings.map-c8zdox7m/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(map);
+
     var osmb = new L.BuildingsLayer({ url: '../server/?w={w}&n={n}&e={e}&s={s}&z={z}' }).addTo(map);
     L.control.layers({}, { Buildings: osmb }).addTo(map);
     </script>

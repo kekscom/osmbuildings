@@ -10,15 +10,15 @@ var Layers = {
         container.style.left = 0;
         container.style.top = 0;
 
-        Shadows.init(this.add());
-        FlatBuildings.init(this.add());
-        context = this.add();
+        Shadows.init(this.create());
+        FlatBuildings.init(this.create());
+        context = this.create();
 
         parentNode.appendChild(container);
         return container;
     },
 
-    add: function () {
+    create: function () {
         var canvas = doc.createElement('CANVAS');
         canvas.style.webkitTransform = 'translate3d(0,0,0)'; // turn on hw acceleration
         canvas.style.imageRendering = 'optimizeSpeed';
