@@ -24,23 +24,23 @@
 		$srcPath . "/prefix.js",
 		$srcPath . "/shortcuts.js",
 		$srcPath . "/lib/Color.js",
-        $srcPath . "/lib/SunPosition.js",
+		$srcPath . "/lib/SunPosition.js",
 		$srcPath . "/constants.js",
 		$srcPath . "/geometry.js",
 			$srcPath . "/prefix.class.js",
 			$srcPath . "/variables.js",
 			$srcPath . "/functions.js",
-            $srcPath . "/Layers.js",
+			$srcPath . "/Layers.js",
 			$srcPath . "/data.js",
 			$srcPath . "/properties.js",
 			$srcPath . "/events.js",
-            $srcPath . "/Shadows.js",
-            $srcPath . "/FlatBuildings.js",
 			$srcPath . "/render.js",
+			$srcPath . "/Shadows.js",
+			$srcPath . "/FlatBuildings.js",
 			$srcPath . "/public.js",
 			$srcPath . "/suffix.class.js",
 		$srcPath . "/suffix.js",
-        $srcPath . "/engines/Leaflet.js"
+		$srcPath . "/engines/Leaflet.js"
 	);
 	for ($i = 0; $i < count($srcFiles) ; $i++) {
 		echo "\n//*** ".$srcFiles[$i]." ***\n\n";
@@ -86,8 +86,8 @@
     </div>
 
     <script>
-//  var map = new L.Map('map').setView([52.50557, 13.33451], 17); // Berlin Ku'Damm
-    var map = new L.Map('map').setView([52.52079, 13.40882], 17); // Berlin Fernsehturm
+    var map = new L.Map('map').setView([52.50557, 13.33451], 17); // Berlin Ku'Damm
+//  var map = new L.Map('map').setView([52.52079, 13.40882], 17); // Berlin Fernsehturm
 //  var map = new L.Map('map').setView([55.82116, 37.61263], 17); // Moscow
     new L.TileLayer('http://otile1.mqcdn.com/tiles/1.0.0/map/{z}/{x}/{y}.jpg', { maxZoom: 18 }).addTo(map);
 //  new L.TileLayer('http://{s}.tiles.mapbox.com/v3/osmbuildings.map-c8zdox7m/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(map);
