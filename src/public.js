@@ -34,3 +34,14 @@ this.setOrigin   = setOrigin;
 this.setSize     = setSize;
 this.setZoom     = setZoom;
 this.render      = render;
+
+this.screenshot = function(queue) {
+    queue.push(function(context) {
+        renderAll();
+        var items = Layers.items;
+        for (var i = 0, il = items.length; i < il; i++) {
+            context.drawImage(items[i], 0, 0);
+        }
+        queue.next();
+    });
+};

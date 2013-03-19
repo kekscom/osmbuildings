@@ -137,5 +137,9 @@ L.BuildingsLayer = L.Class.extend({
 
     setDate: function (date)  {
         return this.osmb.setDate(date);
+    },
+
+    screenshot: function (context)  {
+        return this.osmb.screenshot(context);
     }
 });
