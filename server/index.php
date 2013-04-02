@@ -57,6 +57,7 @@ $json = array(
         "y" => $XY["y"],
         "z" => $Z
     ),
+	"schema" => array("HEIGHT", "MIN_HEIGHT", "FOOTPRINT"),
     "data" => array(),
 );
 

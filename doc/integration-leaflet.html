@@ -24,9 +24,8 @@
 
         <pre class="code">
 &lt;head&gt;
-	&lt;link rel=&quot;stylesheet&quot; href=&quot;http://cdn.leafletjs.com/leaflet-0.4.5/leaflet.css&quot;&gt;
-	&lt;!--[if lte IE 8]&gt;&lt;link rel=&quot;stylesheet&quot; href=&quot;http://cdn.leafletjs.com/leaflet-0.4.5/leaflet.ie.css&quot; /&gt;&lt;![endif]--&gt;
-	&lt;script src=&quot;http://cdn.leafletjs.com/leaflet-0.4.5/leaflet.js&quot;&gt;&lt;/script&gt;
+	&lt;link rel=&quot;stylesheet&quot; href=&quot;http://cdn.leafletjs.com/leaflet-0.5.1/leaflet.css&quot;&gt;
+	&lt;script src=&quot;http://cdn.leafletjs.com/leaflet-0.5.1/leaflet.js&quot;&gt;&lt;/script&gt;
 	&lt;script src=&quot;dist/L.BuildingsLayer.js&quot;&gt;&lt;/script&gt;
 &lt;/head&gt;
         </pre>
@@ -95,7 +94,7 @@ new L.BuildingsLayer().addTo(map).geoJSON(data);
         pre[i].onclick = function (e) {
             this.className += ' large';
             e.cancelBubble = true;
-        }
+        };
     }
 
     document.onclick = function () {

@@ -47,7 +47,7 @@ var jshintOptions = {
 
 	"eqeqeq": true,
 	"trailing": true,
-	"white": true,
+	"white": false,
 	"smarttabs": true
 };
 
@@ -108,8 +108,7 @@ exports.jshint = function (str) {
     var err = jshint.errors;
 
     if (err.length) {
-        var
-            lines = str.split('\n'),
+        var lines = str.split('\n'),
             prevFile = ''
         ;
 
@@ -169,12 +168,20 @@ exports.eachFile = function (path, callback) {
     }.bind(this));
 };
 
-exports.setVars = function (str, data) {
-    // example: /*<version=*/'0.1.6a'/*>*/
-    return str.replace(/\/\*\<([^=]+)=\*\/('?)([^']*)('?)\/\*\>\*\//g, function(all, key, q1, value, q2) {
+exports.setVars = function (str, data, isDebugMode) {
+    // example: /*<version=*/'0.1.7a'/*>*/
+    str = str.replace(/\/\*\<([^=]+)=\*\/('?)([^']+?)('?)\/\*\>\*\//g, function(unused, key, q1, value, q2) {
         return q1 + (data[key] || value) + q2;
     });
+
+    // example: /*<debug*/some code/*>*/
+    str = str.replace(/\/\*\<debug\*\/([\s\S]+?)\/\*\>\*\//g, function(unused, code) {
+        return isDebugMode ? code : '';
+    });
+
+    return str;
 }
+
 
 // JSDOC http://www.2ality.com/2011/08/jsdoc-intro.html
 //exports.documentation = function (srcFile, dstPath, callback) {

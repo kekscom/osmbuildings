@@ -22,8 +22,7 @@ OpenLayers.Layer.Buildings = OpenLayers.Class(OpenLayers.Layer, {
     },
 
     setOrigin: function () {
-        var
-            origin = this.map.getLonLatFromPixel(new OpenLayers.Pixel(0, 0)),
+        var origin = this.map.getLonLatFromPixel(new OpenLayers.Pixel(0, 0)),
             res = this.map.resolution,
             ext = this.maxExtent,
             x = Math.round((origin.lon - ext.left) / res),
@@ -35,18 +34,19 @@ OpenLayers.Layer.Buildings = OpenLayers.Class(OpenLayers.Layer, {
     setMap: function (map) {
         if (!this.map) {
             OpenLayers.Layer.prototype.setMap(map);
-            this.osmb = new OSMBuildings(this.options.url);
-            this.osmb.createCanvas(this.div);
-            this.osmb.setSize(this.map.size.w, this.map.size.h);
-            this.osmb.setZoom(this.map.zoom);
-            this.setOrigin();
-            this.osmb.loadData();
         }
+        if (!this.osmb) {
+            this.osmb = new OSMBuildings(this.options.url);
+            this.container = this.osmb.appendTo(this.div);
+        }
+        this.osmb.setSize(this.map.size.w, this.map.size.h);
+        this.osmb.setZoom(this.map.zoom);
+        this.setOrigin();
+        this.osmb.loadData();
     },
 
     removeMap: function (map) {
-        this.osmb.destroyCanvas();
-        this.osmb = null;
+        this.container.parentNode.removeChild(this.container);
         OpenLayers.Layer.prototype.removeMap(map);
     },
 
@@ -89,11 +89,17 @@ OpenLayers.Layer.Buildings = OpenLayers.Class(OpenLayers.Layer, {
         return result;
     },
 
+    // TODO: refactor these ugly bindings
+
     geoJSON: function (url, isLatLon) {
         return this.osmb.geoJSON(url, isLatLon);
     },
 
     setStyle: function (style)  {
         return this.osmb.setStyle(style);
+    },
+
+    setDate: function (date)  {
+        return this.osmb.setDate(date);
     }
 });

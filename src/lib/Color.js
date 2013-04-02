@@ -1,5 +1,3 @@
-/*jshint white:false */
-
 var Color = (function () {
 
     function hsla2rgb(hsla) {
@@ -120,5 +118,3 @@ var Color = (function () {
     return C;
 
 }());
-
-/*jshint white:true */
