@@ -137,53 +137,36 @@ function renderPass() {
 }
 
 function render() {
-    var algo = 'optimized-anaglyphs';
+    var f = width / (window.devicePixelRatio || 1) / 30;
 
-    camX -= 10;
+    camX -= f;
     renderPass();
     var canvasData1 = context.getImageData(0, 0, width, height);
 
-    camX += 20;
+    camX += 2*f;
     renderPass();
     var canvasData2 = context.getImageData(0, 0, width, height);
 
-    camX -= 10;
+    camX -= f;
 
-    var
-        data1 = canvasData1.data,
+    var data1 = canvasData1.data,
         data2 = canvasData2.data,
-        R, G, B
-    ;
+        R, G, B, A;
 
     for (var i = 0, il = data1.length; i < il; i+= 4) {
         R = i;
         G = i + 1;
         B = i + 2;
-        switch (algo) {
-            case 'true-anaglyphs':
-                data1[R] = 0.299 * data1[R] + 0.587 * data1[G] + 0.114 * data1[B];
-                data1[B] = 0.299 * data2[R] + 0.587 * data2[G] + 0.114 * data2[B];
-                break;
-            case 'optimized-anaglyphs':
-                data1[R] = 0.7 * data1[G] + 0.3 * data1[B];
-                data1[G] = data2[G];
-                data1[B] = data2[B];
-                break;
-            case 'gray-anaglyphs':
-                data1[R] = 0.299 * data1[R] + 0.587 * data1[G] + 0.114 * data1[B];
-                data1[G] = data1[B] = 0.299 * data2[R] + 0.587 * data2[G] + 0.114 * data2[B];
-                break;
-            case 'color-anaglyphs':
-                data1[R] = data1[R];
-                data1[G] = data2[R];
-                data1[B] = data2[B];
-                break;
-            case 'half-color-anaglyphs':
-                data1[R] = 0.299 * data1[R] + 0.587 * data1[G] + 0.114 * data1[B];
-                data1[G] = data2[R];
-                data1[B] = data2[B];
-                break;
+        A = i + 3;
+
+        if (!data1[A] && !data2[A]) {
+            continue;
         }
+
+        data1[R] = 0.7 * (data1[G] || 235)  + 0.3 * (data1[B] || 230);
+        data1[G] = data2[G] || roofColor.g;
+        data1[B] = data2[B] || roofColor.b;
+        data1[A] = max(data1[A], data2[A]);
     }
 
     context.clearRect(0, 0, width, height);
