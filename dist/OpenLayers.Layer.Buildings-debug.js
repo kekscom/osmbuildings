@@ -1054,24 +1054,42 @@ function render() {
 
     camX -= f;
 
-    var data1 = canvasData1.data,
-        data2 = canvasData2.data,
+    var dataRed = canvasData1.data,
+        dataCyan = canvasData2.data,
         R, G, B, A;
 
-    for (var i = 0, il = data1.length; i < il; i+= 4) {
+    for (var i = 0, il = dataRed.length; i < il; i+= 4) {
         R = i;
         G = i + 1;
         B = i + 2;
         A = i + 3;
 
-        if (!data1[A] && !data2[A]) {
+        if (!dataRed[A] && !dataCyan[A]) {
             continue;
         }
 
-        data1[R] = 0.7 * (data1[G] || 235)  + 0.3 * (data1[B] || 230);
-        data1[G] = data2[G] || roofColor.g;
-        data1[B] = data2[B] || roofColor.b;
-        data1[A] = max(data1[A], data2[A]);
+        dataRed[R] = 0.7 * (dataRed[G] || 235)  + 0.3 * (dataRed[B] || 230);
+        dataRed[G] = dataCyan[G] || roofColor.g;
+        dataRed[B] = dataCyan[B] || roofColor.b;
+        dataRed[A] = max(dataCyan[A], dataCyan[A]);
+/*
+        if (dataRed[A] && dataCyan[A]) {
+            dataRed[R] = 0.7 * dataRed[G] + 0.3 * dataRed[B];
+            dataRed[G] = dataCyan[G];
+            dataRed[B] = dataCyan[B];
+            dataRed[A] = max(dataRed[A], dataCyan[A]);
+        } else if (dataRed[A]) {
+            dataRed[R] = 0.7 * dataRed[G] + 0.3 * dataRed[B];
+            dataRed[G] = roofColor.g;
+            dataRed[B] = roofColor.b;
+            dataRed[A] = dataRed[A]; // * 0.5;
+        } else if (dataCyan[A]) {
+            dataRed[R] = 0.7 * roofColor.g + 0.3 * roofColor.b;
+            dataRed[G] = dataCyan[G];
+            dataRed[B] = dataCyan[B];
+            dataRed[A] = dataCyan[A]; // * 0.5;
+        }
+*/
     }
 
     context.clearRect(0, 0, width, height);
