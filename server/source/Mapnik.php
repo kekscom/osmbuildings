@@ -20,6 +20,8 @@ class Source_Mapnik extends Source_Abstract {
             SELECT
                 height,
                 min_height AS minHeight,
+                color,
+                roof_color AS roofColor,
                 ST_AsText(ST_Transform(ST_ExteriorRing(way), 4326)) AS footprint
             FROM
                 {$this->_options['table']}

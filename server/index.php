@@ -57,7 +57,7 @@ $json = array(
         "y" => $XY["y"],
         "z" => $Z
     ),
-	"schema" => array("HEIGHT", "MIN_HEIGHT", "FOOTPRINT"),
+	"schema" => array("HEIGHT", "MIN_HEIGHT", "FOOTPRINT", "COLOR", "ROOF_COLOR"),
     "data" => array(),
 );
 
@@ -67,12 +67,9 @@ while ($row = $source->fetch()) {
     $height    = ($row->height    ? $row->height    : 5) * $heightScale >> $z;
     $minHeight = ($row->minHeight ? $row->minHeight : 0) * $heightScale >> $z;
 
-    if ($height <= 1) {
-        continue;
-    }
+    if ($height <= 1) continue;
 
     $f = strToPoly($row->footprint);
-
     $fp = array();
     for ($i = 0; $i < count($f)-1; $i+=2) {
         $px = geoToPixel($f[$i], $f[$i+1], $Z);
@@ -84,7 +81,18 @@ while ($row = $source->fetch()) {
     // TODO: do this during data import
     $fp = makeClockwiseWinding($fp);
 
-    $json["data"][] = array($height, $minHeight, $fp);
+    $res = array($height, $minHeight, $fp);
+
+    if ($row->color) {
+        $res[] = $row->color;
+    } else if ($row->roofColor) {
+        $res[] = 0;
+    }
+    if ($row->roofColor) {
+        $res[] = $row->roofColor;
+    }
+
+    $json["data"][] = $res;
 }
 
 if ($_GET["callback"]) {

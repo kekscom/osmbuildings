@@ -11,6 +11,7 @@ var Shadows = {
 
     init: function (context) {
         this.context = context;
+        // TODO: fix bad Date() syntax
         this.setDate(new Date().setHours(10)); // => render()
     },
 

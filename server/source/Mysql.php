@@ -17,6 +17,8 @@ class Source_Mysql extends Source_Abstract {
             SELECT
                 height,
                 min_height AS minHeight,
+                color,
+                roof_color AS roofColor,
                 ASTEXT(footprint) AS footprint
             FROM
                 {$this->_options['table']}

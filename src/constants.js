@@ -12,5 +12,10 @@ var VERSION = /*<version=*/'0.1.8a'/*>*/,
 
     LAT = 'latitude', LON = 'longitude',
 
-//  HEIGHT = 0, FOOTPRINT = 1, COLOR = 2, CENTER = 3, IS_NEW = 4, RENDER_COLOR = 5, MIN_HEIGHT = 6;
+    // import keys
+    // TODO: use meta info
+    DATA_HEIGHT = 0, DATA_MIN_HEIGHT = 1, DATA_FOOTPRINT = 2, DATA_COLOR = 3, DATA_ROOF_COLOR = 4,
+
+    // converted & render keys
+    // TODO: cleanup
     HEIGHT = 0, MIN_HEIGHT = 1, FOOTPRINT = 2, COLOR = 3, CENTER = 4, IS_NEW = 5, RENDER_COLOR = 6;
