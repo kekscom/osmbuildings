@@ -282,7 +282,7 @@ function parseGeoJSON(json, isLonLat, res) {
             if (heightSum) {
                 item = [];
                 item[FOOTPRINT] = makeClockwiseWinding(footprint);
-                item[HEIGHT]    = heightSum / coords.length << 0;
+                item[HEIGHT]    = heightSum/coords.length <<0;
                 item[COLOR] = [
                     dataWallColor || null,
                     dataWallColor ? dataWallColor.adjustLightness(0.8) : null,

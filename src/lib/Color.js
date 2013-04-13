@@ -15,9 +15,9 @@ var Color = (function () {
             b = hue2rgb(p, q, hsla.h - 1 / 3);
         }
         return new Color(
-            r * 255 << 0,
-            g * 255 << 0,
-            b * 255 << 0,
+            r * 255 <<0,
+            g * 255 <<0,
+            b * 255 <<0,
             hsla.a
         );
     }
@@ -51,7 +51,7 @@ var Color = (function () {
     var proto = C.prototype;
 
     proto.toString = function () {
-        return 'rgba(' + [this.r << 0, this.g << 0, this.b << 0, this.a.toFixed(2)].join(',') + ')';
+        return 'rgba(' + [this.r <<0, this.g <<0, this.b <<0, this.a.toFixed(2)].join(',') + ')';
     };
 
     proto.adjustLightness = function (l) {

@@ -52,9 +52,9 @@ var Color = (function () {
             b = hue2rgb(p, q, hsla.h - 1 / 3);
         }
         return new Color(
-            r * 255 << 0,
-            g * 255 << 0,
-            b * 255 << 0,
+            r * 255 <<0,
+            g * 255 <<0,
+            b * 255 <<0,
             hsla.a
         );
     }
@@ -88,7 +88,7 @@ var Color = (function () {
     var proto = C.prototype;
 
     proto.toString = function () {
-        return 'rgba(' + [this.r << 0, this.g << 0, this.b << 0, this.a.toFixed(2)].join(',') + ')';
+        return 'rgba(' + [this.r <<0, this.g <<0, this.b <<0, this.a.toFixed(2)].join(',') + ')';
     };
 
     proto.adjustLightness = function (l) {
@@ -228,34 +228,37 @@ var VERSION = '0.1.8a',
 
     LAT = 'latitude', LON = 'longitude',
 
-//  HEIGHT = 0, FOOTPRINT = 1, COLOR = 2, CENTER = 3, IS_NEW = 4, RENDER_COLOR = 5, MIN_HEIGHT = 6;
+    // import keys
+    // TODO: use meta info
+    DATA_HEIGHT = 0, DATA_MIN_HEIGHT = 1, DATA_FOOTPRINT = 2, DATA_COLOR = 3, DATA_ROOF_COLOR = 4,
+
+    // converted & render keys
+    // TODO: cleanup
     HEIGHT = 0, MIN_HEIGHT = 1, FOOTPRINT = 2, COLOR = 3, CENTER = 4, IS_NEW = 5, RENDER_COLOR = 6;
 
 
 //****** file: geometry.js ******
 
 function distance(p1, p2) {
-    var dx = p1[0] - p2[0],
-        dy = p1[1] - p2[1]
-    ;
-    return dx * dx + dy * dy;
+    var dx = p1[0]-p2[0],
+        dy = p1[1]-p2[1];
+    return dx*dx + dy*dy;
 }
 
 function center(points) {
     var len,
-        x = 0, y = 0
-    ;
+        x = 0, y = 0;
     for (var i = 0, il = points.length - 3; i < il; i += 2) {
         x += points[i];
-        y += points[i + 1];
+        y += points[i+1];
     }
-    len = (points.length - 2) * 2;
-    return [x / len << 0, y / len << 0];
+    len = (points.length-2) * 2;
+    return [x/len <<0, y/len <<0];
 }
 
 function getSquareSegmentDistance(px, py, p1x, p1y, p2x, p2y) {
-    var dx = p2x - p1x,
-        dy = p2y - p1y,
+    var dx = p2x-p1x,
+        dy = p2y-p1y,
         t;
     if (dx !== 0 || dy !== 0) {
         t = ((px - p1x) * dx + (py - p1y) * dy) / (dx * dx + dy * dy);
@@ -388,12 +391,11 @@ function pixelToGeo(x, y) {
 }
 
 function geoToPixel(lat, lon) {
-    var latitude = min(1, max(0, 0.5 - (log(tan(QUARTER_PI + HALF_PI * lat / 180)) / PI) / 2)),
-        longitude = lon / 360 + 0.5
-    ;
+    var latitude  = min(1, max(0, 0.5 - (log(tan(QUARTER_PI + HALF_PI * lat / 180)) / PI) / 2)),
+        longitude = lon / 360 + 0.5;
     return {
-        x: longitude * size << 0,
-        y: latitude  * size << 0
+        x: longitude*size <<0,
+        y: latitude *size <<0
     };
 }
 
@@ -425,15 +427,15 @@ var Layers = {
         container.style.left = 0;
         container.style.top = 0;
 
-        Shadows.init(this.add());
-        FlatBuildings.init(this.add());
-        context = this.add();
+        Shadows.init(this.create());
+        FlatBuildings.init(this.create());
+        context = this.create();
 
         parentNode.appendChild(container);
         return container;
     },
 
-    add: function () {
+    create: function () {
         var canvas = doc.createElement('CANVAS');
         canvas.style.webkitTransform = 'translate3d(0,0,0)'; // turn on hw acceleration
         canvas.style.imageRendering = 'optimizeSpeed';
@@ -511,11 +513,13 @@ function loadData() {
 
 function onDataLoaded(res) {
     var i, il,
+        j,
         resData, resMeta,
         keyList = [], k,
         offX = 0, offY = 0,
         item,
-        footprint
+        footprint,
+        dataWallColor, dataRoofColor
     ;
 
     minZoom = MIN_ZOOM;
@@ -545,8 +549,6 @@ function onDataLoaded(res) {
     meta = resMeta;
     data = [];
 
-    
-
     for (i = 0, il = resData.length; i < il; i++) {
         item = [];
 
@@ -554,11 +556,7 @@ function onDataLoaded(res) {
             continue;
         }
 
-        
-
         footprint = simplify(resData[i][FOOTPRINT]);
-
-        
 
         if (footprint.length < 8) { // 3 points & end = start (x2)
             continue;
@@ -576,10 +574,23 @@ function onDataLoaded(res) {
         item[COLOR] = [];
         item[RENDER_COLOR] = [];
 
+        dataWallColor = resData[i][DATA_COLOR]      ? Color.parse(resData[i][DATA_COLOR])      : null;
+        dataRoofColor = resData[i][DATA_ROOF_COLOR] ? Color.parse(resData[i][DATA_ROOF_COLOR]) : null;
+
+        item[COLOR] = [
+            dataWallColor || null,
+            dataWallColor ? dataWallColor.adjustLightness(0.8) : null,
+            dataRoofColor ? dataRoofColor : dataWallColor ? dataWallColor.adjustLightness(1.2) : roofColor
+        ];
+
+        for (j = 0; j < 3; j++) {
+            if (item[COLOR][j]) {
+                item[RENDER_COLOR][j] = item[COLOR][j].adjustAlpha(zoomAlpha) + '';
+            }
+        }
+
         data.push(item);
     }
-
-    
 
     resMeta = resData = keyList = null; // gc
     fadeIn();
@@ -696,7 +707,7 @@ function parseGeoJSON(json, isLonLat, res) {
         features = json[0] ? json : json.features,
         geometry, polygons, coords, properties,
         footprint, heightSum,
-        propHeight, propWallColor, propRoofColor,
+        propHeight, dataWallColor, dataRoofColor,
         lat = isLonLat ? 1 : 0,
         lon = isLonLat ? 0 : 1,
         alt = 2,
@@ -726,10 +737,10 @@ function parseGeoJSON(json, isLonLat, res) {
     if (polygons) {
         propHeight = properties.height;
         if (properties.color || properties.wallColor) {
-            propWallColor = Color.parse(properties.color || properties.wallColor);
+            dataWallColor = Color.parse(properties.color || properties.wallColor);
         }
         if (properties.roofColor) {
-            propRoofColor = Color.parse(properties.roofColor);
+            dataRoofColor = Color.parse(properties.roofColor);
         }
 
         for (i = 0, il = polygons.length; i < il; i++) {
@@ -744,11 +755,11 @@ function parseGeoJSON(json, isLonLat, res) {
             if (heightSum) {
                 item = [];
                 item[FOOTPRINT] = makeClockwiseWinding(footprint);
-                item[HEIGHT]    = heightSum / coords.length << 0;
+                item[HEIGHT]    = heightSum/coords.length <<0;
                 item[COLOR] = [
-                    propWallColor || null,
-                    propWallColor ? propWallColor.adjustLightness(0.8) : null,
-                    propRoofColor ? propRoofColor : propWallColor ? propWallColor.adjustLightness(1.2) : roofColor
+                    dataWallColor || null,
+                    dataWallColor ? dataWallColor.adjustLightness(0.8) : null,
+                    dataRoofColor ? dataRoofColor : dataWallColor ? dataWallColor.adjustLightness(1.2) : roofColor
                 ];
                 res.push(item);
             }
@@ -788,11 +799,12 @@ function setData(json, isLonLat) {
 function setSize(w, h) {
     width  = w;
     height = h;
-    halfWidth  = width / 2 << 0;
-    halfHeight = height / 2 << 0;
+    halfWidth  = width /2 <<0;
+    halfHeight = height/2 <<0;
     camX = halfWidth;
     camY = height;
-    camZ = width / 1.5 / tan(90 / 2) << 0; // adapting cam pos to field of view (90°), 1.5 is an empirical correction factor
+//    camZ = width / ((window.devicePixelRatio || 1) * 1.5) / tan(90 / 2) <<0; // adapting cam pos to field of view (90°), 1.5 is an empirical correction factor
+    camZ = width / (1.5 / (window.devicePixelRatio || 1)) / tan(90 / 2) <<0; // adapting cam pos to field of view (90°), 1.5 is an empirical correction factor
     Layers.setSize(width, height);
     // TODO: change of maxHeight needs to adjust building heights!
     maxHeight = camZ - 50;
@@ -902,6 +914,188 @@ function onZoomEnd(e) {
 }
 
 
+//****** file: render.js ******
+
+
+function fadeIn() {
+    clearInterval(fadeTimer);
+    fadeFactor = 0;
+    FlatBuildings.render();
+    fadeTimer = setInterval(function () {
+        fadeFactor += 0.5 * 0.2; // amount * easing
+        if (fadeFactor > 1) {
+            clearInterval(fadeTimer);
+            fadeFactor = 1;
+            // unset 'already present' marker
+            for (var i = 0, il = data.length; i < il; i++) {
+                data[i][IS_NEW] = 0;
+            }
+        }
+        Shadows.render();
+        render();
+    }, 33);
+}
+
+function renderAll() {
+    Shadows.render();
+    FlatBuildings.render();
+    render();
+}
+
+function render() {
+    context.clearRect(0, 0, width, height);
+
+    // data needed for rendering
+    if (!meta || !data ||
+        // show on high zoom levels only and avoid rendering during zoom
+        zoom < minZoom || isZooming) {
+        return;
+    }
+
+    var i, il, j, jl,
+        item,
+        f, h, m, n,
+        x, y,
+        offX = originX - meta.x,
+        offY = originY - meta.y,
+        flatMaxHeight = FlatBuildings.getMaxHeight(),
+        sortCam = [camX + offX, camY + offY],
+        footprint, roof,
+        isVisible,
+        ax, ay, bx, by,
+        a, b, _a, _b
+    ;
+
+    // TODO: FlatBuildings are drawn separetely, data has to be split
+    data.sort(function (a, b) {
+        return distance(b[CENTER], sortCam) / b[HEIGHT] - distance(a[CENTER], sortCam) / a[HEIGHT];
+    });
+
+    for (i = 0, il = data.length; i < il; i++) {
+        item = data[i];
+
+        if (item[HEIGHT] <= flatMaxHeight) {
+            continue;
+        }
+
+        isVisible = false;
+        f = item[FOOTPRINT];
+        footprint = []; // typed array would be created each pass and is way too slow
+        for (j = 0, jl = f.length - 1; j < jl; j += 2) {
+            footprint[j]     = x = (f[j]     - offX);
+            footprint[j + 1] = y = (f[j + 1] - offY);
+
+            // checking footprint is sufficient for visibility
+            if (!isVisible) {
+                isVisible = (x > 0 && x < width && y > 0 && y < height);
+            }
+        }
+
+        if (!isVisible) {
+            continue;
+        }
+
+        // when fading in, use a dynamic height
+        h = item[IS_NEW] ? item[HEIGHT] * fadeFactor : item[HEIGHT];
+        // precalculating projection height scale
+        m = camZ / (camZ - h);
+
+        // prepare same calculations for min_height if applicable
+        if (item[MIN_HEIGHT]) {
+            h = item[IS_NEW] ? item[MIN_HEIGHT] * fadeFactor : item[MIN_HEIGHT];
+            n = camZ / (camZ - h);
+        }
+
+        roof = []; // typed array would be created each pass and is way too slow
+
+        for (j = 0, jl = footprint.length - 3; j < jl; j += 2) {
+            ax = footprint[j];
+            ay = footprint[j + 1];
+            bx = footprint[j + 2];
+            by = footprint[j + 3];
+
+            // project 3d to 2d on extruded footprint
+            _a = project(ax, ay, m);
+            _b = project(bx, by, m);
+
+            if (item[MIN_HEIGHT]) {
+                a = project(ax, ay, n);
+                b = project(bx, by, n);
+                ax = a.x;
+                ay = a.y;
+                bx = b.x;
+                by = b.y;
+            }
+
+            // backface culling check
+            if ((bx - ax) * (_a.y - ay) > (_a.x - ax) * (by - ay)) {
+                // depending on direction, set wall shading
+                if ((ax < bx && ay < by) || (ax > bx && ay > by)) {
+                    context.fillStyle = item[RENDER_COLOR][1] || altColorAlpha;
+                } else {
+                    context.fillStyle = item[RENDER_COLOR][0] || wallColorAlpha;
+                }
+
+                drawShape([
+                    bx, by,
+                    ax, ay,
+                    _a.x, _a.y,
+                    _b.x, _b.y
+                ]);
+            }
+            roof[j]     = _a.x;
+            roof[j + 1] = _a.y;
+        }
+
+        // fill roof and optionally stroke it
+        context.fillStyle   = item[RENDER_COLOR][2] || roofColorAlpha;
+        context.strokeStyle = item[RENDER_COLOR][1] || altColorAlpha;
+        drawShape(roof, true);
+    }
+}
+
+function drawShape(points, stroke) {
+    if (!points.length) {
+        return;
+    }
+
+    context.beginPath();
+    context.moveTo(points[0], points[1]);
+    for (var i = 2, il = points.length; i < il; i += 2) {
+        context.lineTo(points[i], points[i + 1]);
+    }
+    context.closePath();
+    if (stroke) {
+        context.stroke();
+    }
+    context.fill();
+}
+
+function project(x, y, m) {
+    return {
+        x: (x-camX) * m + camX <<0,
+        y: (y-camY) * m + camY <<0
+    };
+}
+
+function debugMarker(x, y, color, size) {
+    context.fillStyle = color || '#ffcc00';
+    context.beginPath();
+    context.arc(x, y, size || 3, 0, PI * 2, true);
+    context.closePath();
+    context.fill();
+}
+
+function debugLine(ax, ay, bx, by, color, size) {
+    context.strokeStyle = color || '#ff0000';
+    context.beginPath();
+    context.moveTo(ax, ay);
+    context.lineTo(bx, by);
+    context.closePath();
+    context.stroke();
+}
+
+
 //****** file: Shadows.js ******
 
 var Shadows = {
@@ -917,6 +1111,7 @@ var Shadows = {
 
     init: function (context) {
         this.context = context;
+        // TODO: fix bad Date() syntax
         this.setDate(new Date().setHours(10)); // => render()
     },
 
@@ -1154,188 +1349,6 @@ var FlatBuildings = {
         return this.maxHeight;
     }
 };
-
-
-//****** file: render.js ******
-
-
-function fadeIn() {
-    clearInterval(fadeTimer);
-    fadeFactor = 0;
-    FlatBuildings.render();
-    fadeTimer = setInterval(function () {
-        fadeFactor += 0.5 * 0.2; // amount * easing
-        if (fadeFactor > 1) {
-            clearInterval(fadeTimer);
-            fadeFactor = 1;
-            // unset 'already present' marker
-            for (var i = 0, il = data.length; i < il; i++) {
-                data[i][IS_NEW] = 0;
-            }
-        }
-        Shadows.render();
-        render();
-    }, 33);
-}
-
-function renderAll() {
-    Shadows.render();
-    FlatBuildings.render();
-    render();
-}
-
-function render() {
-    context.clearRect(0, 0, width, height);
-
-    // data needed for rendering
-    if (!meta || !data ||
-        // show on high zoom levels only and avoid rendering during zoom
-        zoom < minZoom || isZooming) {
-        return;
-    }
-
-    var i, il, j, jl,
-        item,
-        f, h, m, n,
-        x, y,
-        offX = originX - meta.x,
-        offY = originY - meta.y,
-        flatMaxHeight = FlatBuildings.getMaxHeight(),
-        sortCam = [camX + offX, camY + offY],
-        footprint, roof,
-        isVisible,
-        ax, ay, bx, by,
-        a, b, _a, _b
-    ;
-
-    // TODO: FlatBuildings are drawn separetely, data has to be split
-    data.sort(function (a, b) {
-        return distance(b[CENTER], sortCam) / b[HEIGHT] - distance(a[CENTER], sortCam) / a[HEIGHT];
-    });
-
-    for (i = 0, il = data.length; i < il; i++) {
-        item = data[i];
-
-        if (item[HEIGHT] <= flatMaxHeight) {
-            continue;
-        }
-
-        isVisible = false;
-        f = item[FOOTPRINT];
-        footprint = []; // typed array would be created each pass and is way too slow
-        for (j = 0, jl = f.length - 1; j < jl; j += 2) {
-            footprint[j]     = x = (f[j]     - offX);
-            footprint[j + 1] = y = (f[j + 1] - offY);
-
-            // checking footprint is sufficient for visibility
-            if (!isVisible) {
-                isVisible = (x > 0 && x < width && y > 0 && y < height);
-            }
-        }
-
-        if (!isVisible) {
-            continue;
-        }
-
-        // when fading in, use a dynamic height
-        h = item[IS_NEW] ? item[HEIGHT] * fadeFactor : item[HEIGHT];
-        // precalculating projection height scale
-        m = camZ / (camZ - h);
-
-        // prepare same calculations for min_height if applicable
-        if (item[MIN_HEIGHT]) {
-            h = item[IS_NEW] ? item[MIN_HEIGHT] * fadeFactor : item[MIN_HEIGHT];
-            n = camZ / (camZ - h);
-        }
-
-        roof = []; // typed array would be created each pass and is way too slow
-
-        for (j = 0, jl = footprint.length - 3; j < jl; j += 2) {
-            ax = footprint[j];
-            ay = footprint[j + 1];
-            bx = footprint[j + 2];
-            by = footprint[j + 3];
-
-            // project 3d to 2d on extruded footprint
-            _a = project(ax, ay, m);
-            _b = project(bx, by, m);
-
-            if (item[MIN_HEIGHT]) {
-                a = project(ax, ay, n);
-                b = project(bx, by, n);
-                ax = a.x;
-                ay = a.y;
-                bx = b.x;
-                by = b.y;
-            }
-
-            // backface culling check
-            if ((bx - ax) * (_a.y - ay) > (_a.x - ax) * (by - ay)) {
-                // depending on direction, set wall shading
-                if ((ax < bx && ay < by) || (ax > bx && ay > by)) {
-                    context.fillStyle = item[RENDER_COLOR][1] || altColorAlpha;
-                } else {
-                    context.fillStyle = item[RENDER_COLOR][0] || wallColorAlpha;
-                }
-
-                drawShape([
-                    bx, by,
-                    ax, ay,
-                    _a.x, _a.y,
-                    _b.x, _b.y
-                ]);
-            }
-            roof[j]     = _a.x;
-            roof[j + 1] = _a.y;
-        }
-
-        // fill roof and optionally stroke it
-        context.fillStyle   = item[RENDER_COLOR][2] || roofColorAlpha;
-        context.strokeStyle = item[RENDER_COLOR][1] || altColorAlpha;
-        drawShape(roof, true);
-    }
-}
-
-function drawShape(points, stroke) {
-    if (!points.length) {
-        return;
-    }
-
-    context.beginPath();
-    context.moveTo(points[0], points[1]);
-    for (var i = 2, il = points.length; i < il; i += 2) {
-        context.lineTo(points[i], points[i + 1]);
-    }
-    context.closePath();
-    if (stroke) {
-        context.stroke();
-    }
-    context.fill();
-}
-
-function project(x, y, m) {
-    return {
-        x: ((x - camX) * m + camX << 0),
-        y: ((y - camY) * m + camY << 0)
-    };
-}
-
-function debugMarker(x, y, color, size) {
-    context.fillStyle = color || '#ffcc00';
-    context.beginPath();
-    context.arc(x, y, size || 3, 0, PI * 2, true);
-    context.closePath();
-    context.fill();
-}
-
-function debugLine(ax, ay, bx, by, color, size) {
-    context.strokeStyle = color || '#ff0000';
-    context.beginPath();
-    context.moveTo(ax, ay);
-    context.lineTo(bx, by);
-    context.closePath();
-    context.stroke();
-}
 
 
 //****** file: public.js ******

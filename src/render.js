@@ -155,8 +155,8 @@ function drawShape(points, stroke) {
 
 function project(x, y, m) {
     return {
-        x: ((x - camX) * m + camX << 0),
-        y: ((y - camY) * m + camY << 0)
+        x: (x-camX) * m + camX <<0,
+        y: (y-camY) * m + camY <<0
     };
 }
 
