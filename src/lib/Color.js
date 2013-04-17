@@ -1,6 +1,6 @@
 var Color = (function () {
 
-    function hsla2rgb(hsla) {
+    function hsla2rgb(hsla) { // h,s,l,a all belong to [0, 1]
         var r, g, b;
 
         if (hsla.s === 0) {
