@@ -80,12 +80,22 @@ var Color = (function () {
 
         m = str.match(/rgba?\((\d+)\D+(\d+)\D+(\d+)(\D+([\d.]+))?\)/);
         if (m) {
-             return new Color(
+            return new Color(
                 parseInt(m[1], 10),
                 parseInt(m[2], 10),
                 parseInt(m[3], 10),
                 m[4] ? parseFloat(m[5], 10) : 1
             );
+        }
+
+        m = str.match(/hsla?\(([\d.]+)\D+([\d.]+)\D+([\d.]+)(\D+([\d.]+))?\)/);
+        if (m) {
+            return hsla2rgb({
+                h: parseFloat(m[1], 10),
+                s: parseFloat(m[2], 10),
+                l: parseFloat(m[3], 10),
+                a: m[4] ? parseFloat(m[5], 10) : 1
+            });
         }
     };
 
