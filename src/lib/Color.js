@@ -41,7 +41,7 @@ var Color = (function () {
         return p;
     }
 
-    function C(r, g, b, a) {
+    function C(r, g, b, a) { // r,g,b belong to [0, 255]; a belongs to [0,1]
         this.r = r;
         this.g = g;
         this.b = b;
@@ -65,6 +65,12 @@ var Color = (function () {
         return new Color(this.r, this.g, this.b, this.a * a);
     };
 
+    /* 
+     * str can be in any of the following forms:
+     * "#[00-ff][00-ff][00-ff]", "#[00-ff][00-ff][00-ff][00-ff]",
+     * "rgb([0-255],[0-255],[0-255])", "rgba([0-255],[0-255],[0-255],[0-1])",
+     * "hsl([0-360],[0-1],[0-1])", "hsla([0-360],[0-1],[0-1],[0-1])"
+     */
     C.parse = function (str) {
         var m;
         str += '';
@@ -91,7 +97,7 @@ var Color = (function () {
         m = str.match(/hsla?\(([\d.]+)\D+([\d.]+)\D+([\d.]+)(\D+([\d.]+))?\)/);
         if (m) {
             return hsla2rgb({
-                h: parseFloat(m[1], 10),
+                h: parseInt(m[1], 10) / 360,
                 s: parseFloat(m[2], 10),
                 l: parseFloat(m[3], 10),
                 a: m[4] ? parseFloat(m[5], 10) : 1
@@ -99,7 +105,7 @@ var Color = (function () {
         }
     };
 
-    C.toHSLA = function (rgba) {
+    C.toHSLA = function (rgba) { // r,g,b belong to [0, 255]; a belongs to [0,1]
         var
             r = rgba.r / 255,
             g = rgba.g / 255,
