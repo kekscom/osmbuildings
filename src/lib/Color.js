@@ -91,7 +91,7 @@ var Color = (function () {
                 parseInt(m[1], 10),
                 parseInt(m[2], 10),
                 parseInt(m[3], 10),
-                m[4] ? parseFloat(m[5], 10) : 1
+                m[4] ? parseFloat(m[5]) : 1
             );
         }
 
@@ -99,9 +99,9 @@ var Color = (function () {
         if (m) {
             return hsla2rgb({
                 h: parseInt(m[1], 10),
-                s: parseFloat(m[2], 10),
-                l: parseFloat(m[3], 10),
-                a: m[4] ? parseFloat(m[5], 10) : 1
+                s: parseFloat(m[2]),
+                l: parseFloat(m[3]),
+                a: m[4] ? parseFloat(m[5]) : 1
             });
         }
     };

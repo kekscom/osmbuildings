@@ -37,9 +37,9 @@
 
 var Color = (function () {
 
-    function hsla2rgb(hsla) { // h,s,l,a all belong to [0, 1]
+    function hsla2rgb(hsla) { // h belongs to [0, 360]; s,l,a belong to [0, 1]
         var r, g, b;
-
+        
         if (hsla.s === 0) {
             r = g = b = hsla.l; // achromatic
         } else {
@@ -47,6 +47,7 @@ var Color = (function () {
                 q = hsla.l < 0.5 ? hsla.l * (1 + hsla.s) : hsla.l + hsla.s - hsla.l * hsla.s,
                 p = 2 * hsla.l - q
             ;
+            hsla.h /= 360;
             r = hue2rgb(p, q, hsla.h + 1 / 3);
             g = hue2rgb(p, q, hsla.h);
             b = hue2rgb(p, q, hsla.h - 1 / 3);
@@ -127,17 +128,17 @@ var Color = (function () {
                 parseInt(m[1], 10),
                 parseInt(m[2], 10),
                 parseInt(m[3], 10),
-                m[4] ? parseFloat(m[5], 10) : 1
+                m[4] ? parseFloat(m[5]) : 1
             );
         }
 
         m = str.match(/hsla?\(([\d.]+)\D+([\d.]+)\D+([\d.]+)(\D+([\d.]+))?\)/);
         if (m) {
             return hsla2rgb({
-                h: parseInt(m[1], 10) / 360,
-                s: parseFloat(m[2], 10),
-                l: parseFloat(m[3], 10),
-                a: m[4] ? parseFloat(m[5], 10) : 1
+                h: parseInt(m[1], 10),
+                s: parseFloat(m[2]),
+                l: parseFloat(m[3]),
+                a: m[4] ? parseFloat(m[5]) : 1
             });
         }
     };
@@ -165,7 +166,7 @@ var Color = (function () {
             h /= 6;
         }
 
-        return { h: h, s: s, l: l, a: rgba.a };
+        return { h: h*360, s: s, l: l, a: rgba.a };
     };
 
     return C;
