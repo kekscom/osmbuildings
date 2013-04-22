@@ -160,6 +160,7 @@ function project(x, y, m) {
     };
 }
 
+/*
 function debugMarker(x, y, color, size) {
     context.fillStyle = color || '#ffcc00';
     context.beginPath();
@@ -168,7 +169,7 @@ function debugMarker(x, y, color, size) {
     context.fill();
 }
 
-function debugLine(ax, ay, bx, by, color, size) {
+function debugLine(ax, ay, bx, by, color) {
     context.strokeStyle = color || '#ff0000';
     context.beginPath();
     context.moveTo(ax, ay);
@@ -176,3 +177,4 @@ function debugLine(ax, ay, bx, by, color, size) {
     context.closePath();
     context.stroke();
 }
+*/
