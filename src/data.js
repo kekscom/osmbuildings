@@ -23,8 +23,7 @@ function loadData() {
 
     // create bounding box of double viewport size
     var nw = pixelToGeo(originX         - halfWidth, originY          - halfHeight),
-        se = pixelToGeo(originX + width + halfWidth, originY + height + halfHeight)
-    ;
+        se = pixelToGeo(originX + width + halfWidth, originY + height + halfHeight);
 
     if (req) {
         req.abort();
@@ -281,8 +280,9 @@ function parseGeoJSON(json, isLonLat, res) {
 
             if (heightSum) {
                 item = [];
-                item[FOOTPRINT] = makeClockwiseWinding(footprint);
-                item[HEIGHT]    = heightSum/coords.length <<0;
+                item[FOOTPRINT]  = makeClockwiseWinding(footprint);
+                item[HEIGHT]     = heightSum/coords.length <<0;
+                item[MIN_HEIGHT] = properties.minHeight;
                 item[COLOR] = [
                     dataWallColor || null,
                     dataWallColor ? dataWallColor.adjustLightness(0.8) : null,
