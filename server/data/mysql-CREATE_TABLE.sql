@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS `buildings` (
   `region_id` INT(8) UNSIGNED NOT NULL,
   `deleted` TINYINT(1) UNSIGNED NULL,
   SPATIAL KEY `footprint` (`footprint`),
-  KEY `region` (`region`),
+  KEY `region` (`region_id`),
   KEY `deleted` (`deleted`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
