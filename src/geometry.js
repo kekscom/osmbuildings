@@ -1,25 +1,23 @@
 function distance(p1, p2) {
-    var dx = p1[0] - p2[0],
-        dy = p1[1] - p2[1]
-    ;
-    return dx * dx + dy * dy;
+    var dx = p1[0]-p2[0],
+        dy = p1[1]-p2[1];
+    return dx*dx + dy*dy;
 }
 
 function center(points) {
     var len,
-        x = 0, y = 0
-    ;
+        x = 0, y = 0;
     for (var i = 0, il = points.length - 3; i < il; i += 2) {
         x += points[i];
-        y += points[i + 1];
+        y += points[i+1];
     }
-    len = (points.length - 2) * 2;
-    return [x / len << 0, y / len << 0];
+    len = (points.length-2) * 2;
+    return [x/len <<0, y/len <<0];
 }
 
 function getSquareSegmentDistance(px, py, p1x, p1y, p2x, p2y) {
-    var dx = p2x - p1x,
-        dy = p2y - p1y,
+    var dx = p2x-p1x,
+        dy = p2y-p1y,
         t;
     if (dx !== 0 || dy !== 0) {
         t = ((px - p1x) * dx + (py - p1y) * dy) / (dx * dx + dy * dy);

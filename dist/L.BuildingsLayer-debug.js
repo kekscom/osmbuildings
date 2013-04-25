@@ -13,95 +13,99 @@
 
 //****** file: shortcuts.js ******
 
-    // object access shortcuts
-    var Int32Array = Int32Array || Array,
-        Uint8Array = Uint8Array || Array,
-        m = Math,
-        exp = m.exp,
-        log = m.log,
-        sin = m.sin,
-        cos = m.cos,
-        tan = m.tan,
-        asin = m.asin,
-        atan = m.atan,
-        atan2 = m.atan2,
-        min = m.min,
-        max = m.max,
-        doc = global.document
-    ;
+// object access shortcuts
+var Int32Array = Int32Array || Array,
+	Uint8Array = Uint8Array || Array,
+	m = Math,
+	exp = m.exp,
+	log = m.log,
+	sin = m.sin,
+	cos = m.cos,
+	tan = m.tan,
+	atan = m.atan,
+	min = m.min,
+	max = m.max,
+	doc = document;
 
-    
+
 
 
 //****** file: Color.js ******
 
-var Color = (function () {
+var Color = (function() {
 
-    function hsla2rgb(hsla) {
+    function hsla2rgb(hsla) { // h belongs to [0, 360]; s,l,a belong to [0, 1]
         var r, g, b;
-
+        
         if (hsla.s === 0) {
             r = g = b = hsla.l; // achromatic
         } else {
             var
-                q = hsla.l < 0.5 ? hsla.l * (1 + hsla.s) : hsla.l + hsla.s - hsla.l * hsla.s,
-                p = 2 * hsla.l - q
+                q = hsla.l < 0.5 ? hsla.l * (1+hsla.s) : hsla.l + hsla.s - hsla.l * hsla.s,
+                p = 2 * hsla.l-q
             ;
-            r = hue2rgb(p, q, hsla.h + 1 / 3);
+            hsla.h /= 360;
+            r = hue2rgb(p, q, hsla.h + 1/3);
             g = hue2rgb(p, q, hsla.h);
-            b = hue2rgb(p, q, hsla.h - 1 / 3);
+            b = hue2rgb(p, q, hsla.h - 1/3);
         }
         return new Color(
-            r * 255 << 0,
-            g * 255 << 0,
-            b * 255 << 0,
+            r * 255 <<0,
+            g * 255 <<0,
+            b * 255 <<0,
             hsla.a
         );
     }
 
-    function hue2rgb(p, q, t) {
-        if (t < 0) {
-            t += 1;
-        }
-        if (t > 1) {
-            t -= 1;
-        }
-        if (t < 1 / 6) {
-            return p + (q - p) * 6 * t;
-        }
-        if (t < 1 / 2) {
-            return q;
-        }
-        if (t < 2 / 3) {
-            return p + (q - p) * (2 / 3 - t) * 6;
-        }
-        return p;
-    }
+	function hue2rgb(p, q, t) {
+		if (t < 0) {
+			t += 1;
+		}
+		if (t > 1) {
+			t -= 1;
+		}
+		if (t < 1 / 6) {
+			return p + (q-p) * 6 * t;
+		}
+		if (t < 1 / 2) {
+			return q;
+		}
+		if (t < 2 / 3) {
+			return p + (q-p) * (2/3 - t) * 6;
+		}
+		return p;
+	}
 
-    function C(r, g, b, a) {
+    function C(r, g, b, a) { // r,g,b belong to [0, 255]; a belongs to [0,1]
         this.r = r;
         this.g = g;
         this.b = b;
         this.a = arguments.length < 4 ? 1 : a;
     }
 
-    var proto = C.prototype;
+	var proto = C.prototype;
 
-    proto.toString = function () {
-        return 'rgba(' + [this.r << 0, this.g << 0, this.b << 0, this.a.toFixed(2)].join(',') + ')';
-    };
+	proto.toString = function() {
+		return 'rgba(' + [this.r <<0, this.g <<0, this.b <<0, this.a.toFixed(2)].join(',') + ')';
+	};
 
-    proto.adjustLightness = function (l) {
-        var hsla = Color.toHSLA(this);
-        hsla.l *= l;
-        hsla.l = Math.min(1, Math.max(0, hsla.l));
-        return hsla2rgb(hsla);
-    };
+	proto.adjustLightness = function(l) {
+		var hsla = Color.toHSLA(this);
+		hsla.l *= l;
+		hsla.l = Math.min(1, Math.max(0, hsla.l));
+		return hsla2rgb(hsla);
+	};
 
-    proto.adjustAlpha = function (a) {
-        return new Color(this.r, this.g, this.b, this.a * a);
-    };
+	proto.adjustAlpha = function(a) {
+		return new Color(this.r, this.g, this.b, this.a * a);
+	};
 
+    /* 
+     * str can be in any of the following forms:
+     * "#[00-ff][00-ff][00-ff]", "#[00-ff][00-ff][00-ff][00-ff]",
+     * "rgb([0-255],[0-255],[0-255])", "rgba([0-255],[0-255],[0-255],[0-1])",
+     * "hsl([0-360],[0-1],[0-1])", "hsla([0-360],[0-1],[0-1],[0-1])"
+     */
     C.parse = function (str) {
         var m;
         str += '';
@@ -117,42 +121,50 @@ var Color = (function () {
 
         m = str.match(/rgba?\((\d+)\D+(\d+)\D+(\d+)(\D+([\d.]+))?\)/);
         if (m) {
-             return new Color(
+            return new Color(
                 parseInt(m[1], 10),
                 parseInt(m[2], 10),
                 parseInt(m[3], 10),
-                m[4] ? parseFloat(m[5], 10) : 1
+                m[4] ? parseFloat(m[5]) : 1
             );
         }
-    };
 
-    C.toHSLA = function (rgba) {
-        var
-            r = rgba.r / 255,
-            g = rgba.g / 255,
-            b = rgba.b / 255,
-            max = Math.max(r, g, b), min = Math.min(r, g, b),
-            h, s, l = (max + min) / 2,
-            d
-        ;
-
-        if (max === min) {
-            h = s = 0; // achromatic
-        } else {
-            d = max - min;
-            s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-            switch (max) {
-                case r: h = (g - b) / d + (g < b ? 6 : 0); break;
-                case g: h = (b - r) / d + 2; break;
-                case b: h = (r - g) / d + 4; break;
-            }
-            h /= 6;
+        m = str.match(/hsla?\(([\d.]+)\D+([\d.]+)\D+([\d.]+)(\D+([\d.]+))?\)/);
+        if (m) {
+            return hsla2rgb({
+                h: parseInt(m[1], 10),
+                s: parseFloat(m[2]),
+                l: parseFloat(m[3]),
+                a: m[4] ? parseFloat(m[5]) : 1
+            });
         }
-
-        return { h: h, s: s, l: l, a: rgba.a };
     };
 
-    return C;
+    C.toHSLA = function (rgba) { // r,g,b belong to [0, 255]; a belongs to [0,1]
+        var r = rgba.r/255,
+            g = rgba.g/255,
+            b = rgba.b/255,
+            max = Math.max(r, g, b), min = Math.min(r, g, b),
+            h, s, l = (max+min) / 2,
+            d;
+
+		if (max === min) {
+			h = s = 0; // achromatic
+		} else {
+			d = max-min;
+			s = l > 0.5 ? d / (2 - max - min) : d / (max+min);
+			switch (max) {
+				case r: h = (g-b) / d + (g < b ? 6 : 0); break;
+				case g: h = (b-r) / d + 2; break;
+				case b: h = (r-g) / d + 4; break;
+			}
+			h /= 6;
+		}
+
+        return { h: h*360, s: s, l: l, a: rgba.a };
+    };
+
+	return C;
 
 }());
 
@@ -228,33 +240,37 @@ var VERSION = '0.1.8a',
 
     LAT = 'latitude', LON = 'longitude',
 
+    // import keys
+    // TODO: use meta info
+    DATA_HEIGHT = 0, DATA_MIN_HEIGHT = 1, DATA_FOOTPRINT = 2, DATA_COLOR = 3, DATA_ROOF_COLOR = 4,
+
+    // converted & render keys
+    // TODO: cleanup
     HEIGHT = 0, MIN_HEIGHT = 1, FOOTPRINT = 2, COLOR = 3, CENTER = 4, IS_NEW = 5, RENDER_COLOR = 6;
 
 
 //****** file: geometry.js ******
 
 function distance(p1, p2) {
-    var dx = p1[0] - p2[0],
-        dy = p1[1] - p2[1]
-    ;
-    return dx * dx + dy * dy;
+    var dx = p1[0]-p2[0],
+        dy = p1[1]-p2[1];
+    return dx*dx + dy*dy;
 }
 
 function center(points) {
     var len,
-        x = 0, y = 0
-    ;
+        x = 0, y = 0;
     for (var i = 0, il = points.length - 3; i < il; i += 2) {
         x += points[i];
-        y += points[i + 1];
+        y += points[i+1];
     }
-    len = (points.length - 2) * 2;
-    return [x / len << 0, y / len << 0];
+    len = (points.length-2) * 2;
+    return [x/len <<0, y/len <<0];
 }
 
 function getSquareSegmentDistance(px, py, p1x, p1y, p2x, p2y) {
-    var dx = p2x - p1x,
-        dy = p2y - p1y,
+    var dx = p2x-p1x,
+        dy = p2y-p1y,
         t;
     if (dx !== 0 || dy !== 0) {
         t = ((px - p1x) * dx + (py - p1y) * dy) / (dx * dx + dy * dy);
@@ -387,12 +403,11 @@ function pixelToGeo(x, y) {
 }
 
 function geoToPixel(lat, lon) {
-    var latitude = min(1, max(0, 0.5 - (log(tan(QUARTER_PI + HALF_PI * lat / 180)) / PI) / 2)),
-        longitude = lon / 360 + 0.5
-    ;
+    var latitude  = min(1, max(0, 0.5 - (log(tan(QUARTER_PI + HALF_PI * lat / 180)) / PI) / 2)),
+        longitude = lon / 360 + 0.5;
     return {
-        x: longitude * size << 0,
-        y: latitude  * size << 0
+        x: longitude*size <<0,
+        y: latitude *size <<0
     };
 }
 
@@ -493,8 +508,7 @@ function loadData() {
 
     // create bounding box of double viewport size
     var nw = pixelToGeo(originX         - halfWidth, originY          - halfHeight),
-        se = pixelToGeo(originX + width + halfWidth, originY + height + halfHeight)
-    ;
+        se = pixelToGeo(originX + width + halfWidth, originY + height + halfHeight);
 
     if (req) {
         req.abort();
@@ -510,11 +524,13 @@ function loadData() {
 
 function onDataLoaded(res) {
     var i, il,
+        j,
         resData, resMeta,
         keyList = [], k,
         offX = 0, offY = 0,
         item,
-        footprint
+        footprint,
+        dataWallColor, dataRoofColor
     ;
 
     minZoom = MIN_ZOOM;
@@ -544,8 +560,6 @@ function onDataLoaded(res) {
     meta = resMeta;
     data = [];
 
-    
-
     for (i = 0, il = resData.length; i < il; i++) {
         item = [];
 
@@ -553,11 +567,7 @@ function onDataLoaded(res) {
             continue;
         }
 
-        
-
         footprint = simplify(resData[i][FOOTPRINT]);
-
-        
 
         if (footprint.length < 8) { // 3 points & end = start (x2)
             continue;
@@ -575,10 +585,23 @@ function onDataLoaded(res) {
         item[COLOR] = [];
         item[RENDER_COLOR] = [];
 
+        dataWallColor = resData[i][DATA_COLOR]      ? Color.parse(resData[i][DATA_COLOR])      : null;
+        dataRoofColor = resData[i][DATA_ROOF_COLOR] ? Color.parse(resData[i][DATA_ROOF_COLOR]) : null;
+
+        item[COLOR] = [
+            dataWallColor || null,
+            dataWallColor ? dataWallColor.adjustLightness(0.8) : null,
+            dataRoofColor ? dataRoofColor : dataWallColor ? dataWallColor.adjustLightness(1.2) : roofColor
+        ];
+
+        for (j = 0; j < 3; j++) {
+            if (item[COLOR][j]) {
+                item[RENDER_COLOR][j] = item[COLOR][j].adjustAlpha(zoomAlpha) + '';
+            }
+        }
+
         data.push(item);
     }
-
-    
 
     resMeta = resData = keyList = null; // gc
     fadeIn();
@@ -695,7 +718,7 @@ function parseGeoJSON(json, isLonLat, res) {
         features = json[0] ? json : json.features,
         geometry, polygons, coords, properties,
         footprint, heightSum,
-        propHeight, propWallColor, propRoofColor,
+        propHeight, dataWallColor, dataRoofColor,
         lat = isLonLat ? 1 : 0,
         lon = isLonLat ? 0 : 1,
         alt = 2,
@@ -725,10 +748,10 @@ function parseGeoJSON(json, isLonLat, res) {
     if (polygons) {
         propHeight = properties.height;
         if (properties.color || properties.wallColor) {
-            propWallColor = Color.parse(properties.color || properties.wallColor);
+            dataWallColor = Color.parse(properties.color || properties.wallColor);
         }
         if (properties.roofColor) {
-            propRoofColor = Color.parse(properties.roofColor);
+            dataRoofColor = Color.parse(properties.roofColor);
         }
 
         for (i = 0, il = polygons.length; i < il; i++) {
@@ -742,12 +765,13 @@ function parseGeoJSON(json, isLonLat, res) {
 
             if (heightSum) {
                 item = [];
-                item[FOOTPRINT] = makeClockwiseWinding(footprint);
-                item[HEIGHT]    = heightSum / coords.length << 0;
+                item[FOOTPRINT]  = makeClockwiseWinding(footprint);
+                item[HEIGHT]     = heightSum/coords.length <<0;
+                item[MIN_HEIGHT] = properties.minHeight;
                 item[COLOR] = [
-                    propWallColor || null,
-                    propWallColor ? propWallColor.adjustLightness(0.8) : null,
-                    propRoofColor ? propRoofColor : propWallColor ? propWallColor.adjustLightness(1.2) : roofColor
+                    dataWallColor || null,
+                    dataWallColor ? dataWallColor.adjustLightness(0.8) : null,
+                    dataRoofColor ? dataRoofColor : dataWallColor ? dataWallColor.adjustLightness(1.2) : roofColor
                 ];
                 res.push(item);
             }
@@ -787,11 +811,11 @@ function setData(json, isLonLat) {
 function setSize(w, h) {
     width  = w;
     height = h;
-    halfWidth  = width / 2 << 0;
-    halfHeight = height / 2 << 0;
+    halfWidth  = width /2 <<0;
+    halfHeight = height/2 <<0;
     camX = halfWidth;
     camY = height;
-    camZ = width / ((window.devicePixelRatio || 1) * 1.5) / tan(90 / 2) << 0; // adapting cam pos to field of view (90°), 1.5 is an empirical correction factor
+    camZ = width / (1.5 / (window.devicePixelRatio || 1)) / tan(90 / 2) <<0; // adapting cam pos to field of view (90°), 1.5 is an empirical correction factor
     Layers.setSize(width, height);
     // TODO: change of maxHeight needs to adjust building heights!
     maxHeight = camZ - 50;
@@ -1115,11 +1139,12 @@ function drawShape(points, stroke) {
 
 function project(x, y, m) {
     return {
-        x: ((x - camX) * m + camX << 0),
-        y: ((y - camY) * m + camY << 0)
+        x: (x-camX) * m + camX <<0,
+        y: (y-camY) * m + camY <<0
     };
 }
 
+/*
 function debugMarker(x, y, color, size) {
     context.fillStyle = color || '#ffcc00';
     context.beginPath();
@@ -1128,7 +1153,7 @@ function debugMarker(x, y, color, size) {
     context.fill();
 }
 
-function debugLine(ax, ay, bx, by, color, size) {
+function debugLine(ax, ay, bx, by, color) {
     context.strokeStyle = color || '#ff0000';
     context.beginPath();
     context.moveTo(ax, ay);
@@ -1136,6 +1161,7 @@ function debugLine(ax, ay, bx, by, color, size) {
     context.closePath();
     context.stroke();
 }
+*/
 
 
 //****** file: Shadows.js ******
@@ -1153,6 +1179,7 @@ var Shadows = {
 
     init: function (context) {
         this.context = context;
+        // TODO: fix bad Date() syntax
         this.setDate(new Date().setHours(10)); // => render()
     },
 
@@ -1188,7 +1215,7 @@ var Shadows = {
 
         var i, il, j, jl,
             item,
-            f, h,
+            f, h, g,
             x, y,
             offX = originX - meta.x,
             offY = originY - meta.y,
@@ -1228,7 +1255,7 @@ var Shadows = {
 
             // prepare same calculations for min_height if applicable
             if (item[MIN_HEIGHT]) {
-                h = item[IS_NEW] ? item[MIN_HEIGHT] * fadeFactor : item[MIN_HEIGHT];
+                g = item[IS_NEW] ? item[MIN_HEIGHT] * fadeFactor : item[MIN_HEIGHT];
             }
 
             mode = null;
@@ -1243,8 +1270,8 @@ var Shadows = {
                 _b = this.project(bx, by, h);
 
                 if (item[MIN_HEIGHT]) {
-                    a = this.project(ax, ay, h);
-                    b = this.project(bx, by, h);
+                    a = this.project(ax, ay, g);
+                    b = this.project(bx, by, g);
                     ax = a.x;
                     ay = a.y;
                     bx = b.x;

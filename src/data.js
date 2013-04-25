@@ -23,8 +23,7 @@ function loadData() {
 
     // create bounding box of double viewport size
     var nw = pixelToGeo(originX         - halfWidth, originY          - halfHeight),
-        se = pixelToGeo(originX + width + halfWidth, originY + height + halfHeight)
-    ;
+        se = pixelToGeo(originX + width + halfWidth, originY + height + halfHeight);
 
     if (req) {
         req.abort();
@@ -40,11 +39,13 @@ function loadData() {
 
 function onDataLoaded(res) {
     var i, il,
+        j,
         resData, resMeta,
         keyList = [], k,
         offX = 0, offY = 0,
         item,
-        footprint
+        footprint,
+        dataWallColor, dataRoofColor
     ;
 
     minZoom = MIN_ZOOM;
@@ -74,11 +75,6 @@ function onDataLoaded(res) {
     meta = resMeta;
     data = [];
 
-    /*<debug*/
-    var polyCountBefore = 0,
-        polyCountAfter = 0;
-    /*>*/
-
     for (i = 0, il = resData.length; i < il; i++) {
         item = [];
 
@@ -86,11 +82,7 @@ function onDataLoaded(res) {
             continue;
         }
 
-        /*<debug*/polyCountBefore += resData[i][FOOTPRINT].length;/*>*/
-
         footprint = simplify(resData[i][FOOTPRINT]);
-
-        /*<debug*/polyCountAfter += footprint.length;/*>*/
 
         if (footprint.length < 8) { // 3 points & end = start (x2)
             continue;
@@ -108,10 +100,23 @@ function onDataLoaded(res) {
         item[COLOR] = [];
         item[RENDER_COLOR] = [];
 
+        dataWallColor = resData[i][DATA_COLOR]      ? Color.parse(resData[i][DATA_COLOR])      : null;
+        dataRoofColor = resData[i][DATA_ROOF_COLOR] ? Color.parse(resData[i][DATA_ROOF_COLOR]) : null;
+
+        item[COLOR] = [
+            dataWallColor || null,
+            dataWallColor ? dataWallColor.adjustLightness(0.8) : null,
+            dataRoofColor ? dataRoofColor : dataWallColor ? dataWallColor.adjustLightness(1.2) : roofColor
+        ];
+
+        for (j = 0; j < 3; j++) {
+            if (item[COLOR][j]) {
+                item[RENDER_COLOR][j] = item[COLOR][j].adjustAlpha(zoomAlpha) + '';
+            }
+        }
+
         data.push(item);
     }
-
-    /*<debug*/console.log('PolyCount: ' + polyCountBefore + ' => ' + polyCountAfter);/*>*/
 
     resMeta = resData = keyList = null; // gc
     fadeIn();
@@ -228,7 +233,7 @@ function parseGeoJSON(json, isLonLat, res) {
         features = json[0] ? json : json.features,
         geometry, polygons, coords, properties,
         footprint, heightSum,
-        propHeight, propWallColor, propRoofColor,
+        propHeight, dataWallColor, dataRoofColor,
         lat = isLonLat ? 1 : 0,
         lon = isLonLat ? 0 : 1,
         alt = 2,
@@ -258,10 +263,10 @@ function parseGeoJSON(json, isLonLat, res) {
     if (polygons) {
         propHeight = properties.height;
         if (properties.color || properties.wallColor) {
-            propWallColor = Color.parse(properties.color || properties.wallColor);
+            dataWallColor = Color.parse(properties.color || properties.wallColor);
         }
         if (properties.roofColor) {
-            propRoofColor = Color.parse(properties.roofColor);
+            dataRoofColor = Color.parse(properties.roofColor);
         }
 
         for (i = 0, il = polygons.length; i < il; i++) {
@@ -275,12 +280,13 @@ function parseGeoJSON(json, isLonLat, res) {
 
             if (heightSum) {
                 item = [];
-                item[FOOTPRINT] = makeClockwiseWinding(footprint);
-                item[HEIGHT]    = heightSum / coords.length << 0;
+                item[FOOTPRINT]  = makeClockwiseWinding(footprint);
+                item[HEIGHT]     = heightSum/coords.length <<0;
+                item[MIN_HEIGHT] = properties.minHeight;
                 item[COLOR] = [
-                    propWallColor || null,
-                    propWallColor ? propWallColor.adjustLightness(0.8) : null,
-                    propRoofColor ? propRoofColor : propWallColor ? propWallColor.adjustLightness(1.2) : roofColor
+                    dataWallColor || null,
+                    dataWallColor ? dataWallColor.adjustLightness(0.8) : null,
+                    dataRoofColor ? dataRoofColor : dataWallColor ? dataWallColor.adjustLightness(1.2) : roofColor
                 ];
                 res.push(item);
             }

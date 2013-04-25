@@ -11,6 +11,7 @@ var Shadows = {
 
     init: function (context) {
         this.context = context;
+        // TODO: fix bad Date() syntax
         this.setDate(new Date().setHours(10)); // => render()
     },
 
@@ -46,7 +47,7 @@ var Shadows = {
 
         var i, il, j, jl,
             item,
-            f, h,
+            f, h, g,
             x, y,
             offX = originX - meta.x,
             offY = originY - meta.y,
@@ -86,7 +87,7 @@ var Shadows = {
 
             // prepare same calculations for min_height if applicable
             if (item[MIN_HEIGHT]) {
-                h = item[IS_NEW] ? item[MIN_HEIGHT] * fadeFactor : item[MIN_HEIGHT];
+                g = item[IS_NEW] ? item[MIN_HEIGHT] * fadeFactor : item[MIN_HEIGHT];
             }
 
             mode = null;
@@ -101,8 +102,8 @@ var Shadows = {
                 _b = this.project(bx, by, h);
 
                 if (item[MIN_HEIGHT]) {
-                    a = this.project(ax, ay, h);
-                    b = this.project(bx, by, h);
+                    a = this.project(ax, ay, g);
+                    b = this.project(bx, by, g);
                     ax = a.x;
                     ay = a.y;
                     bx = b.x;
