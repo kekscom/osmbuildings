@@ -8,18 +8,21 @@ $srcFiles = array(
     $srcPath . "/lib/SunPosition.js",
     $srcPath . "/constants.js",
     $srcPath . "/geometry.js",
-    $srcPath . "/variables.js",
-    $srcPath . "/functions.js",
-    $srcPath . "/Layers.js",
-    $srcPath . "/data.js",
-    $srcPath . "/properties.js",
-    $srcPath . "/events.js",
-    $srcPath . "/render.js",
-    $srcPath . "/Shadows.js",
-    $srcPath . "/FlatBuildings.js",
-    $srcPath . "/engines/OpenLayers.js",
-//    $srcPath . "/engines/Leaflet.js",
-    $srcPath . "/suffix.js"
+        $srcPath . "/prefix.class.js",
+        $srcPath . "/variables.js",
+        $srcPath . "/functions.js",
+        $srcPath . "/Layers.js",
+        $srcPath . "/data.js",
+        $srcPath . "/properties.js",
+        $srcPath . "/events.js",
+        $srcPath . "/render.js",
+        $srcPath . "/Shadows.js",
+        $srcPath . "/FlatBuildings.js",
+        $srcPath . "/public.js",
+        $srcPath . "/suffix.class.js",
+    $srcPath . "/suffix.js",
+//    $srcPath . "/engines/OpenLayers.js"
+    $srcPath . "/engines/Leaflet.js"
 );
 
 header("Content-Type: application/javascript");
