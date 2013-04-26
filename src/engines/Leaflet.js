@@ -9,11 +9,11 @@ L.BuildingsLayer = L.Class.extend({
     lastX: 0,
     lastY: 0,
 
-    initialize: function (options) {
+    initialize: function(options) {
         options = L.Util.setOptions(this, options);
     },
 
-    onMove: function () {
+    onMove: function() {
         var mp = L.DomUtil.getPosition(this.map._mapPane);
         this.osmb.setCamOffset(
             this.lastX - mp.x,
@@ -22,7 +22,7 @@ L.BuildingsLayer = L.Class.extend({
         this.osmb.render();
     },
 
-    onMoveEnd: function () {
+    onMoveEnd: function() {
         if (this.blockMoveEvent) {
             this.blockMoveEvent = false;
             return;
@@ -42,11 +42,11 @@ L.BuildingsLayer = L.Class.extend({
         this.osmb.onMoveEnd();
     },
 
-    onZoomStart: function () {
+    onZoomStart: function() {
         this.osmb.onZoomStart();
     },
 
-    onZoomEnd: function () {
+    onZoomEnd: function() {
         var mp = L.DomUtil.getPosition(this.map._mapPane),
             po = this.map.getPixelOrigin();
 
@@ -55,12 +55,12 @@ L.BuildingsLayer = L.Class.extend({
         this.blockMoveEvent = true;
     },
 
-    addTo: function (map) {
+    addTo: function(map) {
         map.addLayer(this);
         return this;
     },
 
-    onAdd: function (map) {
+    onAdd: function(map) {
         this.map = map;
         var parentNode = this.map._panes.overlayPane;
         if (this.osmb) {
@@ -88,7 +88,7 @@ L.BuildingsLayer = L.Class.extend({
             zoomend: this.onZoomEnd
         }, this);
 
-//        var onZoom = function (opt) {
+//        var onZoom = function(opt) {
 //            var
 //                scale = this.map.getZoomScale(opt.zoom),
 //                offset = this.map._getCenterOffset(opt.center).divideBy(1 - 1 / scale),
@@ -112,7 +112,7 @@ L.BuildingsLayer = L.Class.extend({
         this.osmb.render(); // in case of for re-adding this layer
     },
 
-    onRemove: function (map) {
+    onRemove: function(map) {
         map.attributionControl.removeAttribution(OSMBuildings.ATTRIBUTION);
 
         map.off({
@@ -127,15 +127,15 @@ L.BuildingsLayer = L.Class.extend({
 
     // TODO: refactor these ugly bindings
 
-    geoJSON: function (url, isLatLon) {
+    geoJSON: function(url, isLatLon) {
         return this.osmb.geoJSON(url, isLatLon);
     },
 
-    setStyle: function (style)  {
+    setStyle: function(style)  {
         return this.osmb.setStyle(style);
     },
 
-    setDate: function (date)  {
+    setDate: function(date)  {
         return this.osmb.setDate(date);
     }
 });

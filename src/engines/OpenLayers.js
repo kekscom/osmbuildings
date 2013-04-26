@@ -15,13 +15,13 @@ OpenLayers.Layer.Buildings = OpenLayers.Class(OpenLayers.Layer, {
     dxSum: 0, // for cumulative cam offset during moveBy
     dySum: 0, // for cumulative cam offset during moveBy
 
-    initialize: function (options) {
+    initialize: function(options) {
         options = options || {};
         options.projection = 'EPSG:900913';
         OpenLayers.Layer.prototype.initialize.call(this, this.name, options);
     },
 
-    setOrigin: function () {
+    setOrigin: function() {
         var origin = this.map.getLonLatFromPixel(new OpenLayers.Pixel(0, 0)),
             res = this.map.resolution,
             ext = this.maxExtent,
@@ -31,7 +31,7 @@ OpenLayers.Layer.Buildings = OpenLayers.Class(OpenLayers.Layer, {
         this.osmb.setOrigin(x, y);
     },
 
-    setMap: function (map) {
+    setMap: function(map) {
         if (!this.map) {
             OpenLayers.Layer.prototype.setMap.call(this, map);
         }
@@ -45,17 +45,17 @@ OpenLayers.Layer.Buildings = OpenLayers.Class(OpenLayers.Layer, {
         this.osmb.loadData();
     },
 
-    removeMap: function (map) {
+    removeMap: function(map) {
         this.container.parentNode.removeChild(this.container);
         OpenLayers.Layer.prototype.removeMap.call(this, map);
     },
 
-    onMapResize: function () {
+    onMapResize: function() {
         OpenLayers.Layer.prototype.onMapResize.call(this);
         this.osmb.onResize({ width: this.map.size.w, height: this.map.size.h });
     },
 
-    moveTo: function (bounds, zoomChanged, dragging) {
+    moveTo: function(bounds, zoomChanged, dragging) {
         var result = OpenLayers.Layer.prototype.moveTo.call(this, bounds, zoomChanged, dragging);
         if (!dragging) {
             var
@@ -80,7 +80,7 @@ OpenLayers.Layer.Buildings = OpenLayers.Class(OpenLayers.Layer, {
         return result;
     },
 
-    moveByPx: function (dx, dy) {
+    moveByPx: function(dx, dy) {
         this.dxSum += dx;
         this.dySum += dy;
         var result = OpenLayers.Layer.prototype.moveByPx.call(this, dx, dy);
@@ -91,15 +91,15 @@ OpenLayers.Layer.Buildings = OpenLayers.Class(OpenLayers.Layer, {
 
     // TODO: refactor these ugly bindings
 
-    geoJSON: function (url, isLatLon) {
+    geoJSON: function(url, isLatLon) {
         return this.osmb.geoJSON(url, isLatLon);
     },
 
-    setStyle: function (style)  {
+    setStyle: function(style)  {
         return this.osmb.setStyle(style);
     },
 
-    setDate: function (date)  {
+    setDate: function(date)  {
         return this.osmb.setDate(date);
     }
 });

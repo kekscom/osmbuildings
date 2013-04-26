@@ -1,5 +1,6 @@
 var Shadows = {
 
+    enabled: true,
     context: null,
     color: new Color(0, 0, 0),
     colorStr: this.color + '',
@@ -9,20 +10,25 @@ var Shadows = {
     directionX: 0,
     directionY: 0,
 
-    init: function (context) {
+    init: function(context) {
         this.context = context;
         // TODO: fix bad Date() syntax
         this.setDate(new Date().setHours(10)); // => render()
     },
 
-    render: function () {
+    setEnabled: function(flag) {
+        this.enabled = !!flag;
+        // this.render(); // this is usually set by setStyle() and there a renderAll() is called
+    },
+
+    render: function() {
         var context = this.context,
             center, sun, length, alpha, colorStr;
 
         context.clearRect(0, 0, width, height);
 
-        // data needed for rendering
-        if (!meta || !data ||
+        if (!this.enabled ||
+            !meta || !data || // data needed for rendering
             // show on high zoom levels only and avoid rendering during zoom
             zoom < minZoom || isZooming) {
             return;
@@ -156,7 +162,7 @@ var Shadows = {
         context.globalCompositeOperation = 'source-over';
     },
 
-    project: function (x, y, h) {
+    project: function(x, y, h) {
         return {
             x: x + this.directionX * h,
             y: y + this.directionY * h

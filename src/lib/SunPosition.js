@@ -1,4 +1,4 @@
-var getSunPosition = (function () {
+var getSunPosition = (function() {
 
     var m = Math,
         sin = m.sin,
@@ -32,7 +32,7 @@ var getSunPosition = (function () {
     function getAzimuth(H, phi, d) {      return atan2(sin(H), cos(H) * sin(phi) - tan(d) * cos(phi)); }
     function getAltitude(H, phi, d) {     return asin(sin(phi) * sin(d) + cos(phi) * cos(d) * cos(H)); }
 
-    return function (date, lat, lon) {
+    return function(date, lat, lon) {
         var lw  = -lon / RAD,
             phi = lat / RAD,
             J   = dateToJulianDate(date),

@@ -17,7 +17,7 @@ function geoToPixel(lat, lon) {
 }
 
 function template(str, data) {
-    return str.replace(/\{ *([\w_]+) *\}/g, function (x, key) {
+    return str.replace(/\{ *([\w_]+) *\}/g, function(x, key) {
         return data[key];
     });
 }

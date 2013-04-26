@@ -3,11 +3,11 @@ var FlatBuildings = {
     context: null,
     maxHeight: 8,
 
-    init: function (context) {
+    init: function(context) {
         this.context = context;
     },
 
-    render: function () {
+    render: function() {
         var context = this.context;
 
         context.clearRect(0, 0, width, height);
@@ -72,7 +72,7 @@ var FlatBuildings = {
         context.fill();
     },
 
-    getMaxHeight: function () {
+    getMaxHeight: function() {
         return this.maxHeight;
     }
 };

@@ -2,7 +2,7 @@ var Color = (function() {
 
     function hsla2rgb(hsla) { // h belongs to [0, 360]; s,l,a belong to [0, 1]
         var r, g, b;
-        
+
         if (hsla.s === 0) {
             r = g = b = hsla.l; // achromatic
         } else {
@@ -66,13 +66,13 @@ var Color = (function() {
 		return new Color(this.r, this.g, this.b, this.a * a);
 	};
 
-    /* 
+    /*
      * str can be in any of the following forms:
      * "#[00-ff][00-ff][00-ff]", "#[00-ff][00-ff][00-ff][00-ff]",
      * "rgb([0-255],[0-255],[0-255])", "rgba([0-255],[0-255],[0-255],[0-1])",
      * "hsl([0-360],[0-1],[0-1])", "hsla([0-360],[0-1],[0-1],[0-1])"
      */
-    C.parse = function (str) {
+    C.parse = function(str) {
         var m;
         str += '';
         if (~str.indexOf('#')) {
@@ -106,7 +106,7 @@ var Color = (function() {
         }
     };
 
-    C.toHSLA = function (rgba) { // r,g,b belong to [0, 255]; a belongs to [0,1]
+    C.toHSLA = function(rgba) { // r,g,b belong to [0, 255]; a belongs to [0,1]
         var r = rgba.r/255,
             g = rgba.g/255,
             b = rgba.b/255,

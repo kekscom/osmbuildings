@@ -37,22 +37,19 @@ class Source_Mapnik extends Source_Abstract {
         $bboxStr = vsprintf("%1$.5f %2$.5f, %3$.5f %4$.5f", $bbox);
         $query = vsprintf($query, array_map("pg_escape_string", array($bboxStr)));
 
-        $this->_collection = pg_query($this->_link, $query);
-        if (!$this->_collection) {
+        $this->result = pg_query($this->_link, $query);
+        if (!$this->result) {
             throw new Exception(pg_last_error());
         }
         return $this;
     }
 
     public function count() {
-        if($this->_collection){
-            return pg_num_rows($this->_collection);
-        }
-        return null;
+        return pg_num_rows($this->result);
     }
 
     public function fetch() {
-        return pg_fetch_object($this->_collection);
+        return pg_fetch_object($this->result);
     }
 }
 

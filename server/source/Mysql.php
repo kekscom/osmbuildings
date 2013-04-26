@@ -32,7 +32,7 @@ class Source_Mysql extends Source_Abstract {
         $bboxStr = vsprintf("POLYGON((%1$.5f %2$.5f, %1$.5f %4$.5f, %3$.5f %4$.5f, %3$.5f %2$.5f, %1$.5f %2$.5f))", $bbox);
         $query = vsprintf($query, array_map("mysql_escape_string", array($bboxStr)));
 
-        $this->_collection = $this->_link->query($query);
+        $this->result = $this->_link->query($query);
         if ($this->_link->errno) {
             throw new Exception($this->_link->error);
         }
@@ -40,14 +40,11 @@ class Source_Mysql extends Source_Abstract {
     }
 
     public function count() {
-        if ($this->_collection) {
-            return $this->_collection->num_rows;
-        }
-        return NULL;
+        return $this->result->num_rows;
     }
 
     public function fetch() {
-        return $this->_collection->fetch_object();
+        return $this->result->fetch_object();
     }
 }
 

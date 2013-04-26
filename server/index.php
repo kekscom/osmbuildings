@@ -67,7 +67,9 @@ while ($row = $source->fetch()) {
     $height    = ($row->height    ? $row->height    : 5) * $heightScale >> $z;
     $minHeight = ($row->minHeight ? $row->minHeight : 0) * $heightScale >> $z;
 
-    if ($height <= 1) continue;
+    if ($height <= 1) {
+        continue;
+    }
 
     $f = strToPoly($row->footprint);
     $fp = array();

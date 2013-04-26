@@ -7,7 +7,7 @@
 
 /*jshint bitwise:false */
 
-(function (global) {
+(function(global) {
     'use strict';
 
 
@@ -36,7 +36,7 @@ var Color = (function() {
 
     function hsla2rgb(hsla) { // h belongs to [0, 360]; s,l,a belong to [0, 1]
         var r, g, b;
-        
+
         if (hsla.s === 0) {
             r = g = b = hsla.l; // achromatic
         } else {
@@ -100,13 +100,13 @@ var Color = (function() {
 		return new Color(this.r, this.g, this.b, this.a * a);
 	};
 
-    /* 
+    /*
      * str can be in any of the following forms:
      * "#[00-ff][00-ff][00-ff]", "#[00-ff][00-ff][00-ff][00-ff]",
      * "rgb([0-255],[0-255],[0-255])", "rgba([0-255],[0-255],[0-255],[0-1])",
      * "hsl([0-360],[0-1],[0-1])", "hsla([0-360],[0-1],[0-1],[0-1])"
      */
-    C.parse = function (str) {
+    C.parse = function(str) {
         var m;
         str += '';
         if (~str.indexOf('#')) {
@@ -140,7 +140,7 @@ var Color = (function() {
         }
     };
 
-    C.toHSLA = function (rgba) { // r,g,b belong to [0, 255]; a belongs to [0,1]
+    C.toHSLA = function(rgba) { // r,g,b belong to [0, 255]; a belongs to [0,1]
         var r = rgba.r/255,
             g = rgba.g/255,
             b = rgba.b/255,
@@ -171,7 +171,7 @@ var Color = (function() {
 
 //****** file: SunPosition.js ******
 
-var getSunPosition = (function () {
+var getSunPosition = (function() {
 
     var m = Math,
         sin = m.sin,
@@ -205,7 +205,7 @@ var getSunPosition = (function () {
     function getAzimuth(H, phi, d) {      return atan2(sin(H), cos(H) * sin(phi) - tan(d) * cos(phi)); }
     function getAltitude(H, phi, d) {     return asin(sin(phi) * sin(d) + cos(phi) * cos(d) * cos(H)); }
 
-    return function (date, lat, lon) {
+    return function(date, lat, lon) {
         var lw  = -lon / RAD,
             phi = lat / RAD,
             J   = dateToJulianDate(date),
@@ -349,7 +349,7 @@ function simplify(points) {
 
 //****** file: prefix.class.js ******
 
-    global.OSMBuildings = function (u) {
+    global.OSMBuildings = function(u) {
 
 
 //****** file: variables.js ******
@@ -390,6 +390,26 @@ var width = 0, height = 0,
 
     isZooming;
 
+var materialColors = {
+    brick: '#cc7755',
+    bronze: '#ffeecc',
+    canvas: '#fff8f0',
+    concrete: '#999999',
+    copper: '#a0e0d0',
+    glass: '#e8f8f8',
+    gold: '#ffcc00',
+    grass: '#009933',
+    metal: '#aaaaaa',
+    panel: '#fff8f0',
+    plaster: '#999999',
+    roof_tiles: '#f08060',
+    silver: '#cccccc',
+    slate: '#666666',
+    stone: '#996666',
+    tar_paper: '#333333',
+    wood: '#deb887'
+};
+
 
 //****** file: functions.js ******
 
@@ -412,7 +432,7 @@ function geoToPixel(lat, lon) {
 }
 
 function template(str, data) {
-    return str.replace(/\{ *([\w_]+) *\}/g, function (x, key) {
+    return str.replace(/\{ *([\w_]+) *\}/g, function(x, key) {
         return data[key];
     });
 }
@@ -432,7 +452,7 @@ var Layers = {
     container: null,
     items: [],
 
-    init: function (parentNode) {
+    init: function(parentNode) {
         var container = this.container = doc.createElement('DIV');
         container.style.pointerEvents = 'none';
         container.style.position = 'absolute';
@@ -447,7 +467,7 @@ var Layers = {
         return container;
     },
 
-    create: function () {
+    create: function() {
         var canvas = doc.createElement('CANVAS');
         canvas.style.webkitTransform = 'translate3d(0,0,0)'; // turn on hw acceleration
         canvas.style.imageRendering = 'optimizeSpeed';
@@ -460,9 +480,8 @@ var Layers = {
         context.lineJoin = 'round';
         context.lineWidth = 1;
 
-        try {
-            context.mozImageSmoothingEnabled = false;
-        } catch (err) {}
+        context.mozImageSmoothingEnabled = false;
+        context.webkitImageSmoothingEnabled = false;
 
         this.items.push(canvas);
 
@@ -471,7 +490,7 @@ var Layers = {
         return context;
     },
 
-    setSize: function (w, h) {
+    setSize: function(w, h) {
         var items = this.items;
         for (var i = 0, il = items.length; i < il; i++) {
             items[i].width = w;
@@ -485,7 +504,7 @@ var Layers = {
 
 function xhr(url, callback) {
     var x = new XMLHttpRequest();
-    x.onreadystatechange = function () {
+    x.onreadystatechange = function() {
         if (x.readyState !== 4) {
             return;
         }
@@ -530,8 +549,7 @@ function onDataLoaded(res) {
         offX = 0, offY = 0,
         item,
         footprint,
-        dataWallColor, dataRoofColor
-    ;
+        c, dataWallColor, dataRoofColor;
 
     minZoom = MIN_ZOOM;
     setZoom(zoom); // recalculating all zoom related variables
@@ -585,13 +603,15 @@ function onDataLoaded(res) {
         item[COLOR] = [];
         item[RENDER_COLOR] = [];
 
-        dataWallColor = resData[i][DATA_COLOR]      ? Color.parse(resData[i][DATA_COLOR])      : null;
-        dataRoofColor = resData[i][DATA_ROOF_COLOR] ? Color.parse(resData[i][DATA_ROOF_COLOR]) : null;
+        c = resData[i][DATA_COLOR];
+        dataWallColor = c ? Color.parse(materialColors[c] || c) : null;
+        c = resData[i][DATA_ROOF_COLOR];
+        dataRoofColor = c ? Color.parse(materialColors[c] || c) : null;
 
         item[COLOR] = [
-            dataWallColor || null,
+            dataWallColor,
             dataWallColor ? dataWallColor.adjustLightness(0.8) : null,
-            dataRoofColor ? dataRoofColor : dataWallColor ? dataWallColor.adjustLightness(1.2) : roofColor
+            dataRoofColor
         ];
 
         for (j = 0; j < 3; j++) {
@@ -700,7 +720,7 @@ function geoJSON(url, isLatLon) {
         callback = 'jsonpCallback',
         script = doc.createElement('script')
     ;
-    global[callback] = function (res) {
+    global[callback] = function(res) {
         delete global[callback];
         el.removeChild(script);
         setData(res, !isLatLon);
@@ -718,12 +738,12 @@ function parseGeoJSON(json, isLonLat, res) {
         features = json[0] ? json : json.features,
         geometry, polygons, coords, properties,
         footprint, heightSum,
-        propHeight, dataWallColor, dataRoofColor,
+        propHeight,
+        c, dataWallColor, dataRoofColor,
         lat = isLonLat ? 1 : 0,
         lon = isLonLat ? 0 : 1,
         alt = 2,
-        item
-    ;
+        item;
 
     if (features) {
         for (i = 0, il = features.length; i < il; i++) {
@@ -747,11 +767,17 @@ function parseGeoJSON(json, isLonLat, res) {
 
     if (polygons) {
         propHeight = properties.height;
+
+        dataWallColor = null;
+        dataRoofColor = null;
+
         if (properties.color || properties.wallColor) {
-            dataWallColor = Color.parse(properties.color || properties.wallColor);
+            c = properties.color || properties.wallColor;
+            dataWallColor = Color.parse(materialColors[c] || c);
         }
         if (properties.roofColor) {
-            dataRoofColor = Color.parse(properties.roofColor);
+            c = properties.roofColor;
+            dataRoofColor = Color.parse(materialColors[c] || c);
         }
 
         for (i = 0, il = polygons.length; i < il; i++) {
@@ -768,11 +794,13 @@ function parseGeoJSON(json, isLonLat, res) {
                 item[FOOTPRINT]  = makeClockwiseWinding(footprint);
                 item[HEIGHT]     = heightSum/coords.length <<0;
                 item[MIN_HEIGHT] = properties.minHeight;
+
                 item[COLOR] = [
-                    dataWallColor || null,
+                    dataWallColor,
                     dataWallColor ? dataWallColor.adjustLightness(0.8) : null,
-                    dataRoofColor ? dataRoofColor : dataWallColor ? dataWallColor.adjustLightness(1.2) : roofColor
+                    dataRoofColor
                 ];
+
                 res.push(item);
             }
         }
@@ -815,10 +843,10 @@ function setSize(w, h) {
     halfHeight = height/2 <<0;
     camX = halfWidth;
     camY = height;
-    camZ = width / (1.5 / (window.devicePixelRatio || 1)) / tan(90 / 2) <<0; // adapting cam pos to field of view (90°), 1.5 is an empirical correction factor
+    camZ = width / (1.5 / (window.devicePixelRatio || 1)) / tan(90/2) <<0; // adapting cam pos to field of view (90°), 1.5 is an empirical correction factor
     Layers.setSize(width, height);
     // TODO: change of maxHeight needs to adjust building heights!
-    maxHeight = camZ - 50;
+    maxHeight = camZ-50;
 }
 
 function setOrigin(x, y) {
@@ -828,13 +856,12 @@ function setOrigin(x, y) {
 
 function setZoom(z) {
     var i, il, j,
-        item
-    ;
+        item;
 
     zoom = z;
     size = TILE_SIZE << zoom;
 
-    zoomAlpha = 1 - fromRange(zoom, minZoom, maxZoom, 0, 0.4);
+    zoomAlpha = 1 - fromRange(zoom, minZoom, maxZoom, 0, 0.3);
 
     wallColorAlpha = wallColor.adjustAlpha(zoomAlpha) + '';
     altColorAlpha  = altColor.adjustAlpha(zoomAlpha) + '';
@@ -874,6 +901,10 @@ function setStyle(style) {
     if (style.roofColor) {
         roofColor = Color.parse(style.roofColor);
         roofColorAlpha = roofColor.adjustAlpha(zoomAlpha) + '';
+    }
+
+    if (style.shadows !== undefined) {
+        Shadows.setEnabled(style.shadows);
     }
 
     renderAll();
@@ -932,7 +963,7 @@ function fadeIn() {
     clearInterval(fadeTimer);
     fadeFactor = 0;
     FlatBuildings.render();
-    fadeTimer = setInterval(function () {
+    fadeTimer = setInterval(function() {
         fadeFactor += 0.5 * 0.2; // amount * easing
         if (fadeFactor > 1) {
             clearInterval(fadeTimer);
@@ -974,11 +1005,10 @@ function render() {
         footprint, roof,
         isVisible,
         ax, ay, bx, by,
-        a, b, _a, _b
-    ;
+        a, b, _a, _b;
 
     // TODO: FlatBuildings are drawn separetely, data has to be split
-    data.sort(function (a, b) {
+    data.sort(function(a, b) {
         return distance(b[CENTER], sortCam) / b[HEIGHT] - distance(a[CENTER], sortCam) / a[HEIGHT];
     });
 
@@ -1113,6 +1143,7 @@ function debugLine(ax, ay, bx, by, color) {
 
 var Shadows = {
 
+    enabled: true,
     context: null,
     color: new Color(0, 0, 0),
     colorStr: this.color + '',
@@ -1122,20 +1153,25 @@ var Shadows = {
     directionX: 0,
     directionY: 0,
 
-    init: function (context) {
+    init: function(context) {
         this.context = context;
         // TODO: fix bad Date() syntax
         this.setDate(new Date().setHours(10)); // => render()
     },
 
-    render: function () {
+    setEnabled: function(flag) {
+        this.enabled = !!flag;
+        // this.render(); // this is usually set by setStyle() and there a renderAll() is called
+    },
+
+    render: function() {
         var context = this.context,
             center, sun, length, alpha, colorStr;
 
         context.clearRect(0, 0, width, height);
 
-        // data needed for rendering
-        if (!meta || !data ||
+        if (!this.enabled ||
+            !meta || !data || // data needed for rendering
             // show on high zoom levels only and avoid rendering during zoom
             zoom < minZoom || isZooming) {
             return;
@@ -1269,7 +1305,7 @@ var Shadows = {
         context.globalCompositeOperation = 'source-over';
     },
 
-    project: function (x, y, h) {
+    project: function(x, y, h) {
         return {
             x: x + this.directionX * h,
             y: y + this.directionY * h
@@ -1289,11 +1325,11 @@ var FlatBuildings = {
     context: null,
     maxHeight: 8,
 
-    init: function (context) {
+    init: function(context) {
         this.context = context;
     },
 
-    render: function () {
+    render: function() {
         var context = this.context;
 
         context.clearRect(0, 0, width, height);
@@ -1358,7 +1394,7 @@ var FlatBuildings = {
         context.fill();
     },
 
-    getMaxHeight: function () {
+    getMaxHeight: function() {
         return this.maxHeight;
     }
 };
@@ -1366,31 +1402,31 @@ var FlatBuildings = {
 
 //****** file: public.js ******
 
-this.setStyle = function (style) {
+this.setStyle = function(style) {
     setStyle(style);
     return this;
 };
 
-this.geoJSON = function (url, isLatLon) {
+this.geoJSON = function(url, isLatLon) {
     geoJSON(url, isLatLon);
     return this;
 };
 
-this.setCamOffset = function (x, y) {
+this.setCamOffset = function(x, y) {
     camX = halfWidth + x;
     camY = height    + y;
 };
 
-this.setMaxZoom = function (z) {
+this.setMaxZoom = function(z) {
     maxZoom = z;
 };
 
-this.setDate = function (date) {
+this.setDate = function(date) {
     Shadows.setDate(date);
     return this;
 };
 
-this.appendTo = function (parentNode) {
+this.appendTo = function(parentNode) {
     return Layers.init(parentNode);
 };
 
@@ -1438,13 +1474,13 @@ OpenLayers.Layer.Buildings = OpenLayers.Class(OpenLayers.Layer, {
     dxSum: 0, // for cumulative cam offset during moveBy
     dySum: 0, // for cumulative cam offset during moveBy
 
-    initialize: function (options) {
+    initialize: function(options) {
         options = options || {};
         options.projection = 'EPSG:900913';
         OpenLayers.Layer.prototype.initialize.call(this, this.name, options);
     },
 
-    setOrigin: function () {
+    setOrigin: function() {
         var origin = this.map.getLonLatFromPixel(new OpenLayers.Pixel(0, 0)),
             res = this.map.resolution,
             ext = this.maxExtent,
@@ -1454,7 +1490,7 @@ OpenLayers.Layer.Buildings = OpenLayers.Class(OpenLayers.Layer, {
         this.osmb.setOrigin(x, y);
     },
 
-    setMap: function (map) {
+    setMap: function(map) {
         if (!this.map) {
             OpenLayers.Layer.prototype.setMap.call(this, map);
         }
@@ -1468,17 +1504,17 @@ OpenLayers.Layer.Buildings = OpenLayers.Class(OpenLayers.Layer, {
         this.osmb.loadData();
     },
 
-    removeMap: function (map) {
+    removeMap: function(map) {
         this.container.parentNode.removeChild(this.container);
         OpenLayers.Layer.prototype.removeMap.call(this, map);
     },
 
-    onMapResize: function () {
+    onMapResize: function() {
         OpenLayers.Layer.prototype.onMapResize.call(this);
         this.osmb.onResize({ width: this.map.size.w, height: this.map.size.h });
     },
 
-    moveTo: function (bounds, zoomChanged, dragging) {
+    moveTo: function(bounds, zoomChanged, dragging) {
         var result = OpenLayers.Layer.prototype.moveTo.call(this, bounds, zoomChanged, dragging);
         if (!dragging) {
             var
@@ -1503,7 +1539,7 @@ OpenLayers.Layer.Buildings = OpenLayers.Class(OpenLayers.Layer, {
         return result;
     },
 
-    moveByPx: function (dx, dy) {
+    moveByPx: function(dx, dy) {
         this.dxSum += dx;
         this.dySum += dy;
         var result = OpenLayers.Layer.prototype.moveByPx.call(this, dx, dy);
@@ -1514,15 +1550,15 @@ OpenLayers.Layer.Buildings = OpenLayers.Class(OpenLayers.Layer, {
 
     // TODO: refactor these ugly bindings
 
-    geoJSON: function (url, isLatLon) {
+    geoJSON: function(url, isLatLon) {
         return this.osmb.geoJSON(url, isLatLon);
     },
 
-    setStyle: function (style)  {
+    setStyle: function(style)  {
         return this.osmb.setStyle(style);
     },
 
-    setDate: function (date)  {
+    setDate: function(date)  {
         return this.osmb.setDate(date);
     }
 });

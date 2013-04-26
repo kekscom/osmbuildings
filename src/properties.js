@@ -5,10 +5,10 @@ function setSize(w, h) {
     halfHeight = height/2 <<0;
     camX = halfWidth;
     camY = height;
-    camZ = width / (1.5 / (window.devicePixelRatio || 1)) / tan(90 / 2) <<0; // adapting cam pos to field of view (90°), 1.5 is an empirical correction factor
+    camZ = width / (1.5 / (window.devicePixelRatio || 1)) / tan(90/2) <<0; // adapting cam pos to field of view (90°), 1.5 is an empirical correction factor
     Layers.setSize(width, height);
     // TODO: change of maxHeight needs to adjust building heights!
-    maxHeight = camZ - 50;
+    maxHeight = camZ-50;
 }
 
 function setOrigin(x, y) {
@@ -18,13 +18,12 @@ function setOrigin(x, y) {
 
 function setZoom(z) {
     var i, il, j,
-        item
-    ;
+        item;
 
     zoom = z;
     size = TILE_SIZE << zoom;
 
-    zoomAlpha = 1 - fromRange(zoom, minZoom, maxZoom, 0, 0.4);
+    zoomAlpha = 1 - fromRange(zoom, minZoom, maxZoom, 0, 0.3);
 
     wallColorAlpha = wallColor.adjustAlpha(zoomAlpha) + '';
     altColorAlpha  = altColor.adjustAlpha(zoomAlpha) + '';
@@ -64,6 +63,10 @@ function setStyle(style) {
     if (style.roofColor) {
         roofColor = Color.parse(style.roofColor);
         roofColorAlpha = roofColor.adjustAlpha(zoomAlpha) + '';
+    }
+
+    if (style.shadows !== undefined) {
+        Shadows.setEnabled(style.shadows);
     }
 
     renderAll();

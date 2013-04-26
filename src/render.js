@@ -3,7 +3,7 @@ function fadeIn() {
     clearInterval(fadeTimer);
     fadeFactor = 0;
     FlatBuildings.render();
-    fadeTimer = setInterval(function () {
+    fadeTimer = setInterval(function() {
         fadeFactor += 0.5 * 0.2; // amount * easing
         if (fadeFactor > 1) {
             clearInterval(fadeTimer);
@@ -45,11 +45,10 @@ function render() {
         footprint, roof,
         isVisible,
         ax, ay, bx, by,
-        a, b, _a, _b
-    ;
+        a, b, _a, _b;
 
     // TODO: FlatBuildings are drawn separetely, data has to be split
-    data.sort(function (a, b) {
+    data.sort(function(a, b) {
         return distance(b[CENTER], sortCam) / b[HEIGHT] - distance(a[CENTER], sortCam) / a[HEIGHT];
     });
 

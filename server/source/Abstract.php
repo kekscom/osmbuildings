@@ -3,10 +3,10 @@
 abstract class Source_Abstract {
 
     protected $_link;
-    protected $_collection;
+    protected $result;
     protected $_options = array();
     protected $_table;
-    private static $validSources = array("Mysql", "Mapnik");
+    private static $validSources = array("Mysql", "Mapnik", "CartoDB");
 
     public function __construct(array $options = array()) {
         $this->_options = $options;

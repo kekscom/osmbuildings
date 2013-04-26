@@ -1,6 +1,6 @@
 function xhr(url, callback) {
     var x = new XMLHttpRequest();
-    x.onreadystatechange = function () {
+    x.onreadystatechange = function() {
         if (x.readyState !== 4) {
             return;
         }
@@ -45,8 +45,7 @@ function onDataLoaded(res) {
         offX = 0, offY = 0,
         item,
         footprint,
-        dataWallColor, dataRoofColor
-    ;
+        c, dataWallColor, dataRoofColor;
 
     minZoom = MIN_ZOOM;
     setZoom(zoom); // recalculating all zoom related variables
@@ -100,13 +99,15 @@ function onDataLoaded(res) {
         item[COLOR] = [];
         item[RENDER_COLOR] = [];
 
-        dataWallColor = resData[i][DATA_COLOR]      ? Color.parse(resData[i][DATA_COLOR])      : null;
-        dataRoofColor = resData[i][DATA_ROOF_COLOR] ? Color.parse(resData[i][DATA_ROOF_COLOR]) : null;
+        c = resData[i][DATA_COLOR];
+        dataWallColor = c ? Color.parse(materialColors[c] || c) : null;
+        c = resData[i][DATA_ROOF_COLOR];
+        dataRoofColor = c ? Color.parse(materialColors[c] || c) : null;
 
         item[COLOR] = [
-            dataWallColor || null,
+            dataWallColor,
             dataWallColor ? dataWallColor.adjustLightness(0.8) : null,
-            dataRoofColor ? dataRoofColor : dataWallColor ? dataWallColor.adjustLightness(1.2) : roofColor
+            dataRoofColor
         ];
 
         for (j = 0; j < 3; j++) {
@@ -215,7 +216,7 @@ function geoJSON(url, isLatLon) {
         callback = 'jsonpCallback',
         script = doc.createElement('script')
     ;
-    global[callback] = function (res) {
+    global[callback] = function(res) {
         delete global[callback];
         el.removeChild(script);
         setData(res, !isLatLon);
@@ -233,12 +234,12 @@ function parseGeoJSON(json, isLonLat, res) {
         features = json[0] ? json : json.features,
         geometry, polygons, coords, properties,
         footprint, heightSum,
-        propHeight, dataWallColor, dataRoofColor,
+        propHeight,
+        c, dataWallColor, dataRoofColor,
         lat = isLonLat ? 1 : 0,
         lon = isLonLat ? 0 : 1,
         alt = 2,
-        item
-    ;
+        item;
 
     if (features) {
         for (i = 0, il = features.length; i < il; i++) {
@@ -262,11 +263,17 @@ function parseGeoJSON(json, isLonLat, res) {
 
     if (polygons) {
         propHeight = properties.height;
+
+        dataWallColor = null;
+        dataRoofColor = null;
+
         if (properties.color || properties.wallColor) {
-            dataWallColor = Color.parse(properties.color || properties.wallColor);
+            c = properties.color || properties.wallColor;
+            dataWallColor = Color.parse(materialColors[c] || c);
         }
         if (properties.roofColor) {
-            dataRoofColor = Color.parse(properties.roofColor);
+            c = properties.roofColor;
+            dataRoofColor = Color.parse(materialColors[c] || c);
         }
 
         for (i = 0, il = polygons.length; i < il; i++) {
@@ -283,11 +290,13 @@ function parseGeoJSON(json, isLonLat, res) {
                 item[FOOTPRINT]  = makeClockwiseWinding(footprint);
                 item[HEIGHT]     = heightSum/coords.length <<0;
                 item[MIN_HEIGHT] = properties.minHeight;
+
                 item[COLOR] = [
-                    dataWallColor || null,
+                    dataWallColor,
                     dataWallColor ? dataWallColor.adjustLightness(0.8) : null,
-                    dataRoofColor ? dataRoofColor : dataWallColor ? dataWallColor.adjustLightness(1.2) : roofColor
+                    dataRoofColor
                 ];
+
                 res.push(item);
             }
         }
