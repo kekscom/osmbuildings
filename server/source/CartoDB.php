@@ -14,27 +14,27 @@ class Source_CartoDB extends Source_Abstract {
         $this->url = "http://" . $this->_options["user"] . ".cartodb.com/api/v2/sql?q=";
 
         $tags = array(
-            "{table}"          => $this->_options["table"],
-            "{fieldHeight}"    => $this->_options["fieldHeight"]    ? $this->_options["fieldHeight"]    : 10,
-            "{fieldMinHeight}" => $this->_options["fieldMinHeight"] ? $this->_options["fieldMinHeight"] : 0,
-            "{fieldColor}"     => $this->_options["fieldColor"]     ? $this->_options["fieldColor"]     : "NULL",
-            "{fieldRoofColor}" => $this->_options["fieldRoofColor"] ? $this->_options["fieldRoofColor"] : "NULL",
-            "{fieldFootprint}" => $this->_options["fieldFootprint"],
-            "{extraCondition}" => $this->_options["extraCondition"] ? " AND " . $this->_options["fieldMinHeight"] : "",
-            "{orderBY}"        => $this->_options["fieldHeight"]    ? " ORDER BY " . $this->_options["fieldHeight"] . " DESC " : ""
+            "{table}"           => $this->_options["table"],
+            "{columnHeight}"    => $this->_options["columnHeight"]    ? $this->_options["columnHeight"]    : 10,
+            "{columnMinHeight}" => $this->_options["columnMinHeight"] ? $this->_options["columnMinHeight"] : 0,
+            "{columnColor}"     => $this->_options["columnColor"]     ? $this->_options["columnColor"]     : "NULL",
+            "{columnRoofColor}" => $this->_options["columnRoofColor"] ? $this->_options["columnRoofColor"] : "NULL",
+            "{columnFootprint}" => $this->_options["columnFootprint"],
+            "{extraCondition}"  => $this->_options["extraCondition"]  ? " AND " . $this->_options["extraCondition"] : "",
+            "{orderBY}"         => $this->_options["columnHeight"]    ? " ORDER BY " . $this->_options["columnHeight"] . " DESC " : ""
         );
 
         $query = "
             SELECT
-                {fieldHeight} AS height,
-                {fieldMinHeight} AS minHeight,
-                {fieldColor} AS color,
-                {fieldRoofColor} AS roofColor,
+                {columnHeight} AS height,
+                {columnMinHeight} AS minHeight,
+                {columnColor} AS color,
+                {columnRoofColor} AS roofColor,
                 ST_AsText(ST_ExteriorRing(ST_GeometryN(the_geom,1))) AS footprint
             FROM
                 {table}
             WHERE
-                {fieldFootprint} && ST_SetSRID(%s, 4326)
+                {columnFootprint} && ST_SetSRID(%s, 4326)
                 {extraCondition}
             {orderBY}
         ";
