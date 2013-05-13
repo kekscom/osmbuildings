@@ -20,7 +20,8 @@ $dbConfig = array(
 
 
 
-/** this is a CartoDB specific example:
+/**
+ * this is a CartoDB specific example:
  * all it does is defining column names in order to create the correct sql query
  * which is then sent as url to CartoDB
  */

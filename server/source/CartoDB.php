@@ -54,8 +54,7 @@ class Source_CartoDB extends Source_Abstract {
     }
 
     public function query($bbox) {
-        $bbox = array(53.00,13.00,52.00,14.00);
-        $bboxStr = vsprintf("ST_MakeBox2D(ST_Point(%2$.5f, %3$.5f), ST_Point(%4$.5f, %1$.5f))", $bbox);
+        $bboxStr = vsprintf("ST_MakeBox2D(ST_Point(%1$.5f, %4$.5f), ST_Point(%3$.5f, %2$.5f))", $bbox);
 
         $url = $this->url . urlencode(vsprintf($this->queryStr, array($bboxStr)));
 
