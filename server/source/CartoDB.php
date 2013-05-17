@@ -64,8 +64,9 @@ class Source_CartoDB extends Source_Abstract {
         if (!$this->result) {
             throw new Exception("no results");
         }
+
         if ($this->result["error"]) {
-            throw new Exception($this->result["error"]);
+            throw new Exception($this->result["error"][0]);
         }
 
         return $this;
