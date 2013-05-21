@@ -1,6 +1,6 @@
 <?php
 
-require_once dirname(__FILE__) . '/Abstract.php';
+require_once(dirname(__FILE__)."/Abstract.php");
 
 class Source_Mapnik extends Source_Abstract {
 
@@ -19,6 +19,9 @@ class Source_Mapnik extends Source_Abstract {
         $query = "
             SELECT
                 height,
+                min_height AS minHeight,
+                color,
+                roof_color AS roofColor,
                 ST_AsText(ST_Transform(ST_ExteriorRing(way), 4326)) AS footprint
             FROM
                 {$this->_options['table']}
@@ -31,24 +34,23 @@ class Source_Mapnik extends Source_Abstract {
 
         // alternative WHERE: ST_Intersects(ST_GeomFromText('%s', 4326), geom)
 
-        $bboxStr = vsprintf('%1$.5f %2$.5f, %3$.5f %4$.5f', $bbox);
-        $query = vsprintf($query, array_map('pg_escape_string', array($bboxStr)));
+        $bboxStr = vsprintf("%1$.5f %2$.5f, %3$.5f %4$.5f", $bbox);
+        $query = vsprintf($query, array_map("pg_escape_string", array($bboxStr)));
 
-        $this->_collection = pg_query($this->_link, $query);
-        if (!$this->_collection) {
+        $this->result = pg_query($this->_link, $query);
+        if (!$this->result) {
             throw new Exception(pg_last_error());
         }
         return $this;
     }
 
     public function count() {
-        if($this->_collection){
-            return pg_num_rows($this->_collection);
-        }
-        return null;
+        return pg_num_rows($this->result);
     }
 
     public function fetch() {
-        return pg_fetch_object($this->_collection);
+        return pg_fetch_object($this->result);
     }
 }
+
+?>

@@ -1,260 +1,231 @@
-        function request(url, callbackFn) {
-            var
-                el = doc.documentElement,
-                callbackName = 'jsonpCallback',
-                script = doc.createElement('script')
-            ;
-            global[callbackName] = function (res) {
-                delete global[callbackName];
-                el.removeChild(script);
-                callbackFn(res);
-            };
-            el.insertBefore(script, el.lastChild).src = url.replace(/\{callback\}/, callbackName);
+// http://overpass-api.de/api/interpreter?data=[out:json];(way[%22building%22](52.405,13.35,52.410,13.4);node(w);way[%22building:part%22=%22yes%22](52.405,13.35,52.410,13.4);node(w);relation[%22building%22](52.405,13.35,52.410,13.4);way(r);node(w););out;
+
+var Data = {
+
+    init: function(url, isLatLon) {
+        this.url = url;
+        this.isLatLon = isLatLon !== undefined ? isLatLon : true;
+    },
+
+    load: function() {
+        if (!this.url || zoom < MIN_ZOOM) {
+            return;
         }
 
-        function loadData() {
-            if (!url || zoom < MIN_ZOOM) {
-                return;
-            }
-            var
-                // create bounding box of double viewport size
-                nw = pixelToGeo(originX         - halfWidth, originY          - halfHeight),
-                se = pixelToGeo(originX + width + halfWidth, originY + height + halfHeight)
-            ;
+        // create bounding box of double viewport size
+        var nw = pixelToGeo(originX         - halfWidth, originY          - halfHeight),
+            se = pixelToGeo(originX + width + halfWidth, originY + height + halfHeight);
 
-            request(template(url, {
-                w: nw[LON],
-                n: nw[LAT],
-                e: se[LON],
-                s: se[LAT],
-                callback: '{callback}' // doing this in order to keep the callback tag
-            }), setData2);
+        request(template(this.url, { w:nw[LON], n:nw[LAT], e:se[LON], s:se[LAT] }), this.onLoad.bind(this));
+    },
+
+    onLoad: function(data) {
+        this.set(data);
+    },
+
+    set: function(data) {
+        if (!data) {
+            return;
         }
 
-        function setData2(res) {
-            var
-                i, il,
-                resData, resMeta,
-                keyList = [], k,
-                offX = 0, offY = 0,
-                item,
-                zoomSimplify = max(1, (zoom - minZoom) * 2)
-            ;
+        this.raw = this.parse(data, !this.isLatLon);
+// not needed!
+//        minZoom = 0; // geoJSON specific as visualizations may start from zoom 0
+//        minZoom = MIN_ZOOM;
+//        setZoom(zoom); // recalculating all zoom related variables
 
-            minZoom = MIN_ZOOM;
-            setZoom(zoom); // recalculating all zoom related variables
-            req = null;
+// recalc this for GeoJSON
+        this.meta = {
+//            n:90,
+//            w:-180,
+//            s:-90,
+//            e:180,
+//            x:0,
+//            y:0,
+//            z:zoom
+        };
 
-            // no response or response not matching current zoom (too old response)
-            if (!res || res.meta.z !== zoom) {
-                return;
-            }
+        this.render = this.scale(this.raw, true);
+        fadeIn();
+    },
 
-            resMeta = res.meta;
-            resData = res.data;
+/*
+        resMeta = res.meta;
+        resData = res.data;
 
-            // offset between old and new data set
-            if (meta && data && meta.z === resMeta.z) {
-                offX = meta.x - resMeta.x;
-                offY = meta.y - resMeta.y;
+        // offset between old and new data set
+        if (meta && data && meta.z === resMeta.z) {
+            offX = meta.x - resMeta.x;
+            offY = meta.y - resMeta.y;
 
-                // identify already present buildings to fade in new ones
-                for (i = 0, il = data.length; i < il; i++) {
-                    // key: x,y of first point - good enough
-                    keyList[i] = (data[i][FOOTPRINT][0]) + ',' + (data[i][FOOTPRINT][1]);
-                }
-            }
-
-            meta = res.meta;
-            data = [];
-
-            for (i = 0, il = resData.length; i < il; i++) {
-                item = {};
-
-                item[FOOTPRINT] = simplify(resData[i][FOOTPRINT], zoomSimplify);
-
-                if (item[FOOTPRINT].length < 8) { // 3 points & end = start (x2)
-                    continue;
-                }
-
-                item[HEIGHT] = min(resData[i][HEIGHT], MAX_HEIGHT);
-                item[CENTER] = center(item[FOOTPRINT]);
-
-                k = item[FOOTPRINT][0] + ',' + item[FOOTPRINT][1];
-                item[IS_NEW] = !(keyList && ~keyList.indexOf(k));
-
-                data.push(item);
-            }
-
-            keyList = null; // gc
-// ZOOM, scale data
-//            minZoom = MIN_ZOOM;
-//            setZoom(zoom); // recalculating all zoom related variables
-
-            fadeIn();
-        }
-
-        // detect polygon winding direction: clockwise or counter clockwise
-        function getPolygonWinding(points) {
-            var
-                x1, y1, x2, y2,
-                a = 0,
-                i, il
-            ;
-            for (i = 0, il = points.length - 3; i < il; i += 2) {
-                x1 = points[i];
-                y1 = points[i + 1];
-                x2 = points[i + 2];
-                y2 = points[i + 3];
-                a += x1 * y2 - x2 * y1;
-            }
-            return (a / 2) > 0 ? 'CW' : 'CCW';
-        }
-
-        // make polygon winding clockwise. This is needed for proper backface culling on client side.
-        function makeClockwiseWinding(points) {
-            var winding = getPolygonWinding(points);
-            if (winding === 'CW') {
-                return points;
-            }
-            var revPoints = [];
-            for (var i = points.length - 2; i >= 0; i -= 2) {
-                revPoints.push(points[i], points[i + 1]);
-            }
-            return revPoints;
-        }
-
-        function scaleData(data, isNew) {
-            var
-                res = [],
-                i, il, j, jl,
-                item,
-                coords, footprint,
-                p,
-                z = maxZoom - zoom
-            ;
-
+            // identify already present buildings to fade in new ones
             for (i = 0, il = data.length; i < il; i++) {
-                item = data[i];
-                coords = item[FOOTPRINT];
-                footprint = new Int32Array(coords.length);
-                for (j = 0, jl = coords.length - 1; j < jl; j += 2) {
-                    p = geoToPixel(coords[j], coords[j + 1]);
-                    footprint[j]     = p.x;
-                    footprint[j + 1] = p.y;
-                }
-                res[i] = [];
-                res[i][HEIGHT]    = min(item[HEIGHT] >> z, MAX_HEIGHT);
-                res[i][FOOTPRINT] = footprint;
-                res[i][COLOR]     = item[COLOR];
-                res[i][IS_NEW]    = isNew;
+                // id key: x,y of first point - good enough
+                keyList[i] = (data[i][FOOTPRINT][0] + offX) + ',' + (data[i][FOOTPRINT][1] + offY);
             }
+        }
 
+        meta = resMeta;
+        data = [];
+        for (i = 0, il = resData.length; i < il; i++) {
+            item = [];
+
+            // identify already present buildings to fade in new ones
+            for (i = 0, il = data.length; i < il; i++) {
+                // key: x,y of first point - good enough
+                keyList[i] = (data[i][FOOTPRINT][0]) + ',' + (data[i][FOOTPRINT][1]);
+            }
+        }
+
+            item[HEIGHT] = min(resData[i][HEIGHT], maxHeight);
+            item[MIN_HEIGHT] = resData[i][MIN_HEIGHT];
+
+            k = item[FOOTPRINT][0] + ',' + item[FOOTPRINT][1];
+            item[IS_NEW] = !(keyList && ~keyList.indexOf(k));
+
+    <<<<<<< HEAD
+                keyList = null; // gc
+    // ZOOM, scale data
+    //            minZoom = MIN_ZOOM;
+    //            setZoom(zoom); // recalculating all zoom related variables
+    =======
+            c = resData[i][DATA_COLOR];
+            wallColor_ = c ? Color.parse(materialColors[c] || c) : null;
+            c = resData[i][DATA_ROOF_COLOR];
+            roofColor_ = c ? Color.parse(materialColors[c] || c) : null;
+        }
+
+        resMeta = resData = keyList = null; // gc
+*/
+
+    parse: function(data, isLonLat, res) {
+        // recursions pass res by referece to be filled
+        // finally it's returned by value, so create it on initial call
+        if (res === undefined) {
+            res = [];
+        }
+
+        // recurse into feature collections
+        var collection = data[0] ? data : data.features;
+
+        if (collection) {
+            for (var i = 0, il = collection.length; i < il; i++) {
+                this.parse(collection[i], isLonLat, res);
+            }
             return res;
         }
 
-        function geoJSON(url, isLatLon) {
-            if (typeof url === 'object') {
-                setData(url, !isLatLon);
-                return;
-            }
-            request(url, function (res) {
-                setData(res, !isLatLon);
-            });
-        }
-
-        function parseGeoJSON(json, isLonLat, res) {
-            if (res === undefined) {
-                res = [];
-            }
-
-            var
-                i, il,
-                j, jl,
-                features = json[0] ? json : json.features,
-                geometry, polygons, coords, properties,
-                footprint, heightSum,
-                propHeight, propWallColor, propRoofColor,
-                lat = isLonLat ? 1 : 0,
-                lon = isLonLat ? 0 : 1,
-                alt = 2,
-                item
-            ;
-
-            if (features) {
-                for (i = 0, il = features.length; i < il; i++) {
-                    parseGeoJSON(features[i], isLonLat, res);
-                }
-                return res;
-            }
-
-            if (json.type === 'Feature') {
-                geometry = json.geometry;
-                properties = json.properties;
-            }
-        //      else geometry = json
-
-            if (geometry.type === 'Polygon') {
-                polygons = [geometry.coordinates];
-            }
-            if (geometry.type === 'MultiPolygon') {
-                polygons = geometry.coordinates;
-            }
-
-            if (polygons) {
-                propHeight = properties.height;
-                if (properties.color || properties.wallColor) {
-                    propWallColor = Color.parse(properties.color || properties.wallColor);
-                }
-                if (properties.roofColor) {
-                    propRoofColor = Color.parse(properties.roofColor);
-                }
-
-                for (i = 0, il = polygons.length; i < il; i++) {
-                    coords = polygons[i][0];
-                    footprint = [];
-                    heightSum = 0;
-                    for (j = 0, jl = coords.length; j < jl; j++) {
-                        footprint.push(coords[j][lat], coords[j][lon]);
-                        heightSum += propHeight || coords[j][alt] || 0;
-                    }
-
-                    if (heightSum) {
-                        item = [];
-                        item[HEIGHT] = heightSum / coords.length << 0;
-                        item[FOOTPRINT] = makeClockwiseWinding(footprint);
-                        if (propWallColor || propRoofColor) {
-                            item[COLOR] = [propWallColor, propRoofColor];
-                        }
-                        res.push(item);
-                    }
-                }
-            }
-
+        if (data.type !== 'Feature') {
             return res;
         }
 
-        function setData(json, isLonLat) {
-            if (!json) {
-                rawData = null;
-                render(); // effectively clears
-                return;
+        var geometry = data.geometry,
+            properties = data.properties,
+            coordinates;
+
+        if (geometry.type === 'Polygon') {
+            coordinates = [geometry.coordinates];
+        }
+
+        if (geometry.type === 'MultiPolygon') {
+            coordinates = geometry.coordinates;
+        }
+
+        if (!coordinates) {
+            return res;
+        }
+
+        var colorCode,
+            wallColor_, roofColor_;
+
+        if (properties.color || properties.wallColor) {
+            colorCode = properties.color || properties.wallColor;
+            wallColor_ = Color.parse(materialColors[colorCode] || colorCode);
+        }
+
+        if (properties.roofColor) {
+            colorCode = properties.roofColor;
+            roofColor_ = Color.parse(materialColors[colorCode] || colorCode);
+        }
+
+        var height_ = properties.height,
+            polygon, footprint, heightSum,
+            j, jl,
+            lat = isLonLat ? 1 : 0, lon = isLonLat ? 0 : 1, alt = 2,
+            feature;
+
+        for (var i = 0, il = coordinates.length; i < il; i++) {
+            polygon = coordinates[i][0];
+            footprint = [];
+            heightSum = 0;
+            for (j = 0, jl = polygon.length; j < jl; j++) {
+                footprint.push(polygon[j][lat], polygon[j][lon]);
+                heightSum += height_ || polygon[j][alt] || 0;
             }
 
-            rawData = parseGeoJSON(json, isLonLat);
-            minZoom = 0;
-            setZoom(zoom); // recalculating all zoom related variables
+            if (heightSum) {
+                feature = [];
+                feature[FOOTPRINT]  = makeClockwiseWinding(footprint);
+                feature[HEIGHT]     = heightSum/polygon.length <<0;
+                feature[MIN_HEIGHT] = properties.minHeight;
+                feature[COLOR] = [
+                    wallColor_,
+                    wallColor_ ? wallColor_.adjustLightness(0.8) : null,
+                    roofColor_
+                ];
 
-            meta = {
-                n: 90,
-                w: -180,
-                s: -90,
-                e: 180,
-                x: 0,
-                y: 0,
-                z: zoom
-            };
-            data = scaleData(rawData, true);
-
-            fadeIn();
+                res.push(feature);
+            }
         }
+
+        return res;
+    },
+
+    scale: function(data, isNew) {
+        var res = [],
+            j, jl,
+            rawFeature, feature,
+            polygon, px,
+            minHeight, footprint,
+            zoomDelta = maxZoom-zoom;
+
+        for (var i = 0, il = data.length; i < il; i++) {
+            rawFeature = data[i];
+
+            minHeight = rawFeature[MIN_HEIGHT] >> zoomDelta;
+            if (minHeight > maxHeight) {
+                continue;
+            }
+
+            polygon = rawFeature[FOOTPRINT];
+            footprint = new Int32Array(polygon.length);
+            for (j = 0, jl = polygon.length-1; j < jl; j+=2) {
+                px = geoToPixel(polygon[j], polygon[j+1]);
+                footprint[j]     = px.x;
+                footprint[j + 1] = px.y;
+            }
+
+            footprint = simplify(footprint);
+            if (footprint.length < 8) { // 3 points + end=start (x2)
+                continue;
+            }
+
+            feature = [];
+            feature[FOOTPRINT]  = footprint;
+            feature[HEIGHT]     = min(rawFeature[HEIGHT] >> zoomDelta, maxHeight);
+            feature[MIN_HEIGHT] = minHeight;
+            feature[COLOR]      = [];
+            for (j = 0; j < 3; j++) {
+                if (rawFeature[COLOR][j]) {
+                    feature[COLOR][j] = rawFeature[COLOR][j].adjustAlpha(zoomAlpha) + '';
+                }
+            }
+            feature[CENTER] = center(footprint);
+            feature[IS_NEW] = isNew;
+
+            res.push(feature);
+        }
+
+        return res;
+    }
+};

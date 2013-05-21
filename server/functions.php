@@ -1,13 +1,13 @@
 <?php
 
-// parse from geometry text, swap llon/lat order
+// parse from geometry text, swap lon/lat order
 function strToPoly($str) {
     global $coordsOrder;
-    $coords = explode(',', str_replace(' ', ',', preg_replace('/^[A-Z\(]+|\)+$/', '', $str)));
+    $coords = explode(",", str_replace(" ", ",", preg_replace("/^[A-Z\(]+|\)+$/", "", $str)));
     $res = array();
 
     for ($i = 0; $i < count($coords)-1; $i+=2) {
-        if ($coordsOrder === 'lat,lon') {
+        if ($coordsOrder === "lat,lon") {
             $res[$i  ] = $coords[$i  ]*1;
             $res[$i+1] = $coords[$i+1]*1;
         } else {
@@ -22,14 +22,14 @@ function strToPoly($str) {
 // creates the bounding box according to expected lat/lon order
 function createBBox($n, $w, $s, $e) {
     global $coordsOrder;
-    if ($coordsOrder === 'lat,lon') {
+    if ($coordsOrder === "lat,lon") {
         return array($n, $w, $s, $e);
     }
     return array($w, $n, $e, $s);
 }
 
 function crop($n) {
-    return round($n*100000)/100000;
+    return round($n*100000) / 100000;
 }
 
 // detect polygon winding direction: clockwise or counter clockwise
@@ -42,13 +42,13 @@ function getPolygonWinding($points) {
         $y2 = $points[$i+3];
         $a += $x1 * $y2 - $x2 * $y1;
     }
-    return ($a / 2) > 0 ? 'CW' : 'CCW';
+    return ($a / 2) > 0 ? "CW" : "CCW";
 }
 
 // Make polygon winding clockwise. This is needed for proper backface culling on client side.
 function makeClockwiseWinding($points) {
     $winding = getPolygonWinding($points);
-    if ($winding == 'CW') {
+    if ($winding == "CW") {
         return $points;
     }
     $revPoints = array();
@@ -58,3 +58,5 @@ function makeClockwiseWinding($points) {
     }
     return $revPoints;
 }
+
+?>

@@ -7,9 +7,8 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <link rel="stylesheet" href="../assets/styles.css">
 
-    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.4.5/leaflet.css">
-    <!--[if lte IE 8]><link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.4.5/leaflet.ie.css" /><![endif]-->
-    <script src="http://cdn.leafletjs.com/leaflet-0.4.5/leaflet.js"></script>
+    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.5.1/leaflet.css">
+    <script src="http://cdn.leafletjs.com/leaflet-0.4.1/leaflet.js"></script>
 
     <link rel="stylesheet" href="js/highlight/github.css">
     <script src="js/highlight/highlight.pack.js"></script>
@@ -92,6 +91,11 @@
             <td>Set default styles.</td>
         </tr>
         <tr>
+            <td class="api-code">setDate(Date {Object})</td>
+            <td class="api-code">setDate(new Date(2013, 15, 1, 10, 30)))</td>
+            <td>Set date / time for shadow projection.</td>
+        </tr>
+        <tr>
             <td class="api-code">geoJSON(
     <a href="#styles">url</a> {String} | <a href="http://www.geojson.org/geojson-spec.html">GeoJSON</a> {Object},
     isLatLon? {Boolean}
@@ -140,7 +144,6 @@
 'rgb(255,200,200)'
 'rgba(255,200,200,0.9)'</td>
                 <td>Define the objects primary color.<br>
-                    <em>Deprecation notice</em>: the name wallColor be dropped in favor to color.<br>
                     Default color is rgb(200,190,180).
                     If setStyle() has been used to set different global colors, these will be applied.
                     If color is set in GeoJSON, this will be used with highest priority.
@@ -153,17 +156,18 @@
 'rgb(255,200,200)'
 'rgba(255,200,200,0.9)'</td>
                 <td>Define the objects alternate color.<br>
-                    <em>Deprecation notice</em>: the name will likely change to altColor.<br>
                     By default, wallColor will be adapted by some different brightness.
                     If setStyle() has been used used to set a different global wallColor, this will be applied.
                     If roofColor is set in GeoJSON, this will be used with highest priority.
                 </td>
             </tr>
             <tr>
-                <td>strokeRoofs:</td>
+                <td>shadows:</td>
                 <td>Boolean</td>
-                <td class="api-code">false</td>
-                <td>Set whether roof edges are outlined or not. False by default.</td>
+                <td class="api-code">true</td>
+                <td>Enable or disable shadow rendering.<br>
+                    By default, it's enabled and depends on viewer's current local time.
+                </td>
             </tr>
         </table>
 

@@ -15,15 +15,14 @@ OpenLayers.Layer.Buildings = OpenLayers.Class(OpenLayers.Layer, {
     dxSum: 0, // for cumulative cam offset during moveBy
     dySum: 0, // for cumulative cam offset during moveBy
 
-    initialize: function (options) {
+    initialize: function(options) {
         options = options || {};
         options.projection = 'EPSG:900913';
-        OpenLayers.Layer.prototype.initialize(this.name, options);
+        OpenLayers.Layer.prototype.initialize.call(this, this.name, options);
     },
 
-    setOrigin: function () {
-        var
-            origin = this.map.getLonLatFromPixel(new OpenLayers.Pixel(0, 0)),
+    setOrigin: function() {
+        var origin = this.map.getLonLatFromPixel(new OpenLayers.Pixel(0, 0)),
             res = this.map.resolution,
             ext = this.maxExtent,
             x = Math.round((origin.lon - ext.left) / res),
@@ -32,31 +31,32 @@ OpenLayers.Layer.Buildings = OpenLayers.Class(OpenLayers.Layer, {
         this.osmb.setOrigin(x, y);
     },
 
-    setMap: function (map) {
+    setMap: function(map) {
         if (!this.map) {
-            OpenLayers.Layer.prototype.setMap(map);
-            this.osmb = new OSMBuildings(this.options.url);
-            this.osmb.createCanvas(this.div);
-            this.osmb.setSize(this.map.size.w, this.map.size.h);
-            this.osmb.setZoom(this.map.zoom);
-            this.setOrigin();
-            this.osmb.loadData();
+            OpenLayers.Layer.prototype.setMap.call(this, map);
         }
+        if (!this.osmb) {
+            this.osmb = new OSMBuildings(this.options.url);
+            this.container = this.osmb.appendTo(this.div);
+        }
+        this.osmb.setSize(this.map.size.w, this.map.size.h);
+        this.osmb.setZoom(this.map.zoom);
+        this.setOrigin();
+        this.osmb.loadData();
     },
 
-    removeMap: function (map) {
-        this.osmb.destroyCanvas();
-        this.osmb = null;
-        OpenLayers.Layer.prototype.removeMap(map);
+    removeMap: function(map) {
+        this.container.parentNode.removeChild(this.container);
+        OpenLayers.Layer.prototype.removeMap.call(this, map);
     },
 
-    onMapResize: function () {
-        OpenLayers.Layer.prototype.onMapResize();
+    onMapResize: function() {
+        OpenLayers.Layer.prototype.onMapResize.call(this);
         this.osmb.onResize({ width: this.map.size.w, height: this.map.size.h });
     },
 
-    moveTo: function (bounds, zoomChanged, dragging) {
-        var result = OpenLayers.Layer.prototype.moveTo(bounds, zoomChanged, dragging);
+    moveTo: function(bounds, zoomChanged, dragging) {
+        var result = OpenLayers.Layer.prototype.moveTo.call(this, bounds, zoomChanged, dragging);
         if (!dragging) {
             var
                 offsetLeft = parseInt(this.map.layerContainerDiv.style.left, 10),
@@ -80,20 +80,26 @@ OpenLayers.Layer.Buildings = OpenLayers.Class(OpenLayers.Layer, {
         return result;
     },
 
-    moveByPx: function (dx, dy) {
+    moveByPx: function(dx, dy) {
         this.dxSum += dx;
         this.dySum += dy;
-        var result = OpenLayers.Layer.prototype.moveByPx(dx, dy);
+        var result = OpenLayers.Layer.prototype.moveByPx.call(this, dx, dy);
         this.osmb.setCamOffset(this.dxSum, this.dySum);
         this.osmb.render();
         return result;
     },
 
-    geoJSON: function (url, isLatLon) {
+    // TODO: refactor these ugly bindings
+
+    geoJSON: function(url, isLatLon) {
         return this.osmb.geoJSON(url, isLatLon);
     },
 
-    setStyle: function (style)  {
+    setStyle: function(style)  {
         return this.osmb.setStyle(style);
+    },
+
+    setDate: function(date)  {
+        return this.osmb.setDate(date);
     }
 });

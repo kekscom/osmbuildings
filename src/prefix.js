@@ -1,4 +1,4 @@
 /*jshint bitwise:false */
 
-(function (global) {
+(function(global) {
     'use strict';
