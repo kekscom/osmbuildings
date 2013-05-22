@@ -28,7 +28,7 @@ var Shadows = {
         context.clearRect(0, 0, width, height);
 
         if (!this.enabled ||
-            !meta || !data || // data needed for rendering
+            !Data.rendering || // Data.rendering needed
             // show on high zoom levels only and avoid rendering during zoom
             zoom < minZoom || isZooming) {
             return;
@@ -68,11 +68,11 @@ var Shadows = {
 
         context.beginPath();
 
-        for (i = 0, il = data.length; i < il; i++) {
-            item = data[i];
+        for (i = 0, il = Data.rendering.length; i < il; i++) {
+            item = Data.rendering[i];
 
             isVisible = false;
-            f = item[FOOTPRINT];
+            f = item.footprint;
             footprint = [];
             for (j = 0, jl = f.length - 1; j < jl; j += 2) {
                 footprint[j]     = x = (f[j]     - offX);
@@ -89,11 +89,11 @@ var Shadows = {
             }
 
             // when fading in, use a dynamic height
-            h = item[IS_NEW] ? item[HEIGHT] * fadeFactor : item[HEIGHT];
+            h = item.isNew ? item.height * fadeFactor : item.height;
 
             // prepare same calculations for min_height if applicable
-            if (item[MIN_HEIGHT]) {
-                g = item[IS_NEW] ? item[MIN_HEIGHT] * fadeFactor : item[MIN_HEIGHT];
+            if (item.minHeight) {
+                g = item.isNew ? item.minHeight * fadeFactor : item.minHeight;
             }
 
             mode = null;
@@ -107,7 +107,7 @@ var Shadows = {
                 _a = this.project(ax, ay, h);
                 _b = this.project(bx, by, h);
 
-                if (item[MIN_HEIGHT]) {
+                if (item.minHeight) {
                     a = this.project(ax, ay, g);
                     b = this.project(bx, by, g);
                     ax = a.x;

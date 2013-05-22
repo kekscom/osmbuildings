@@ -26,7 +26,7 @@ this.appendTo = function(parentNode) {
     return Layers.init(parentNode);
 };
 
-this.loadData    = loadData;
+this.loadData    = Data.load;
 this.onMoveEnd   = onMoveEnd;
 this.onZoomEnd   = onZoomEnd;
 this.onZoomStart = onZoomStart;

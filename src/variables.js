@@ -10,8 +10,7 @@ var width = 0, height = 0,
 
     url,
 
-    rawData,
-    meta, data, renderData,
+    meta,
 
     wallColor = new Color(200, 190, 180),
     altColor = wallColor.adjustLightness(0.8),
@@ -22,9 +21,6 @@ var width = 0, height = 0,
     wallColorAlpha = wallColor + '',
     altColorAlpha  = altColor + '',
     roofColorAlpha = roofColor + '',
-
-    rawData,
-    meta, data,
 
     fadeFactor = 1, fadeTimer,
     zoomAlpha = 1,

@@ -12,8 +12,8 @@ var FlatBuildings = {
 
         context.clearRect(0, 0, width, height);
 
-        // data needed for rendering
-        if (!meta || !data ||
+        // Data.rendering needed
+        if (!Data.rendering ||
             // show on high zoom levels only and avoid rendering during zoom
             zoom < minZoom || isZooming) {
             return;
@@ -32,11 +32,11 @@ var FlatBuildings = {
 
         context.beginPath();
 
-        for (i = 0, il = data.length; i < il; i++) {
-            item = data[i];
+        for (i = 0, il = Data.rendering.length; i < il; i++) {
+            item = Data.rendering[i];
 
             isVisible = false;
-            f = item[FOOTPRINT];
+            f = item.footprint;
             footprint = [];
             for (j = 0, jl = f.length - 1; j < jl; j += 2) {
                 footprint[j]     = x = (f[j]     - offX);

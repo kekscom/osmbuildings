@@ -42,14 +42,14 @@ var Color = (function() {
 		return p;
 	}
 
-    function C(r, g, b, a) { // r,g,b belong to [0, 255]; a belongs to [0,1]
+    function Color(r, g, b, a) { // r,g,b belong to [0, 255]; a belongs to [0,1]
         this.r = r;
         this.g = g;
         this.b = b;
         this.a = arguments.length < 4 ? 1 : a;
     }
 
-	var proto = C.prototype;
+	var proto = Color.prototype;
 
 	proto.toString = function() {
 		return 'rgba(' + [this.r <<0, this.g <<0, this.b <<0, this.a.toFixed(2)].join(',') + ')';
@@ -72,7 +72,7 @@ var Color = (function() {
      * "rgb([0-255],[0-255],[0-255])", "rgba([0-255],[0-255],[0-255],[0-1])",
      * "hsl([0-360],[0-1],[0-1])", "hsla([0-360],[0-1],[0-1],[0-1])"
      */
-    C.parse = function(str) {
+    Color.parse = function(str) {
         var m;
         str += '';
         if (~str.indexOf('#')) {
@@ -106,7 +106,7 @@ var Color = (function() {
         }
     };
 
-    C.toHSLA = function(rgba) { // r,g,b belong to [0, 255]; a belongs to [0,1]
+    Color.toHSLA = function(rgba) { // r,g,b belong to [0, 255]; a belongs to [0,1]
         var r = rgba.r/255,
             g = rgba.g/255,
             b = rgba.b/255,
@@ -130,6 +130,6 @@ var Color = (function() {
         return { h: h*360, s: s, l: l, a: rgba.a };
     };
 
-	return C;
+	return Color;
 
 }());

@@ -9,8 +9,8 @@ function fadeIn() {
             clearInterval(fadeTimer);
             fadeFactor = 1;
             // unset 'already present' marker
-            for (var i = 0, il = data.length; i < il; i++) {
-                data[i][IS_NEW] = 0;
+            for (var i = 0, il = Data.rendering.length; i < il; i++) {
+                Data.rendering[i].isNew = 0;
             }
         }
         Shadows.render();
@@ -27,8 +27,8 @@ function renderAll() {
 function render() {
     context.clearRect(0, 0, width, height);
 
-    // data needed for rendering
-    if (!meta || !data ||
+    // Data.rendering needed
+    if (!Data.rendering ||
         // show on high zoom levels only and avoid rendering during zoom
         zoom < minZoom || isZooming) {
         return;
@@ -48,19 +48,19 @@ function render() {
         a, b, _a, _b;
 
     // TODO: FlatBuildings are drawn separetely, data has to be split
-    data.sort(function(a, b) {
-        return distance(b[CENTER], sortCam) / b[HEIGHT] - distance(a[CENTER], sortCam) / a[HEIGHT];
+    Data.rendering.sort(function(a, b) {
+        return distance(b.center, sortCam)/b.height - distance(a.center, sortCam)/a.height;
     });
 
-    for (i = 0, il = data.length; i < il; i++) {
-        item = data[i];
+    for (i = 0, il = Data.rendering.length; i < il; i++) {
+        item = Data.rendering[i];
 
-        if (item[HEIGHT] <= flatMaxHeight) {
+        if (item.height <= flatMaxHeight) {
             continue;
         }
 
         isVisible = false;
-        f = item[FOOTPRINT];
+        f = item.footprint;
         footprint = []; // typed array would be created each pass and is way too slow
         for (j = 0, jl = f.length - 1; j < jl; j += 2) {
             footprint[j]     = x = (f[j]     - offX);
@@ -77,13 +77,13 @@ function render() {
         }
 
         // when fading in, use a dynamic height
-        h = item[IS_NEW] ? item[HEIGHT] * fadeFactor : item[HEIGHT];
+        h = item.isNew ? item.height*fadeFactor : item.height;
         // precalculating projection height scale
         m = camZ / (camZ - h);
 
         // prepare same calculations for min_height if applicable
-        if (item[MIN_HEIGHT]) {
-            h = item[IS_NEW] ? item[MIN_HEIGHT] * fadeFactor : item[MIN_HEIGHT];
+        if (item.minHeight) {
+            h = item.isNew ? item.minHeight*fadeFactor : item.minHeight;
             n = camZ / (camZ - h);
         }
 
@@ -99,7 +99,7 @@ function render() {
             _a = project(ax, ay, m);
             _b = project(bx, by, m);
 
-            if (item[MIN_HEIGHT]) {
+            if (item.minHeight) {
                 a = project(ax, ay, n);
                 b = project(bx, by, n);
                 ax = a.x;
@@ -112,9 +112,9 @@ function render() {
             if ((bx - ax) * (_a.y - ay) > (_a.x - ax) * (by - ay)) {
                 // depending on direction, set wall shading
                 if ((ax < bx && ay < by) || (ax > bx && ay > by)) {
-                    context.fillStyle = item[RENDER_COLOR][1] || altColorAlpha;
+                    context.fillStyle = item.altColor  || altColorAlpha;
                 } else {
-                    context.fillStyle = item[RENDER_COLOR][0] || wallColorAlpha;
+                    context.fillStyle = item.wallColor || wallColorAlpha;
                 }
 
                 drawShape([
@@ -129,8 +129,8 @@ function render() {
         }
 
         // fill roof and optionally stroke it
-        context.fillStyle   = item[RENDER_COLOR][2] || roofColorAlpha;
-        context.strokeStyle = item[RENDER_COLOR][1] || altColorAlpha;
+        context.fillStyle   = item.roofColor || roofColorAlpha;
+        context.strokeStyle = item.altColor  || altColorAlpha;
         drawShape(roof, true);
     }
 }

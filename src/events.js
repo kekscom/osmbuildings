@@ -1,7 +1,7 @@
 function onResize(e) {
     setSize(e.width, e.height);
     renderAll();
-    loadData();
+    Data.load();
 }
 
 // TODO: cleanup, no engine is using that
@@ -11,13 +11,12 @@ function onMove(e) {
 }
 
 function onMoveEnd(e) {
-    var nw = pixelToGeo(originX,         originY),
-        se = pixelToGeo(originX + width, originY + height)
-    ;
+    var nw = pixelToGeo(originX,       originY),
+        se = pixelToGeo(originX+width, originY+height);
     renderAll();
     // check, whether viewport is still within loaded data bounding box
     if (meta && (nw[LAT] > meta.n || nw[LON] < meta.w || se[LAT] < meta.s || se[LON] > meta.e)) {
-        loadData(); // => fadeIn() => renderAll()
+        Data.load(); // => fadeIn() => renderAll()
     }
 }
 
@@ -31,11 +30,11 @@ function onZoomEnd(e) {
     isZooming = false;
     setZoom(e.zoom);
 
-    if (rawData) { // GeoJSON
-        data = scaleData(rawData);
+    if (Data.raw) { // GeoJSON
+        Data.rendering = Data.scale(Data.raw);
         renderAll();
     } else {
         render();
-        loadData(); // => fadeIn() => renderAll()
+        Data.load(); // => fadeIn() => renderAll()
     }
 }

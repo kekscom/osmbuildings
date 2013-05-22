@@ -29,17 +29,8 @@ function setZoom(z) {
     altColorAlpha  = altColor.adjustAlpha(zoomAlpha) + '';
     roofColorAlpha = roofColor.adjustAlpha(zoomAlpha) + '';
 
-    if (data) {
-        for (i = 0, il = data.length; i < il; i++) {
-            item = data[i];
-            item[RENDER_COLOR] = [];
-            for (j = 0; j < 3; j++) {
-                if (item[COLOR][j]) {
-                    item[RENDER_COLOR][j] = item[COLOR][j].adjustAlpha(zoomAlpha) + '';
-                }
-            }
-        }
-    }
+    // TODO: not working properly yet FIXME
+    Data.scale();
 }
 
 function setCam(x, y) {
