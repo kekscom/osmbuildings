@@ -10,8 +10,6 @@ var width = 0, height = 0,
 
     url,
 
-    meta,
-
     wallColor = new Color(200, 190, 180),
     altColor = wallColor.adjustLightness(0.8),
     roofColor = wallColor.adjustLightness(1.2),

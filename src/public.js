@@ -3,11 +3,6 @@ this.setStyle = function(style) {
     return this;
 };
 
-this.geoJSON = function(url, isLatLon) {
-    geoJSON(url, isLatLon);
-    return this;
-};
-
 this.setCamOffset = function(x, y) {
     camX = halfWidth + x;
     camY = height    + y;

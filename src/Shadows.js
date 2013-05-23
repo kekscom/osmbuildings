@@ -55,16 +55,17 @@ var Shadows = {
             item,
             f, h, g,
             x, y,
-            offX = originX - meta.x,
-            offY = originY - meta.y,
+//            offX = originX-meta.x,
+//            offY = originY-meta.y,
+            offX = originX,
+            offY = originY,
             footprint,
             mode,
             isVisible,
             ax, ay, bx, by,
             a, b, _a, _b,
             points,
-            allFootprints = []
-        ;
+            allFootprints = [];
 
         context.beginPath();
 
@@ -75,8 +76,8 @@ var Shadows = {
             f = item.footprint;
             footprint = [];
             for (j = 0, jl = f.length - 1; j < jl; j += 2) {
-                footprint[j]     = x = (f[j]     - offX);
-                footprint[j + 1] = y = (f[j + 1] - offY);
+                footprint[j]   = x = f[j]  -offX;
+                footprint[j+1] = y = f[j+1]-offY;
 
                 // TODO: checking footprint is sufficient for visibility - NOT VALID FOR SHADOWS!
                 if (!isVisible) {
@@ -89,20 +90,20 @@ var Shadows = {
             }
 
             // when fading in, use a dynamic height
-            h = item.isNew ? item.height * fadeFactor : item.height;
+            h = item.isNew ? item.height*fadeFactor : item.height;
 
             // prepare same calculations for min_height if applicable
             if (item.minHeight) {
-                g = item.isNew ? item.minHeight * fadeFactor : item.minHeight;
+                g = item.isNew ? item.minHeight*fadeFactor : item.minHeight;
             }
 
             mode = null;
 
-            for (j = 0, jl = footprint.length - 3; j < jl; j += 2) {
+            for (j = 0, jl = footprint.length-3; j < jl; j += 2) {
                 ax = footprint[j];
-                ay = footprint[j + 1];
-                bx = footprint[j + 2];
-                by = footprint[j + 3];
+                ay = footprint[j+1];
+                bx = footprint[j+2];
+                by = footprint[j+3];
 
                 _a = this.project(ax, ay, h);
                 _b = this.project(bx, by, h);
@@ -116,7 +117,7 @@ var Shadows = {
                     by = b.y;
                 }
 
-                if ((bx - ax) * (_a.y - ay) > (_a.x - ax) * (by - ay)) {
+                if ((bx-ax) * (_a.y-ay) > (_a.x-ax) * (by-ay)) {
                     if (mode === 1) {
                         context.lineTo(ax, ay);
                     }
@@ -152,7 +153,7 @@ var Shadows = {
             points = allFootprints[i];
             context.moveTo(points[0], points[1]);
             for (j = 2, jl = points.length; j < jl; j += 2) {
-                context.lineTo(points[j], points[j + 1]);
+                context.lineTo(points[j], points[j+1]);
             }
             context.lineTo(points[0], points[1]);
             context.closePath();
@@ -164,8 +165,8 @@ var Shadows = {
 
     project: function(x, y, h) {
         return {
-            x: x + this.directionX * h,
-            y: y + this.directionY * h
+            x: x + this.directionX*h,
+            y: y + this.directionY*h
         };
     },
 

@@ -17,20 +17,17 @@ function setOrigin(x, y) {
 }
 
 function setZoom(z) {
-    var i, il, j,
-        item;
-
     zoom = z;
     size = TILE_SIZE << zoom;
 
     zoomAlpha = 1 - fromRange(zoom, minZoom, maxZoom, 0, 0.3);
 
     wallColorAlpha = wallColor.adjustAlpha(zoomAlpha) + '';
-    altColorAlpha  = altColor.adjustAlpha(zoomAlpha) + '';
+    altColorAlpha  = altColor.adjustAlpha( zoomAlpha) + '';
     roofColorAlpha = roofColor.adjustAlpha(zoomAlpha) + '';
 
     // TODO: not working properly yet FIXME
-    Data.scale();
+    Data.scale(zoom);
 }
 
 function setCam(x, y) {

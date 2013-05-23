@@ -91,7 +91,7 @@ L.BuildingsLayer = L.Class.extend({
 //        var onZoom = function(opt) {
 //            var
 //                scale = this.map.getZoomScale(opt.zoom),
-//                offset = this.map._getCenterOffset(opt.center).divideBy(1 - 1 / scale),
+//                offset = this.map._getCenterOffset(opt.center).divideBy(1 - 1/scale),
 //                viewportPos = this.map.containerPointToLayerPoint(this.map.getSize().multiplyBy(-1)),
 //                origin = viewportPos.add(offset).round()
 //            ;

@@ -15,7 +15,7 @@ function onMoveEnd(e) {
         se = pixelToGeo(originX+width, originY+height);
     renderAll();
     // check, whether viewport is still within loaded data bounding box
-    if (meta && (nw[LAT] > meta.n || nw[LON] < meta.w || se[LAT] < meta.s || se[LON] > meta.e)) {
+    if (nw[LAT] > Data.n || nw[LON] < Data.w || se[LAT] < Data.s || se[LON] > Data.e) {
         Data.load(); // => fadeIn() => renderAll()
     }
 }
@@ -28,13 +28,7 @@ function onZoomStart(e) {
 
 function onZoomEnd(e) {
     isZooming = false;
-    setZoom(e.zoom);
-
-    if (Data.raw) { // GeoJSON
-        Data.rendering = Data.scale(Data.raw);
-        renderAll();
-    } else {
-        render();
-        Data.load(); // => fadeIn() => renderAll()
-    }
+    setZoom(e.zoom); // => Data.scale()
+    Data.load(); // => fadeIn()
+    renderAll();
 }

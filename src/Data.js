@@ -3,6 +3,9 @@
 
 var Data = {
 
+    raw: [],
+    rendering: [],
+
     init: function() {},
 
     setUrl: function(url) {
@@ -47,9 +50,9 @@ var Data = {
         }
 /*
         // offset between old and new data set
-        if (this.meta && this.raw) {
-            offX = this.x - meta.x;
-            offY = this.y - meta.y;
+        if (this.raw) {
+            offX = this.x-meta.x;
+            offY = this.y-meta.y;
 
             // identify already present buildings to fade in new ones
             for (var i = 0, il = data.length; i < il; i++) {
@@ -58,8 +61,7 @@ var Data = {
             }
         }
 */
-
-        this.rendering = this.scale(this.raw, true);
+        this.scale(zoom, true);
         fadeIn();
     },
 
@@ -71,16 +73,17 @@ var Data = {
     resMeta = resData = idList = null; // gc
 */
 
-    scale: function(data, isNew) {
-        var res = [],
+    scale: function(zoom, isNew) {
+        var thisRaw = this.raw,
+            res = [],
             j, jl,
             item,
             polygon, px,
             minHeight, footprint,
             zoomDelta = maxZoom-zoom;
 
-        for (var i = 0, il = data.length; i < il; i++) {
-            item = data[i];
+        for (var i = 0, il = thisRaw.length; i < il; i++) {
+            item = thisRaw[i];
 
             minHeight = item.minHeight >> zoomDelta;
             if (minHeight > maxHeight) {
@@ -91,8 +94,8 @@ var Data = {
             footprint = new Int32Array(polygon.length);
             for (j = 0, jl = polygon.length-1; j < jl; j+=2) {
                 px = geoToPixel(polygon[j], polygon[j+1]);
-                footprint[j]     = px.x;
-                footprint[j + 1] = px.y;
+                footprint[j]   = px.x;
+                footprint[j+1] = px.y;
             }
 
             footprint = simplify(footprint);
@@ -112,11 +115,11 @@ var Data = {
             });
         }
 
-        return res;
+        this.rendering = res;
     }
 };
 
-osmb.geoJSON = function(url) {
+this.geoJSON = function(url) {
     var type = typeof url,
         thisData = this.Data;
     thisData.setLatLon(false);

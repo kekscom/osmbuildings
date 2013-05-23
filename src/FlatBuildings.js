@@ -23,12 +23,13 @@ var FlatBuildings = {
             item,
             f,
             x, y,
-            offX = originX - meta.x,
-            offY = originY - meta.y,
+//            offX = originX-meta.x,
+//            offY = originY-meta.y,
+            offX = originX,
+            offY = originY,
             footprint,
             isVisible,
-            ax, ay
-        ;
+            ax, ay;
 
         context.beginPath();
 
@@ -38,9 +39,9 @@ var FlatBuildings = {
             isVisible = false;
             f = item.footprint;
             footprint = [];
-            for (j = 0, jl = f.length - 1; j < jl; j += 2) {
-                footprint[j]     = x = (f[j]     - offX);
-                footprint[j + 1] = y = (f[j + 1] - offY);
+            for (j = 0, jl = f.length-1; j < jl; j += 2) {
+                footprint[j]   = x = f[j]  -offX;
+                footprint[j+1] = y = f[j+1]-offY;
 
                 // checking footprint is sufficient for visibility
                 if (!isVisible) {
@@ -52,7 +53,7 @@ var FlatBuildings = {
                 continue;
             }
 
-            for (j = 0, jl = footprint.length - 3; j < jl; j += 2) {
+            for (j = 0, jl = footprint.length-3; j < jl; j += 2) {
                 ax = footprint[j];
                 ay = footprint[j + 1];
                 if (!j) {

@@ -38,10 +38,12 @@ function render() {
         item,
         f, h, m, n,
         x, y,
-        offX = originX - meta.x,
-        offY = originY - meta.y,
+//        offX = originX-meta.x,
+//        offY = originY-meta.y,
+        offX = originX,
+        offY = originY,
         flatMaxHeight = FlatBuildings.getMaxHeight(),
-        sortCam = [camX + offX, camY + offY],
+        sortCam = [camX+offX, camY+offY],
         footprint, roof,
         isVisible,
         ax, ay, bx, by,
@@ -63,8 +65,8 @@ function render() {
         f = item.footprint;
         footprint = []; // typed array would be created each pass and is way too slow
         for (j = 0, jl = f.length - 1; j < jl; j += 2) {
-            footprint[j]     = x = (f[j]     - offX);
-            footprint[j + 1] = y = (f[j + 1] - offY);
+            footprint[j]   = x = f[j]  -offX;
+            footprint[j+1] = y = f[j+1]-offY;
 
             // checking footprint is sufficient for visibility
             if (!isVisible) {
@@ -79,21 +81,21 @@ function render() {
         // when fading in, use a dynamic height
         h = item.isNew ? item.height*fadeFactor : item.height;
         // precalculating projection height scale
-        m = camZ / (camZ - h);
+        m = camZ / (camZ-h);
 
         // prepare same calculations for min_height if applicable
         if (item.minHeight) {
             h = item.isNew ? item.minHeight*fadeFactor : item.minHeight;
-            n = camZ / (camZ - h);
+            n = camZ / (camZ-h);
         }
 
         roof = []; // typed array would be created each pass and is way too slow
 
         for (j = 0, jl = footprint.length - 3; j < jl; j += 2) {
             ax = footprint[j];
-            ay = footprint[j + 1];
-            bx = footprint[j + 2];
-            by = footprint[j + 3];
+            ay = footprint[j+1];
+            bx = footprint[j+2];
+            by = footprint[j+3];
 
             // project 3d to 2d on extruded footprint
             _a = project(ax, ay, m);
@@ -109,7 +111,7 @@ function render() {
             }
 
             // backface culling check
-            if ((bx - ax) * (_a.y - ay) > (_a.x - ax) * (by - ay)) {
+            if ((bx-ax) * (_a.y-ay) > (_a.x-ax) * (by-ay)) {
                 // depending on direction, set wall shading
                 if ((ax < bx && ay < by) || (ax > bx && ay > by)) {
                     context.fillStyle = item.altColor  || altColorAlpha;
@@ -124,8 +126,8 @@ function render() {
                     _b.x, _b.y
                 ]);
             }
-            roof[j]     = _a.x;
-            roof[j + 1] = _a.y;
+            roof[j]   = _a.x;
+            roof[j+1] = _a.y;
         }
 
         // fill roof and optionally stroke it
@@ -143,7 +145,7 @@ function drawShape(points, stroke) {
     context.beginPath();
     context.moveTo(points[0], points[1]);
     for (var i = 2, il = points.length; i < il; i += 2) {
-        context.lineTo(points[i], points[i + 1]);
+        context.lineTo(points[i], points[i+1]);
     }
     context.closePath();
     if (stroke) {
@@ -163,7 +165,7 @@ function project(x, y, m) {
 function debugMarker(x, y, color, size) {
     context.fillStyle = color || '#ffcc00';
     context.beginPath();
-    context.arc(x, y, size || 3, 0, PI * 2, true);
+    context.arc(x, y, size || 3, 0, PI*2, true);
     context.closePath();
     context.fill();
 }
