@@ -127,8 +127,8 @@ L.BuildingsLayer = L.Class.extend({
 
     // TODO: refactor these ugly bindings
 
-    geoJSON: function(url, isLatLon) {
-        return this.osmb.geoJSON(url, isLatLon);
+    geoJSON: function(url) {
+        return this.osmb.geoJSON(url);
     },
 
     setStyle: function(style)  {

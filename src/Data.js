@@ -40,7 +40,7 @@ var Data = {
         this.n = -90; this.w = 180; this.s = 90; this.e = -180;
         for (var i = 0, il = rawData.length; i < il; i++) {
             idList[i] = rawData[i].id;
-            footprint = rawData[i].footprint
+            footprint = rawData[i].footprint;
             for (var j = 0, jl = footprint.length-1; j < jl; j+=2) {
                 this.n = max(footprint[j  ], this.n);
                 this.e = max(footprint[j+1], this.e);

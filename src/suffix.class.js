@@ -1,4 +1,4 @@
-        url = u;
+        Data.setUrl(url);
     };
 
     global.OSMBuildings.VERSION = VERSION;

@@ -91,8 +91,8 @@ OpenLayers.Layer.Buildings = OpenLayers.Class(OpenLayers.Layer, {
 
     // TODO: refactor these ugly bindings
 
-    geoJSON: function(url, isLatLon) {
-        return this.osmb.geoJSON(url, isLatLon);
+    geoJSON: function(url) {
+        return this.osmb.geoJSON(url);
     },
 
     setStyle: function(style)  {

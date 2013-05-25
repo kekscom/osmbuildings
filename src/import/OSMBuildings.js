@@ -90,10 +90,10 @@ var importOSMBuildings = (function() {
 
     function isBuilding(data) {
         var tags = data.tags;
-        return (tags
-            && !tags.landuse
-            && (tags.building || tags['building:part'])
-            && (!tags.layer || tags.layer >= 0));
+        return (tags &&
+            !tags.landuse &&
+            (tags.building || tags['building:part']) &&
+            (!tags.layer || tags.layer >= 0));
     }
 
     function getBuildingType(tags) {
@@ -158,7 +158,7 @@ var importOSMBuildings = (function() {
     function mergeTags(dst, src) {
         for (var p in src) {
             if (!dst[p]) {
-                dst[p] = src[p]
+                dst[p] = src[p];
             }
         }
         return dst;
@@ -243,7 +243,7 @@ var importOSMBuildings = (function() {
             color: color,
             roofColor: roofColor
         };
-    };
+    }
 
     function processNode(node) {
         nodes[node.id] = node.lat.toFixed(5) + ' ' + node.lon.toFixed(5);
@@ -253,7 +253,7 @@ var importOSMBuildings = (function() {
         var tags, footprint;
         if (isBuilding(way)) {
             tags = filterTags(way.tags);
-            if (footprint = getFootprint(way.nodes)) {
+            if ((footprint = getFootprint(way.nodes))) {
                 addResult(tags, footprint);
             }
         } else {
@@ -268,11 +268,11 @@ var importOSMBuildings = (function() {
         var outerWay, way,
             tags, footprint;
         if (isBuilding(relation) && (relation.tags.type === 'multipolygon' || relation.tags.type === 'building')) {
-            if (outerWay = getOuterWay(relation.members)) {
+            if ((outerWay = getOuterWay(relation.members))) {
                 var relTags = filterTags(relation.tags);
-                if (way = ways[outerWay.ref]) {
+                if ((way = ways[outerWay.ref])) {
                     tags = filterTags(way.tags);
-                    if (footprint = getFootprint(way.nodes)) {
+                    if ((footprint = getFootprint(way.nodes))) {
                         tags = mergeTags(tags, relTags);
                         addResult(tags, footprint);
                     }
