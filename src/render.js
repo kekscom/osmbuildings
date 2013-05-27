@@ -27,10 +27,8 @@ function renderAll() {
 function render() {
     context.clearRect(0, 0, width, height);
 
-    // Data.rendering needed
-    if (!Data.rendering ||
-        // show on high zoom levels only and avoid rendering during zoom
-        zoom < minZoom || isZooming) {
+    // show on high zoom levels only and avoid rendering during zoom
+    if (zoom < minZoom || isZooming) {
         return;
     }
 
@@ -80,7 +78,7 @@ function render() {
 
         // when fading in, use a dynamic height
         h = item.isNew ? item.height*fadeFactor : item.height;
-        // precalculating projection height scale
+        // precalculating projection height factor
         m = camZ / (camZ-h);
 
         // prepare same calculations for min_height if applicable

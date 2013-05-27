@@ -33,8 +33,8 @@ function request(url, callbackFn) {
     var el = doc.documentElement,
         callbackName = 'jsonpCallback',
         script = doc.createElement('script');
-    global[callbackName] = function(res) {
-        delete global[callbackName];
+    window[callbackName] = function(res) {
+        delete window[callbackName];
         el.removeChild(script);
         callbackFn(res);
     };

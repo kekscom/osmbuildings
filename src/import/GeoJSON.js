@@ -1,10 +1,10 @@
 // beware, it's not easy to use this standalone
 // dependencies to: makeClockwiseWinding() and {materialColors}
 
-var importGeoJSON = function(data, res) {
+var readGeoJSON = function(data, res) {
     var i, il;
 
-    // recursions pass res by referece to be filled
+    // recursions pass res by reference to be filled
     // finally it's returned by value, so create it on initial call
     if (res === undefined) {
         res = [];
@@ -15,7 +15,7 @@ var importGeoJSON = function(data, res) {
 
     if (collection) {
         for (i = 0, il = collection.length; i < il; i++) {
-            importGeoJSON(collection[i], res);
+            readGeoJSON(collection[i], res);
         }
         return res;
     }

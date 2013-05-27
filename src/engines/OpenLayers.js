@@ -36,13 +36,12 @@ OpenLayers.Layer.Buildings = OpenLayers.Class(OpenLayers.Layer, {
             OpenLayers.Layer.prototype.setMap.call(this, map);
         }
         if (!this.osmb) {
-            this.osmb = new OSMBuildings(this.options.url);
+            this.osmb = new OSMBuildings();
             this.container = this.osmb.appendTo(this.div);
         }
         this.osmb.setSize(this.map.size.w, this.map.size.h);
         this.osmb.setZoom(this.map.zoom);
         this.setOrigin();
-        this.osmb.loadData();
     },
 
     removeMap: function(map) {
@@ -101,5 +100,9 @@ OpenLayers.Layer.Buildings = OpenLayers.Class(OpenLayers.Layer, {
 
     setDate: function(date)  {
         return this.osmb.setDate(date);
+    },
+
+    load: function(url, type) {
+        this.osmb.loadData(url, type);
     }
 });

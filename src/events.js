@@ -1,7 +1,7 @@
 function onResize(e) {
     setSize(e.width, e.height);
     renderAll();
-    Data.load();
+    Data.update();
 }
 
 // TODO: cleanup, no engine is using that
@@ -16,7 +16,7 @@ function onMoveEnd(e) {
     renderAll();
     // check, whether viewport is still within loaded data bounding box
     if (nw[LAT] > Data.n || nw[LON] < Data.w || se[LAT] < Data.s || se[LON] > Data.e) {
-        Data.load(); // => fadeIn() => renderAll()
+        Data.update(); // => fadeIn() => renderAll()
     }
 }
 
@@ -29,6 +29,6 @@ function onZoomStart(e) {
 function onZoomEnd(e) {
     isZooming = false;
     setZoom(e.zoom); // => Data.scale()
-    Data.load(); // => fadeIn()
+    Data.update(); // => fadeIn()
     renderAll();
 }

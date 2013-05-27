@@ -27,10 +27,8 @@ var Shadows = {
 
         context.clearRect(0, 0, width, height);
 
-        if (!this.enabled ||
-            !Data.rendering || // Data.rendering needed
-            // show on high zoom levels only and avoid rendering during zoom
-            zoom < minZoom || isZooming) {
+        // show on high zoom levels only and avoid rendering during zoom
+        if (!this.enabled || zoom < minZoom || isZooming) {
             return;
         }
 

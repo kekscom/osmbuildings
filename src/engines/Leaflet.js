@@ -16,8 +16,8 @@ L.BuildingsLayer = L.Class.extend({
     onMove: function() {
         var mp = L.DomUtil.getPosition(this.map._mapPane);
         this.osmb.setCamOffset(
-            this.lastX - mp.x,
-            this.lastY - mp.y
+            this.lastX-mp.x,
+            this.lastY-mp.y
         );
         this.osmb.render();
     },
@@ -66,7 +66,7 @@ L.BuildingsLayer = L.Class.extend({
         if (this.osmb) {
             parentNode.appendChild(this.container);
         } else {
-            this.osmb = new OSMBuildings(this.options.url);
+            this.osmb = new OSMBuildings();
             this.container = this.osmb.appendTo(parentNode);
             this.osmb.maxZoom = this.map._layersMaxZoom;
         }
@@ -107,8 +107,6 @@ L.BuildingsLayer = L.Class.extend({
 //        }
 
         this.map.attributionControl.addAttribution(OSMBuildings.ATTRIBUTION);
-
-        this.osmb.loadData();
         this.osmb.render(); // in case of for re-adding this layer
     },
 
@@ -137,5 +135,9 @@ L.BuildingsLayer = L.Class.extend({
 
     setDate: function(date)  {
         return this.osmb.setDate(date);
+    },
+
+    load: function(url, type) {
+        this.osmb.loadData(url, type);
     }
 });

@@ -1,22 +1,47 @@
 // http://overpass-api.de/api/interpreter?data=[out:json];(way[%22building%22](52.405,13.35,52.410,13.4);node(w);way[%22building:part%22=%22yes%22](52.405,13.35,52.410,13.4);node(w);relation[%22building%22](52.405,13.35,52.410,13.4);way(r);node(w););out;
 // http://overpass.osm.rambler.ru/cgi/xapi?
 
+/*
+// http://graphviz-dev.appspot.com/
+digraph g{
+    CityGML -> XML
+    KML -> XML
+    OSM -> XML [style=dotted]
+    XML -> SQL
+    Shape -> SQL
+    SQL -> GeoJSON
+    CartoDB -> GeoJSON
+    GeoJSON -> Client
+    OSM -> XAPI
+    XAPI -> JSON
+    XAPI -> XML [style=dotted]
+    CartoDB -> JSON [style=dotted]
+    JSON -> Client
+
+    CartoDB [shape=box]
+    SQL [shape=box]
+    XAPI [shape=box]
+
+    Client [shape=box,fillcolor="green",style="filled,rounded"]
+}
+*/
+
 var Data = {
 
+    url: '',
+    type: '',
     raw: [],
     rendering: [],
 
     init: function() {},
 
-    setUrl: function(url) {
-        this.url = url;
+    load: function(url, type) {
+        this.url  = url;
+        this.type = type;
+        this.update();
     },
 
-    setLatLon: function(isLatLon) {
-        this.isLatLon = isLatLon;
-    },
-
-    load: function() {
+    update: function() {
         if (!this.url || zoom < MIN_ZOOM) {
             return;
         }
@@ -25,21 +50,40 @@ var Data = {
         var nw = pixelToGeo(originX      -halfWidth, originY       -halfHeight),
             se = pixelToGeo(originX+width+halfWidth, originY+height+halfHeight);
 
-        request(template(this.url, { w:nw[LON], n:nw[LAT], e:se[LON], s:se[LAT] }), this.set.bind(this));
+        request(template(this.url, { w:nw[LON], n:nw[LAT], e:se[LON], s:se[LAT] }), function(res) {
+            this.set(res, this.type);
+        }.bind(this));
     },
 
-    set: function(data) {
+    set: function(data, type) {
+        type = /*(type && type.toLowerCase()) ||*/ 'geojson';
+
         if (!data) {
             return;
         }
 
-        var rawData = this.raw = importGeoJSON(data);
+        var i, il,
+            rawData = this.raw,
+            presentItems = {};
 
-        // TODO: improve this with bbox handling
-        var footprint, idList = [];
-        this.n = -90; this.w = 180; this.s = 90; this.e = -180;
-        for (var i = 0, il = rawData.length; i < il; i++) {
-            idList[i] = rawData[i].id;
+        // identify already present buildings to fade in new ones
+        for (i = 0, il = rawData.length; i < il; i++) {
+            presentItems[rawData[i].id] = 1;
+        }
+
+        if (type === 'geojson') {
+            rawData = this.raw = readGeoJSON(data);
+        }
+
+        this.n =  -90;
+        this.w =  180;
+        this.s =   90;
+        this.e = -180;
+
+        var footprint;
+        for (i = 0, il = rawData.length; i < il; i++) {
+            rawData[i].isNew = !presentItems[rawData[i].id];
+            // TODO: use bounding boxes instead of iterating over all points
             footprint = rawData[i].footprint;
             for (var j = 0, jl = footprint.length-1; j < jl; j+=2) {
                 this.n = max(footprint[j  ], this.n);
@@ -48,42 +92,22 @@ var Data = {
                 this.w = min(footprint[j+1], this.w);
             }
         }
-/*
-        // offset between old and new data set
-        if (this.raw) {
-            offX = this.x-meta.x;
-            offY = this.y-meta.y;
 
-            // identify already present buildings to fade in new ones
-            for (var i = 0, il = data.length; i < il; i++) {
-                // id key: x,y of first point - good enough
-                idList[i] = (data[i].footprint[0] + offX) + ',' + (data[i].footprint[1] + offY);
-            }
-        }
-*/
-        this.scale(zoom, true);
+        this.scale(zoom);
         fadeIn();
     },
 
-/*
-    // identify already present buildings to fade in new ones
-    item.height = min(resData[i].height, maxHeight);
-    item.isNew = !(idList && ~idList.indexOf(k));
-
-    resMeta = resData = idList = null; // gc
-*/
-
-    scale: function(zoom, isNew) {
-        var thisRaw = this.raw,
+    scale: function(zoom) {
+        var i, il, j, jl,
+            rawData = this.raw,
             res = [],
-            j, jl,
             item,
             polygon, px,
             minHeight, footprint,
             zoomDelta = maxZoom-zoom;
 
-        for (var i = 0, il = thisRaw.length; i < il; i++) {
-            item = thisRaw[i];
+        for (i = 0, il = rawData.length; i < il; i++) {
+            item = rawData[i];
 
             minHeight = item.minHeight >> zoomDelta;
             if (minHeight > maxHeight) {
@@ -108,28 +132,13 @@ var Data = {
                 height:    min(item.height >> zoomDelta, maxHeight),
                 minHeight: minHeight,
                 wallColor: (item.wallColor && item.wallColor.adjustAlpha(zoomAlpha) + ''),
-                altColor:  (item.wallColor && item.altColor.adjustAlpha(zoomAlpha) + ''),
+                altColor:  (item.wallColor && item.altColor.adjustAlpha( zoomAlpha) + ''),
                 roofColor: (item.roofColor && item.roofColor.adjustAlpha(zoomAlpha) + ''),
                 center:    center(footprint),
-                isNew:     isNew
+                isNew:     item.isNew
             });
         }
 
         this.rendering = res;
     }
-};
-
-this.geoJSON = function(url) {
-    var type = typeof url,
-        thisData = this.Data;
-    thisData.setLatLon(false);
-    if (type === 'string') {
-        thisData.setUrl(url);
-        thisData.load();
-    }
-    if (type === 'object') {
-        // url is a GeoJSON object, just set it
-        thisData.set(url);
-    }
-    return this;
 };

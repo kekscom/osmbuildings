@@ -12,10 +12,8 @@ var FlatBuildings = {
 
         context.clearRect(0, 0, width, height);
 
-        // Data.rendering needed
-        if (!Data.rendering ||
-            // show on high zoom levels only and avoid rendering during zoom
-            zoom < minZoom || isZooming) {
+        // show on high zoom levels only and avoid rendering during zoom
+        if (zoom < minZoom || isZooming) {
             return;
         }
 

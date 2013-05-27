@@ -16,10 +16,10 @@ exports.srcFiles = [
     srcPath + '/lib/Color.js',
     srcPath + '/lib/SunPosition.js',
     srcPath + '/import/GeoJSON.js',
-    srcPath + '/import/OSMBuildings.js',
+    srcPath + '/import/OSMXAPI.js',
     srcPath + '/constants.js',
     srcPath + '/geometry.js',
-        srcPath + '/prefix.class.js',
+        srcPath + '/class.js',
         srcPath + '/variables.js',
         srcPath + '/functions.js',
         srcPath + '/Layers.js',
@@ -30,7 +30,6 @@ exports.srcFiles = [
         srcPath + '/Shadows.js',
         srcPath + '/FlatBuildings.js',
         srcPath + '/public.js',
-        srcPath + '/suffix.class.js',
     srcPath + '/suffix.js'
 ];
 

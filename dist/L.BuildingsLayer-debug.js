@@ -5,9 +5,8 @@
  */
 //****** file: prefix.js ******
 
-/*jshint bitwise:false */
+var OSMBuildings = (function() {
 
-(function(global) {
     'use strict';
 
 
@@ -229,10 +228,10 @@ var getSunPosition = (function() {
 // beware, it's not easy to use this standalone
 // dependencies to: makeClockwiseWinding() and {materialColors}
 
-var importGeoJSON = function(data, res) {
+var readGeoJSON = function(data, res) {
     var i, il;
 
-    // recursions pass res by referece to be filled
+    // recursions pass res by reference to be filled
     // finally it's returned by value, so create it on initial call
     if (res === undefined) {
         res = [];
@@ -243,7 +242,7 @@ var importGeoJSON = function(data, res) {
 
     if (collection) {
         for (i = 0, il = collection.length; i < il; i++) {
-            importGeoJSON(collection[i], res);
+            readGeoJSON(collection[i], res);
         }
         return res;
     }
@@ -311,12 +310,12 @@ var importGeoJSON = function(data, res) {
 };
 
 
-//****** file: OSMBuildings.js ******
+//****** file: OSMXAPI.js ******
 
 // beware, it's not easy to use this standalone
 // dependencies to: makeClockwiseWinding() and {materialColors}
 
-var importOSMBuildings = (function() {
+var readOSMXAPI = (function() {
 
     var YARD_TO_METER = 0.9144;
     var FOOT_TO_METER = 0.3048;
@@ -637,6 +636,8 @@ var importOSMBuildings = (function() {
 var VERSION = '0.1.8a',
     ATTRIBUTION = '&copy; <a href="http://osmbuildings.org">OSM Buildings</a>',
 
+//  OSM_XAPI_URL = 'http://overpass-api.de/api/interpreter?data=[out:json];(way[%22building%22](52.405,13.35,52.410,13.4);node(w);way[%22building:part%22=%22yes%22](52.405,13.35,52.410,13.4);node(w);relation[%22building%22](52.405,13.35,52.410,13.4);way(r);node(w););out;'
+
     PI = Math.PI,
     HALF_PI = PI/2,
     QUARTER_PI = PI/4,
@@ -776,9 +777,9 @@ function makeClockwiseWinding(points) {
 }
 
 
-//****** file: prefix.class.js ******
+//****** file: class.js ******
 
-    global.OSMBuildings = function(u) {
+    var osmb = function(url) {
 
 
 //****** file: variables.js ******
@@ -872,8 +873,8 @@ function request(url, callbackFn) {
     var el = doc.documentElement,
         callbackName = 'jsonpCallback',
         script = doc.createElement('script');
-    global[callbackName] = function(res) {
-        delete global[callbackName];
+    window[callbackName] = function(res) {
+        delete window[callbackName];
         el.removeChild(script);
         callbackFn(res);
     };
@@ -941,22 +942,47 @@ var Layers = {
 // http://overpass-api.de/api/interpreter?data=[out:json];(way[%22building%22](52.405,13.35,52.410,13.4);node(w);way[%22building:part%22=%22yes%22](52.405,13.35,52.410,13.4);node(w);relation[%22building%22](52.405,13.35,52.410,13.4);way(r);node(w););out;
 // http://overpass.osm.rambler.ru/cgi/xapi?
 
+/*
+// http://graphviz-dev.appspot.com/
+digraph g{
+    CityGML -> XML
+    KML -> XML
+    OSM -> XML [style=dotted]
+    XML -> SQL
+    Shape -> SQL
+    SQL -> GeoJSON
+    CartoDB -> GeoJSON
+    GeoJSON -> Client
+    OSM -> XAPI
+    XAPI -> JSON
+    XAPI -> XML [style=dotted]
+    CartoDB -> JSON [style=dotted]
+    JSON -> Client
+
+    CartoDB [shape=box]
+    SQL [shape=box]
+    XAPI [shape=box]
+
+    Client [shape=box,fillcolor="green",style="filled,rounded"]
+}
+*/
+
 var Data = {
 
+    url: '',
+    type: '',
     raw: [],
     rendering: [],
 
     init: function() {},
 
-    setUrl: function(url) {
-        this.url = url;
+    load: function(url, type) {
+        this.url  = url;
+        this.type = type;
+        this.update();
     },
 
-    setLatLon: function(isLatLon) {
-        this.isLatLon = isLatLon;
-    },
-
-    load: function() {
+    update: function() {
         if (!this.url || zoom < MIN_ZOOM) {
             return;
         }
@@ -965,21 +991,40 @@ var Data = {
         var nw = pixelToGeo(originX      -halfWidth, originY       -halfHeight),
             se = pixelToGeo(originX+width+halfWidth, originY+height+halfHeight);
 
-        request(template(this.url, { w:nw[LON], n:nw[LAT], e:se[LON], s:se[LAT] }), this.set.bind(this));
+        request(template(this.url, { w:nw[LON], n:nw[LAT], e:se[LON], s:se[LAT] }), function(res) {
+            this.set(res, this.type);
+        }.bind(this));
     },
 
-    set: function(data) {
+    set: function(data, type) {
+        type = /*(type && type.toLowerCase()) ||*/ 'geojson';
+
         if (!data) {
             return;
         }
 
-        var rawData = this.raw = importGeoJSON(data);
+        var i, il,
+            rawData = this.raw,
+            presentItems = {};
 
-        // TODO: improve this with bbox handling
-        var footprint, idList = [];
-        this.n = -90; this.w = 180; this.s = 90; this.e = -180;
-        for (var i = 0, il = rawData.length; i < il; i++) {
-            idList[i] = rawData[i].id;
+        // identify already present buildings to fade in new ones
+        for (i = 0, il = rawData.length; i < il; i++) {
+            presentItems[rawData[i].id] = 1;
+        }
+
+        if (type === 'geojson') {
+            rawData = this.raw = readGeoJSON(data);
+        }
+
+        this.n =  -90;
+        this.w =  180;
+        this.s =   90;
+        this.e = -180;
+
+        var footprint;
+        for (i = 0, il = rawData.length; i < il; i++) {
+            rawData[i].isNew = !presentItems[rawData[i].id];
+            // TODO: use bounding boxes instead of iterating over all points
             footprint = rawData[i].footprint;
             for (var j = 0, jl = footprint.length-1; j < jl; j+=2) {
                 this.n = max(footprint[j  ], this.n);
@@ -988,42 +1033,22 @@ var Data = {
                 this.w = min(footprint[j+1], this.w);
             }
         }
-/*
-        // offset between old and new data set
-        if (this.raw) {
-            offX = this.x-meta.x;
-            offY = this.y-meta.y;
 
-            // identify already present buildings to fade in new ones
-            for (var i = 0, il = data.length; i < il; i++) {
-                // id key: x,y of first point - good enough
-                idList[i] = (data[i].footprint[0] + offX) + ',' + (data[i].footprint[1] + offY);
-            }
-        }
-*/
-        this.scale(zoom, true);
+        this.scale(zoom);
         fadeIn();
     },
 
-/*
-    // identify already present buildings to fade in new ones
-    item.height = min(resData[i].height, maxHeight);
-    item.isNew = !(idList && ~idList.indexOf(k));
-
-    resMeta = resData = idList = null; // gc
-*/
-
-    scale: function(zoom, isNew) {
-        var thisRaw = this.raw,
+    scale: function(zoom) {
+        var i, il, j, jl,
+            rawData = this.raw,
             res = [],
-            j, jl,
             item,
             polygon, px,
             minHeight, footprint,
             zoomDelta = maxZoom-zoom;
 
-        for (var i = 0, il = thisRaw.length; i < il; i++) {
-            item = thisRaw[i];
+        for (i = 0, il = rawData.length; i < il; i++) {
+            item = rawData[i];
 
             minHeight = item.minHeight >> zoomDelta;
             if (minHeight > maxHeight) {
@@ -1048,30 +1073,15 @@ var Data = {
                 height:    min(item.height >> zoomDelta, maxHeight),
                 minHeight: minHeight,
                 wallColor: (item.wallColor && item.wallColor.adjustAlpha(zoomAlpha) + ''),
-                altColor:  (item.wallColor && item.altColor.adjustAlpha(zoomAlpha) + ''),
+                altColor:  (item.wallColor && item.altColor.adjustAlpha( zoomAlpha) + ''),
                 roofColor: (item.roofColor && item.roofColor.adjustAlpha(zoomAlpha) + ''),
                 center:    center(footprint),
-                isNew:     isNew
+                isNew:     item.isNew
             });
         }
 
         this.rendering = res;
     }
-};
-
-this.geoJSON = function(url) {
-    var type = typeof url,
-        thisData = this.Data;
-    thisData.setLatLon(false);
-    if (type === 'string') {
-        thisData.setUrl(url);
-        thisData.load();
-    }
-    if (type === 'object') {
-        // url is a GeoJSON object, just set it
-        thisData.set(url);
-    }
-    return this;
 };
 
 
@@ -1145,7 +1155,7 @@ function setStyle(style) {
 function onResize(e) {
     setSize(e.width, e.height);
     renderAll();
-    Data.load();
+    Data.update();
 }
 
 // TODO: cleanup, no engine is using that
@@ -1160,7 +1170,7 @@ function onMoveEnd(e) {
     renderAll();
     // check, whether viewport is still within loaded data bounding box
     if (nw[LAT] > Data.n || nw[LON] < Data.w || se[LAT] < Data.s || se[LON] > Data.e) {
-        Data.load(); // => fadeIn() => renderAll()
+        Data.update(); // => fadeIn() => renderAll()
     }
 }
 
@@ -1173,7 +1183,7 @@ function onZoomStart(e) {
 function onZoomEnd(e) {
     isZooming = false;
     setZoom(e.zoom); // => Data.scale()
-    Data.load(); // => fadeIn()
+    Data.update(); // => fadeIn()
     renderAll();
 }
 
@@ -1209,10 +1219,8 @@ function renderAll() {
 function render() {
     context.clearRect(0, 0, width, height);
 
-    // Data.rendering needed
-    if (!Data.rendering ||
-        // show on high zoom levels only and avoid rendering during zoom
-        zoom < minZoom || isZooming) {
+    // show on high zoom levels only and avoid rendering during zoom
+    if (zoom < minZoom || isZooming) {
         return;
     }
 
@@ -1262,7 +1270,7 @@ function render() {
 
         // when fading in, use a dynamic height
         h = item.isNew ? item.height*fadeFactor : item.height;
-        // precalculating projection height scale
+        // precalculating projection height factor
         m = camZ / (camZ-h);
 
         // prepare same calculations for min_height if applicable
@@ -1394,10 +1402,8 @@ var Shadows = {
 
         context.clearRect(0, 0, width, height);
 
-        if (!this.enabled ||
-            !Data.rendering || // Data.rendering needed
-            // show on high zoom levels only and avoid rendering during zoom
-            zoom < minZoom || isZooming) {
+        // show on high zoom levels only and avoid rendering during zoom
+        if (!this.enabled || zoom < minZoom || isZooming) {
             return;
         }
 
@@ -1559,10 +1565,8 @@ var FlatBuildings = {
 
         context.clearRect(0, 0, width, height);
 
-        // Data.rendering needed
-        if (!Data.rendering ||
-            // show on high zoom levels only and avoid rendering during zoom
-            zoom < minZoom || isZooming) {
+        // show on high zoom levels only and avoid rendering during zoom
+        if (zoom < minZoom || isZooming) {
             return;
         }
 
@@ -1651,7 +1655,24 @@ this.appendTo = function(parentNode) {
     return Layers.init(parentNode);
 };
 
-this.loadData    = Data.load;
+/**
+ * @param {string} url string
+ * @param {string} optional data type, default: GeoJSON
+ */
+this.loadData = function(url, type) {
+    Data.load(url, type);
+    return this;
+};
+
+/**
+ * @param {object} data object
+ * @param {string} optional data type, default: GeoJSON (no other types supported yet)
+ */
+this.setData = function(data, type) {
+    Data.set(data, type);
+    return this;
+};
+
 this.onMoveEnd   = onMoveEnd;
 this.onZoomEnd   = onZoomEnd;
 this.onZoomStart = onZoomStart;
@@ -1661,20 +1682,18 @@ this.setZoom     = setZoom;
 this.render      = render;
 
 
-//****** file: suffix.class.js ******
-
-        Data.setUrl(url);
-    };
-
-    global.OSMBuildings.VERSION = VERSION;
-    global.OSMBuildings.ATTRIBUTION = ATTRIBUTION;
-
-
 //****** file: suffix.js ******
 
-}(this));
+    };
 
-/*jshint bitwise:true */
+    osmb.VERSION = VERSION;
+    osmb.ATTRIBUTION = ATTRIBUTION;
+    osmb.OSM_XAPI_URL = OSM_XAPI_URL;
+
+    return osmb;
+
+}());
+
 
 //****** file: Leaflet.js ******
 
@@ -1696,8 +1715,8 @@ L.BuildingsLayer = L.Class.extend({
     onMove: function() {
         var mp = L.DomUtil.getPosition(this.map._mapPane);
         this.osmb.setCamOffset(
-            this.lastX - mp.x,
-            this.lastY - mp.y
+            this.lastX-mp.x,
+            this.lastY-mp.y
         );
         this.osmb.render();
     },
@@ -1746,7 +1765,7 @@ L.BuildingsLayer = L.Class.extend({
         if (this.osmb) {
             parentNode.appendChild(this.container);
         } else {
-            this.osmb = new OSMBuildings(this.options.url);
+            this.osmb = new OSMBuildings();
             this.container = this.osmb.appendTo(parentNode);
             this.osmb.maxZoom = this.map._layersMaxZoom;
         }
@@ -1787,8 +1806,6 @@ L.BuildingsLayer = L.Class.extend({
 //        }
 
         this.map.attributionControl.addAttribution(OSMBuildings.ATTRIBUTION);
-
-        this.osmb.loadData();
         this.osmb.render(); // in case of for re-adding this layer
     },
 
@@ -1817,6 +1834,11 @@ L.BuildingsLayer = L.Class.extend({
 
     setDate: function(date)  {
         return this.osmb.setDate(date);
+    },
+
+    load: function(url, type) {
+        this.osmb.loadData(url, type);
     }
 });
+
 
