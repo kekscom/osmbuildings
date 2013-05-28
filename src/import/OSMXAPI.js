@@ -1,11 +1,12 @@
 // beware, it's not easy to use this standalone
-// dependencies to: makeClockwiseWinding() and {materialColors}
+// dependencies to: makeClockwiseWinding()
 
 var readOSMXAPI = (function() {
 
-    var YARD_TO_METER = 0.9144;
-    var FOOT_TO_METER = 0.3048;
-    var INCH_TO_METER = 0.0254;
+    var YARD_TO_METER = 0.9144,
+        FOOT_TO_METER = 0.3048,
+        INCH_TO_METER = 0.0254,
+        METERS_PER_LEVEL = 3;
 
     function parseDimension(str) {
         var value = parseFloat(str);
@@ -37,7 +38,8 @@ var readOSMXAPI = (function() {
         lightgrey: '#d3d3d3',
         lightgray: '#d3d3d3',
         yellow: '#ffff00',
-        red: '#ff0000'
+        red: '#ff0000',
+        blue: '#0000ff'
     };
 
     function parseColor(str) {
@@ -48,8 +50,8 @@ var readOSMXAPI = (function() {
         }
 
 //      living: '#f08060',
-//		nonliving: '#cccccc',
-//		worship: '#80f080'
+//          nonliving: '#cccccc',
+//          worship: '#80f080'
         return namedColors[str] || null;
     }
 
@@ -60,12 +62,14 @@ var readOSMXAPI = (function() {
         bricks: 'brick',
         glas: 'glass',
         glassfront: 'glass',
-        gras: 'grass',
-        gravel: 'stone',
+        grass: 'plants',
+        masonry: 'stone',
+        granite: 'stone',
         panels: 'panel',
         paving_stones: 'stone',
         plastered: 'plaster',
         rooftiles: 'roof_tiles',
+        roofingfelt: 'tar_paper',
         sandstone: 'stone',
         sheet: 'canvas',
         sheets: 'canvas',
@@ -74,8 +78,35 @@ var readOSMXAPI = (function() {
         slates: 'slate',
         steel: 'metal',
         tar: 'tar_paper',
+        tent: 'canvas',
+        thatch: 'plants',
         tile: 'roof_tiles',
         tiles: 'roof_tiles'
+    };
+
+    // cardboard
+    // eternit
+    // limestone
+    // straw
+
+    var materialColors = {
+        brick: '#cc7755',
+        bronze: '#ffeecc',
+        canvas: '#fff8f0',
+        concrete: '#999999',
+        copper: '#a0e0d0',
+        glass: '#e8f8f8',
+        gold: '#ffcc00',
+        plants: '#009933',
+        metal: '#aaaaaa',
+        panel: '#fff8f0',
+        plaster: '#999999',
+        roof_tiles: '#f08060',
+        silver: '#cccccc',
+        slate: '#666666',
+        stone: '#996666',
+        tar_paper: '#333333',
+        wood: '#deb887'
     };
 
     function parseMaterial(str) {
@@ -85,7 +116,7 @@ var readOSMXAPI = (function() {
             return str;
         }
 
-        return baseMaterials[str] || str;
+        return materialColors[baseMaterials[str] || str] || null;
     }
 
     function isBuilding(data) {
@@ -137,18 +168,19 @@ var readOSMXAPI = (function() {
             return;
         }
 
-        var footprint = [];
+        var footprint = [], p;
         for (var i = 0, il = points.length; i < il; i++) {
-            footprint[i] = nodes[ points[i] ];
+            p = nodes[ points[i] ];
+            footprint.push(p[0], p[1]);
         }
 
         // do not close polygon yet
-        if (footprint[footprint.length-1] !== footprint[0]) {
-            footprint.push(footprint[0]);
+        if (footprint[footprint.length-2] !== footprint[0] && footprint[footprint.length-1] !== footprint[1]) {
+            footprint.push(footprint[0], footprint[1]);
         }
 
         // can't span a polygon with just 2 points (+ start & end)
-        if (footprint.length < 4) {
+        if (footprint.length < 8) {
             return;
         }
 
@@ -196,23 +228,24 @@ var readOSMXAPI = (function() {
             minHeight = tags['building:min_level']*METERS_PER_LEVEL <<0;
         }
 
+        var wallColor, roofColor;
+
         // wall material
         if (tags['building:material']) {
-            color = parseMaterial(tags['building:material']);
+            wallColor = parseMaterial(tags['building:material']);
         }
         if (tags['building:facade:material']) {
-            color = parseMaterial(tags['building:facade:material']);
+            wallColor = parseMaterial(tags['building:facade:material']);
         }
         if (tags['building:cladding']) {
-            color = parseMaterial(tags['building:cladding']);
+            wallColor = parseMaterial(tags['building:cladding']);
         }
         // wall color
-        var color;
         if (tags['building:color']) {
-            color = parseColor(tags['building:color']);
+            wallColor = parseColor(tags['building:color']);
         }
         if (tags['building:colour']) {
-            color = parseColor(tags['building:colour']);
+            wallColor = parseColor(tags['building:colour']);
         }
 
         // roof material
@@ -223,7 +256,6 @@ var readOSMXAPI = (function() {
             roofColor = parseMaterial(tags['building:roof:material']);
         }
         // roof color
-        var roofColor;
         if (tags['roof:color']) {
             roofColor = parseColor(tags['roof:color']);
         }
@@ -238,15 +270,15 @@ var readOSMXAPI = (function() {
         }
 
         return {
-            height: height,
+            height:    height,
             minHeight: minHeight,
-            color: color,
+            wallColor: wallColor,
             roofColor: roofColor
         };
     }
 
     function processNode(node) {
-        nodes[node.id] = node.lat.toFixed(5) + ' ' + node.lon.toFixed(5);
+        nodes[node.id] = [node.lat, node.lon];
     }
 
     function processWay(way) {
@@ -254,11 +286,11 @@ var readOSMXAPI = (function() {
         if (isBuilding(way)) {
             tags = filterTags(way.tags);
             if ((footprint = getFootprint(way.nodes))) {
-                addResult(tags, footprint);
+                addResult(way.id, tags, footprint);
             }
         } else {
             tags = way.tags;
-            if (!tags.highway && !tags.railway && !tags.landuse) { // TODO: add more filters
+            if (tags && !tags.highway && !tags.railway && !tags.landuse) { // TODO: add more filters
                 ways[way.id] = way;
             }
         }
@@ -274,23 +306,20 @@ var readOSMXAPI = (function() {
                     tags = filterTags(way.tags);
                     if ((footprint = getFootprint(way.nodes))) {
                         tags = mergeTags(tags, relTags);
-                        addResult(tags, footprint);
+                        addResult(way.id, tags, footprint);
                     }
                 }
             }
         }
     }
 
-    function addResult(tags, footprint) {
-        res.push({
-            id:        tags.id,
-            footprint: makeClockwiseWinding(footprint),
-            height:    tags.height || DEFAULT_HEIGHT,
-            minHeight: tags.minHeight,
-            wallColor: tags.color,
-            altColor:  (tags.color && tags.color.adjustLightness(0.8)),
-            roofColor: tags.roofColor
-        });
+    function addResult(id, tags, footprint) {
+        var item = { id:id, footprint:makeClockwiseWinding(footprint) };
+        if (tags.height)    item.height    = tags.height;
+        if (tags.minHeight) item.minHeight = tags.minHeight;
+        if (tags.wallColor) item.wallColor = tags.wallColor;
+        if (tags.roofColor) item.roofColor = tags.roofColor;
+        res.push(item);
     }
 
     var nodes, ways, res;

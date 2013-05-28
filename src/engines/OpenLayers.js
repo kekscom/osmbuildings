@@ -90,10 +90,6 @@ OpenLayers.Layer.Buildings = OpenLayers.Class(OpenLayers.Layer, {
 
     // TODO: refactor these ugly bindings
 
-    geoJSON: function(url) {
-        return this.osmb.geoJSON(url);
-    },
-
     setStyle: function(style)  {
         return this.osmb.setStyle(style);
     },
@@ -102,7 +98,11 @@ OpenLayers.Layer.Buildings = OpenLayers.Class(OpenLayers.Layer, {
         return this.osmb.setDate(date);
     },
 
-    load: function(url, type) {
-        this.osmb.loadData(url, type);
+    load: function(url) {
+        this.osmb.loadData(url);
+    },
+
+    geoJSON: function(data) {
+        this.osmb.setData(data);
     }
 });

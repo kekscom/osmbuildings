@@ -10,7 +10,7 @@ function fadeIn() {
             fadeFactor = 1;
             // unset 'already present' marker
             for (var i = 0, il = Data.rendering.length; i < il; i++) {
-                Data.rendering[i].isNew = 0;
+                Data.rendering[i].isNew = false;
             }
         }
         Shadows.render();
@@ -89,7 +89,7 @@ function render() {
 
         roof = []; // typed array would be created each pass and is way too slow
 
-        for (j = 0, jl = footprint.length - 3; j < jl; j += 2) {
+        for (j = 0, jl = footprint.length-3; j < jl; j += 2) {
             ax = footprint[j];
             ay = footprint[j+1];
             bx = footprint[j+2];

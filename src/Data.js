@@ -29,15 +29,13 @@ digraph g{
 var Data = {
 
     url: '',
-    type: '',
     raw: [],
     rendering: [],
 
     init: function() {},
 
-    load: function(url, type) {
-        this.url  = url;
-        this.type = type;
+    load: function(url) {
+        this.url = url;
         this.update();
     },
 
@@ -50,14 +48,20 @@ var Data = {
         var nw = pixelToGeo(originX      -halfWidth, originY       -halfHeight),
             se = pixelToGeo(originX+width+halfWidth, originY+height+halfHeight);
 
-        request(template(this.url, { w:nw[LON], n:nw[LAT], e:se[LON], s:se[LAT] }), function(res) {
-            this.set(res, this.type);
-        }.bind(this));
+        if (activeRequest) {
+            activeRequest.abort();
+        }
+
+        activeRequest = xhr(template(this.url, {
+            w: nw[LON],
+            n: nw[LAT],
+            e: se[LON],
+            s: se[LAT]
+        }),
+        this.set.bind(this));
     },
 
-    set: function(data, type) {
-        type = /*(type && type.toLowerCase()) ||*/ 'geojson';
-
+    set: function(data) {
         if (!data) {
             return;
         }
@@ -71,8 +75,10 @@ var Data = {
             presentItems[rawData[i].id] = 1;
         }
 
-        if (type === 'geojson') {
-            rawData = this.raw = readGeoJSON(data);
+        if (data.type === 'FeatureCollection') { // GeoJSON
+            rawData = this.raw = readGeoJSON(data.features);
+        } else if (data.osm3s) { // XAPI
+            rawData = this.raw = readOSMXAPI(data.elements);
         }
 
         this.n =  -90;
@@ -80,11 +86,25 @@ var Data = {
         this.s =   90;
         this.e = -180;
 
-        var footprint;
+        var item, footprint;
+
         for (i = 0, il = rawData.length; i < il; i++) {
-            rawData[i].isNew = !presentItems[rawData[i].id];
+            item = rawData[i];
+            item.isNew = !presentItems[item.id];
+
+            if (item.wallColor) {
+                item.wallColor = Color.parse(item.wallColor);
+                item.altColor  = item.wallColor.adjustLightness(0.8);
+            }
+
+            if (item.roofColor) {
+                item.roofColor = Color.parse(item.roofColor);
+            }
+
+            item.center = center(item.footprint),
+
             // TODO: use bounding boxes instead of iterating over all points
-            footprint = rawData[i].footprint;
+            footprint = item.footprint;
             for (var j = 0, jl = footprint.length-1; j < jl; j+=2) {
                 this.n = max(footprint[j  ], this.n);
                 this.e = max(footprint[j+1], this.e);
@@ -103,13 +123,18 @@ var Data = {
             res = [],
             item,
             polygon, px,
-            minHeight, footprint,
+            height, minHeight, footprint, center,
             zoomDelta = maxZoom-zoom;
 
         for (i = 0, il = rawData.length; i < il; i++) {
             item = rawData[i];
 
-            minHeight = item.minHeight >> zoomDelta;
+            height = (item.height || DEFAULT_HEIGHT)*HEIGHT_SCALE >> zoomDelta;
+            if (!height) {
+                continue;
+            }
+
+            minHeight = item.minHeight*HEIGHT_SCALE >> zoomDelta;
             if (minHeight > maxHeight) {
                 continue;
             }
@@ -127,14 +152,17 @@ var Data = {
                 continue;
             }
 
+            px = geoToPixel(item.center[0], item.center[1]);
+            center = [px.x, px.y];
+
             res.push({
                 footprint: footprint,
-                height:    min(item.height >> zoomDelta, maxHeight),
+                height:    min(height, maxHeight),
                 minHeight: minHeight,
                 wallColor: (item.wallColor && item.wallColor.adjustAlpha(zoomAlpha) + ''),
-                altColor:  (item.wallColor && item.altColor.adjustAlpha( zoomAlpha) + ''),
+                altColor:  (item.altColor  && item.altColor.adjustAlpha( zoomAlpha) + ''),
                 roofColor: (item.roofColor && item.roofColor.adjustAlpha(zoomAlpha) + ''),
-                center:    center(footprint),
+                center:    center,
                 isNew:     item.isNew
             });
         }

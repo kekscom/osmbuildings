@@ -29,14 +29,20 @@ function fromRange(sVal, sMin, sMax, dMin, dMax) {
     return min(max(dMin + rel * range, dMin), dMax);
 }
 
-function request(url, callbackFn) {
-    var el = doc.documentElement,
-        callbackName = 'jsonpCallback',
-        script = doc.createElement('script');
-    window[callbackName] = function(res) {
-        delete window[callbackName];
-        el.removeChild(script);
-        callbackFn(res);
+function xhr(url, callback) {
+    var req = new XMLHttpRequest();
+    req.onreadystatechange = function () {
+        if (req.readyState !== 4) {
+            return;
+        }
+        if (!req.status || req.status < 200 || req.status > 299) {
+            return;
+        }
+        if (req.responseText) {
+            callback(JSON.parse(req.responseText));
+        }
     };
-    el.insertBefore(script, el.lastChild).src = url.replace(/\{callback\}/, callbackName);
+    req.open('GET', url);
+    req.send(null);
+    return req;
 }
