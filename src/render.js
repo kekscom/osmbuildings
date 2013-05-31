@@ -49,7 +49,7 @@ function render() {
 
     // TODO: FlatBuildings are drawn separetely, data has to be split
     Data.rendering.sort(function(a, b) {
-        return distance(b.center, sortCam)/b.height - distance(a.center, sortCam)/a.height;
+        return getDistance(b.center, sortCam)/b.height - getDistance(a.center, sortCam)/a.height;
     });
 
     for (i = 0, il = Data.rendering.length; i < il; i++) {

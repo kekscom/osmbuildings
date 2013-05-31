@@ -9,10 +9,8 @@ var width = 0, height = 0,
     context,
 
     wallColor = new Color(200, 190, 180),
-    altColor = wallColor.adjustLightness(0.8),
-    roofColor = wallColor.adjustLightness(1.2),
-    //red: roofColor = new Color(240, 200, 180),
-    //green: roofColor = new Color(210, 240, 220),
+    altColor  = wallColor.setLightness(0.8),
+    roofColor = wallColor.setLightness(1.2),
 
     wallColorAlpha = wallColor + '',
     altColorAlpha  = altColor + '',

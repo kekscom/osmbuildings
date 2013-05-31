@@ -50,8 +50,8 @@ var readOSMXAPI = (function() {
         }
 
 //      living: '#f08060',
-//          nonliving: '#cccccc',
-//          worship: '#80f080'
+//      nonliving: '#cccccc',
+//      worship: '#80f080'
         return namedColors[str] || null;
     }
 
@@ -339,7 +339,6 @@ var readOSMXAPI = (function() {
             }
         }
 
-        data = nodes = ways = null; // gc
         return res;
     };
 })();

@@ -22,9 +22,9 @@ function setZoom(z) {
 
     zoomAlpha = 1 - fromRange(zoom, minZoom, maxZoom, 0, 0.3);
 
-    wallColorAlpha = wallColor.adjustAlpha(zoomAlpha) + '';
-    altColorAlpha  = altColor.adjustAlpha( zoomAlpha) + '';
-    roofColorAlpha = roofColor.adjustAlpha(zoomAlpha) + '';
+    wallColorAlpha = wallColor.setAlpha(zoomAlpha) + '';
+    altColorAlpha  = altColor.setAlpha( zoomAlpha) + '';
+    roofColorAlpha = roofColor.setAlpha(zoomAlpha) + '';
 
     // TODO: not working properly yet FIXME
     Data.scale(zoom);
@@ -39,18 +39,18 @@ function setStyle(style) {
     style = style || {};
     if (style.color || style.wallColor) {
         wallColor = Color.parse(style.color || style.wallColor);
-        wallColorAlpha = wallColor.adjustAlpha(zoomAlpha) + '';
+        wallColorAlpha = wallColor.setAlpha(zoomAlpha) + '';
 
-        altColor = wallColor.adjustLightness(0.8);
-        altColorAlpha = altColor.adjustAlpha(zoomAlpha) + '';
+        altColor = wallColor.setLightness(0.8);
+        altColorAlpha = altColor.setAlpha(zoomAlpha) + '';
 
-        roofColor = wallColor.adjustLightness(1.2);
-        roofColorAlpha = roofColor.adjustAlpha(zoomAlpha) + '';
+        roofColor = wallColor.setLightness(1.2);
+        roofColorAlpha = roofColor.setAlpha(zoomAlpha) + '';
     }
 
     if (style.roofColor) {
         roofColor = Color.parse(style.roofColor);
-        roofColorAlpha = roofColor.adjustAlpha(zoomAlpha) + '';
+        roofColorAlpha = roofColor.setAlpha(zoomAlpha) + '';
     }
 
     if (style.shadows !== undefined) {

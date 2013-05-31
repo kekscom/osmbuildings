@@ -67,18 +67,17 @@ var Data = {
         }
 
         var i, il,
-            rawData = this.raw,
             presentItems = {};
 
         // identify already present buildings to fade in new ones
-        for (i = 0, il = rawData.length; i < il; i++) {
-            presentItems[rawData[i].id] = 1;
+        for (i = 0, il = this.raw.length; i < il; i++) {
+            presentItems[this.raw[i].id] = 1;
         }
 
         if (data.type === 'FeatureCollection') { // GeoJSON
-            rawData = this.raw = readGeoJSON(data.features);
+            this.raw = readGeoJSON(data.features);
         } else if (data.osm3s) { // XAPI
-            rawData = this.raw = readOSMXAPI(data.elements);
+            this.raw = readOSMXAPI(data.elements);
         }
 
         this.n =  -90;
@@ -88,20 +87,9 @@ var Data = {
 
         var item, footprint;
 
-        for (i = 0, il = rawData.length; i < il; i++) {
-            item = rawData[i];
+        for (i = 0, il = this.raw.length; i < il; i++) {
+            item = this.raw[i];
             item.isNew = !presentItems[item.id];
-
-            if (item.wallColor) {
-                item.wallColor = Color.parse(item.wallColor);
-                item.altColor  = item.wallColor.adjustLightness(0.8);
-            }
-
-            if (item.roofColor) {
-                item.roofColor = Color.parse(item.roofColor);
-            }
-
-            item.center = center(item.footprint),
 
             // TODO: use bounding boxes instead of iterating over all points
             footprint = item.footprint;
@@ -119,15 +107,19 @@ var Data = {
 
     scale: function(zoom) {
         var i, il, j, jl,
-            rawData = this.raw,
             res = [],
             item,
             polygon, px,
-            height, minHeight, footprint, center,
+            height, minHeight, footprint,
+            wallColor, altColor, roofColor
             zoomDelta = maxZoom-zoom;
 
-        for (i = 0, il = rawData.length; i < il; i++) {
-            item = rawData[i];
+        for (i = 0, il = this.raw.length; i < il; i++) {
+            wallColor = null;
+            altColor = null;
+            roofColor = null;
+
+            item = this.raw[i];
 
             height = (item.height || DEFAULT_HEIGHT)*HEIGHT_SCALE >> zoomDelta;
             if (!height) {
@@ -152,17 +144,24 @@ var Data = {
                 continue;
             }
 
-            px = geoToPixel(item.center[0], item.center[1]);
-            center = [px.x, px.y];
+            if (item.wallColor) {
+                wallColor = Color.parse(item.wallColor).setAlpha(zoomAlpha);
+                altColor  = '' + wallColor.setLightness(0.8);
+                wallColor = '' + wallColor;
+            }
+
+            if (item.roofColor) {
+                roofColor = '' + Color.parse(item.roofColor).setAlpha(zoomAlpha);
+            }
 
             res.push({
                 footprint: footprint,
                 height:    min(height, maxHeight),
                 minHeight: minHeight,
-                wallColor: (item.wallColor && item.wallColor.adjustAlpha(zoomAlpha) + ''),
-                altColor:  (item.altColor  && item.altColor.adjustAlpha( zoomAlpha) + ''),
-                roofColor: (item.roofColor && item.roofColor.adjustAlpha(zoomAlpha) + ''),
-                center:    center,
+                wallColor: wallColor,
+                altColor:  altColor,
+                roofColor: roofColor,
+                center:    getCenter(footprint),
                 isNew:     item.isNew
             });
         }
