@@ -39,10 +39,8 @@ var Color = (function() {
         if (hsla.s === 0) {
             r = g = b = hsla.l; // achromatic
         } else {
-            var
-                q = hsla.l < 0.5 ? hsla.l * (1+hsla.s) : hsla.l + hsla.s - hsla.l * hsla.s,
-                p = 2 * hsla.l-q
-            ;
+            var q = hsla.l < 0.5 ? hsla.l * (1+hsla.s) : hsla.l + hsla.s - hsla.l * hsla.s,
+                p = 2 * hsla.l-q;
             hsla.h /= 360;
             r = hue2rgb(p, q, hsla.h + 1/3);
             g = hue2rgb(p, q, hsla.h);
@@ -85,17 +83,20 @@ var Color = (function() {
     var proto = Color.prototype;
 
     proto.toString = function() {
+//        if (this.a === 1) {
+//            return '#' + ((1 << 24) + (this.r << 16) + (this.g << 8) + this.b).toString(16).slice(1, 7);
+//        }
         return 'rgba(' + [this.r <<0, this.g <<0, this.b <<0, this.a.toFixed(2)].join(',') + ')';
     };
 
-    proto.adjustLightness = function(l) {
+    proto.setLightness = function(l) {
         var hsla = Color.toHSLA(this);
         hsla.l *= l;
         hsla.l = Math.min(1, Math.max(0, hsla.l));
         return hsla2rgb(hsla);
     };
 
-    proto.adjustAlpha = function(a) {
+    proto.setAlpha = function(a) {
         return new Color(this.r, this.g, this.b, this.a * a);
     };
 
@@ -108,8 +109,7 @@ var Color = (function() {
     Color.parse = function(str) {
         var m;
         str += '';
-        if (~str.indexOf('#')) {
-            m = str.match(/^#?(\w{2})(\w{2})(\w{2})(\w{2})?$/);
+        if (~str.indexOf('#') && (m = str.match(/^#?(\w{2})(\w{2})(\w{2})(\w{2})?$/))) {
             return new Color(
                 parseInt(m[1], 16),
                 parseInt(m[2], 16),
@@ -118,8 +118,7 @@ var Color = (function() {
             );
         }
 
-        m = str.match(/rgba?\((\d+)\D+(\d+)\D+(\d+)(\D+([\d.]+))?\)/);
-        if (m) {
+        if ((m = str.match(/rgba?\((\d+)\D+(\d+)\D+(\d+)(\D+([\d.]+))?\)/))) {
             return new Color(
                 parseInt(m[1], 10),
                 parseInt(m[2], 10),
@@ -128,8 +127,7 @@ var Color = (function() {
             );
         }
 
-        m = str.match(/hsla?\(([\d.]+)\D+([\d.]+)\D+([\d.]+)(\D+([\d.]+))?\)/);
-        if (m) {
+        if ((m = str.match(/hsla?\(([\d.]+)\D+([\d.]+)\D+([\d.]+)(\D+([\d.]+))?\)/))) {
             return hsla2rgb({
                 h: parseInt(m[1], 10),
                 s: parseFloat(m[2]),
@@ -151,7 +149,7 @@ var Color = (function() {
             h = s = 0; // achromatic
         } else {
             d = max-min;
-            s = l > 0.5 ? d / (2 - max - min) : d / (max+min);
+            s = l > 0.5 ? d / (2-max-min) : d / (max+min);
             switch (max) {
                 case r: h = (g-b) / d + (g < b ? 6 : 0); break;
                 case g: h = (b-r) / d + 2; break;
@@ -160,7 +158,7 @@ var Color = (function() {
             h /= 6;
         }
 
-        return { h: h*360, s: s, l: l, a: rgba.a };
+        return { h:h*360, s:s, l:l, a:rgba.a };
     };
 
     return Color;
@@ -357,8 +355,8 @@ var readOSMXAPI = (function() {
         }
 
 //      living: '#f08060',
-//          nonliving: '#cccccc',
-//          worship: '#80f080'
+//      nonliving: '#cccccc',
+//      worship: '#80f080'
         return namedColors[str] || null;
     }
 
@@ -646,7 +644,6 @@ var readOSMXAPI = (function() {
             }
         }
 
-        data = nodes = ways = null; // gc
         return res;
     };
 })();
@@ -675,7 +672,7 @@ var VERSION      = '0.1.8a',
 
 //****** file: geometry.js ******
 
-function distance(p1, p2) {
+function getDistance(p1, p2) {
     var dx = p1[0]-p2[0],
         dy = p1[1]-p2[1];
     return dx*dx + dy*dy;
@@ -686,14 +683,14 @@ function distance(p1, p2) {
 //    return (num * 10000 << 0) / 10000;
 //}
 
-function center(points) {
+function getCenter(points) {
     var len, x = 0, y = 0;
     for (var i = 0, il = points.length-3; i < il; i += 2) {
         x += points[i];
         y += points[i+1];
     }
     len = (points.length-2) / 2;
-    return [x/len, y/len];
+    return [x/len <<0, y/len <<0];
 }
 
 function getSquareSegmentDistance(px, py, p1x, p1y, p2x, p2y) {
@@ -821,10 +818,8 @@ var width = 0, height = 0,
     context,
 
     wallColor = new Color(200, 190, 180),
-    altColor = wallColor.adjustLightness(0.8),
-    roofColor = wallColor.adjustLightness(1.2),
-    //red: roofColor = new Color(240, 200, 180),
-    //green: roofColor = new Color(210, 240, 220),
+    altColor  = wallColor.setLightness(0.8),
+    roofColor = wallColor.setLightness(1.2),
 
     wallColorAlpha = wallColor + '',
     altColorAlpha  = altColor + '',
@@ -1020,18 +1015,17 @@ var Data = {
         }
 
         var i, il,
-            rawData = this.raw,
             presentItems = {};
 
         // identify already present buildings to fade in new ones
-        for (i = 0, il = rawData.length; i < il; i++) {
-            presentItems[rawData[i].id] = 1;
+        for (i = 0, il = this.raw.length; i < il; i++) {
+            presentItems[this.raw[i].id] = 1;
         }
 
         if (data.type === 'FeatureCollection') { // GeoJSON
-            rawData = this.raw = readGeoJSON(data.features);
+            this.raw = readGeoJSON(data.features);
         } else if (data.osm3s) { // XAPI
-            rawData = this.raw = readOSMXAPI(data.elements);
+            this.raw = readOSMXAPI(data.elements);
         }
 
         this.n =  -90;
@@ -1041,20 +1035,9 @@ var Data = {
 
         var item, footprint;
 
-        for (i = 0, il = rawData.length; i < il; i++) {
-            item = rawData[i];
+        for (i = 0, il = this.raw.length; i < il; i++) {
+            item = this.raw[i];
             item.isNew = !presentItems[item.id];
-
-            if (item.wallColor) {
-                item.wallColor = Color.parse(item.wallColor);
-                item.altColor  = item.wallColor.adjustLightness(0.8);
-            }
-
-            if (item.roofColor) {
-                item.roofColor = Color.parse(item.roofColor);
-            }
-
-            item.center = center(item.footprint),
 
             // TODO: use bounding boxes instead of iterating over all points
             footprint = item.footprint;
@@ -1072,15 +1055,19 @@ var Data = {
 
     scale: function(zoom) {
         var i, il, j, jl,
-            rawData = this.raw,
             res = [],
             item,
             polygon, px,
-            height, minHeight, footprint, center,
+            height, minHeight, footprint,
+            color, wallColor, altColor, roofColor,
             zoomDelta = maxZoom-zoom;
 
-        for (i = 0, il = rawData.length; i < il; i++) {
-            item = rawData[i];
+        for (i = 0, il = this.raw.length; i < il; i++) {
+            wallColor = null;
+            altColor  = null;
+            roofColor = null;
+
+            item = this.raw[i];
 
             height = (item.height || DEFAULT_HEIGHT)*HEIGHT_SCALE >> zoomDelta;
             if (!height) {
@@ -1105,17 +1092,28 @@ var Data = {
                 continue;
             }
 
-            px = geoToPixel(item.center[0], item.center[1]);
-            center = [px.x, px.y];
+            if (item.wallColor) {
+                if ((color = Color.parse(item.wallColor))) {
+                    wallColor = color.setAlpha(zoomAlpha);
+                    altColor  = '' + wallColor.setLightness(0.8);
+                    wallColor = '' + wallColor;
+                }
+            }
+
+            if (item.roofColor) {
+                if ((color = Color.parse(item.roofColor))) {
+                    roofColor = '' + color.setAlpha(zoomAlpha);
+                }
+            }
 
             res.push({
                 footprint: footprint,
                 height:    min(height, maxHeight),
                 minHeight: minHeight,
-                wallColor: (item.wallColor && item.wallColor.adjustAlpha(zoomAlpha) + ''),
-                altColor:  (item.altColor  && item.altColor.adjustAlpha( zoomAlpha) + ''),
-                roofColor: (item.roofColor && item.roofColor.adjustAlpha(zoomAlpha) + ''),
-                center:    center,
+                wallColor: wallColor,
+                altColor:  altColor,
+                roofColor: roofColor,
+                center:    getCenter(footprint),
                 isNew:     item.isNew
             });
         }
@@ -1151,9 +1149,9 @@ function setZoom(z) {
 
     zoomAlpha = 1 - fromRange(zoom, minZoom, maxZoom, 0, 0.3);
 
-    wallColorAlpha = wallColor.adjustAlpha(zoomAlpha) + '';
-    altColorAlpha  = altColor.adjustAlpha( zoomAlpha) + '';
-    roofColorAlpha = roofColor.adjustAlpha(zoomAlpha) + '';
+    wallColorAlpha = wallColor.setAlpha(zoomAlpha) + '';
+    altColorAlpha  = altColor.setAlpha( zoomAlpha) + '';
+    roofColorAlpha = roofColor.setAlpha(zoomAlpha) + '';
 
     // TODO: not working properly yet FIXME
     Data.scale(zoom);
@@ -1168,18 +1166,18 @@ function setStyle(style) {
     style = style || {};
     if (style.color || style.wallColor) {
         wallColor = Color.parse(style.color || style.wallColor);
-        wallColorAlpha = wallColor.adjustAlpha(zoomAlpha) + '';
+        wallColorAlpha = wallColor.setAlpha(zoomAlpha) + '';
 
-        altColor = wallColor.adjustLightness(0.8);
-        altColorAlpha = altColor.adjustAlpha(zoomAlpha) + '';
+        altColor = wallColor.setLightness(0.8);
+        altColorAlpha = altColor.setAlpha(zoomAlpha) + '';
 
-        roofColor = wallColor.adjustLightness(1.2);
-        roofColorAlpha = roofColor.adjustAlpha(zoomAlpha) + '';
+        roofColor = wallColor.setLightness(1.2);
+        roofColorAlpha = roofColor.setAlpha(zoomAlpha) + '';
     }
 
     if (style.roofColor) {
         roofColor = Color.parse(style.roofColor);
-        roofColorAlpha = roofColor.adjustAlpha(zoomAlpha) + '';
+        roofColorAlpha = roofColor.setAlpha(zoomAlpha) + '';
     }
 
     if (style.shadows !== undefined) {
@@ -1281,7 +1279,7 @@ function render() {
 
     // TODO: FlatBuildings are drawn separetely, data has to be split
     Data.rendering.sort(function(a, b) {
-        return distance(b.center, sortCam)/b.height - distance(a.center, sortCam)/a.height;
+        return getDistance(b.center, sortCam)/b.height - getDistance(a.center, sortCam)/a.height;
     });
 
     for (i = 0, il = Data.rendering.length; i < il; i++) {

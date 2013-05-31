@@ -76,8 +76,7 @@ var Color = (function() {
     Color.parse = function(str) {
         var m;
         str += '';
-        if (~str.indexOf('#')) {
-            m = str.match(/^#?(\w{2})(\w{2})(\w{2})(\w{2})?$/);
+        if (~str.indexOf('#') && (m = str.match(/^#?(\w{2})(\w{2})(\w{2})(\w{2})?$/))) {
             return new Color(
                 parseInt(m[1], 16),
                 parseInt(m[2], 16),
@@ -86,8 +85,7 @@ var Color = (function() {
             );
         }
 
-        m = str.match(/rgba?\((\d+)\D+(\d+)\D+(\d+)(\D+([\d.]+))?\)/);
-        if (m) {
+        if ((m = str.match(/rgba?\((\d+)\D+(\d+)\D+(\d+)(\D+([\d.]+))?\)/))) {
             return new Color(
                 parseInt(m[1], 10),
                 parseInt(m[2], 10),
@@ -96,8 +94,7 @@ var Color = (function() {
             );
         }
 
-        m = str.match(/hsla?\(([\d.]+)\D+([\d.]+)\D+([\d.]+)(\D+([\d.]+))?\)/);
-        if (m) {
+        if ((m = str.match(/hsla?\(([\d.]+)\D+([\d.]+)\D+([\d.]+)(\D+([\d.]+))?\)/))) {
             return hsla2rgb({
                 h: parseInt(m[1], 10),
                 s: parseFloat(m[2]),

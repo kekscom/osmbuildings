@@ -111,12 +111,12 @@ var Data = {
             item,
             polygon, px,
             height, minHeight, footprint,
-            wallColor, altColor, roofColor
+            color, wallColor, altColor, roofColor,
             zoomDelta = maxZoom-zoom;
 
         for (i = 0, il = this.raw.length; i < il; i++) {
             wallColor = null;
-            altColor = null;
+            altColor  = null;
             roofColor = null;
 
             item = this.raw[i];
@@ -145,13 +145,17 @@ var Data = {
             }
 
             if (item.wallColor) {
-                wallColor = Color.parse(item.wallColor).setAlpha(zoomAlpha);
-                altColor  = '' + wallColor.setLightness(0.8);
-                wallColor = '' + wallColor;
+                if ((color = Color.parse(item.wallColor))) {
+                    wallColor = color.setAlpha(zoomAlpha);
+                    altColor  = '' + wallColor.setLightness(0.8);
+                    wallColor = '' + wallColor;
+                }
             }
 
             if (item.roofColor) {
-                roofColor = '' + Color.parse(item.roofColor).setAlpha(zoomAlpha);
+                if ((color = Color.parse(item.roofColor))) {
+                    roofColor = '' + color.setAlpha(zoomAlpha);
+                }
             }
 
             res.push({
