@@ -1,5 +1,10 @@
 # Changelog
 
+## 2013-05-31
+
+- backend removed, now using web services with GeoJSON or XAPI
+
+
 ## v0.1.8a @ 2013-03-10
 
 - on layer removal from map, OSM Buildings is not destroyed anymore

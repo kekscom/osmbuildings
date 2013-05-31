@@ -665,7 +665,7 @@ var VERSION      = '0.1.8a',
     RAD        = 180/PI,
 
     TILE_SIZE = 256,
-    MIN_ZOOM = 14, // TODO: for buildings data only, GeoJSON should not be affected
+    MIN_ZOOM = 16,
 
     LAT = 'latitude', LON = 'longitude',
 
