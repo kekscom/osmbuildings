@@ -1,7 +1,7 @@
 function onResize(e) {
     setSize(e.width, e.height);
     renderAll();
-    loadData();
+    Data.update();
 }
 
 // TODO: cleanup, no engine is using that
@@ -11,13 +11,12 @@ function onMove(e) {
 }
 
 function onMoveEnd(e) {
-    var nw = pixelToGeo(originX,         originY),
-        se = pixelToGeo(originX + width, originY + height)
-    ;
+    var nw = pixelToGeo(originX,       originY),
+        se = pixelToGeo(originX+width, originY+height);
     renderAll();
     // check, whether viewport is still within loaded data bounding box
-    if (meta && (nw[LAT] > meta.n || nw[LON] < meta.w || se[LAT] < meta.s || se[LON] > meta.e)) {
-        loadData(); // => fadeIn() => renderAll()
+    if (nw[LAT] > Data.n || nw[LON] < Data.w || se[LAT] < Data.s || se[LON] > Data.e) {
+        Data.update(); // => fadeIn() => renderAll()
     }
 }
 
@@ -29,13 +28,7 @@ function onZoomStart(e) {
 
 function onZoomEnd(e) {
     isZooming = false;
-    setZoom(e.zoom);
-
-    if (rawData) { // GeoJSON
-        data = scaleData(rawData);
-        renderAll();
-    } else {
-        render();
-        loadData(); // => fadeIn() => renderAll()
-    }
+    setZoom(e.zoom); // => Data.scale()
+    Data.update(); // => fadeIn()
+    renderAll();
 }

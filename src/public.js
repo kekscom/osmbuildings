@@ -3,11 +3,6 @@ this.setStyle = function(style) {
     return this;
 };
 
-this.geoJSON = function(url, isLatLon) {
-    geoJSON(url, isLatLon);
-    return this;
-};
-
 this.setCamOffset = function(x, y) {
     camX = halfWidth + x;
     camY = height    + y;
@@ -26,7 +21,22 @@ this.appendTo = function(parentNode) {
     return Layers.init(parentNode);
 };
 
-this.loadData    = loadData;
+/**
+ * @param {string} url string
+ */
+this.loadData = function(url) {
+    Data.load(url);
+    return this;
+};
+
+/**
+ * @param {object} data object
+ */
+this.setData = function(data) {
+    Data.set(data);
+    return this;
+};
+
 this.onMoveEnd   = onMoveEnd;
 this.onZoomEnd   = onZoomEnd;
 this.onZoomStart = onZoomStart;

@@ -17,29 +17,17 @@ function setOrigin(x, y) {
 }
 
 function setZoom(z) {
-    var i, il, j,
-        item;
-
     zoom = z;
     size = TILE_SIZE << zoom;
 
     zoomAlpha = 1 - fromRange(zoom, minZoom, maxZoom, 0, 0.3);
 
     wallColorAlpha = wallColor.adjustAlpha(zoomAlpha) + '';
-    altColorAlpha  = altColor.adjustAlpha(zoomAlpha) + '';
+    altColorAlpha  = altColor.adjustAlpha( zoomAlpha) + '';
     roofColorAlpha = roofColor.adjustAlpha(zoomAlpha) + '';
 
-    if (data) {
-        for (i = 0, il = data.length; i < il; i++) {
-            item = data[i];
-            item[RENDER_COLOR] = [];
-            for (j = 0; j < 3; j++) {
-                if (item[COLOR][j]) {
-                    item[RENDER_COLOR][j] = item[COLOR][j].adjustAlpha(zoomAlpha) + '';
-                }
-            }
-        }
-    }
+    // TODO: not working properly yet FIXME
+    Data.scale(zoom);
 }
 
 function setCam(x, y) {

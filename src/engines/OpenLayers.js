@@ -36,13 +36,12 @@ OpenLayers.Layer.Buildings = OpenLayers.Class(OpenLayers.Layer, {
             OpenLayers.Layer.prototype.setMap.call(this, map);
         }
         if (!this.osmb) {
-            this.osmb = new OSMBuildings(this.options.url);
+            this.osmb = new OSMBuildings();
             this.container = this.osmb.appendTo(this.div);
         }
         this.osmb.setSize(this.map.size.w, this.map.size.h);
         this.osmb.setZoom(this.map.zoom);
         this.setOrigin();
-        this.osmb.loadData();
     },
 
     removeMap: function(map) {
@@ -91,15 +90,19 @@ OpenLayers.Layer.Buildings = OpenLayers.Class(OpenLayers.Layer, {
 
     // TODO: refactor these ugly bindings
 
-    geoJSON: function(url, isLatLon) {
-        return this.osmb.geoJSON(url, isLatLon);
-    },
-
     setStyle: function(style)  {
         return this.osmb.setStyle(style);
     },
 
     setDate: function(date)  {
         return this.osmb.setDate(date);
+    },
+
+    load: function(url) {
+        this.osmb.loadData(url);
+    },
+
+    geoJSON: function(data) {
+        this.osmb.setData(data);
     }
 });

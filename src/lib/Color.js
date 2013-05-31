@@ -23,48 +23,48 @@ var Color = (function() {
         );
     }
 
-	function hue2rgb(p, q, t) {
-		if (t < 0) {
-			t += 1;
-		}
-		if (t > 1) {
-			t -= 1;
-		}
-		if (t < 1 / 6) {
-			return p + (q-p) * 6 * t;
-		}
-		if (t < 1 / 2) {
-			return q;
-		}
-		if (t < 2 / 3) {
-			return p + (q-p) * (2/3 - t) * 6;
-		}
-		return p;
-	}
+    function hue2rgb(p, q, t) {
+        if (t < 0) {
+            t += 1;
+        }
+        if (t > 1) {
+            t -= 1;
+        }
+        if (t < 1 / 6) {
+            return p + (q-p) * 6 * t;
+        }
+        if (t < 1 / 2) {
+            return q;
+        }
+        if (t < 2 / 3) {
+            return p + (q-p) * (2/3 - t) * 6;
+        }
+        return p;
+    }
 
-    function C(r, g, b, a) { // r,g,b belong to [0, 255]; a belongs to [0,1]
+    function Color(r, g, b, a) { // r,g,b belong to [0, 255]; a belongs to [0,1]
         this.r = r;
         this.g = g;
         this.b = b;
         this.a = arguments.length < 4 ? 1 : a;
     }
 
-	var proto = C.prototype;
+    var proto = Color.prototype;
 
-	proto.toString = function() {
-		return 'rgba(' + [this.r <<0, this.g <<0, this.b <<0, this.a.toFixed(2)].join(',') + ')';
-	};
+    proto.toString = function() {
+        return 'rgba(' + [this.r <<0, this.g <<0, this.b <<0, this.a.toFixed(2)].join(',') + ')';
+    };
 
-	proto.adjustLightness = function(l) {
-		var hsla = Color.toHSLA(this);
-		hsla.l *= l;
-		hsla.l = Math.min(1, Math.max(0, hsla.l));
-		return hsla2rgb(hsla);
-	};
+    proto.adjustLightness = function(l) {
+        var hsla = Color.toHSLA(this);
+        hsla.l *= l;
+        hsla.l = Math.min(1, Math.max(0, hsla.l));
+        return hsla2rgb(hsla);
+    };
 
-	proto.adjustAlpha = function(a) {
-		return new Color(this.r, this.g, this.b, this.a * a);
-	};
+    proto.adjustAlpha = function(a) {
+        return new Color(this.r, this.g, this.b, this.a * a);
+    };
 
     /*
      * str can be in any of the following forms:
@@ -72,7 +72,7 @@ var Color = (function() {
      * "rgb([0-255],[0-255],[0-255])", "rgba([0-255],[0-255],[0-255],[0-1])",
      * "hsl([0-360],[0-1],[0-1])", "hsla([0-360],[0-1],[0-1],[0-1])"
      */
-    C.parse = function(str) {
+    Color.parse = function(str) {
         var m;
         str += '';
         if (~str.indexOf('#')) {
@@ -106,7 +106,7 @@ var Color = (function() {
         }
     };
 
-    C.toHSLA = function(rgba) { // r,g,b belong to [0, 255]; a belongs to [0,1]
+    Color.toHSLA = function(rgba) { // r,g,b belong to [0, 255]; a belongs to [0,1]
         var r = rgba.r/255,
             g = rgba.g/255,
             b = rgba.b/255,
@@ -114,22 +114,22 @@ var Color = (function() {
             h, s, l = (max+min) / 2,
             d;
 
-		if (max === min) {
-			h = s = 0; // achromatic
-		} else {
-			d = max-min;
-			s = l > 0.5 ? d / (2 - max - min) : d / (max+min);
-			switch (max) {
-				case r: h = (g-b) / d + (g < b ? 6 : 0); break;
-				case g: h = (b-r) / d + 2; break;
-				case b: h = (r-g) / d + 4; break;
-			}
-			h /= 6;
-		}
+        if (max === min) {
+            h = s = 0; // achromatic
+        } else {
+            d = max-min;
+            s = l > 0.5 ? d / (2 - max - min) : d / (max+min);
+            switch (max) {
+                case r: h = (g-b) / d + (g < b ? 6 : 0); break;
+                case g: h = (b-r) / d + 2; break;
+                case b: h = (r-g) / d + 4; break;
+            }
+            h /= 6;
+        }
 
         return { h: h*360, s: s, l: l, a: rgba.a };
     };
 
-	return C;
+    return Color;
 
 }());

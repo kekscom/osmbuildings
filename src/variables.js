@@ -4,11 +4,9 @@ var width = 0, height = 0,
     originX = 0, originY = 0,
     zoom, size,
 
-    req,
+    activeRequest,
 
     context,
-
-    url,
 
     wallColor = new Color(200, 190, 180),
     altColor = wallColor.adjustLightness(0.8),
@@ -20,9 +18,6 @@ var width = 0, height = 0,
     altColorAlpha  = altColor + '',
     roofColorAlpha = roofColor + '',
 
-    rawData,
-    meta, data,
-
     fadeFactor = 1, fadeTimer,
     zoomAlpha = 1,
 
@@ -33,23 +28,3 @@ var width = 0, height = 0,
     camX, camY, camZ,
 
     isZooming;
-
-var materialColors = {
-    brick: '#cc7755',
-    bronze: '#ffeecc',
-    canvas: '#fff8f0',
-    concrete: '#999999',
-    copper: '#a0e0d0',
-    glass: '#e8f8f8',
-    gold: '#ffcc00',
-    grass: '#009933',
-    metal: '#aaaaaa',
-    panel: '#fff8f0',
-    plaster: '#999999',
-    roof_tiles: '#f08060',
-    silver: '#cccccc',
-    slate: '#666666',
-    stone: '#996666',
-    tar_paper: '#333333',
-    wood: '#deb887'
-};
