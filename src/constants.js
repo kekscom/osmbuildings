@@ -8,10 +8,12 @@ var VERSION      = /*<version=*/'0.1.8a'/*>*/,
     QUARTER_PI = PI/4,
     RAD        = 180/PI,
 
-    TILE_SIZE = 256,
+    MAP_TILE_SIZE  = 256,    // map tile size in pixels
+    DATA_TILE_SIZE = 0.0075, // data tile size in geo coordinates, smaller: less data to load but more requests
+
     MIN_ZOOM = 16,
 
     LAT = 'latitude', LON = 'longitude',
 
-    DEFAULT_HEIGHT = 5,
+    DEFAULT_HEIGHT = 15,
     HEIGHT_SCALE = 3;

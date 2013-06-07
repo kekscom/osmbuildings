@@ -4,10 +4,9 @@ function getDistance(p1, p2) {
     return dx*dx + dy*dy;
 }
 
-//function digit5(num) {
-//    return parseFloat(num.toFixed(5));
-//    return (num * 10000 << 0) / 10000;
-//}
+function crop(num) {
+    return (num*10000 << 0) / 10000;
+}
 
 function getCenter(points) {
     var len, x = 0, y = 0;

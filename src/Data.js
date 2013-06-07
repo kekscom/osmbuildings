@@ -29,7 +29,10 @@ digraph g{
 var Data = {
 
     url: '',
-    raw: [],
+    cache: {},
+    rawData: [],
+    oldItems: {}, // maintain a list of present id's in order to fade in new features
+
     rendering: [],
 
     init: function() {},
@@ -44,65 +47,74 @@ var Data = {
             return;
         }
 
-        // create bounding box of double viewport size
-        var nw = pixelToGeo(originX      -halfWidth, originY       -halfHeight),
-            se = pixelToGeo(originX+width+halfWidth, originY+height+halfHeight);
+	    var nw = pixelToGeo(originX,       originY),
+            se = pixelToGeo(originX+width, originY+height);
 
-        if (activeRequest) {
-            activeRequest.abort();
-        }
+        var bounds = {
+            n: (nw.latitude /DATA_TILE_SIZE <<0) * DATA_TILE_SIZE,
+            e: (se.longitude/DATA_TILE_SIZE <<0) * DATA_TILE_SIZE,
+            s: (se.latitude /DATA_TILE_SIZE <<0) * DATA_TILE_SIZE,
+            w: (nw.longitude/DATA_TILE_SIZE <<0) * DATA_TILE_SIZE
+        };
 
-        activeRequest = xhr(template(this.url, {
-            w: nw[LON],
-            n: nw[LAT],
-            e: se[LON],
-            s: se[LAT]
-        }),
-        this.set.bind(this));
+        this.rawData = [];
+        this.oldItems = {};
+
+		var lat, lon, key;
+		for (lat = bounds.s; lat <= bounds.n; lat += DATA_TILE_SIZE) {
+			for (lon = bounds.w; lon <= bounds.e; lon += DATA_TILE_SIZE) {
+                key = lat + ',' + lon;
+                if (this.cache[key]) {
+                    this.onLoad(this.cache[key]);
+                } else {
+                    xhr(template(this.url, {
+                        n: crop(lat+DATA_TILE_SIZE),
+                        e: crop(lon+DATA_TILE_SIZE),
+                        s: crop(lat),
+                        w: crop(lon)
+                    }), (function(k) {
+                        return function(res) {
+                            this.onLoad(res);
+// TODO purge cache!
+                            this.cache[k] = res;
+                        }.bind(this)
+                    }.bind(this)(key)));
+                }
+			}
+		}
     },
 
-    set: function(data) {
+    onLoad: function(data) {
         if (!data) {
             return;
         }
 
-        var i, il,
-            presentItems = {};
+        var newData;
+        if (data.type === 'FeatureCollection') { // GeoJSON
+            newData = readGeoJSON(data.features);
+        } else if (data.osm3s) { // XAPI
+            newData = readOSMXAPI(data.elements);
+        }
 
         // identify already present buildings to fade in new ones
-        for (i = 0, il = this.raw.length; i < il; i++) {
-            presentItems[this.raw[i].id] = 1;
-        }
-
-        if (data.type === 'FeatureCollection') { // GeoJSON
-            this.raw = readGeoJSON(data.features);
-        } else if (data.osm3s) { // XAPI
-            this.raw = readOSMXAPI(data.elements);
-        }
-
-        this.n =  -90;
-        this.w =  180;
-        this.s =   90;
-        this.e = -180;
-
-        var item, footprint;
-
-        for (i = 0, il = this.raw.length; i < il; i++) {
-            item = this.raw[i];
-            item.isNew = !presentItems[item.id];
-
-            // TODO: use bounding boxes instead of iterating over all points
-            footprint = item.footprint;
-            for (var j = 0, jl = footprint.length-1; j < jl; j+=2) {
-                this.n = max(footprint[j  ], this.n);
-                this.e = max(footprint[j+1], this.e);
-                this.s = min(footprint[j  ], this.s);
-                this.w = min(footprint[j+1], this.w);
+        var item;
+        for (var i = 0, il = newData.length; i < il; i++) {
+            item = newData[i];
+            if (!this.oldItems[item.id]) {
+                item.isNew = true;
+                this.oldItems[item.id] = 1;
+                this.rawData.push(item);
             }
         }
 
         this.scale(zoom);
         fadeIn();
+    },
+
+    set: function(data) {
+        this.rawData = [];
+        this.oldItems = {};
+        this.onLoad(data);
     },
 
     scale: function(zoom) {
@@ -114,12 +126,12 @@ var Data = {
             color, wallColor, altColor, roofColor,
             zoomDelta = maxZoom-zoom;
 
-        for (i = 0, il = this.raw.length; i < il; i++) {
+        for (i = 0, il = this.rawData.length; i < il; i++) {
             wallColor = null;
             altColor  = null;
             roofColor = null;
 
-            item = this.raw[i];
+            item = this.rawData[i];
 
             height = (item.height || DEFAULT_HEIGHT)*HEIGHT_SCALE >> zoomDelta;
             if (!height) {

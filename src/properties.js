@@ -18,7 +18,7 @@ function setOrigin(x, y) {
 
 function setZoom(z) {
     zoom = z;
-    size = TILE_SIZE << zoom;
+    size = MAP_TILE_SIZE <<zoom;
 
     zoomAlpha = 1 - fromRange(zoom, minZoom, maxZoom, 0, 0.3);
 

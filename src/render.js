@@ -67,6 +67,7 @@ function render() {
             footprint[j+1] = y = f[j+1]-offY;
 
             // checking footprint is sufficient for visibility
+            // TODO probably pre-filter by data tile position
             if (!isVisible) {
                 isVisible = (x > 0 && x < width && y > 0 && y < height);
             }

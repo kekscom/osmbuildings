@@ -11,13 +11,8 @@ function onMove(e) {
 }
 
 function onMoveEnd(e) {
-    var nw = pixelToGeo(originX,       originY),
-        se = pixelToGeo(originX+width, originY+height);
     renderAll();
-    // check, whether viewport is still within loaded data bounding box
-    if (nw[LAT] > Data.n || nw[LON] < Data.w || se[LAT] < Data.s || se[LON] > Data.e) {
-        Data.update(); // => fadeIn() => renderAll()
-    }
+    Data.update(); // => fadeIn() => renderAll()
 }
 
 function onZoomStart(e) {

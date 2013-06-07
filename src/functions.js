@@ -24,9 +24,9 @@ function template(str, data) {
 
 function fromRange(sVal, sMin, sMax, dMin, dMax) {
     sVal = min(max(sVal, sMin), sMax);
-    var rel = (sVal - sMin) / (sMax - sMin),
-        range = dMax - dMin;
-    return min(max(dMin + rel * range, dMin), dMax);
+    var rel = (sVal-sMin) / (sMax-sMin),
+        range = dMax-dMin;
+    return min(max(dMin + rel*range, dMin), dMax);
 }
 
 function xhr(url, callback) {
@@ -38,7 +38,7 @@ function xhr(url, callback) {
         if (!req.status || req.status < 200 || req.status > 299) {
             return;
         }
-        if (req.responseText) {
+        if (callback && req.responseText) {
             callback(JSON.parse(req.responseText));
         }
     };
