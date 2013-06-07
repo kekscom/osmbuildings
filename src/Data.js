@@ -48,28 +48,30 @@ var Data = {
         }
 
 	    var nw = pixelToGeo(originX,       originY),
-            se = pixelToGeo(originX+width, originY+height);
+            se = pixelToGeo(originX+width, originY+height),
+            sizeLat = DATA_TILE_SIZE,
+            sizeLon = DATA_TILE_SIZE*2;
 
         var bounds = {
-            n: (nw.latitude /DATA_TILE_SIZE <<0) * DATA_TILE_SIZE,
-            e: (se.longitude/DATA_TILE_SIZE <<0) * DATA_TILE_SIZE,
-            s: (se.latitude /DATA_TILE_SIZE <<0) * DATA_TILE_SIZE,
-            w: (nw.longitude/DATA_TILE_SIZE <<0) * DATA_TILE_SIZE
+            n: (nw.latitude /sizeLat <<0) * sizeLat + sizeLat,
+            e: (se.longitude/sizeLon <<0) * sizeLon + sizeLon,
+            s: (se.latitude /sizeLat <<0) * sizeLat,
+            w: (nw.longitude/sizeLon <<0) * sizeLon
         };
 
         this.rawData = [];
         this.oldItems = {};
 
 		var lat, lon, key;
-		for (lat = bounds.s; lat <= bounds.n; lat += DATA_TILE_SIZE) {
-			for (lon = bounds.w; lon <= bounds.e; lon += DATA_TILE_SIZE) {
+		for (lat = bounds.s; lat <= bounds.n; lat += sizeLat) {
+			for (lon = bounds.w; lon <= bounds.e; lon += sizeLon) {
                 key = lat + ',' + lon;
                 if (this.cache[key]) {
                     this.onLoad(this.cache[key]);
                 } else {
                     xhr(template(this.url, {
-                        n: crop(lat+DATA_TILE_SIZE),
-                        e: crop(lon+DATA_TILE_SIZE),
+                        n: crop(lat+sizeLat),
+                        e: crop(lon+sizeLon),
                         s: crop(lat),
                         w: crop(lon)
                     }), (function(k) {
@@ -101,7 +103,7 @@ var Data = {
         for (var i = 0, il = newData.length; i < il; i++) {
             item = newData[i];
             if (!this.oldItems[item.id]) {
-                item.isNew = true;
+//              item.isNew = true;
                 this.oldItems[item.id] = 1;
                 this.rawData.push(item);
             }
