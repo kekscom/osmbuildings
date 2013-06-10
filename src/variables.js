@@ -16,7 +16,8 @@ var width = 0, height = 0,
     altColorAlpha  = altColor + '',
     roofColorAlpha = roofColor + '',
 
-    fadeFactor = 1, fadeTimer,
+    fadeFactor = 1,
+    animTimer,
     zoomAlpha = 1,
 
     minZoom = MIN_ZOOM,

@@ -21,25 +21,21 @@ var FlatBuildings = {
             item,
             f,
             x, y,
-//            offX = originX-meta.x,
-//            offY = originY-meta.y,
-            offX = originX,
-            offY = originY,
             footprint,
             isVisible,
             ax, ay;
 
         context.beginPath();
 
-        for (i = 0, il = Data.rendering.length; i < il; i++) {
-            item = Data.rendering[i];
+        for (i = 0, il = Data.renderItems.length; i < il; i++) {
+            item = Data.renderItems[i];
 
             isVisible = false;
             f = item.footprint;
             footprint = [];
             for (j = 0, jl = f.length-1; j < jl; j += 2) {
-                footprint[j]   = x = f[j]  -offX;
-                footprint[j+1] = y = f[j+1]-offY;
+                footprint[j]   = x = f[j]  -originX;
+                footprint[j+1] = y = f[j+1]-originY;
 
                 // checking footprint is sufficient for visibility
                 if (!isVisible) {

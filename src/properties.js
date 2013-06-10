@@ -26,8 +26,7 @@ function setZoom(z) {
     altColorAlpha  = altColor.setAlpha( zoomAlpha) + '';
     roofColorAlpha = roofColor.setAlpha(zoomAlpha) + '';
 
-    // TODO: not working properly yet FIXME
-    Data.scale(zoom);
+    Data.renderItems = Data.scale(Data.rawItems, zoom);
 }
 
 function setCam(x, y) {

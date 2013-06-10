@@ -1,20 +1,29 @@
 
 function fadeIn() {
-    clearInterval(fadeTimer);
-    fadeFactor = 0;
+    if (animTimer) {
+        return;
+    }
+
     FlatBuildings.render();
-    fadeTimer = setInterval(function() {
-        fadeFactor += 0.5 * 0.2; // amount * easing
-        if (fadeFactor > 1) {
-            clearInterval(fadeTimer);
-            fadeFactor = 1;
-            // unset 'already present' marker
-            for (var i = 0, il = Data.rendering.length; i < il; i++) {
-                Data.rendering[i].isNew = false;
+    animTimer = setInterval(function() {
+        var item;
+        var needed = false;
+        for (var i = 0, il = Data.renderItems.length; i < il; i++) {
+            item = Data.renderItems[i];
+            if (item.scale < 1) {
+                item.scale += 0.5*0.2; // amount*easing
+                if (item.scale > 1) {
+                    item.scale = 1;
+                }
+                needed = true;
             }
         }
         Shadows.render();
         render();
+        if (!needed) {
+            clearInterval(animTimer);
+            animTimer = null;
+        }
     }, 33);
 }
 
@@ -36,24 +45,20 @@ function render() {
         item,
         f, h, m, n,
         x, y,
-//        offX = originX-meta.x,
-//        offY = originY-meta.y,
-        offX = originX,
-        offY = originY,
         flatMaxHeight = FlatBuildings.getMaxHeight(),
-        sortCam = [camX+offX, camY+offY],
+        sortCam = [camX+originX, camY+originY],
         footprint, roof,
         isVisible,
         ax, ay, bx, by,
         a, b, _a, _b;
 
     // TODO: FlatBuildings are drawn separetely, data has to be split
-    Data.rendering.sort(function(a, b) {
+    Data.renderItems.sort(function(a, b) {
         return getDistance(b.center, sortCam)/b.height - getDistance(a.center, sortCam)/a.height;
     });
 
-    for (i = 0, il = Data.rendering.length; i < il; i++) {
-        item = Data.rendering[i];
+    for (i = 0, il = Data.renderItems.length; i < il; i++) {
+        item = Data.renderItems[i];
 
         if (item.height <= flatMaxHeight) {
             continue;
@@ -63,8 +68,8 @@ function render() {
         f = item.footprint;
         footprint = []; // typed array would be created each pass and is way too slow
         for (j = 0, jl = f.length - 1; j < jl; j += 2) {
-            footprint[j]   = x = f[j]  -offX;
-            footprint[j+1] = y = f[j+1]-offY;
+            footprint[j]   = x = f[j]  -originX;
+            footprint[j+1] = y = f[j+1]-originY;
 
             // checking footprint is sufficient for visibility
             // TODO probably pre-filter by data tile position
@@ -78,13 +83,13 @@ function render() {
         }
 
         // when fading in, use a dynamic height
-        h = item.isNew ? item.height*fadeFactor : item.height;
+        h = item.scale < 1 ? item.height*item.scale : item.height;
         // precalculating projection height factor
         m = camZ / (camZ-h);
 
         // prepare same calculations for min_height if applicable
         if (item.minHeight) {
-            h = item.isNew ? item.minHeight*fadeFactor : item.minHeight;
+            h = item.scale < 1 ? item.minHeight*item.scale : item.minHeight;
             n = camZ / (camZ-h);
         }
 

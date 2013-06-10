@@ -30,10 +30,9 @@ var Data = {
 
     url: '',
     cache: {},
-    rawData: [],
-    oldItems: {}, // maintain a list of present id's in order to fade in new features
-
-    rendering: [],
+    oldItemIds: {}, // maintain a list of present id's in order to fade in new features
+    rawItems: [],
+    renderItems: [],
 
     init: function() {},
 
@@ -86,8 +85,9 @@ var Data = {
     },
 
     beforeLoad: function() {
-        this.rawData = [];
-        this.oldItems = {};
+        this.oldItemIds = {};
+        this.rawItems = [];
+        this.renderItems = [];
         // purge cache
         var time = new Date();
         time.setMinutes(time.getMinutes()-5);
@@ -103,25 +103,23 @@ var Data = {
             return;
         }
 
-        var newData;
+        var newItems;
         if (data.type === 'FeatureCollection') { // GeoJSON
-            newData = readGeoJSON(data.features);
+            newItems = this.scale(readGeoJSON(data.features), zoom, true);
         } else if (data.osm3s) { // XAPI
-            newData = readOSMXAPI(data.elements);
+            newItems = this.scale(readOSMXAPI(data.elements), zoom, true);
         }
 
         // identify already present buildings to fade in new ones
         var item;
-        for (var i = 0, il = newData.length; i < il; i++) {
-            item = newData[i];
-            if (!this.oldItems[item.id]) {
-//              item.isNew = true;
-                this.oldItems[item.id] = 1;
-                this.rawData.push(item);
+        for (var i = 0, il = newItems.length; i < il; i++) {
+            item = newItems[i];
+            if (!this.oldItemIds[item.id]) {
+                this.oldItemIds[item.id] = 1;
+                this.renderItems.push(item);
             }
         }
 
-        this.scale(zoom);
         fadeIn();
     },
 
@@ -130,7 +128,7 @@ var Data = {
         this.onLoad(data);
     },
 
-    scale: function(zoom) {
+    scale: function(rawItems, zoom, isNew) {
         var i, il, j, jl,
             res = [],
             item,
@@ -139,12 +137,12 @@ var Data = {
             color, wallColor, altColor, roofColor,
             zoomDelta = maxZoom-zoom;
 
-        for (i = 0, il = this.rawData.length; i < il; i++) {
+        for (i = 0, il = rawItems.length; i < il; i++) {
             wallColor = null;
             altColor  = null;
             roofColor = null;
 
-            item = this.rawData[i];
+            item = rawItems[i];
 
             height = (item.height || DEFAULT_HEIGHT)*HEIGHT_SCALE >> zoomDelta;
             if (!height) {
@@ -184,6 +182,7 @@ var Data = {
             }
 
             res.push({
+                id:        item.id,
                 footprint: footprint,
                 height:    min(height, maxHeight),
                 minHeight: minHeight,
@@ -191,10 +190,10 @@ var Data = {
                 altColor:  altColor,
                 roofColor: roofColor,
                 center:    getCenter(footprint),
-                isNew:     item.isNew
+                scale:     isNew ? 0 : 1
             });
         }
 
-        this.rendering = res;
+        return res;
     }
 };

@@ -53,10 +53,6 @@ var Shadows = {
             item,
             f, h, g,
             x, y,
-//            offX = originX-meta.x,
-//            offY = originY-meta.y,
-            offX = originX,
-            offY = originY,
             footprint,
             mode,
             isVisible,
@@ -67,15 +63,15 @@ var Shadows = {
 
         context.beginPath();
 
-        for (i = 0, il = Data.rendering.length; i < il; i++) {
-            item = Data.rendering[i];
+        for (i = 0, il = Data.renderItems.length; i < il; i++) {
+            item = Data.renderItems[i];
 
             isVisible = false;
             f = item.footprint;
             footprint = [];
             for (j = 0, jl = f.length - 1; j < jl; j += 2) {
-                footprint[j]   = x = f[j]  -offX;
-                footprint[j+1] = y = f[j+1]-offY;
+                footprint[j]   = x = f[j]  -originX;
+                footprint[j+1] = y = f[j+1]-originY;
 
                 // TODO: checking footprint is sufficient for visibility - NOT VALID FOR SHADOWS!
                 if (!isVisible) {
@@ -88,11 +84,11 @@ var Shadows = {
             }
 
             // when fading in, use a dynamic height
-            h = item.isNew ? item.height*fadeFactor : item.height;
+            h = item.scale < 1 ? item.height*item.scale : item.height;
 
             // prepare same calculations for min_height if applicable
             if (item.minHeight) {
-                g = item.isNew ? item.minHeight*fadeFactor : item.minHeight;
+                g = item.scale < 1 ? item.minHeight*item.scale : item.minHeight;
             }
 
             mode = null;
