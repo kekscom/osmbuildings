@@ -47,7 +47,7 @@ var Data = {
             return;
         }
 
-	    var nw = pixelToGeo(originX,       originY),
+        var nw = pixelToGeo(originX,       originY),
             se = pixelToGeo(originX+width, originY+height),
             sizeLat = DATA_TILE_SIZE,
             sizeLon = DATA_TILE_SIZE*2;
@@ -59,15 +59,15 @@ var Data = {
             w: (nw.longitude/sizeLon <<0) * sizeLon
         };
 
-        this.rawData = [];
-        this.oldItems = {};
+        this.beforeLoad();
+        var time = new Date();
 
-		var lat, lon, key;
-		for (lat = bounds.s; lat <= bounds.n; lat += sizeLat) {
-			for (lon = bounds.w; lon <= bounds.e; lon += sizeLon) {
+        var lat, lon, key;
+        for (lat = bounds.s; lat <= bounds.n; lat += sizeLat) {
+            for (lon = bounds.w; lon <= bounds.e; lon += sizeLon) {
                 key = lat + ',' + lon;
                 if (this.cache[key]) {
-                    this.onLoad(this.cache[key]);
+                    this.onLoad(this.cache[key].data);
                 } else {
                     xhr(template(this.url, {
                         n: crop(lat+sizeLat),
@@ -77,13 +77,25 @@ var Data = {
                     }), (function(k) {
                         return function(res) {
                             this.onLoad(res);
-// TODO purge cache!
-                            this.cache[k] = res;
+                            this.cache[k] = { data:res, time:time };
                         }.bind(this)
                     }.bind(this)(key)));
                 }
-			}
-		}
+            }
+        }
+    },
+
+    beforeLoad: function() {
+        this.rawData = [];
+        this.oldItems = {};
+        // purge cache
+        var time = new Date();
+        time.setMinutes(time.getMinutes()-5);
+        for (var key in this.cache) {
+            if (this.cache[key].time < time) {
+                delete this.cache[key];
+            }
+        }
     },
 
     onLoad: function(data) {
@@ -114,8 +126,7 @@ var Data = {
     },
 
     set: function(data) {
-        this.rawData = [];
-        this.oldItems = {};
+        this.beforeLoad();
         this.onLoad(data);
     },
 
