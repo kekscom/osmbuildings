@@ -11,7 +11,7 @@ var VERSION      = /*<version=*/'0.1.8a'/*>*/,
     MAP_TILE_SIZE  = 256,    // map tile size in pixels
     DATA_TILE_SIZE = 0.0075, // data tile size in geo coordinates, smaller: less data to load but more requests
 
-    MIN_ZOOM = 16,
+    MIN_ZOOM = 15,
 
     LAT = 'latitude', LON = 'longitude',
 

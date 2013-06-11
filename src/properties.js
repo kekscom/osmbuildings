@@ -25,8 +25,6 @@ function setZoom(z) {
     wallColorAlpha = wallColor.setAlpha(zoomAlpha) + '';
     altColorAlpha  = altColor.setAlpha( zoomAlpha) + '';
     roofColorAlpha = roofColor.setAlpha(zoomAlpha) + '';
-
-    Data.renderItems = Data.scale(Data.rawItems, zoom);
 }
 
 function setCam(x, y) {
@@ -53,7 +51,7 @@ function setStyle(style) {
     }
 
     if (style.shadows !== undefined) {
-        Shadows.setEnabled(style.shadows);
+        Shadows.enable(style.shadows);
     }
 
     renderAll();

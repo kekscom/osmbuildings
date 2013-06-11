@@ -22,13 +22,14 @@ exports.srcFiles = [
         srcPath + '/class.js',
         srcPath + '/variables.js',
         srcPath + '/functions.js',
-        srcPath + '/Layers.js',
+        srcPath + '/Cache.js',
         srcPath + '/Data.js',
-        srcPath + '/properties.js',
-        srcPath + '/events.js',
         srcPath + '/render.js',
         srcPath + '/Shadows.js',
         srcPath + '/FlatBuildings.js',
+        srcPath + '/Layers.js',
+        srcPath + '/properties.js',
+        srcPath + '/events.js',
         srcPath + '/public.js',
     srcPath + '/suffix.js'
 ];

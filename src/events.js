@@ -4,12 +4,6 @@ function onResize(e) {
     Data.update();
 }
 
-// TODO: cleanup, no engine is using that
-function onMove(e) {
-    setOrigin(e.x, e.y);
-    render();
-}
-
 function onMoveEnd(e) {
     renderAll();
     Data.update(); // => fadeIn() => renderAll()
@@ -23,7 +17,7 @@ function onZoomStart(e) {
 
 function onZoomEnd(e) {
     isZooming = false;
-    setZoom(e.zoom); // => Data.scale()
+    setZoom(e.zoom);
     Data.update(); // => fadeIn()
     renderAll();
 }

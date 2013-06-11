@@ -26,109 +26,52 @@ digraph g{
 }
 */
 
-var Data = {
+var Data = (function() {
 
-    url: '',
-    cache: {},
-    oldItemIds: {}, // maintain a list of present id's in order to fade in new features
-    rawItems: [],
-    renderItems: [],
+    var _url;
+    var _index = {}; // maintain a list of cached items in order to fade in new ones
 
-    init: function() {},
-
-    load: function(url) {
-        this.url = url;
-        this.update();
-    },
-
-    update: function() {
-        if (!this.url || zoom < MIN_ZOOM) {
-            return;
-        }
-
-        var nw = pixelToGeo(originX,       originY),
-            se = pixelToGeo(originX+width, originY+height),
-            sizeLat = DATA_TILE_SIZE,
-            sizeLon = DATA_TILE_SIZE*2;
-
-        var bounds = {
-            n: (nw.latitude /sizeLat <<0) * sizeLat + sizeLat,
-            e: (se.longitude/sizeLon <<0) * sizeLon + sizeLon,
-            s: (se.latitude /sizeLat <<0) * sizeLat,
-            w: (nw.longitude/sizeLon <<0) * sizeLon
+    function _closureParse(cacheKey) {
+        return function(res) {
+            _parse(res, cacheKey);
         };
+    }
 
-        this.beforeLoad();
-        var time = new Date();
-
-        var lat, lon, key;
-        for (lat = bounds.s; lat <= bounds.n; lat += sizeLat) {
-            for (lon = bounds.w; lon <= bounds.e; lon += sizeLon) {
-                key = lat + ',' + lon;
-                if (this.cache[key]) {
-                    this.onLoad(this.cache[key].data);
-                } else {
-                    xhr(template(this.url, {
-                        n: crop(lat+sizeLat),
-                        e: crop(lon+sizeLon),
-                        s: crop(lat),
-                        w: crop(lon)
-                    }), (function(k) {
-                        return function(res) {
-                            this.onLoad(res);
-                            this.cache[k] = { data:res, time:time };
-                        }.bind(this)
-                    }.bind(this)(key)));
-                }
-            }
-        }
-    },
-
-    beforeLoad: function() {
-        this.oldItemIds = {};
-        this.rawItems = [];
-        this.renderItems = [];
-        // purge cache
-        var time = new Date();
-        time.setMinutes(time.getMinutes()-5);
-        for (var key in this.cache) {
-            if (this.cache[key].time < time) {
-                delete this.cache[key];
-            }
-        }
-    },
-
-    onLoad: function(data) {
+    function _parse(data, cacheKey) {
         if (!data) {
             return;
         }
 
-        var newItems;
+        var items;
         if (data.type === 'FeatureCollection') { // GeoJSON
-            newItems = this.scale(readGeoJSON(data.features), zoom, true);
+            items = readGeoJSON(data.features);
         } else if (data.osm3s) { // XAPI
-            newItems = this.scale(readOSMXAPI(data.elements), zoom, true);
+            items = readOSMXAPI(data.elements);
         }
 
-        // identify already present buildings to fade in new ones
+        if (cacheKey) {
+            Cache.add(cacheKey, items);
+        }
+
+        _add(items, true);
+    }
+
+    function _add(data, isNew) {
+        var items = _scale(data, zoom, isNew);
+
         var item;
-        for (var i = 0, il = newItems.length; i < il; i++) {
-            item = newItems[i];
-            if (!this.oldItemIds[item.id]) {
-                this.oldItemIds[item.id] = 1;
-                this.renderItems.push(item);
+        for (var i = 0, il = items.length; i < il; i++) {
+            item = items[i];
+            if (!_index[item.id]) {
+                item.scale = isNew ? 0 : 1;
+                me.renderItems.push(items[i]);
+                _index[item.id] = 1;
             }
         }
-
         fadeIn();
-    },
+    }
 
-    set: function(data) {
-        this.beforeLoad();
-        this.onLoad(data);
-    },
-
-    scale: function(rawItems, zoom, isNew) {
+    function _scale(items, zoom) {
         var i, il, j, jl,
             res = [],
             item,
@@ -137,12 +80,12 @@ var Data = {
             color, wallColor, altColor, roofColor,
             zoomDelta = maxZoom-zoom;
 
-        for (i = 0, il = rawItems.length; i < il; i++) {
+        for (i = 0, il = items.length; i < il; i++) {
             wallColor = null;
             altColor  = null;
             roofColor = null;
 
-            item = rawItems[i];
+            item = items[i];
 
             height = (item.height || DEFAULT_HEIGHT)*HEIGHT_SCALE >> zoomDelta;
             if (!height) {
@@ -189,11 +132,71 @@ var Data = {
                 wallColor: wallColor,
                 altColor:  altColor,
                 roofColor: roofColor,
-                center:    getCenter(footprint),
-                scale:     isNew ? 0 : 1
+                center:    getCenter(footprint)
             });
         }
 
         return res;
     }
-};
+
+    var me = {};
+
+    me.renderItems = []; // TODO: move to renderer
+
+    me.load = function(url) {
+        _url = url;
+        me.update();
+    };
+
+    me.update = function() {
+        if (!_url || zoom < MIN_ZOOM) {
+            return;
+        }
+
+        var nw = pixelToGeo(originX,       originY),
+            se = pixelToGeo(originX+width, originY+height),
+            sizeLat = DATA_TILE_SIZE,
+            sizeLon = DATA_TILE_SIZE*2;
+
+        var bounds = {
+            n: (nw.latitude /sizeLat <<0) * sizeLat + sizeLat,
+            e: (se.longitude/sizeLon <<0) * sizeLon + sizeLon,
+            s: (se.latitude /sizeLat <<0) * sizeLat,
+            w: (nw.longitude/sizeLon <<0) * sizeLon
+        };
+
+        Cache.purge();
+        me.renderItems = [];
+        _index = {};
+
+        var lat, lon,
+            cached, key;
+
+
+
+        for (lat = bounds.s; lat <= bounds.n; lat += sizeLat) {
+            for (lon = bounds.w; lon <= bounds.e; lon += sizeLon) {
+                key = lat + ',' + lon;
+                if ((cached = Cache.get(key))) {
+                    _add(cached);
+                } else {
+                    xhr(template(_url, {
+                        n: crop(lat+sizeLat),
+                        e: crop(lon+sizeLon),
+                        s: crop(lat),
+                        w: crop(lon)
+                    }), _closureParse(key));
+                }
+            }
+        }
+    };
+
+    me.set = function(data) {
+        me.renderItems = [];
+        _index = {};
+        _parse(data);
+    };
+
+    return me;
+
+}());

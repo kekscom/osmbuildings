@@ -4,10 +4,8 @@ function fadeIn() {
         return;
     }
 
-    FlatBuildings.render();
     animTimer = setInterval(function() {
-        var item;
-        var needed = false;
+        var item, needed = false;
         for (var i = 0, il = Data.renderItems.length; i < il; i++) {
             item = Data.renderItems[i];
             if (item.scale < 1) {
@@ -18,8 +16,9 @@ function fadeIn() {
                 needed = true;
             }
         }
-        Shadows.render();
-        render();
+
+        renderAll();
+
         if (!needed) {
             clearInterval(animTimer);
             animTimer = null;
@@ -45,7 +44,7 @@ function render() {
         item,
         f, h, m, n,
         x, y,
-        flatMaxHeight = FlatBuildings.getMaxHeight(),
+        flatMaxHeight = FlatBuildings.MAX_HEIGHT,
         sortCam = [camX+originX, camY+originY],
         footprint, roof,
         isVisible,

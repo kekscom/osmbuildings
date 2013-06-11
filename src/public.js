@@ -18,7 +18,7 @@ this.setDate = function(date) {
 };
 
 this.appendTo = function(parentNode) {
-    return Layers.init(parentNode);
+    return Layers.appendTo(parentNode);
 };
 
 /**
