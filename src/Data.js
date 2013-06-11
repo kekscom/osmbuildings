@@ -26,23 +26,75 @@ digraph g{
 }
 */
 
-var Data = {
+var Data = (function() {
 
-    url: '',
-    cache: {},
-    oldItemIds: {}, // maintain a list of present id's in order to fade in new features
-    rawItems: [],
-    renderItems: [],
+    var _url;
+    var _itemIndex = {}; // maintain a list of cached items in order to fade in new ones
 
-    init: function() {},
+    function _beforeLoad() {
+//      _itemIndex = {};
+        me.rawItems    = [];
+        me.renderItems = [];
+        Cache.purge();
+    }
 
-    load: function(url) {
-        this.url = url;
-        this.update();
-    },
+    function _onLoadFromCache(data, isNew) {
+        var newItems = me.scale(data, zoom, isNew);
+        for (var i = 0, il = newItems.length; i < il; i++) {
+            me.renderItems.push(newItems[i]);
+        }
+        fadeIn();
+    }
 
-    update: function() {
-        if (!this.url || zoom < MIN_ZOOM) {
+    function _onLoadFromSet(data) {
+        if (!data) {
+            return;
+        }
+        var newItems = readGeoJSON(data.features);
+        _itemIndex = {};
+        _onLoadFromCache(newItems, true);
+    }
+
+    function _onLoad(data, cacheKey) {
+        if (!data) {
+            return;
+        }
+
+        var newItems;
+        if (data.type === 'FeatureCollection') { // GeoJSON
+            newItems = readGeoJSON(data.features);
+        } else if (data.osm3s) { // XAPI
+            newItems = readOSMXAPI(data.elements);
+        }
+
+        if (cacheKey) {
+            Cache.add(cacheKey, newItems);
+        }
+
+        // identify already present buildings to fade in new ones
+        var item;
+        for (var i = 0, il = newItems.length; i < il; i++) {
+            item = newItems[i];
+            if (!_itemIndex[item.id]) {
+                _itemIndex[item.id] = 1;
+            }
+        }
+
+        _onLoadFromCache(newItems, true);
+    }
+
+    var me = {};
+
+    me.rawItems    = []; // TODO: move to render
+    me.renderItems = []; // TODO: move to render
+
+    me.load = function(url) {
+        _url = url;
+        me.update();
+    };
+
+    me.update = function() {
+        if (!_url || zoom < MIN_ZOOM) {
             return;
         }
 
@@ -58,77 +110,37 @@ var Data = {
             w: (nw.longitude/sizeLon <<0) * sizeLon
         };
 
-        this.beforeLoad();
-        var time = new Date();
+        _beforeLoad();
+        var cached;
 
         var lat, lon, key;
         for (lat = bounds.s; lat <= bounds.n; lat += sizeLat) {
             for (lon = bounds.w; lon <= bounds.e; lon += sizeLon) {
                 key = lat + ',' + lon;
-                if (this.cache[key]) {
-                    this.onLoad(this.cache[key].data);
+                if ((cached = Cache.get(key))) {
+                    _onLoadFromCache(cached);
                 } else {
-                    xhr(template(this.url, {
+                    xhr(template(_url, {
                         n: crop(lat+sizeLat),
                         e: crop(lon+sizeLon),
                         s: crop(lat),
                         w: crop(lon)
                     }), (function(k) {
                         return function(res) {
-                            this.onLoad(res);
-                            this.cache[k] = { data:res, time:time };
-                        }.bind(this)
-                    }.bind(this)(key)));
+                            _onLoad(res, k);
+                        };
+                    }(key)));
                 }
             }
         }
-    },
+    };
 
-    beforeLoad: function() {
-        this.oldItemIds = {};
-        this.rawItems = [];
-        this.renderItems = [];
-        // purge cache
-        var time = new Date();
-        time.setMinutes(time.getMinutes()-5);
-        for (var key in this.cache) {
-            if (this.cache[key].time < time) {
-                delete this.cache[key];
-            }
-        }
-    },
+    me.set = function(data) {
+        _beforeLoad();
+        _onLoadFromSet(data);
+    };
 
-    onLoad: function(data) {
-        if (!data) {
-            return;
-        }
-
-        var newItems;
-        if (data.type === 'FeatureCollection') { // GeoJSON
-            newItems = this.scale(readGeoJSON(data.features), zoom, true);
-        } else if (data.osm3s) { // XAPI
-            newItems = this.scale(readOSMXAPI(data.elements), zoom, true);
-        }
-
-        // identify already present buildings to fade in new ones
-        var item;
-        for (var i = 0, il = newItems.length; i < il; i++) {
-            item = newItems[i];
-            if (!this.oldItemIds[item.id]) {
-                this.oldItemIds[item.id] = 1;
-                this.renderItems.push(item);
-            }
-        }
-
-        fadeIn();
-    },
-
-    set: function(data) {
-        this.beforeLoad();
-        this.onLoad(data);
-    },
-
-    scale: function(rawItems, zoom, isNew) {
+    me.scale = function(rawItems, zoom, isNew) {
         var i, il, j, jl,
             res = [],
             item,
@@ -195,5 +207,8 @@ var Data = {
         }
 
         return res;
-    }
-};
+    };
+
+    return me;
+
+}());

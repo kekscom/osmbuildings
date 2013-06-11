@@ -1,40 +1,45 @@
-var Shadows = {
+debugger
+var Shadows = (function() {
 
-    enabled: true,
-    context: null,
-    color: new Color(0, 0, 0),
-    colorStr: this.color + '',
-    date: null,
-    alpha: 1,
-    length: 0,
-    directionX: 0,
-    directionY: 0,
+    var _context;
+    var _enabled = true;
+    var _color = new Color(0, 0, 0);
+    var _date = null;
+    var _direction = { x:0, y:0 };
 
-    init: function(context) {
-        this.context = context;
+    function _project(x, y, h) {
+        return {
+            x: x + _direction.x*h,
+            y: y + _direction.y*h
+        };
+    }
+
+    var me = {};
+
+    me.setContext = function(context) {
+        _context = context;
         // TODO: fix bad Date() syntax
-        this.setDate(new Date().setHours(10)); // => render()
-    },
+        me.setDate(new Date().setHours(10)); // => render()
+    };
 
-    setEnabled: function(flag) {
-        this.enabled = !!flag;
-        // this.render(); // this is usually set by setStyle() and there a renderAll() is called
-    },
+    me.enable = function(flag) {
+        _enabled = !!flag;
+        // should call me.render() but it is usually set by setStyle() and there a renderAll() is called
+    };
 
-    render: function() {
-        var context = this.context,
-            center, sun, length, alpha, colorStr;
+    me.render = function() {
+        var center, sun, length, alpha, colorStr;
 
-        context.clearRect(0, 0, width, height);
+        _context.clearRect(0, 0, width, height);
 
         // show on high zoom levels only and avoid rendering during zoom
-        if (!this.enabled || zoom < minZoom || isZooming) {
+        if (!_enabled || zoom < minZoom || isZooming) {
             return;
         }
 
-        // TODO: at some point, calculate this just on demand
-        center = pixelToGeo(originX + halfWidth, originY + halfHeight);
-        sun = getSunPosition(this.date, center.latitude, center.longitude);
+        // TODO: at some point, calculate me just on demand
+        center = pixelToGeo(originX+halfWidth, originY+halfHeight);
+        sun = getSunPosition(_date, center.latitude, center.longitude);
 
         if (sun.altitude <= 0) {
             return;
@@ -42,12 +47,12 @@ var Shadows = {
 
         length = 1 / tan(sun.altitude);
         alpha = 0.4 / length;
-        this.directionX = cos(sun.azimuth) * length;
-        this.directionY = sin(sun.azimuth) * length;
+        _direction.x = cos(sun.azimuth) * length;
+        _direction.y = sin(sun.azimuth) * length;
 
         // TODO: maybe introduce Color.setAlpha()
-        this.color.a = alpha;
-        colorStr = this.color + '';
+        _color.a = alpha;
+        colorStr = _color + '';
 
         var i, il, j, jl,
             item,
@@ -61,10 +66,15 @@ var Shadows = {
             points,
             allFootprints = [];
 
-        context.beginPath();
+        _context.beginPath();
 
         for (i = 0, il = Data.renderItems.length; i < il; i++) {
             item = Data.renderItems[i];
+
+// TODO: no shadows when buildings are too flat => don't add them to renderItems then
+//        if (item.height <= FlatBuildings.MAX_HEIGHT) {
+//            continue;
+//        }
 
             isVisible = false;
             f = item.footprint;
@@ -99,12 +109,12 @@ var Shadows = {
                 bx = footprint[j+2];
                 by = footprint[j+3];
 
-                _a = this.project(ax, ay, h);
-                _b = this.project(bx, by, h);
+                _a = _project(ax, ay, h);
+                _b = _project(bx, by, h);
 
                 if (item.minHeight) {
-                    a = this.project(ax, ay, g);
-                    b = this.project(bx, by, g);
+                    a = _project(ax, ay, g);
+                    b = _project(bx, by, g);
                     ax = a.x;
                     ay = a.y;
                     bx = b.x;
@@ -113,59 +123,57 @@ var Shadows = {
 
                 if ((bx-ax) * (_a.y-ay) > (_a.x-ax) * (by-ay)) {
                     if (mode === 1) {
-                        context.lineTo(ax, ay);
+                        _context.lineTo(ax, ay);
                     }
                     mode = 0;
                     if (!j) {
-                        context.moveTo(ax, ay);
+                        _context.moveTo(ax, ay);
                     }
-                    context.lineTo(bx, by);
+                    _context.lineTo(bx, by);
                 } else {
                     if (mode === 0) {
-                        context.lineTo(_a.x, _a.y);
+                        _context.lineTo(_a.x, _a.y);
                     }
                     mode = 1;
                     if (!j) {
-                        context.moveTo(_a.x, _a.y);
+                        _context.moveTo(_a.x, _a.y);
                     }
-                    context.lineTo(_b.x, _b.y);
+                    _context.lineTo(_b.x, _b.y);
                 }
             }
 
-            context.closePath();
+            _context.closePath();
 
             allFootprints.push(footprint);
         }
 
-        context.fillStyle = colorStr;
-        context.fill();
+        _context.fillStyle = colorStr;
+        _context.fill();
 
         // now draw all the footprints as negative clipping mask
-        context.globalCompositeOperation = 'destination-out';
-        context.beginPath();
+        _context.globalCompositeOperation = 'destination-out';
+        _context.beginPath();
         for (i = 0, il = allFootprints.length; i < il; i++) {
             points = allFootprints[i];
-            context.moveTo(points[0], points[1]);
+            _context.moveTo(points[0], points[1]);
             for (j = 2, jl = points.length; j < jl; j += 2) {
-                context.lineTo(points[j], points[j+1]);
+                _context.lineTo(points[j], points[j+1]);
             }
-            context.lineTo(points[0], points[1]);
-            context.closePath();
+            _context.lineTo(points[0], points[1]);
+            _context.closePath();
         }
-        context.fillStyle = '#00ff00';
-        context.fill();
-        context.globalCompositeOperation = 'source-over';
-    },
+        _context.fillStyle = '#00ff00';
+        _context.fill();
+        _context.globalCompositeOperation = 'source-over';
+    };
 
-    project: function(x, y, h) {
-        return {
-            x: x + this.directionX*h,
-            y: y + this.directionY*h
-        };
-    },
+    me.setDate = function(date) {
+        _date = date;
+        me.render();
+    };
 
-    setDate: function(date) {
-        this.date = date;
-        this.render();
-    }
-};
+    return me;
+
+}());
+
+debugger

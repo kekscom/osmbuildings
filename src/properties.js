@@ -53,7 +53,7 @@ function setStyle(style) {
     }
 
     if (style.shadows !== undefined) {
-        Shadows.setEnabled(style.shadows);
+        Shadows.enable(style.shadows);
     }
 
     renderAll();

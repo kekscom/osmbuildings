@@ -1,16 +1,17 @@
-var FlatBuildings = {
+var FlatBuildings = (function() {
 
-    context: null,
-    maxHeight: 8,
+    var _context;
 
-    init: function(context) {
-        this.context = context;
-    },
+    var me = {};
 
-    render: function() {
-        var context = this.context;
+    me.MAX_HEIGHT = 8;
 
-        context.clearRect(0, 0, width, height);
+    me.setContext = function(context) {
+        _context = context;
+    };
+
+    me.render = function() {
+        _context.clearRect(0, 0, width, height);
 
         // show on high zoom levels only and avoid rendering during zoom
         if (zoom < minZoom || isZooming) {
@@ -25,10 +26,14 @@ var FlatBuildings = {
             isVisible,
             ax, ay;
 
-        context.beginPath();
+        _context.beginPath();
 
         for (i = 0, il = Data.renderItems.length; i < il; i++) {
             item = Data.renderItems[i];
+
+            if (item.height > me.MAX_HEIGHT) {
+                continue;
+            }
 
             isVisible = false;
             f = item.footprint;
@@ -51,23 +56,22 @@ var FlatBuildings = {
                 ax = footprint[j];
                 ay = footprint[j + 1];
                 if (!j) {
-                    context.moveTo(ax, ay);
+                    _context.moveTo(ax, ay);
                 } else {
-                    context.lineTo(ax, ay);
+                    _context.lineTo(ax, ay);
                 }
             }
 
-            context.closePath();
+            _context.closePath();
         }
 
-        context.fillStyle   = roofColorAlpha;
-        context.strokeStyle = altColorAlpha;
+        _context.fillStyle   = roofColorAlpha;
+        _context.strokeStyle = altColorAlpha;
 
-        context.stroke();
-        context.fill();
-    },
+        _context.stroke();
+        _context.fill();
+    };
 
-    getMaxHeight: function() {
-        return this.maxHeight;
-    }
-};
+    return me;
+
+}());

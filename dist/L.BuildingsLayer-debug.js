@@ -661,12 +661,14 @@ var VERSION      = '0.1.8a',
     QUARTER_PI = PI/4,
     RAD        = 180/PI,
 
-    TILE_SIZE = 256,
-    MIN_ZOOM = 16,
+    MAP_TILE_SIZE  = 256,    // map tile size in pixels
+    DATA_TILE_SIZE = 0.0075, // data tile size in geo coordinates, smaller: less data to load but more requests
+
+    MIN_ZOOM = 15,
 
     LAT = 'latitude', LON = 'longitude',
 
-    DEFAULT_HEIGHT = 5,
+    DEFAULT_HEIGHT = 15,
     HEIGHT_SCALE = 3;
 
 
@@ -678,10 +680,9 @@ function getDistance(p1, p2) {
     return dx*dx + dy*dy;
 }
 
-//function digit5(num) {
-//    return parseFloat(num.toFixed(5));
-//    return (num * 10000 << 0) / 10000;
-//}
+function crop(num) {
+    return (num*10000 << 0) / 10000;
+}
 
 function getCenter(points) {
     var len, x = 0, y = 0;
@@ -825,7 +826,8 @@ var width = 0, height = 0,
     altColorAlpha  = altColor + '',
     roofColorAlpha = roofColor + '',
 
-    fadeFactor = 1, fadeTimer,
+    fadeFactor = 1,
+    animTimer,
     zoomAlpha = 1,
 
     minZoom = MIN_ZOOM,
@@ -865,9 +867,9 @@ function template(str, data) {
 
 function fromRange(sVal, sMin, sMax, dMin, dMax) {
     sVal = min(max(sVal, sMin), sMax);
-    var rel = (sVal - sMin) / (sMax - sMin),
-        range = dMax - dMin;
-    return min(max(dMin + rel * range, dMin), dMax);
+    var rel = (sVal-sMin) / (sMax-sMin),
+        range = dMax-dMin;
+    return min(max(dMin + rel*range, dMin), dMax);
 }
 
 function xhr(url, callback) {
@@ -879,7 +881,7 @@ function xhr(url, callback) {
         if (!req.status || req.status < 200 || req.status > 299) {
             return;
         }
-        if (req.responseText) {
+        if (callback && req.responseText) {
             callback(JSON.parse(req.responseText));
         }
     };
@@ -891,57 +893,91 @@ function xhr(url, callback) {
 
 //****** file: Layers.js ******
 
-var Layers = {
+var Layers = (function() {
 
-    container: null,
-    items: [],
+    var _container = doc.createElement('DIV');
+    _container.style.pointerEvents = 'none';
+    _container.style.position = 'absolute';
+    _container.style.left = 0;
+    _container.style.top  = 0;
 
-    init: function(parentNode) {
-        var container = this.container = doc.createElement('DIV');
-        container.style.pointerEvents = 'none';
-        container.style.position = 'absolute';
-        container.style.left = 0;
-        container.style.top = 0;
+    var _items = [];
 
-        Shadows.init(this.create());
-        FlatBuildings.init(this.create());
-        context = this.create();
+    // TODO: improve this to _createItem(Layer) => layer.setContext(context)
+    Shadows.setContext(      _createItem());
+    FlatBuildings.setContext(_createItem());
+    context = _createItem(); // default (global) render context
 
-        parentNode.appendChild(container);
-        return container;
-    },
-
-    create: function() {
+    function _createItem() {
         var canvas = doc.createElement('CANVAS');
         canvas.style.webkitTransform = 'translate3d(0,0,0)'; // turn on hw acceleration
         canvas.style.imageRendering = 'optimizeSpeed';
         canvas.style.position = 'absolute';
         canvas.style.left = 0;
-        canvas.style.top = 0;
+        canvas.style.top  = 0;
 
         var context = canvas.getContext('2d');
-        context.lineCap = 'round';
-        context.lineJoin = 'round';
+        context.lineCap   = 'round';
+        context.lineJoin  = 'round';
         context.lineWidth = 1;
 
-        context.mozImageSmoothingEnabled = false;
+        context.mozImageSmoothingEnabled    = false;
         context.webkitImageSmoothingEnabled = false;
 
-        this.items.push(canvas);
-
-        this.container.appendChild(canvas);
+        _items.push(canvas);
+        _container.appendChild(canvas);
 
         return context;
-    },
-
-    setSize: function(w, h) {
-        var items = this.items;
-        for (var i = 0, il = items.length; i < il; i++) {
-            items[i].width = w;
-            items[i].height = h;
-        }
     }
-};
+
+    var me = {};
+
+    me.appendTo = function(parentNode) {
+        parentNode.appendChild(_container);
+        return _container;
+    };
+
+    me.setSize = function(w, h) {
+        for (var i = 0, il = _items.length; i < il; i++) {
+            _items[i].width  = w;
+            _items[i].height = h;
+        }
+    };
+
+    return me;
+
+}());
+
+
+//****** file: Cache.js ******
+
+var Cache = (function() {
+
+    var _time = new Date();
+    var _data = {};
+
+    var me = {};
+
+    me.add = function(key, data) {
+        _data[key] = { data:data, time:Date.now() };
+    };
+
+    me.get = function(key) {
+        return _data[key] && _data[key].data;
+    };
+
+    me.purge = function() {
+        _time.setMinutes(_time.getMinutes()-5);
+        for (var key in _data) {
+            if (_data[key].time < _time) {
+                delete _data[key];
+            }
+        }
+    };
+
+    return me;
+
+}());
 
 
 //****** file: Data.js ******
@@ -974,86 +1010,117 @@ digraph g{
 }
 */
 
-var Data = {
+var Data = (function() {
 
-    url: '',
-    raw: [],
-    rendering: [],
+    var _url;
+    var _itemIndex = {}; // maintain a list of cached items in order to fade in new ones
 
-    init: function() {},
+    function _beforeLoad() {
+//      _itemIndex = {};
+        me.rawItems    = [];
+        me.renderItems = [];
+        Cache.purge();
+    }
 
-    load: function(url) {
-        this.url = url;
-        this.update();
-    },
+    function _onLoadFromCache(data, isNew) {
+        var newItems = me.scale(data, zoom, isNew);
+        for (var i = 0, il = newItems.length; i < il; i++) {
+            me.renderItems.push(newItems[i]);
+        }
+        fadeIn();
+    }
 
-    update: function() {
-        if (!this.url || zoom < MIN_ZOOM) {
+    function _onLoadFromSet(data) {
+        if (!data) {
             return;
         }
+        var newItems = readGeoJSON(data.features);
+        _itemIndex = {};
+        _onLoadFromCache(newItems, true);
+    }
 
-        // create bounding box of double viewport size
-        var nw = pixelToGeo(originX      -halfWidth, originY       -halfHeight),
-            se = pixelToGeo(originX+width+halfWidth, originY+height+halfHeight);
-
-        if (activeRequest) {
-            activeRequest.abort();
-        }
-
-        activeRequest = xhr(template(this.url, {
-            w: nw[LON],
-            n: nw[LAT],
-            e: se[LON],
-            s: se[LAT]
-        }),
-        this.set.bind(this));
-    },
-
-    set: function(data) {
+    function _onLoad(data, cacheKey) {
         if (!data) {
             return;
         }
 
-        var i, il,
-            presentItems = {};
+        var newItems;
+        if (data.type === 'FeatureCollection') { // GeoJSON
+            newItems = readGeoJSON(data.features);
+        } else if (data.osm3s) { // XAPI
+            newItems = readOSMXAPI(data.elements);
+        }
+
+        if (cacheKey) {
+            Cache.add(cacheKey, newItems);
+        }
 
         // identify already present buildings to fade in new ones
-        for (i = 0, il = this.raw.length; i < il; i++) {
-            presentItems[this.raw[i].id] = 1;
-        }
-
-        if (data.type === 'FeatureCollection') { // GeoJSON
-            this.raw = readGeoJSON(data.features);
-        } else if (data.osm3s) { // XAPI
-            this.raw = readOSMXAPI(data.elements);
-        }
-
-        this.n =  -90;
-        this.w =  180;
-        this.s =   90;
-        this.e = -180;
-
-        var item, footprint;
-
-        for (i = 0, il = this.raw.length; i < il; i++) {
-            item = this.raw[i];
-            item.isNew = !presentItems[item.id];
-
-            // TODO: use bounding boxes instead of iterating over all points
-            footprint = item.footprint;
-            for (var j = 0, jl = footprint.length-1; j < jl; j+=2) {
-                this.n = max(footprint[j  ], this.n);
-                this.e = max(footprint[j+1], this.e);
-                this.s = min(footprint[j  ], this.s);
-                this.w = min(footprint[j+1], this.w);
+        var item;
+        for (var i = 0, il = newItems.length; i < il; i++) {
+            item = newItems[i];
+            if (!_itemIndex[item.id]) {
+                _itemIndex[item.id] = 1;
             }
         }
 
-        this.scale(zoom);
-        fadeIn();
-    },
+        _onLoadFromCache(newItems, true);
+    }
 
-    scale: function(zoom) {
+    var me = {};
+
+    me.rawItems    = []; // TODO: move to render
+    me.renderItems = []; // TODO: move to render
+
+    me.load = function(url) {
+        _url = url;
+        me.update();
+    };
+
+    me.update = function() {
+        if (!_url || zoom < MIN_ZOOM) {
+            return;
+        }
+
+        var nw = pixelToGeo(originX,       originY),
+            se = pixelToGeo(originX+width, originY+height),
+            sizeLat = DATA_TILE_SIZE,
+            sizeLon = DATA_TILE_SIZE*2;
+
+        var bounds = {
+            n: (nw.latitude /sizeLat <<0) * sizeLat + sizeLat,
+            e: (se.longitude/sizeLon <<0) * sizeLon + sizeLon,
+            s: (se.latitude /sizeLat <<0) * sizeLat,
+            w: (nw.longitude/sizeLon <<0) * sizeLon
+        };
+
+        _beforeLoad();
+        var cached;
+
+        var lat, lon, key;
+        for (lat = bounds.s; lat <= bounds.n; lat += sizeLat) {
+            for (lon = bounds.w; lon <= bounds.e; lon += sizeLon) {
+                key = lat + ',' + lon;
+                if ((cached = Cache.get(key))) {
+                    _onLoadFromCache(cached);
+                } else {
+                    xhr(template(_url, {
+                        n: crop(lat+sizeLat),
+                        e: crop(lon+sizeLon),
+                        s: crop(lat),
+                        w: crop(lon)
+                    }));
+                }
+            }
+        }
+    };
+
+    me.set = function(data) {
+        _beforeLoad();
+        _onLoadFromSet(data);
+    };
+
+    me.scale = function(rawItems, zoom, isNew) {
         var i, il, j, jl,
             res = [],
             item,
@@ -1062,12 +1129,12 @@ var Data = {
             color, wallColor, altColor, roofColor,
             zoomDelta = maxZoom-zoom;
 
-        for (i = 0, il = this.raw.length; i < il; i++) {
+        for (i = 0, il = rawItems.length; i < il; i++) {
             wallColor = null;
             altColor  = null;
             roofColor = null;
 
-            item = this.raw[i];
+            item = rawItems[i];
 
             height = (item.height || DEFAULT_HEIGHT)*HEIGHT_SCALE >> zoomDelta;
             if (!height) {
@@ -1107,6 +1174,7 @@ var Data = {
             }
 
             res.push({
+                id:        item.id,
                 footprint: footprint,
                 height:    min(height, maxHeight),
                 minHeight: minHeight,
@@ -1114,13 +1182,16 @@ var Data = {
                 altColor:  altColor,
                 roofColor: roofColor,
                 center:    getCenter(footprint),
-                isNew:     item.isNew
+                scale:     isNew ? 0 : 1
             });
         }
 
-        this.rendering = res;
-    }
-};
+        return res;
+    };
+
+    return me;
+
+}());
 
 
 //****** file: properties.js ******
@@ -1145,7 +1216,7 @@ function setOrigin(x, y) {
 
 function setZoom(z) {
     zoom = z;
-    size = TILE_SIZE << zoom;
+    size = MAP_TILE_SIZE <<zoom;
 
     zoomAlpha = 1 - fromRange(zoom, minZoom, maxZoom, 0, 0.3);
 
@@ -1153,8 +1224,7 @@ function setZoom(z) {
     altColorAlpha  = altColor.setAlpha( zoomAlpha) + '';
     roofColorAlpha = roofColor.setAlpha(zoomAlpha) + '';
 
-    // TODO: not working properly yet FIXME
-    Data.scale(zoom);
+    Data.renderItems = Data.scale(Data.rawItems, zoom);
 }
 
 function setCam(x, y) {
@@ -1181,7 +1251,7 @@ function setStyle(style) {
     }
 
     if (style.shadows !== undefined) {
-        Shadows.setEnabled(style.shadows);
+        Shadows.enable(style.shadows);
     }
 
     renderAll();
@@ -1196,20 +1266,9 @@ function onResize(e) {
     Data.update();
 }
 
-// TODO: cleanup, no engine is using that
-function onMove(e) {
-    setOrigin(e.x, e.y);
-    render();
-}
-
 function onMoveEnd(e) {
-    var nw = pixelToGeo(originX,       originY),
-        se = pixelToGeo(originX+width, originY+height);
     renderAll();
-    // check, whether viewport is still within loaded data bounding box
-    if (nw[LAT] > Data.n || nw[LON] < Data.w || se[LAT] < Data.s || se[LON] > Data.e) {
-        Data.update(); // => fadeIn() => renderAll()
-    }
+    Data.update(); // => fadeIn() => renderAll()
 }
 
 function onZoomStart(e) {
@@ -1230,21 +1289,28 @@ function onZoomEnd(e) {
 
 
 function fadeIn() {
-    clearInterval(fadeTimer);
-    fadeFactor = 0;
-    FlatBuildings.render();
-    fadeTimer = setInterval(function() {
-        fadeFactor += 0.5 * 0.2; // amount * easing
-        if (fadeFactor > 1) {
-            clearInterval(fadeTimer);
-            fadeFactor = 1;
-            // unset 'already present' marker
-            for (var i = 0, il = Data.rendering.length; i < il; i++) {
-                Data.rendering[i].isNew = false;
+    if (animTimer) {
+        return;
+    }
+
+    animTimer = setInterval(function() {
+        var item;
+        var needed = false;
+        for (var i = 0, il = Data.renderItems.length; i < il; i++) {
+            item = Data.renderItems[i];
+            if (item.scale < 1) {
+                item.scale += 0.5*0.2; // amount*easing
+                if (item.scale > 1) {
+                    item.scale = 1;
+                }
+                needed = true;
             }
         }
-        Shadows.render();
-        render();
+        renderAll();
+        if (!needed) {
+            clearInterval(animTimer);
+            animTimer = null;
+        }
     }, 33);
 }
 
@@ -1266,24 +1332,20 @@ function render() {
         item,
         f, h, m, n,
         x, y,
-//        offX = originX-meta.x,
-//        offY = originY-meta.y,
-        offX = originX,
-        offY = originY,
-        flatMaxHeight = FlatBuildings.getMaxHeight(),
-        sortCam = [camX+offX, camY+offY],
+        flatMaxHeight = FlatBuildings.MAX_HEIGHT,
+        sortCam = [camX+originX, camY+originY],
         footprint, roof,
         isVisible,
         ax, ay, bx, by,
         a, b, _a, _b;
 
     // TODO: FlatBuildings are drawn separetely, data has to be split
-    Data.rendering.sort(function(a, b) {
+    Data.renderItems.sort(function(a, b) {
         return getDistance(b.center, sortCam)/b.height - getDistance(a.center, sortCam)/a.height;
     });
 
-    for (i = 0, il = Data.rendering.length; i < il; i++) {
-        item = Data.rendering[i];
+    for (i = 0, il = Data.renderItems.length; i < il; i++) {
+        item = Data.renderItems[i];
 
         if (item.height <= flatMaxHeight) {
             continue;
@@ -1293,10 +1355,11 @@ function render() {
         f = item.footprint;
         footprint = []; // typed array would be created each pass and is way too slow
         for (j = 0, jl = f.length - 1; j < jl; j += 2) {
-            footprint[j]   = x = f[j]  -offX;
-            footprint[j+1] = y = f[j+1]-offY;
+            footprint[j]   = x = f[j]  -originX;
+            footprint[j+1] = y = f[j+1]-originY;
 
             // checking footprint is sufficient for visibility
+            // TODO probably pre-filter by data tile position
             if (!isVisible) {
                 isVisible = (x > 0 && x < width && y > 0 && y < height);
             }
@@ -1307,13 +1370,13 @@ function render() {
         }
 
         // when fading in, use a dynamic height
-        h = item.isNew ? item.height*fadeFactor : item.height;
+        h = item.scale < 1 ? item.height*item.scale : item.height;
         // precalculating projection height factor
         m = camZ / (camZ-h);
 
         // prepare same calculations for min_height if applicable
         if (item.minHeight) {
-            h = item.isNew ? item.minHeight*fadeFactor : item.minHeight;
+            h = item.scale < 1 ? item.minHeight*item.scale : item.minHeight;
             n = camZ / (camZ-h);
         }
 
@@ -1411,43 +1474,47 @@ function debugLine(ax, ay, bx, by, color) {
 
 //****** file: Shadows.js ******
 
-var Shadows = {
+var Shadows = (function() {
 
-    enabled: true,
-    context: null,
-    color: new Color(0, 0, 0),
-    colorStr: this.color + '',
-    date: null,
-    alpha: 1,
-    length: 0,
-    directionX: 0,
-    directionY: 0,
+    var _context;
+    var _enabled = true;
+    var _color = new Color(0, 0, 0);
+    var _date = null;
+    var _direction = { x:0, y:0 };
 
-    init: function(context) {
-        this.context = context;
+    function _project(x, y, h) {
+        return {
+            x: x + _direction.x*h,
+            y: y + _direction.y*h
+        };
+    }
+
+    var me = {};
+
+    me.setContext = function(context) {
+        _context = context;
         // TODO: fix bad Date() syntax
-        this.setDate(new Date().setHours(10)); // => render()
-    },
+        me.setDate(new Date().setHours(10)); // => render()
+    };
 
-    setEnabled: function(flag) {
-        this.enabled = !!flag;
-        // this.render(); // this is usually set by setStyle() and there a renderAll() is called
-    },
+    me.enable = function(flag) {
+        _enabled = !!flag;
+        // should call me.render() but it is usually set by setStyle() and there a renderAll() is called
+    };
 
-    render: function() {
-        var context = this.context,
-            center, sun, length, alpha, colorStr;
+    me.render = function() {
+        var center, sun, length, alpha, colorStr;
 
-        context.clearRect(0, 0, width, height);
+        _context.clearRect(0, 0, width, height);
 
         // show on high zoom levels only and avoid rendering during zoom
-        if (!this.enabled || zoom < minZoom || isZooming) {
+        if (!_enabled || zoom < minZoom || isZooming) {
             return;
         }
 
-        // TODO: at some point, calculate this just on demand
-        center = pixelToGeo(originX + halfWidth, originY + halfHeight);
-        sun = getSunPosition(this.date, center.latitude, center.longitude);
+        // TODO: at some point, calculate me just on demand
+        center = pixelToGeo(originX+halfWidth, originY+halfHeight);
+        sun = getSunPosition(_date, center.latitude, center.longitude);
 
         if (sun.altitude <= 0) {
             return;
@@ -1455,21 +1522,17 @@ var Shadows = {
 
         length = 1 / tan(sun.altitude);
         alpha = 0.4 / length;
-        this.directionX = cos(sun.azimuth) * length;
-        this.directionY = sin(sun.azimuth) * length;
+        _direction.x = cos(sun.azimuth) * length;
+        _direction.y = sin(sun.azimuth) * length;
 
         // TODO: maybe introduce Color.setAlpha()
-        this.color.a = alpha;
-        colorStr = this.color + '';
+        _color.a = alpha;
+        colorStr = _color + '';
 
         var i, il, j, jl,
             item,
             f, h, g,
             x, y,
-//            offX = originX-meta.x,
-//            offY = originY-meta.y,
-            offX = originX,
-            offY = originY,
             footprint,
             mode,
             isVisible,
@@ -1478,17 +1541,22 @@ var Shadows = {
             points,
             allFootprints = [];
 
-        context.beginPath();
+        _context.beginPath();
 
-        for (i = 0, il = Data.rendering.length; i < il; i++) {
-            item = Data.rendering[i];
+        for (i = 0, il = Data.renderItems.length; i < il; i++) {
+            item = Data.renderItems[i];
+
+// TODO: no shadows when buildings are too flat => don't add them to renderItems then
+//        if (item.height <= FlatBuildings.MAX_HEIGHT) {
+//            continue;
+//        }
 
             isVisible = false;
             f = item.footprint;
             footprint = [];
             for (j = 0, jl = f.length - 1; j < jl; j += 2) {
-                footprint[j]   = x = f[j]  -offX;
-                footprint[j+1] = y = f[j+1]-offY;
+                footprint[j]   = x = f[j]  -originX;
+                footprint[j+1] = y = f[j+1]-originY;
 
                 // TODO: checking footprint is sufficient for visibility - NOT VALID FOR SHADOWS!
                 if (!isVisible) {
@@ -1501,11 +1569,11 @@ var Shadows = {
             }
 
             // when fading in, use a dynamic height
-            h = item.isNew ? item.height*fadeFactor : item.height;
+            h = item.scale < 1 ? item.height*item.scale : item.height;
 
             // prepare same calculations for min_height if applicable
             if (item.minHeight) {
-                g = item.isNew ? item.minHeight*fadeFactor : item.minHeight;
+                g = item.scale < 1 ? item.minHeight*item.scale : item.minHeight;
             }
 
             mode = null;
@@ -1516,12 +1584,12 @@ var Shadows = {
                 bx = footprint[j+2];
                 by = footprint[j+3];
 
-                _a = this.project(ax, ay, h);
-                _b = this.project(bx, by, h);
+                _a = _project(ax, ay, h);
+                _b = _project(bx, by, h);
 
                 if (item.minHeight) {
-                    a = this.project(ax, ay, g);
-                    b = this.project(bx, by, g);
+                    a = _project(ax, ay, g);
+                    b = _project(bx, by, g);
                     ax = a.x;
                     ay = a.y;
                     bx = b.x;
@@ -1530,78 +1598,76 @@ var Shadows = {
 
                 if ((bx-ax) * (_a.y-ay) > (_a.x-ax) * (by-ay)) {
                     if (mode === 1) {
-                        context.lineTo(ax, ay);
+                        _context.lineTo(ax, ay);
                     }
                     mode = 0;
                     if (!j) {
-                        context.moveTo(ax, ay);
+                        _context.moveTo(ax, ay);
                     }
-                    context.lineTo(bx, by);
+                    _context.lineTo(bx, by);
                 } else {
                     if (mode === 0) {
-                        context.lineTo(_a.x, _a.y);
+                        _context.lineTo(_a.x, _a.y);
                     }
                     mode = 1;
                     if (!j) {
-                        context.moveTo(_a.x, _a.y);
+                        _context.moveTo(_a.x, _a.y);
                     }
-                    context.lineTo(_b.x, _b.y);
+                    _context.lineTo(_b.x, _b.y);
                 }
             }
 
-            context.closePath();
+            _context.closePath();
 
             allFootprints.push(footprint);
         }
 
-        context.fillStyle = colorStr;
-        context.fill();
+        _context.fillStyle = colorStr;
+        _context.fill();
 
         // now draw all the footprints as negative clipping mask
-        context.globalCompositeOperation = 'destination-out';
-        context.beginPath();
+        _context.globalCompositeOperation = 'destination-out';
+        _context.beginPath();
         for (i = 0, il = allFootprints.length; i < il; i++) {
             points = allFootprints[i];
-            context.moveTo(points[0], points[1]);
+            _context.moveTo(points[0], points[1]);
             for (j = 2, jl = points.length; j < jl; j += 2) {
-                context.lineTo(points[j], points[j+1]);
+                _context.lineTo(points[j], points[j+1]);
             }
-            context.lineTo(points[0], points[1]);
-            context.closePath();
+            _context.lineTo(points[0], points[1]);
+            _context.closePath();
         }
-        context.fillStyle = '#00ff00';
-        context.fill();
-        context.globalCompositeOperation = 'source-over';
-    },
+        _context.fillStyle = '#00ff00';
+        _context.fill();
+        _context.globalCompositeOperation = 'source-over';
+    };
 
-    project: function(x, y, h) {
-        return {
-            x: x + this.directionX*h,
-            y: y + this.directionY*h
-        };
-    },
+    me.setDate = function(date) {
+        _date = date;
+        me.render();
+    };
 
-    setDate: function(date) {
-        this.date = date;
-        this.render();
-    }
-};
+    return me;
+
+}());
+
 
 //****** file: FlatBuildings.js ******
 
-var FlatBuildings = {
+var FlatBuildings = (function() {
 
-    context: null,
-    maxHeight: 8,
+    var _context;
 
-    init: function(context) {
-        this.context = context;
-    },
+    var me = {};
 
-    render: function() {
-        var context = this.context;
+    me.MAX_HEIGHT = 8;
 
-        context.clearRect(0, 0, width, height);
+    me.setContext = function(context) {
+        _context = context;
+    };
+
+    me.render = function() {
+        _context.clearRect(0, 0, width, height);
 
         // show on high zoom levels only and avoid rendering during zoom
         if (zoom < minZoom || isZooming) {
@@ -1612,25 +1678,25 @@ var FlatBuildings = {
             item,
             f,
             x, y,
-//            offX = originX-meta.x,
-//            offY = originY-meta.y,
-            offX = originX,
-            offY = originY,
             footprint,
             isVisible,
             ax, ay;
 
-        context.beginPath();
+        _context.beginPath();
 
-        for (i = 0, il = Data.rendering.length; i < il; i++) {
-            item = Data.rendering[i];
+        for (i = 0, il = Data.renderItems.length; i < il; i++) {
+            item = Data.renderItems[i];
+
+            if (item.height > me.MAX_HEIGHT) {
+                continue;
+            }
 
             isVisible = false;
             f = item.footprint;
             footprint = [];
             for (j = 0, jl = f.length-1; j < jl; j += 2) {
-                footprint[j]   = x = f[j]  -offX;
-                footprint[j+1] = y = f[j+1]-offY;
+                footprint[j]   = x = f[j]  -originX;
+                footprint[j+1] = y = f[j+1]-originY;
 
                 // checking footprint is sufficient for visibility
                 if (!isVisible) {
@@ -1646,26 +1712,25 @@ var FlatBuildings = {
                 ax = footprint[j];
                 ay = footprint[j + 1];
                 if (!j) {
-                    context.moveTo(ax, ay);
+                    _context.moveTo(ax, ay);
                 } else {
-                    context.lineTo(ax, ay);
+                    _context.lineTo(ax, ay);
                 }
             }
 
-            context.closePath();
+            _context.closePath();
         }
 
-        context.fillStyle   = roofColorAlpha;
-        context.strokeStyle = altColorAlpha;
+        _context.fillStyle   = roofColorAlpha;
+        _context.strokeStyle = altColorAlpha;
 
-        context.stroke();
-        context.fill();
-    },
+        _context.stroke();
+        _context.fill();
+    };
 
-    getMaxHeight: function() {
-        return this.maxHeight;
-    }
-};
+    return me;
+
+}());
 
 
 //****** file: public.js ******
@@ -1690,7 +1755,7 @@ this.setDate = function(date) {
 };
 
 this.appendTo = function(parentNode) {
-    return Layers.init(parentNode);
+    return Layers.appendTo(parentNode);
 };
 
 /**
