@@ -43,7 +43,7 @@ new L.TileLayer('http://{s}.tiles.mapbox.com/v3/<YOUR MAPBOX KEY HERE>/{z}/{x}/{
 Add the buildings layer.
 
 ~~~ javascript
-new L.BuildingsLayer().addTo(map);
+new L.BuildingsLayer().addTo(map).load();
 ~~~
 
 As a popular alternative, you could pass a <a href="http://www.geojson.org/geojson-spec.html">GeoJSON</a> data object.
@@ -110,7 +110,9 @@ map.setCenter(
 Add the buildings layer.
 
 ~~~ javascript
-map.addLayer(new OpenLayers.Layer.Buildings());
+var osmb = new OpenLayers.Layer.Buildings();
+map.addLayer(osmb);
+osmb.load();
 ~~~
 
 
@@ -167,48 +169,34 @@ Methods
 
 <tr>
 <td>`setStyle({Object})`</td>
-<td>Set default styles.</td>
+<td>Set default styles. See below for details.</td>
 </tr>
 
 <tr>
-<td>`setDate(new Date(2013, 15, 1, 10, 30)))`</td>
+<td>setDate(new Date(2013, 15, 1, 10, 30)))</td>
 <td>Set date / time for shadow projection.</td>
 </tr>
 
+<tr>
+<td>geoJSON({Object})</td>
+<td>Just add a geoJSON data to your map.</td>
+</tr>
 
 
 
 
 <tr>
-<td>`geoJSON(url {String} | <a href="http://www.geojson.org/geojson-spec.html">GeoJSON</a> {Object}, isLatLon? {Boolean})`</td>
-<td>`
-geoJSON({
-  "type": "FeatureCollection",
-  "features": [{
-    "type": "Feature",
-    "geometry": {
-      "type": "Polygon",
-      "coordinates": [[
-        [13.37356, 52.52064],
-        [13.37350, 52.51971],
-        [13.37664, 52.51973],
-        [13.37594, 52.52062],
-        [13.37356, 52.52064]
-      ]]
-    },
-    "properties": {
-      "wallColor": "rgb(255,0,0)",
-      "roofColor": "rgb(255,128,0)",
-      "height": 500,
-      "minHeight": 0
-    }
-  }]
-})`</td>
+<td>load({String} | <a href="http://www.geojson.org/geojson-spec.html">GeoJSON</a> {Object}, isLatLon? {Boolean})`</td>
+</td>
 <td>The method accepts either a string which is handled as JSONP URL for retrieving GeoJSON data from it.<br>
 Or you can pass a common GeoJSON object to it. Supported shape types are Polygon and MultiPolygon.<br>
 The isLatLon parameter forces the method to swap coordinates Lon/Lat order.</td>
 </tr>
 </table>
+
+
+
+
 
 Styles
 
@@ -241,17 +229,18 @@ If color is set in GeoJSON, this will be used with highest priority.
 'rgb(255,200,200)'
 'rgba(255,200,200,0.9)'</td>
 <td>Define the objects alternate color.<br>
-    By default, wallColor will be adapted by some different brightness.
-    If setStyle() has been used used to set a different global wallColor, this will be applied.
-    If roofColor is set in GeoJSON, this will be used with highest priority.
+By default, wallColor will be adapted by some different brightness.
+If setStyle() has been used used to set a different global wallColor, this will be applied.
+If roofColor is set in GeoJSON, this will be used with highest priority.
 </td>
 </tr>
+
 <tr>
-    <td>shadows:</td>
-    <td>Boolean</td>
-    <td class="api-code">true</td>
-    <td>Enable or disable shadow rendering.<br>
-        By default, it's enabled and depends on viewer's current local time.
-    </td>
+<td>shadows:</td>
+<td>Boolean</td>
+<td class="api-code">true</td>
+<td>Enable or disable shadow rendering.<br>
+    By default, it's enabled and depends on viewer's current local time.
+</td>
 </tr>
 </table>
