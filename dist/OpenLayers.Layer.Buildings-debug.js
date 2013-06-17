@@ -891,7 +891,6 @@ function xhr(url, callback) {
 }
 
 
-<<<<<<< HEAD
 //****** file: Cache.js ******
 
 var Cache = (function() {
@@ -920,94 +919,6 @@ var Cache = (function() {
 
     return me;
 
-=======
-//****** file: Layers.js ******
-
-var Layers = (function() {
-
-    var _container = doc.createElement('DIV');
-    _container.style.pointerEvents = 'none';
-    _container.style.position = 'absolute';
-    _container.style.left = 0;
-    _container.style.top  = 0;
-
-    var _items = [];
-
-    // TODO: improve this to _createItem(Layer) => layer.setContext(context)
-    Shadows.setContext(      _createItem());
-    FlatBuildings.setContext(_createItem());
-    context = _createItem(); // default (global) render context
-
-    function _createItem() {
-        var canvas = doc.createElement('CANVAS');
-        canvas.style.webkitTransform = 'translate3d(0,0,0)'; // turn on hw acceleration
-        canvas.style.imageRendering = 'optimizeSpeed';
-        canvas.style.position = 'absolute';
-        canvas.style.left = 0;
-        canvas.style.top  = 0;
-
-        var context = canvas.getContext('2d');
-        context.lineCap   = 'round';
-        context.lineJoin  = 'round';
-        context.lineWidth = 1;
-
-        context.mozImageSmoothingEnabled    = false;
-        context.webkitImageSmoothingEnabled = false;
-
-        _items.push(canvas);
-        _container.appendChild(canvas);
-
-        return context;
-    }
-
-    var me = {};
-
-    me.appendTo = function(parentNode) {
-        parentNode.appendChild(_container);
-        return _container;
-    };
-
-    me.setSize = function(w, h) {
-        for (var i = 0, il = _items.length; i < il; i++) {
-            _items[i].width  = w;
-            _items[i].height = h;
-        }
-    };
-
-    return me;
-
-}());
-
-
-//****** file: Cache.js ******
-
-var Cache = (function() {
-
-    var _time = new Date();
-    var _data = {};
-
-    var me = {};
-
-    me.add = function(key, data) {
-        _data[key] = { data:data, time:Date.now() };
-    };
-
-    me.get = function(key) {
-        return _data[key] && _data[key].data;
-    };
-
-    me.purge = function() {
-        _time.setMinutes(_time.getMinutes()-5);
-        for (var key in _data) {
-            if (_data[key].time < _time) {
-                delete _data[key];
-            }
-        }
-    };
-
-    return me;
-
->>>>>>> be06c3628419de661af2c8bb557af93385a05bab
 }());
 
 
@@ -1044,7 +955,6 @@ digraph g{
 var Data = (function() {
 
     var _url;
-<<<<<<< HEAD
     var _index = {}; // maintain a list of cached items in order to fade in new ones
 
     function _closureParse(cacheKey) {
@@ -1054,40 +964,10 @@ var Data = (function() {
     }
 
     function _parse(data, cacheKey) {
-=======
-    var _itemIndex = {}; // maintain a list of cached items in order to fade in new ones
-
-    function _beforeLoad() {
-//      _itemIndex = {};
-        me.rawItems    = [];
-        me.renderItems = [];
-        Cache.purge();
-    }
-
-    function _onLoadFromCache(data, isNew) {
-        var newItems = me.scale(data, zoom, isNew);
-        for (var i = 0, il = newItems.length; i < il; i++) {
-            me.renderItems.push(newItems[i]);
-        }
-        fadeIn();
-    }
-
-    function _onLoadFromSet(data) {
-        if (!data) {
-            return;
-        }
-        var newItems = readGeoJSON(data.features);
-        _itemIndex = {};
-        _onLoadFromCache(newItems, true);
-    }
-
-    function _onLoad(data, cacheKey) {
->>>>>>> be06c3628419de661af2c8bb557af93385a05bab
         if (!data) {
             return;
         }
 
-<<<<<<< HEAD
         var items;
         if (data.type === 'FeatureCollection') { // GeoJSON
             items = readGeoJSON(data.features);
@@ -1118,85 +998,6 @@ var Data = (function() {
     }
 
     function _scale(items, zoom) {
-=======
-        var newItems;
-        if (data.type === 'FeatureCollection') { // GeoJSON
-            newItems = readGeoJSON(data.features);
-        } else if (data.osm3s) { // XAPI
-            newItems = readOSMXAPI(data.elements);
-        }
-
-        if (cacheKey) {
-            Cache.add(cacheKey, newItems);
-        }
-
-        // identify already present buildings to fade in new ones
-        var item;
-        for (var i = 0, il = newItems.length; i < il; i++) {
-            item = newItems[i];
-            if (!_itemIndex[item.id]) {
-                _itemIndex[item.id] = 1;
-            }
-        }
-
-        _onLoadFromCache(newItems, true);
-    }
-
-    var me = {};
-
-    me.rawItems    = []; // TODO: move to render
-    me.renderItems = []; // TODO: move to render
-
-    me.load = function(url) {
-        _url = url;
-        me.update();
-    };
-
-    me.update = function() {
-        if (!_url || zoom < MIN_ZOOM) {
-            return;
-        }
-
-        var nw = pixelToGeo(originX,       originY),
-            se = pixelToGeo(originX+width, originY+height),
-            sizeLat = DATA_TILE_SIZE,
-            sizeLon = DATA_TILE_SIZE*2;
-
-        var bounds = {
-            n: (nw.latitude /sizeLat <<0) * sizeLat + sizeLat,
-            e: (se.longitude/sizeLon <<0) * sizeLon + sizeLon,
-            s: (se.latitude /sizeLat <<0) * sizeLat,
-            w: (nw.longitude/sizeLon <<0) * sizeLon
-        };
-
-        _beforeLoad();
-        var cached;
-
-        var lat, lon, key;
-        for (lat = bounds.s; lat <= bounds.n; lat += sizeLat) {
-            for (lon = bounds.w; lon <= bounds.e; lon += sizeLon) {
-                key = lat + ',' + lon;
-                if ((cached = Cache.get(key))) {
-                    _onLoadFromCache(cached);
-                } else {
-                    xhr(template(_url, {
-                        n: crop(lat+sizeLat),
-                        e: crop(lon+sizeLon),
-                        s: crop(lat),
-                        w: crop(lon)
-                    }));
-                }
-            }
-        }
-    };
-
-    me.set = function(data) {
-        _beforeLoad();
-        _onLoadFromSet(data);
-    };
-
-    me.scale = function(rawItems, zoom, isNew) {
->>>>>>> be06c3628419de661af2c8bb557af93385a05bab
         var i, il, j, jl,
             res = [],
             item,
@@ -1205,20 +1006,12 @@ var Data = (function() {
             color, wallColor, altColor, roofColor,
             zoomDelta = maxZoom-zoom;
 
-<<<<<<< HEAD
         for (i = 0, il = items.length; i < il; i++) {
-=======
-        for (i = 0, il = rawItems.length; i < il; i++) {
->>>>>>> be06c3628419de661af2c8bb557af93385a05bab
             wallColor = null;
             altColor  = null;
             roofColor = null;
 
-<<<<<<< HEAD
             item = items[i];
-=======
-            item = rawItems[i];
->>>>>>> be06c3628419de661af2c8bb557af93385a05bab
 
             height = (item.height || DEFAULT_HEIGHT)*HEIGHT_SCALE >> zoomDelta;
             if (!height) {
@@ -1265,58 +1058,21 @@ var Data = (function() {
                 wallColor: wallColor,
                 altColor:  altColor,
                 roofColor: roofColor,
-<<<<<<< HEAD
                 center:    getCenter(footprint)
-=======
-                center:    getCenter(footprint),
-                scale:     isNew ? 0 : 1
->>>>>>> be06c3628419de661af2c8bb557af93385a05bab
             });
         }
 
         return res;
-<<<<<<< HEAD
     }
-=======
-    };
-
-    return me;
-
-}());
->>>>>>> be06c3628419de661af2c8bb557af93385a05bab
 
     var me = {};
 
     me.renderItems = []; // TODO: move to renderer
 
-<<<<<<< HEAD
     me.load = function(url) {
         _url = url;
         me.update();
     };
-=======
-function setSize(w, h) {
-    width  = w;
-    height = h;
-    halfWidth  = width /2 <<0;
-    halfHeight = height/2 <<0;
-    camX = halfWidth;
-    camY = height;
-    camZ = width / (1.5 / (window.devicePixelRatio || 1)) / tan(90/2) <<0; // adapting cam pos to field of view (90°), 1.5 is an empirical correction factor
-    Layers.setSize(width, height);
-    // TODO: change of maxHeight needs to adjust building heights!
-    maxHeight = camZ-50;
-}
-
-function setOrigin(x, y) {
-    originX = x;
-    originY = y;
-}
-
-function setZoom(z) {
-    zoom = z;
-    size = MAP_TILE_SIZE <<zoom;
->>>>>>> be06c3628419de661af2c8bb557af93385a05bab
 
     me.update = function() {
         if (!_url || zoom < MIN_ZOOM) {
@@ -1328,17 +1084,12 @@ function setZoom(z) {
             sizeLat = DATA_TILE_SIZE,
             sizeLon = DATA_TILE_SIZE*2;
 
-<<<<<<< HEAD
         var bounds = {
             n: (nw.latitude /sizeLat <<0) * sizeLat + sizeLat,
             e: (se.longitude/sizeLon <<0) * sizeLon + sizeLon,
             s: (se.latitude /sizeLat <<0) * sizeLat,
             w: (nw.longitude/sizeLon <<0) * sizeLon
         };
-=======
-    Data.renderItems = Data.scale(Data.rawItems, zoom);
-}
->>>>>>> be06c3628419de661af2c8bb557af93385a05bab
 
         Cache.purge();
         me.renderItems = [];
@@ -1366,17 +1117,11 @@ function setZoom(z) {
         }
     };
 
-<<<<<<< HEAD
     me.set = function(data) {
         me.renderItems = [];
         _index = {};
         _parse(data);
     };
-=======
-    if (style.shadows !== undefined) {
-        Shadows.enable(style.shadows);
-    }
->>>>>>> be06c3628419de661af2c8bb557af93385a05bab
 
     return me;
 
@@ -1385,18 +1130,11 @@ function setZoom(z) {
 
 //****** file: render.js ******
 
-<<<<<<< HEAD
 
 function fadeIn() {
     if (animTimer) {
         return;
     }
-=======
-function onMoveEnd(e) {
-    renderAll();
-    Data.update(); // => fadeIn() => renderAll()
-}
->>>>>>> be06c3628419de661af2c8bb557af93385a05bab
 
     animTimer = setInterval(function() {
         var item, needed = false;
@@ -1413,36 +1151,10 @@ function onMoveEnd(e) {
 
         renderAll();
 
-<<<<<<< HEAD
         if (!needed) {
             clearInterval(animTimer);
             animTimer = null;
         }
-=======
-function fadeIn() {
-    if (animTimer) {
-        return;
-    }
-
-    animTimer = setInterval(function() {
-        var item;
-        var needed = false;
-        for (var i = 0, il = Data.renderItems.length; i < il; i++) {
-            item = Data.renderItems[i];
-            if (item.scale < 1) {
-                item.scale += 0.5*0.2; // amount*easing
-                if (item.scale > 1) {
-                    item.scale = 1;
-                }
-                needed = true;
-            }
-        }
-        renderAll();
-        if (!needed) {
-            clearInterval(animTimer);
-            animTimer = null;
-        }
->>>>>>> be06c3628419de661af2c8bb557af93385a05bab
     }, 33);
 }
 
@@ -1607,7 +1319,6 @@ function debugLine(ax, ay, bx, by, color) {
 //****** file: Shadows.js ******
 
 var Shadows = (function() {
-<<<<<<< HEAD
 
     var _context;
     var _enabled = true;
@@ -1624,24 +1335,6 @@ var Shadows = (function() {
 
     var me = {};
 
-=======
-
-    var _context;
-    var _enabled = true;
-    var _color = new Color(0, 0, 0);
-    var _date = null;
-    var _direction = { x:0, y:0 };
-
-    function _project(x, y, h) {
-        return {
-            x: x + _direction.x*h,
-            y: y + _direction.y*h
-        };
-    }
-
-    var me = {};
-
->>>>>>> be06c3628419de661af2c8bb557af93385a05bab
     me.setContext = function(context) {
         _context = context;
         // TODO: fix bad Date() syntax
@@ -1810,7 +1503,6 @@ var FlatBuildings = (function() {
     var _context;
 
     var me = {};
-<<<<<<< HEAD
 
     me.MAX_HEIGHT = 8;
 
@@ -1818,15 +1510,6 @@ var FlatBuildings = (function() {
         _context = context;
     };
 
-=======
-
-    me.MAX_HEIGHT = 8;
-
-    me.setContext = function(context) {
-        _context = context;
-    };
-
->>>>>>> be06c3628419de661af2c8bb557af93385a05bab
     me.render = function() {
         _context.clearRect(0, 0, width, height);
 
@@ -1844,17 +1527,10 @@ var FlatBuildings = (function() {
             ax, ay;
 
         _context.beginPath();
-<<<<<<< HEAD
 
         for (i = 0, il = Data.renderItems.length; i < il; i++) {
             item = Data.renderItems[i];
 
-=======
-
-        for (i = 0, il = Data.renderItems.length; i < il; i++) {
-            item = Data.renderItems[i];
-
->>>>>>> be06c3628419de661af2c8bb557af93385a05bab
             if (item.height > me.MAX_HEIGHT) {
                 continue;
             }
@@ -1895,7 +1571,6 @@ var FlatBuildings = (function() {
         _context.stroke();
         _context.fill();
     };
-<<<<<<< HEAD
 
     return me;
 
@@ -2047,12 +1722,38 @@ function onZoomEnd(e) {
     Data.update(); // => fadeIn()
     renderAll();
 }
-=======
 
-    return me;
+var self = this;
+function onDeviceMotion(e) {
+	self.setCamOffset(e.x, e.y);
+    render();
+}
 
-}());
->>>>>>> be06c3628419de661af2c8bb557af93385a05bab
+if (window.DeviceMotionEvent) {
+	var minMovement = 2, abs = Math.abs;
+	window.addEventListener('devicemotion', function(e) {
+		var t;
+		if ((e = e.accelerationIncludingGravity || e.acceleration)) {
+			if (abs(e.x) > minMovement || abs(e.y) > minMovement || abs(e.z) > minMovement) {
+				switch (window.orientation) {
+					case  -90: t = e.x; e.x =  e.y; e.y = -t; break;
+					case   90: t = e.x; e.x = -e.y; e.y =  t; break;
+					case  180:
+					case -180: e.x *= -1; e.y *= -1; break;
+				}
+				onDeviceMotion({ x:-e.x*10, y:-e.y*10 });
+			}
+		}
+    });
+}
+
+window.addEventListener('mousemove', function(e) {
+	var minMovement = 2, abs = Math.abs;
+    var x = width/2-e.x, y = height-e.y;
+    if (abs(x) > minMovement || abs(y) > minMovement) {
+        onDeviceMotion({ x:-x/3, y:-y/3 });
+    }
+});
 
 
 //****** file: public.js ******
@@ -2213,19 +1914,23 @@ OpenLayers.Layer.Buildings = OpenLayers.Class(OpenLayers.Layer, {
     // TODO: refactor these ugly bindings
 
     setStyle: function(style)  {
-        return this.osmb.setStyle(style);
+        this.osmb.setStyle(style);
+        return this;
     },
 
     setDate: function(date)  {
-        return this.osmb.setDate(date);
+        this.osmb.setDate(date);
+        return this;
     },
 
     load: function(url) {
         this.osmb.loadData(url);
+        return this;
     },
 
     geoJSON: function(data) {
         this.osmb.setData(data);
+        return this;
     }
 });
 
