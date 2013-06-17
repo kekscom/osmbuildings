@@ -11,43 +11,38 @@ http://osmbuildings.org/
 
 ## Files
 
-Release version 0.1.8a https://github.com/kekscom/osmbuildings/tree/v0.1.8a
+Release version 0.1.8a https://github.com/kekscom/osmbuildings/tree/v0.1.8a<br>
 Latest development version https://github.com/kekscom/osmbuildings
 
-For any further information visit http://osmbuildings.org, follow [@osmbuildings](https://twitter.com/osmbuildings) on Twitter or report issues here on Github.
+For further information visit http://osmbuildings.org, follow [@osmbuildings](https://twitter.com/osmbuildings) on Twitter or report issues here on Github.
 
 
 ## Documentation
 
 ### Integration with Leaflet
 
-#### Link Leaflet and OSM Buildings files
+Link Leaflet and OSM Buildings files in your HTML head section.
 
-Your HTML head section should look like this
-
-~~~
-&lt;head&gt;
-	&lt;link rel=&quot;stylesheet&quot; href=&quot;http://cdn.leafletjs.com/leaflet-0.5.1/leaflet.css&quot;&gt;
-	&lt;script src=&quot;http://cdn.leafletjs.com/leaflet-0.5.1/leaflet.js&quot;&gt;&lt;/script&gt;
-	&lt;script src=&quot;L.BuildingsLayer.js&quot;&gt;&lt;/script&gt;
-&lt;/head&gt;
+~~~ html
+<head>
+  <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.5.1/leaflet.css">
+  <script src="http://cdn.leafletjs.com/leaflet-0.5.1/leaflet.js"></script>
+  <script src="L.BuildingsLayer.js"></script>
+</head>
 ~~~
 
-#### Initialize the map engine and add a map tile layer
-
+Initialize the map engine and add a map tile layer.<br>
 Position is set to Berlin at zoom level 17, I'm using MapBox tiles here.
 
-~~~
+~~~ javascript
 var map = new L.Map('map').setView([52.52020, 13.37570], 17);
-new L.TileLayer(
-    'http://{s}.tiles.mapbox.com/v3/<YOUR MAPBOX KEY HERE>/{z}/{x}/{y}.png',
-    { attribution: 'Map tiles &copy; <a href="http://mapbox.com">MapBox</a>', maxZoom: 17 }
-).addTo(map);
+new L.TileLayer('http://{s}.tiles.mapbox.com/v3/<YOUR MAPBOX KEY HERE>/{z}/{x}/{y}.png',
+  { attribution: 'Map tiles &copy; <a href="http://mapbox.com">MapBox</a>', maxZoom: 17 }).addTo(map);
 ~~~
 
-#### Add the buildings layer
+Add the buildings layer.
 
-~~~
+~~~ javascript
 new L.BuildingsLayer().addTo(map);
 ~~~
 
@@ -55,26 +50,26 @@ As a popular alternative, you could pass a <a href="http://www.geojson.org/geojs
 
 ~~~
 var data = {
-    "type": "FeatureCollection",
-    "features": [{
-        "type": "Feature",
-        "geometry": {
-            "type": "Polygon",
-            "coordinates": [[
-                [13.37356, 52.52064],
-                [13.37350, 52.51971],
-                [13.37664, 52.51973],
-                [13.37594, 52.52062],
-                [13.37356, 52.52064]
-            ]]
-        },
-        "properties": {
-            "wallColor": "rgb(255,0,0)",
-            "roofColor": "rgb(255,128,0)",
-            "height": 500,
-            "minHeight": 0
-        }
-    }]
+  "type": "FeatureCollection",
+  "features": [{
+    "type": "Feature",
+    "geometry": {
+      "type": "Polygon",
+      "coordinates": [[
+        [13.37356, 52.52064],
+        [13.37350, 52.51971],
+        [13.37664, 52.51973],
+        [13.37594, 52.52062],
+        [13.37356, 52.52064]
+      ]]
+    },
+    "properties": {
+      "wallColor": "rgb(255,0,0)",
+      "roofColor": "rgb(255,128,0)",
+      "height": 500,
+      "minHeight": 0
+    }
+  }]
 };
 
 new L.BuildingsLayer().addTo(map).geoJSON(data);
@@ -83,22 +78,19 @@ new L.BuildingsLayer().addTo(map).geoJSON(data);
 
 ### Integration with OpenLayers
 
-#### Link OpenLayers and OSM Buildings files
+Link OpenLayers and OSM Buildings files in your HTML head section.
 
-Your HTML head section should look like this
-
-~~~
-&lt;head&gt;
-	&lt;script src=&quot;http://www.openlayers.org/api/OpenLayers.js&quot;&gt;&lt;/script&gt;
-	&lt;script src=&quot;dist/Openlayers.Layer.Buildings.js&quot;&gt;&lt;/script&gt;
-&lt;/head&gt;
+~~~ html
+<head>
+  <script src="http://www.openlayers.org/api/OpenLayers.js"></script>
+  <script src="Openlayers.Layer.Buildings.js"></script>
+</head>
 ~~~
 
-#### Initialize the map engine and add a map tile layer
-
+Initialize the map engine and add a map tile layer.<br>
 Position is set to Berlin at zoom level 17.
 
-~~~
+~~~ javascript
 var map = new OpenLayers.Map('map');
 map.addControl(new OpenLayers.Control.LayerSwitcher());
 
@@ -106,20 +98,24 @@ var osm = new OpenLayers.Layer.OSM();
 map.addLayer(osm);
 
 map.setCenter(
-    new OpenLayers.LonLat(13.37570, 52.52020)
-        .transform(
-            new OpenLayers.Projection('EPSG:4326'),
-            map.getProjectionObject()
-        ),
-    17
+  new OpenLayers.LonLat(13.37570, 52.52020)
+    .transform(
+      new OpenLayers.Projection('EPSG:4326'),
+      map.getProjectionObject()
+    ),
+  17
 );
 ~~~
 
-##### Add the buildings layer, database
+Add the buildings layer.
 
-~~~
+~~~ javascript
 map.addLayer(new OpenLayers.Layer.Buildings());
 ~~~
+
+
+
+
 
 
 ## API
