@@ -1,6 +1,5 @@
 this.setStyle = function(style) {
     setStyle(style);
-    return this;
 };
 
 this.setCamOffset = function(x, y) {
@@ -14,27 +13,18 @@ this.setMaxZoom = function(z) {
 
 this.setDate = function(date) {
     Shadows.setDate(date);
-    return this;
 };
 
 this.appendTo = function(parentNode) {
     return Layers.appendTo(parentNode);
 };
 
-/**
- * @param {string} url string
- */
 this.loadData = function(url) {
     Data.load(url);
-    return this;
 };
 
-/**
- * @param {object} data object
- */
 this.setData = function(data) {
     Data.set(data);
-    return this;
 };
 
 this.onMoveEnd   = onMoveEnd;
