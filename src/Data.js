@@ -144,7 +144,7 @@ var Data = (function() {
     me.renderItems = []; // TODO: move to renderer
 
     me.load = function(url) {
-        _url = url;
+        _url = url || OSM_XAPI_URL;
         me.update();
     };
 

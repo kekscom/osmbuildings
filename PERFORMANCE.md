@@ -15,7 +15,7 @@ Probably develop the concept into rendering pipelines.
 Seemed to be a good idea making these a bit more readable.
 Loss expected but turned out to be a slight gain.
 http://jsperf.com/readable-keys/2
-TODO: Not true anymore. Refactor to objects/properties.
+TODO: Not true anymore. Refactor to objects/properties. DONE
 
 
 ## Combined 2d faces

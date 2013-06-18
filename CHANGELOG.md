@@ -1,8 +1,16 @@
 # Changelog
 
-## 2013-05-31
+## 2013-06-18 (v0.1.9a Release Candidate)
 
 - backend removed, now using web services with GeoJSON or XAPI
+- data is subdivieded into tiles
+- data tiles are cached
+- fix for chained method calls
+- fix for flat buildings from rendering tall buildings too
+- min zoom level decreased to 15
+- center() fixed
+- fix for setStyle() removing shadows
+- material color mapping added
 
 
 ## v0.1.8a @ 2013-03-10

@@ -126,18 +126,22 @@ L.BuildingsLayer = L.Class.extend({
     // TODO: refactor these ugly bindings
 
     setStyle: function(style)  {
-        return this.osmb.setStyle(style);
+        this.osmb.setStyle(style);
+        return this;
     },
 
     setDate: function(date)  {
-        return this.osmb.setDate(date);
+        this.osmb.setDate(date);
+        return this;
     },
 
     load: function(url) {
         this.osmb.loadData(url);
+        return this;
     },
 
     geoJSON: function(data) {
         this.osmb.setData(data);
+        return this;
     }
 });
