@@ -1,6 +1,6 @@
 <img src="http://osmbuildings.org/logo.png"/>
 
-OSM Buildings is a JavaScript library for visualizing 3D OSM building geometry on interactive maps.
+OSM Buildings is a JavaScript library for visualizing OpenStreetMaps building geometry on interactive maps.<br>
 Everything is stabilizing now, entering beta state.
 
 
@@ -168,7 +168,7 @@ Methods
 </tr>
 
 <tr>
-<td>`setStyle({Object})`</td>
+<td>setStyle({Object})</td>
 <td>Set default styles. See below for details.</td>
 </tr>
 
@@ -182,21 +182,20 @@ Methods
 <td>Just add a geoJSON data to your map.</td>
 </tr>
 
-
-
-
 <tr>
-<td>load({String} | <a href="http://www.geojson.org/geojson-spec.html">GeoJSON</a> {Object}, isLatLon? {Boolean})`</td>
+<td>load({String})</td>
 </td>
-<td>The method accepts either a string which is handled as JSONP URL for retrieving GeoJSON data from it.<br>
-Or you can pass a common GeoJSON object to it. Supported shape types are Polygon and MultiPolygon.<br>
-The isLatLon parameter forces the method to swap coordinates Lon/Lat order.</td>
+<td>Without parameter, it loads data tiles from OpenStreetMaps. You don't need to care for data anymore.
+As an alternative, pass an URL to <a href="http://cartodb.com/">CartoDB</a>. See below.
+</td>
 </tr>
 </table>
 
+CartoDB URL example
 
-
-
+~~~ url
+http://<YOUR CARTODB ACCOUNT HERE>.cartodb.com/api/v2/sql?q=' + ('SELECT cartodb_id AS id, height, ST_AsText(ST_MakePolygon(ST_ExteriorRing(ST_GeometryN(the_geom, 1)))) AS the_geom, color FROM map_polygon WHERE the_geom %26%26 ST_SetSRID(ST_MakeBox2D(ST_Point({w}, {s}), ST_Point({e}, {n})), 4326)') + '&format=geojson
+~~~
 
 Styles
 
@@ -204,43 +203,25 @@ Styles
 <tr>
 <th>Option</th>
 <th>Type</th>
-<th>Example</th>
 <th>Description</th>
 </tr>
 
 <tr>
 <td>color or <br>
-wallColor:</td>
+wallColor</td>
 <td>String</td>
-<td>`'#ffcc00'
-'rgb(255,200,200)'
-'rgba(255,200,200,0.9)'`</td>
-<td>Define the objects primary color.<br>
-Default color is rgb(200,190,180).
-If setStyle() has been used to set different global colors, these will be applied.
-If color is set in GeoJSON, this will be used with highest priority.
-</td>
+<td>Defines the objects default primary color. I.e. #ffcc00, rgb(255,200,200), rgba(255,200,200,0.9)</td>
 </tr>
 
 <tr>
-<td>roofColor:</td>
+<td>roofColor</td>
 <td>String</td>
-<td class="api-code">'#ffcc00'
-'rgb(255,200,200)'
-'rgba(255,200,200,0.9)'</td>
-<td>Define the objects alternate color.<br>
-By default, wallColor will be adapted by some different brightness.
-If setStyle() has been used used to set a different global wallColor, this will be applied.
-If roofColor is set in GeoJSON, this will be used with highest priority.
-</td>
+<td>Defines the objects default roof color.</td>
 </tr>
 
 <tr>
-<td>shadows:</td>
+<td>shadows</td>
 <td>Boolean</td>
-<td class="api-code">true</td>
-<td>Enable or disable shadow rendering.<br>
-    By default, it's enabled and depends on viewer's current local time.
-</td>
+<td>Enables or disables shadow rendering, default: enabled</td>
 </tr>
 </table>
