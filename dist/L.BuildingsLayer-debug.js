@@ -1089,7 +1089,7 @@ var Data = (function() {
     me.renderItems = []; // TODO: move to renderer
 
     me.load = function(url) {
-        _url = url;
+        _url = url || OSM_XAPI_URL;
         me.update();
     };
 
@@ -1747,7 +1747,6 @@ function onZoomEnd(e) {
 
 this.setStyle = function(style) {
     setStyle(style);
-    return this;
 };
 
 this.setCamOffset = function(x, y) {
@@ -1761,27 +1760,18 @@ this.setMaxZoom = function(z) {
 
 this.setDate = function(date) {
     Shadows.setDate(date);
-    return this;
 };
 
 this.appendTo = function(parentNode) {
     return Layers.appendTo(parentNode);
 };
 
-/**
- * @param {string} url string
- */
 this.loadData = function(url) {
     Data.load(url);
-    return this;
 };
 
-/**
- * @param {object} data object
- */
 this.setData = function(data) {
     Data.set(data);
-    return this;
 };
 
 this.onMoveEnd   = onMoveEnd;
@@ -1797,9 +1787,8 @@ this.render      = render;
 
     };
 
-    osmb.VERSION      = VERSION;
-    osmb.ATTRIBUTION  = ATTRIBUTION;
-    osmb.OSM_XAPI_URL = OSM_XAPI_URL;
+    osmb.VERSION     = VERSION;
+    osmb.ATTRIBUTION = ATTRIBUTION;
 
     return osmb;
 
