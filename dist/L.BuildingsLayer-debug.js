@@ -878,12 +878,6 @@ function geoToPixel(lat, lon) {
     };
 }
 
-function template(str, data) {
-    return str.replace(/\{ *([\w_]+) *\}/g, function(tag, key) {
-        return data[key] || tag;
-    });
-}
-
 function fromRange(sVal, sMin, sMax, dMin, dMax) {
     sVal = min(max(sVal, sMin), sMax);
     var rel = (sVal-sMin) / (sMax-sMin),
@@ -891,9 +885,45 @@ function fromRange(sVal, sMin, sMax, dMin, dMax) {
     return min(max(dMin + rel*range, dMin), dMax);
 }
 
-function xhr(url, callback) {
-    var req = new XMLHttpRequest();
-    req.onreadystatechange = function () {
+function xhr(_url, param, callback) {
+    var url = _url.replace(/\{ *([\w_]+) *\}/g, function(tag, key) {
+        return param[key] || tag;
+    });
+
+    var req = 'XDomainRequest' in window ? new XDomainRequest() : new XMLHttpRequest();
+
+    function changeState(state) {
+        if ('XDomainRequest' in window && state !== req.readyState) {
+            req.readyState = state;
+            if (req.onreadystatechange) {
+                req.onreadystatechange();
+            }
+        }
+    }
+
+    req.onerror = function() {
+        req.status = 500;
+        req.statusText = 'Error';
+        changeState(4);
+    };
+
+    req.ontimeout = function() {
+        req.status = 408;
+        req.statusText = 'Timeout';
+        changeState(4);
+    };
+
+    req.onprogress = function() {
+        changeState(3);
+    };
+
+    req.onload = function() {
+        req.status = 200;
+        req.statusText = 'Ok';
+        changeState(4);
+    };
+
+    req.onreadystatechange = function() {
         if (req.readyState !== 4) {
             return;
         }
@@ -904,8 +934,13 @@ function xhr(url, callback) {
             callback(JSON.parse(req.responseText));
         }
     };
+
+    changeState(0);
     req.open('GET', url);
+    changeState(1);
     req.send(null);
+    changeState(2);
+
     return req;
 }
 
@@ -1117,20 +1152,18 @@ var Data = (function() {
         var lat, lon,
             cached, key;
 
-
-
         for (lat = bounds.s; lat <= bounds.n; lat += sizeLat) {
             for (lon = bounds.w; lon <= bounds.e; lon += sizeLon) {
                 key = lat + ',' + lon;
                 if ((cached = Cache.get(key))) {
                     _add(cached);
                 } else {
-                    xhr(template(_url, {
+                    xhr(_url, {
                         n: crop(lat+sizeLat),
                         e: crop(lon+sizeLon),
                         s: crop(lat),
                         w: crop(lon)
-                    }), _closureParse(key));
+                    }, _closureParse(key));
                 }
             }
         }

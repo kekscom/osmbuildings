@@ -172,20 +172,18 @@ var Data = (function() {
         var lat, lon,
             cached, key;
 
-
-
         for (lat = bounds.s; lat <= bounds.n; lat += sizeLat) {
             for (lon = bounds.w; lon <= bounds.e; lon += sizeLon) {
                 key = lat + ',' + lon;
                 if ((cached = Cache.get(key))) {
                     _add(cached);
                 } else {
-                    xhr(template(_url, {
+                    xhr(_url, {
                         n: crop(lat+sizeLat),
                         e: crop(lon+sizeLon),
                         s: crop(lat),
                         w: crop(lon)
-                    }), _closureParse(key));
+                    }, _closureParse(key));
                 }
             }
         }
