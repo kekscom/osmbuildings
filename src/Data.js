@@ -56,6 +56,21 @@ var Data = (function() {
         _add(items, true);
     }
 
+    function _getFootprint(polygon) {
+        var footprint = new Int32Array(polygon.length),
+            px;
+        for (var i = 0, il = polygon.length-1; i < il; i+=2) {
+            px = geoToPixel(polygon[i], polygon[i+1]);
+            footprint[i]   = px.x;
+            footprint[i+1] = px.y;
+        }
+        footprint = simplify(footprint);
+        if (footprint.length < 8) { // 3 points + end==start (*2)
+            return;
+        }
+        return footprint;
+    }
+
     function _add(data, isNew) {
         var items = _scale(data, zoom, isNew);
 
@@ -75,15 +90,16 @@ var Data = (function() {
         var i, il, j, jl,
             res = [],
             item,
-            polygon, px,
             height, minHeight, footprint,
             color, wallColor, altColor, roofColor,
+            innerWays, innerFootprint,
             zoomDelta = maxZoom-zoom;
 
         for (i = 0, il = items.length; i < il; i++) {
             wallColor = null;
             altColor  = null;
             roofColor = null;
+            innerWays = [];
 
             item = items[i];
 
@@ -97,17 +113,16 @@ var Data = (function() {
                 continue;
             }
 
-            polygon = item.footprint;
-            footprint = new Int32Array(polygon.length);
-            for (j = 0, jl = polygon.length-1; j < jl; j+=2) {
-                px = geoToPixel(polygon[j], polygon[j+1]);
-                footprint[j]   = px.x;
-                footprint[j+1] = px.y;
+            if (!(footprint = _getFootprint(item.footprint))) {
+                continue;
             }
 
-            footprint = simplify(footprint);
-            if (footprint.length < 8) { // 3 points + end=start (x2)
-                continue;
+            if (item.innerWays) {
+                for (j = 0, jl = item.innerWays.length; j < jl; j++) {
+                    if ((innerFootprint = _getFootprint(item.innerWays[j]))) {
+                        innerWays.push(innerFootprint);
+                    }
+                }
             }
 
             if (item.wallColor) {
@@ -132,7 +147,8 @@ var Data = (function() {
                 wallColor: wallColor,
                 altColor:  altColor,
                 roofColor: roofColor,
-                center:    getCenter(footprint)
+                center:    getCenter(footprint),
+                innerWays: innerWays.length ? innerWays : null
             });
         }
 

@@ -137,6 +137,60 @@ function render() {
         context.fillStyle   = item.roofColor || roofColorAlpha;
         context.strokeStyle = item.altColor  || altColorAlpha;
         drawShape(roof, true);
+
+
+
+if (item.innerWays) {
+    console.log(item.innerWays);
+    for (var v = 0, vl = item.innerWays.length; v < vl; v++) {
+        roof = [];
+        for (j = 0, jl = item.innerWays[v].length-3; j < jl; j += 2) {
+            ax = item.innerWays[v][j]  -originX;
+            ay = item.innerWays[v][j+1]-originY;
+            bx = item.innerWays[v][j+2]-originX;
+            by = item.innerWays[v][j+3]-originY;
+
+            // project 3d to 2d on extruded footprint
+            _a = project(ax, ay, m);
+            _b = project(bx, by, m);
+
+            if (item.minHeight) {
+                a = project(ax, ay, n);
+                b = project(bx, by, n);
+                ax = a.x;
+                ay = a.y;
+                bx = b.x;
+                by = b.y;
+            }
+/*
+            // backface culling check
+            if ((bx-ax) * (_a.y-ay) > (_a.x-ax) * (by-ay)) {
+                // depending on direction, set wall shading
+                if ((ax < bx && ay < by) || (ax > bx && ay > by)) {
+                    context.fillStyle = item.altColor  || altColorAlpha;
+                } else {
+                    context.fillStyle = item.wallColor || wallColorAlpha;
+                }
+
+                drawShape([
+                    bx, by,
+                    ax, ay,
+                    _a.x, _a.y,
+                    _b.x, _b.y
+                ]);
+            }
+*/
+            roof[j]   = _a.x;
+            roof[j+1] = _a.y;
+        }
+
+        // fill roof and optionally stroke it
+//        context.fillStyle   = item.roofColor || roofColorAlpha;
+//        context.strokeStyle = item.altColor  || altColorAlpha;
+        context.fillStyle   = '#ffffff';
+        context.strokeStyle = '#000000';
+        console.log(roof);
+        drawShape(roof, true);
     }
 }
 

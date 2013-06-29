@@ -1,6 +1,3 @@
-// beware, it's not easy to use this standalone
-// dependencies to: makeClockwiseWinding()
-
 var readGeoJSON = function(collection) {
     var i, il, j, jl,
         res = [],
@@ -62,7 +59,7 @@ var readGeoJSON = function(collection) {
         // one item per coordinates ring (usually just one ring)
         item = {
             id:properties.id || (footprint[0] + ',' + footprint[1]),
-            footprint:makeClockwiseWinding(footprint)
+            footprint:makeWinding(footprint, 'CW')
         };
 
         if (heightSum)            item.height    = heightSum/polygon.length <<0;
