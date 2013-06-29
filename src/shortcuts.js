@@ -10,6 +10,8 @@ var Int32Array = Int32Array || Array,
     atan = m.atan,
     min = m.min,
     max = m.max,
+    ceil = m.ceil,
+    floor = m.floor,
     doc = document;
 
 /*<debug*/

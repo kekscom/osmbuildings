@@ -175,10 +175,10 @@ var Data = (function() {
             sizeLon = DATA_TILE_SIZE*2;
 
         var bounds = {
-            n: (nw.latitude /sizeLat <<0) * sizeLat + sizeLat,
-            e: (se.longitude/sizeLon <<0) * sizeLon + sizeLon,
-            s: (se.latitude /sizeLat <<0) * sizeLat,
-            w: (nw.longitude/sizeLon <<0) * sizeLon
+            n: ceil( nw.latitude /sizeLat) * sizeLat,
+            e: ceil( se.longitude/sizeLon) * sizeLon,
+            s: floor(se.latitude /sizeLat) * sizeLat,
+            w: floor(nw.longitude/sizeLon) * sizeLon
         };
 
         Cache.purge();
