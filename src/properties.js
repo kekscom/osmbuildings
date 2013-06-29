@@ -22,9 +22,9 @@ function setZoom(z) {
 
     zoomAlpha = 1 - fromRange(zoom, minZoom, maxZoom, 0, 0.3);
 
-    wallColorAlpha = wallColor.setAlpha(zoomAlpha) + '';
-    altColorAlpha  = altColor.setAlpha( zoomAlpha) + '';
-    roofColorAlpha = roofColor.setAlpha(zoomAlpha) + '';
+    wallColorAlpha = defaultWallColor.setAlpha(zoomAlpha) + '';
+    altColorAlpha  = defaultAltColor.setAlpha( zoomAlpha) + '';
+    roofColorAlpha = defaultRoofColor.setAlpha(zoomAlpha) + '';
 }
 
 function setCam(x, y) {
@@ -35,19 +35,19 @@ function setCam(x, y) {
 function setStyle(style) {
     style = style || {};
     if (style.color || style.wallColor) {
-        wallColor = Color.parse(style.color || style.wallColor);
-        wallColorAlpha = wallColor.setAlpha(zoomAlpha) + '';
+        defaultWallColor = Color.parse(style.color || style.wallColor);
+        wallColorAlpha = defaultWallColor.setAlpha(zoomAlpha) + '';
 
-        altColor = wallColor.setLightness(0.8);
-        altColorAlpha = altColor.setAlpha(zoomAlpha) + '';
+        defaultAltColor = defaultWallColor.setLightness(0.8);
+        altColorAlpha = defaultAltColor.setAlpha(zoomAlpha) + '';
 
-        roofColor = wallColor.setLightness(1.2);
-        roofColorAlpha = roofColor.setAlpha(zoomAlpha) + '';
+        defaultRoofColor = defaultWallColor.setLightness(1.2);
+        roofColorAlpha = defaultRoofColor.setAlpha(zoomAlpha) + '';
     }
 
     if (style.roofColor) {
-        roofColor = Color.parse(style.roofColor);
-        roofColorAlpha = roofColor.setAlpha(zoomAlpha) + '';
+        defaultRoofColor = Color.parse(style.roofColor);
+        roofColorAlpha = defaultRoofColor.setAlpha(zoomAlpha) + '';
     }
 
     if (style.shadows !== undefined) {

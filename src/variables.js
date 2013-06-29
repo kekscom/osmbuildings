@@ -8,13 +8,13 @@ var width = 0, height = 0,
 
     context,
 
-    wallColor = new Color(200, 190, 180),
-    altColor  = wallColor.setLightness(0.8),
-    roofColor = wallColor.setLightness(1.2),
+    defaultWallColor = new Color(200, 190, 180),
+    defaultAltColor  = defaultWallColor.setLightness(0.8),
+    defaultRoofColor = defaultWallColor.setLightness(1.2),
 
-    wallColorAlpha = wallColor + '',
-    altColorAlpha  = altColor + '',
-    roofColorAlpha = roofColor + '',
+    wallColorAlpha = defaultWallColor + '',
+    altColorAlpha  = defaultAltColor + '',
+    roofColorAlpha = defaultRoofColor + '',
 
     fadeFactor = 1,
     animTimer,

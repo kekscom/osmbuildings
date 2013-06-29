@@ -281,7 +281,7 @@ var readOSMXAPI = (function() {
     }
 
     function processRelation(relation) {
-        var relationWays, outerWay, innerWays = [],
+        var relationWays, outerWay, holes = [],
             tags, outerFootprint, innerFootprint;
         if (isBuilding(relation) && (relation.tags.type === 'multipolygon' || relation.tags.type === 'building')) {
             if ((relationWays = getRelationWays(relation.members))) {
@@ -292,23 +292,23 @@ var readOSMXAPI = (function() {
                         tags = mergeTags(tags, relTags);
                         for (var i = 0, il = relationWays.inner.length; i < il; i++) {
                             if ((innerFootprint = getFootprint(relationWays.inner[i].nodes))) {
-                                innerWays.push(makeWinding(innerFootprint, 'CCW'));
+                                holes.push(makeWinding(innerFootprint, 'CCW'));
                             }
                         }
-                        addResult(outerWay.id, tags, outerFootprint, innerWays.length ? innerWays : null);
+                        addResult(outerWay.id, tags, outerFootprint, holes.length ? holes : null);
                     }
                 }
             }
         }
     }
 
-    function addResult(id, tags, footprint, innerWays) {
-        var item = { id:id, footprint:makeWinding(footprint, 'CW'), innerWays:innerWays };
+    function addResult(id, tags, footprint, holes) {
+        var item = { id:id, footprint:makeWinding(footprint, 'CW'), holes:holes };
         if (tags.height)    item.height    = tags.height;
         if (tags.minHeight) item.minHeight = tags.minHeight;
         if (tags.wallColor) item.wallColor = tags.wallColor;
         if (tags.roofColor) item.roofColor = tags.roofColor;
-        if (innerWays)      item.innerWays = innerWays;
+        if (holes)      item.holes = holes;
         res.push(item);
     }
 

@@ -42,16 +42,20 @@ function render() {
 
     var i, il, j, jl,
         item,
-        f, h, m, n,
-        x, y,
+        h, _h, mh, _mh,
         flatMaxHeight = FlatBuildings.MAX_HEIGHT,
         sortCam = [camX+originX, camY+originY],
-        footprint, roof,
+        vp = {
+            minX: originX,
+            maxX: originX+width,
+            minY: originY,
+            maxY: originY+height
+        },
+        footprint, roof, holes,
         isVisible,
-        ax, ay, bx, by,
-        a, b, _a, _b;
+        wallColor, altColor;
 
-    // TODO: FlatBuildings are drawn separetely, data has to be split
+    // TODO: FlatBuildings are drawn separately, data has to be split
     Data.renderItems.sort(function(a, b) {
         return getDistance(b.center, sortCam)/b.height - getDistance(a.center, sortCam)/a.height;
     });
@@ -64,16 +68,12 @@ function render() {
         }
 
         isVisible = false;
-        f = item.footprint;
-        footprint = []; // typed array would be created each pass and is way too slow
-        for (j = 0, jl = f.length - 1; j < jl; j += 2) {
-            footprint[j]   = x = f[j]  -originX;
-            footprint[j+1] = y = f[j+1]-originY;
-
+        footprint = item.footprint;
+        for (j = 0, jl = footprint.length - 1; j < jl; j += 2) {
             // checking footprint is sufficient for visibility
-            // TODO probably pre-filter by data tile position
+            // TODO: pre-filter by data tile position
             if (!isVisible) {
-                isVisible = (x > 0 && x < width && y > 0 && y < height);
+                isVisible = (footprint[j] > vp.minX && footprint[j] < vp.maxX && footprint[j+1] > vp.minY && footprint[j+1] < vp.maxY);
             }
         }
 
@@ -84,126 +84,98 @@ function render() {
         // when fading in, use a dynamic height
         h = item.scale < 1 ? item.height*item.scale : item.height;
         // precalculating projection height factor
-        m = camZ / (camZ-h);
+        _h = camZ / (camZ-h);
 
-        // prepare same calculations for min_height if applicable
+        _mh = 0;
         if (item.minHeight) {
-            h = item.scale < 1 ? item.minHeight*item.scale : item.minHeight;
-            n = camZ / (camZ-h);
+            mh = item.scale < 1 ? item.minHeight*item.scale : item.minHeight;
+            _mh = camZ / (camZ-mh);
         }
 
-        roof = []; // typed array would be created each pass and is way too slow
+        wallColor = item.wallColor || wallColorAlpha;
+        altColor  = item.altColor  || altColorAlpha;
 
-        for (j = 0, jl = footprint.length-3; j < jl; j += 2) {
-            ax = footprint[j];
-            ay = footprint[j+1];
-            bx = footprint[j+2];
-            by = footprint[j+3];
+        roof = renderPolygon(footprint, _h, _mh, wallColor, altColor);
 
-            // project 3d to 2d on extruded footprint
-            _a = project(ax, ay, m);
-            _b = project(bx, by, m);
-
-            if (item.minHeight) {
-                a = project(ax, ay, n);
-                b = project(bx, by, n);
-                ax = a.x;
-                ay = a.y;
-                bx = b.x;
-                by = b.y;
+        holes = [];
+        if (item.holes) {
+            for (j = 0, jl = item.holes.length; j < jl; j++) {
+                holes[j] = renderPolygon(item.holes[j], _h, _mh, wallColor, altColor);
             }
-
-            // backface culling check
-            if ((bx-ax) * (_a.y-ay) > (_a.x-ax) * (by-ay)) {
-                // depending on direction, set wall shading
-                if ((ax < bx && ay < by) || (ax > bx && ay > by)) {
-                    context.fillStyle = item.altColor  || altColorAlpha;
-                } else {
-                    context.fillStyle = item.wallColor || wallColorAlpha;
-                }
-
-                drawShape([
-                    bx, by,
-                    ax, ay,
-                    _a.x, _a.y,
-                    _b.x, _b.y
-                ]);
-            }
-            roof[j]   = _a.x;
-            roof[j+1] = _a.y;
         }
 
         // fill roof and optionally stroke it
         context.fillStyle   = item.roofColor || roofColorAlpha;
-        context.strokeStyle = item.altColor  || altColorAlpha;
-        drawShape(roof, true);
-
-
-
-if (item.innerWays) {
-    console.log(item.innerWays);
-    for (var v = 0, vl = item.innerWays.length; v < vl; v++) {
-        roof = [];
-        for (j = 0, jl = item.innerWays[v].length-3; j < jl; j += 2) {
-            ax = item.innerWays[v][j]  -originX;
-            ay = item.innerWays[v][j+1]-originY;
-            bx = item.innerWays[v][j+2]-originX;
-            by = item.innerWays[v][j+3]-originY;
-
-            // project 3d to 2d on extruded footprint
-            _a = project(ax, ay, m);
-            _b = project(bx, by, m);
-
-            if (item.minHeight) {
-                a = project(ax, ay, n);
-                b = project(bx, by, n);
-                ax = a.x;
-                ay = a.y;
-                bx = b.x;
-                by = b.y;
-            }
-/*
-            // backface culling check
-            if ((bx-ax) * (_a.y-ay) > (_a.x-ax) * (by-ay)) {
-                // depending on direction, set wall shading
-                if ((ax < bx && ay < by) || (ax > bx && ay > by)) {
-                    context.fillStyle = item.altColor  || altColorAlpha;
-                } else {
-                    context.fillStyle = item.wallColor || wallColorAlpha;
-                }
-
-                drawShape([
-                    bx, by,
-                    ax, ay,
-                    _a.x, _a.y,
-                    _b.x, _b.y
-                ]);
-            }
-*/
-            roof[j]   = _a.x;
-            roof[j+1] = _a.y;
-        }
-
-        // fill roof and optionally stroke it
-//        context.fillStyle   = item.roofColor || roofColorAlpha;
-//        context.strokeStyle = item.altColor  || altColorAlpha;
-        context.fillStyle   = '#ffffff';
-        context.strokeStyle = '#000000';
-        console.log(roof);
-        drawShape(roof, true);
+        context.strokeStyle = altColor;
+        drawShape(roof, true, holes);
     }
 }
 
-function drawShape(points, stroke) {
+function renderPolygon(polygon, h, mh, wallColor, altColor) {
+    var a = { x:0, y:0 }, b = { x:0, y:0 },
+        _a, _b,
+        roof = [];
+    for (var i = 0, il = polygon.length-3; i < il; i += 2) {
+        a.x = polygon[i]  -originX;
+        a.y = polygon[i+1]-originY;
+        b.x = polygon[i+2]-originX;
+        b.y = polygon[i+3]-originY;
+
+        // project 3d to 2d on extruded footprint
+        _a = project(a.x, a.y, h);
+        _b = project(b.x, b.y, h);
+
+        if (mh) {
+            a = project(a.x, a.y, mh);
+            b = project(b.x, b.y, mh);
+        }
+
+        // backface culling check
+        if ((b.x-a.x) * (_a.y-a.y) > (_a.x-a.x) * (b.y-a.y)) {
+            // depending on direction, set wall shading
+            if ((a.x < b.x && a.y < b.y) || (a.x > b.x && a.y > b.y)) {
+                context.fillStyle = altColor;
+            } else {
+                context.fillStyle = wallColor;
+            }
+            drawShape([
+                b.x, b.y,
+                a.x, a.y,
+                _a.x, _a.y,
+                _b.x, _b.y
+            ]);
+        }
+        roof[i]   = _a.x;
+        roof[i+1] = _a.y;
+    }
+
+    return roof;
+}
+
+function drawShape(points, stroke, holes) {
     if (!points.length) {
         return;
     }
 
+    var i, il, j, jl;
+
     context.beginPath();
+
     context.moveTo(points[0], points[1]);
-    for (var i = 2, il = points.length; i < il; i += 2) {
+    for (i = 2, il = points.length; i < il; i += 2) {
         context.lineTo(points[i], points[i+1]);
     }
+
+    if (holes) {
+        for (i = 0, il = holes.length; i < il; i++) {
+            points = holes[i];
+            context.moveTo(points[0], points[1]);
+            for (j = 2, jl = points.length; j < jl; j += 2) {
+                context.lineTo(points[j], points[j+1]);
+            }
+        }
+    }
+
     context.closePath();
     if (stroke) {
         context.stroke();

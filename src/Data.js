@@ -92,14 +92,10 @@ var Data = (function() {
             item,
             height, minHeight, footprint,
             color, wallColor, altColor, roofColor,
-            innerWays, innerFootprint,
+            holes, innerFootprint,
             zoomDelta = maxZoom-zoom;
 
         for (i = 0, il = items.length; i < il; i++) {
-            wallColor = null;
-            altColor  = null;
-            roofColor = null;
-            innerWays = [];
 
             item = items[i];
 
@@ -117,14 +113,17 @@ var Data = (function() {
                 continue;
             }
 
-            if (item.innerWays) {
-                for (j = 0, jl = item.innerWays.length; j < jl; j++) {
-                    if ((innerFootprint = _getFootprint(item.innerWays[j]))) {
-                        innerWays.push(innerFootprint);
+            holes = [];
+            if (item.holes) {
+                for (j = 0, jl = item.holes.length; j < jl; j++) {
+                    if ((innerFootprint = _getFootprint(item.holes[j]))) {
+                        holes.push(innerFootprint);
                     }
                 }
             }
 
+            wallColor = null;
+            altColor  = null;
             if (item.wallColor) {
                 if ((color = Color.parse(item.wallColor))) {
                     wallColor = color.setAlpha(zoomAlpha);
@@ -133,6 +132,7 @@ var Data = (function() {
                 }
             }
 
+            roofColor = null;
             if (item.roofColor) {
                 if ((color = Color.parse(item.roofColor))) {
                     roofColor = '' + color.setAlpha(zoomAlpha);
@@ -148,7 +148,7 @@ var Data = (function() {
                 altColor:  altColor,
                 roofColor: roofColor,
                 center:    getCenter(footprint),
-                innerWays: innerWays.length ? innerWays : null
+                holes:     holes.length ? holes : null
             });
         }
 
