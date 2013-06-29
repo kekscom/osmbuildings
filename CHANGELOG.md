@@ -1,7 +1,8 @@
 # Changelog
 
-## 2013-06-18 (v0.1.9a Release Candidate)
+## 2013-06-30 (v0.1.9a Release Candidate)
 
+- multipolygon support added
 - backend removed, now using web services with GeoJSON or XAPI
 - data is subdivieded into tiles
 - data tiles are cached
