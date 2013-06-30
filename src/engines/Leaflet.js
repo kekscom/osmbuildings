@@ -1,10 +1,4 @@
 var OSMBuildings = function(map) {
-    this.map = null;
-    this.osmb = null;
-    this.container = null;
-
-    this.skipMoveEnd = null; // needed as Leaflet fires moveend and zoomend together
-
     this.lastX = 0;
     this.lastY = 0;
 
