@@ -5,14 +5,14 @@
             context.clearRect(0, 0, width, height);
             context.strokeStyle = altColorAlpha;
 
-            p = geoToPixel(52.50700, 13.33300);
-            x = p.x - originX;
-            y = p.y - originY;
-            cylinder(x, y, 20, 200);
+            p = geoToPixel(52.52179, 13.39503);
+            x = p.x-originX;
+            y = p.y-originY;
+            cylinder(x, y, 20, 100);
 
-            p = geoToPixel(52.50557, 13.33451);
-            x = p.x - originX;
-            y = p.y - originY;
+            p = geoToPixel(52.52230, 13.39550);
+            x = p.x-originX;
+            y = p.y-originY;
             cylinder(x-60, y, 30, 10);
 
             dome(x, y, 30);
@@ -27,28 +27,26 @@
          * @param h {float} height in (in pixels)
          */
         function cylinder(x, y, r, h, minHeight) {
-            var m = camZ / (camZ - h),
+            var m = camZ / (camZ-h),
                 p = project(x, y, m),
                 _x = p.x,
                 _y = p.y,
-                _r = r * m
-            ;
+                _r = r*m;
 
             if (minHeight) {
                 var $x = x;
-                m = camZ / (camZ - minHeight),
+                m = camZ / (camZ-minHeight),
                 p = project(x, y, m);
                 x = p.x;
                 y = p.y;
-                p = project($x - r, y, m);
-                r = x - p.x;
+                p = project($x-r, y, m);
+                r = x-p.x;
             }
 
             var t = getTangents(x, y, r, _x, _y, _r), // common tangents for ground and roof circle
                 tx, ty, ta,
                 isAlt,
-                ax, ay
-            ;
+                ax, ay;
 
             // no tangents? roof overlaps everything near cam position
             if (t) {
