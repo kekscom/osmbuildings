@@ -120,6 +120,7 @@ var Shadows = (function() {
                     by = b.y;
                 }
 
+                // mode 0: floor edges, mode 1: roof edges
                 if ((bx-ax) * (_a.y-ay) > (_a.x-ax) * (by-ay)) {
                     if (mode === 1) {
                         _context.lineTo(ax, ay);
