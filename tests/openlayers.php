@@ -17,7 +17,9 @@
 	}
 	</style>
     <script src="http://www.openlayers.org/api/OpenLayers.js"></script>
-    <script src="../dist/OpenLayers.Layer.Buildings.js"></script>
+    <!--script src="../dist/OpenLayers.Layer.Buildings.js"></script-->
+    <script src="scripts.js.php"></script>
+</head>
 
 <body>
     <div id="map"></div>
@@ -37,9 +39,7 @@
             ),
         17
     );
-    var osmb = new OpenLayers.Layer.Buildings({ url: '../server/?w={w}&n={n}&e={e}&s={s}&z={z}' });
-    map.addLayer(osmb);
-    osmb.setDate(new Date(2013, 2, 15, 10, 30));
+    new OpenLayers.Layer.Buildings(map).loadData().setDate(new Date(2013, 2, 15, 10, 30));
     </script>
 </body>
 </html>

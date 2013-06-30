@@ -32,7 +32,7 @@
         { attribution: 'Map tiles &copy; <a href="http://mapbox.com">MapBox</a>', maxZoom: 17 }
     ).addTo(map);
 
-    var osmb = new L.BuildingsLayer({ url: '../server/?w={w}&n={n}&e={e}&s={s}&z={z}' }).addTo(map);
+    var osmb = new L.BuildingsLayer(map).loadData();
     L.control.layers({}, { Buildings: osmb }).addTo(map);
     </script>
 </body>

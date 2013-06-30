@@ -1,92 +1,87 @@
-L.BuildingsLayer = L.Class.extend({
+L.BuildingsLayer = function(map) {
+    this.map = null;
+    this.osmb = null;
+    this.container = null;
 
-    map: null,
-    osmb: null,
-    container: null,
+    this.skipMoveEnd = null; // needed as Leaflet fires moveend and zoomend together
 
-    blockMoveEvent: null, // needed as Leaflet fires moveend and zoomend together
+    this.lastX = 0;
+    this.lastY = 0;
 
-    lastX: 0,
-    lastY: 0,
+    map.addLayer(this);
+};
 
-    initialize: function(options) {
-        options = L.Util.setOptions(this, options);
-    },
+var proto = L.BuildingsLayer.prototype;
 
-    onMove: function() {
-        var mp = L.DomUtil.getPosition(this.map._mapPane);
-        this.osmb.setCamOffset(
-            this.lastX-mp.x,
-            this.lastY-mp.y
-        );
-        this.osmb.render();
-    },
+proto.onMove = function() {
+    var mp = L.DomUtil.getPosition(this.map._mapPane);
+    this.osmb.setCamOffset(
+        this.lastX-mp.x,
+        this.lastY-mp.y
+    );
+    this.osmb.render();
+};
 
-    onMoveEnd: function() {
-        if (this.blockMoveEvent) {
-            this.blockMoveEvent = false;
-            return;
-        }
+proto.onMoveEnd = function() {
+    if (this.skipMoveEnd) {
+        this.skipMoveEnd = false;
+        return;
+    }
 
-        var mp = L.DomUtil.getPosition(this.map._mapPane),
-            po = this.map.getPixelOrigin();
+    var mp = L.DomUtil.getPosition(this.map._mapPane),
+        po = this.map.getPixelOrigin();
 
-        this.lastX = mp.x;
-        this.lastY = mp.y;
-        this.container.style.left = -mp.x + 'px';
-        this.container.style.top  = -mp.y + 'px';
-        this.osmb.setCamOffset(0, 0);
+    this.lastX = mp.x;
+    this.lastY = mp.y;
+    this.container.style.left = -mp.x + 'px';
+    this.container.style.top  = -mp.y + 'px';
+    this.osmb.setCamOffset(0, 0);
 
-        this.osmb.setSize(this.map._size.x, this.map._size.y); // in case this is triggered by resize
-        this.osmb.setOrigin(po.x - mp.x, po.y - mp.y);
-        this.osmb.onMoveEnd();
-    },
+    this.osmb.setSize(this.map._size.x, this.map._size.y); // in case this is triggered by resize
+    this.osmb.setOrigin(po.x - mp.x, po.y - mp.y);
+    this.osmb.onMoveEnd();
+};
 
-    onZoomStart: function() {
-        this.osmb.onZoomStart();
-    },
+proto.onZoomStart = function() {
+    this.osmb.onZoomStart();
+};
 
-    onZoomEnd: function() {
-        var mp = L.DomUtil.getPosition(this.map._mapPane),
-            po = this.map.getPixelOrigin();
+proto.onZoomEnd = function() {
+    var mp = L.DomUtil.getPosition(this.map._mapPane),
+        po = this.map.getPixelOrigin();
 
-        this.osmb.setOrigin(po.x - mp.x, po.y - mp.y);
-        this.osmb.onZoomEnd({ zoom: this.map._zoom });
-        this.blockMoveEvent = true;
-    },
+    this.osmb.setOrigin(po.x - mp.x, po.y - mp.y);
+    this.osmb.onZoomEnd({ zoom: this.map._zoom });
+    this.skipMoveEnd = true;
+};
 
-    addTo: function(map) {
-        map.addLayer(this);
-        return this;
-    },
+proto.onAdd = function(map) {
+    this.map = map;
+    var parentNode = this.map._panes.overlayPane;
+    if (this.osmb) {
+        parentNode.appendChild(this.container);
+    } else {
+        this.osmb = new OSMBuildings();
+        this.container = this.osmb.appendTo(parentNode);
+        this.osmb.maxZoom = this.map._layersMaxZoom;
+    }
 
-    onAdd: function(map) {
-        this.map = map;
-        var parentNode = this.map._panes.overlayPane;
-        if (this.osmb) {
-            parentNode.appendChild(this.container);
-        } else {
-            this.osmb = new OSMBuildings();
-            this.container = this.osmb.appendTo(parentNode);
-            this.osmb.maxZoom = this.map._layersMaxZoom;
-        }
+    var mp = L.DomUtil.getPosition(this.map._mapPane),
+        po = this.map.getPixelOrigin();
 
-        var mp = L.DomUtil.getPosition(this.map._mapPane),
-            po = this.map.getPixelOrigin();
+    this.osmb.setSize(this.map._size.x, this.map._size.y);
+    this.osmb.setOrigin(po.x - mp.x, po.y - mp.y);
+    this.osmb.setZoom(this.map._zoom);
 
-        this.osmb.setSize(this.map._size.x, this.map._size.y);
-        this.osmb.setOrigin(po.x - mp.x, po.y - mp.y);
-        this.osmb.setZoom(this.map._zoom);
+    this.container.style.left = -mp.x + 'px';
+    this.container.style.top  = -mp.y + 'px';
 
-        this.container.style.left = -mp.x + 'px';
-        this.container.style.top  = -mp.y + 'px';
-
-        this.map.on({
-            move: this.onMove,
-            moveend: this.onMoveEnd,
-            zoomstart: this.onZoomStart,
-            zoomend: this.onZoomEnd
-        }, this);
+    this.map.on({
+        move:      this.onMove,
+        moveend:   this.onMoveEnd,
+        zoomstart: this.onZoomStart,
+        zoomend:   this.onZoomEnd
+    }, this);
 
 //        var onZoom = function(opt) {
 //            var
@@ -106,42 +101,41 @@ L.BuildingsLayer = L.Class.extend({
 //            this.map.on('zoomanim', onZoom);
 //        }
 
-        this.map.attributionControl.addAttribution(OSMBuildings.ATTRIBUTION);
-        this.osmb.render(); // in case of for re-adding this layer
-    },
+    this.map.attributionControl.addAttribution(OSMBuildings.ATTRIBUTION);
+    this.osmb.renderAll(); // in case of for re-adding this layer
+};
 
-    onRemove: function(map) {
-        map.attributionControl.removeAttribution(OSMBuildings.ATTRIBUTION);
+proto.onRemove = function(map) {
+    map.attributionControl.removeAttribution(OSMBuildings.ATTRIBUTION);
 
-        map.off({
-            move: this.onMove,
-            moveend: this.onMoveEnd,
-            zoomstart: this.onZoomStart,
-            zoomend: this.onZoomEnd
-        }, this);
+    map.off({
+        move:      this.onMove,
+        moveend:   this.onMoveEnd,
+        zoomstart: this.onZoomStart,
+        zoomend:   this.onZoomEnd
+    }, this);
 
-        this.container.parentNode.removeChild(this.container);
-    },
+    this.container.parentNode.removeChild(this.container);
+};
 
-    // TODO: refactor these ugly bindings
+// TODO: refactor these ugly bindings
 
-    setStyle: function(style)  {
-        this.osmb.setStyle(style);
-        return this;
-    },
+proto.setStyle = function(style)  {
+    this.osmb.setStyle(style);
+    return this;
+};
 
-    setDate: function(date)  {
-        this.osmb.setDate(date);
-        return this;
-    },
+proto.setDate = function(date)  {
+    this.osmb.setDate(date);
+    return this;
+};
 
-    load: function(url) {
-        this.osmb.loadData(url);
-        return this;
-    },
+proto.loadData = function(url) {
+    this.osmb.loadData(url);
+    return this;
+};
 
-    geoJSON: function(data) {
-        this.osmb.setData(data);
-        return this;
-    }
-});
+proto.geoJSON = function(data) {
+    this.osmb.setData(data);
+    return this;
+};

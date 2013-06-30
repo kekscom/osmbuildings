@@ -23,8 +23,8 @@ $srcFiles = array(
         $srcPath . "/events.js",
         $srcPath . "/public.js",
     $srcPath . "/suffix.js",
-//    $srcPath . "/engines/OpenLayers.js"
-    $srcPath . "/engines/Leaflet.js"
+    $srcPath . "/engines/OpenLayers.js"
+    //$srcPath . "/engines/Leaflet.js"
 );
 
 header("Content-Type: application/javascript");
