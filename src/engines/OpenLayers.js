@@ -2,11 +2,9 @@
 
 var parent = OpenLayers.Layer.prototype;
 
-OpenLayers.Layer.Buildings = function(map) {
-//    this.CLASS_NAME = 'OpenLayers.Layer.Buildings';
-
+var OSMBuildings = function(map) {
     this.name = 'OSM Buildings';
-    this.attribution = OSMBuildings.ATTRIBUTION;
+    this.attribution = OSMB.ATTRIBUTION;
 
     this.isBaseLayer = false;
     this.alwaysInRange = true;
@@ -15,9 +13,10 @@ OpenLayers.Layer.Buildings = function(map) {
     this.dySum = 0; // for cumulative cam offset during moveBy
 
     parent.initialize.call(this, this.name, { projection:'EPSG:900913' });
+	map.addLayer(this);
 };
 
-var proto = OpenLayers.Layer.Buildings.prototype;
+var proto = OSMBuildings.prototype = new OpenLayers.Layer();
 
 proto.setOrigin = function() {
     var origin = this.map.getLonLatFromPixel(new OpenLayers.Pixel(0, 0)),
@@ -34,7 +33,7 @@ proto.setMap = function(map) {
         OpenLayers.Layer.prototype.setMap.call(this, map);
     }
     if (!this.osmb) {
-        this.osmb = new OSMBuildings();
+        this.osmb = new OSMB();
         this.container = this.osmb.appendTo(this.div);
     }
     this.osmb.setSize(this.map.size.w, this.map.size.h);

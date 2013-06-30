@@ -39,7 +39,7 @@
             ),
         17
     );
-    new OpenLayers.Layer.Buildings(map).loadData().setDate(new Date(2013, 2, 15, 10, 30));
+    new OSMBuildings(map).loadData().setDate(new Date(2013, 2, 15, 10, 30));
     </script>
 </body>
 </html>

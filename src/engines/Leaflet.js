@@ -1,4 +1,4 @@
-L.BuildingsLayer = function(map) {
+var OSMBuildings = function(map) {
     this.map = null;
     this.osmb = null;
     this.container = null;
@@ -11,7 +11,7 @@ L.BuildingsLayer = function(map) {
     map.addLayer(this);
 };
 
-var proto = L.BuildingsLayer.prototype;
+var proto = OSMBuildings.prototype;
 
 proto.onMove = function() {
     var mp = L.DomUtil.getPosition(this.map._mapPane);
@@ -61,7 +61,7 @@ proto.onAdd = function(map) {
     if (this.osmb) {
         parentNode.appendChild(this.container);
     } else {
-        this.osmb = new OSMBuildings();
+        this.osmb = new OSMB();
         this.container = this.osmb.appendTo(parentNode);
         this.osmb.maxZoom = this.map._layersMaxZoom;
     }
@@ -101,12 +101,12 @@ proto.onAdd = function(map) {
 //            this.map.on('zoomanim', onZoom);
 //        }
 
-    this.map.attributionControl.addAttribution(OSMBuildings.ATTRIBUTION);
+    this.map.attributionControl.addAttribution(OSMB.ATTRIBUTION);
     this.osmb.renderAll(); // in case of for re-adding this layer
 };
 
 proto.onRemove = function(map) {
-    map.attributionControl.removeAttribution(OSMBuildings.ATTRIBUTION);
+    map.attributionControl.removeAttribution(OSMB.ATTRIBUTION);
 
     map.off({
         move:      this.onMove,
