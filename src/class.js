@@ -1,0 +1,1 @@
+    var osmb = function(url) {

@@ -1,38 +1,29 @@
-        // private variables, specific to an instance
-        var width = 0, height = 0,
-            halfWidth = 0, halfHeight = 0,
-            originX = 0, originY = 0,
-            zoom, size,
+// private variables, specific to an instance
+var width = 0, height = 0,
+    halfWidth = 0, halfHeight = 0,
+    originX = 0, originY = 0,
+    zoom, size,
 
-            req,
+    activeRequest,
 
-            canvas, context,
+    context,
 
-            url,
+    defaultWallColor = new Color(200, 190, 180),
+    defaultAltColor  = defaultWallColor.setLightness(0.8),
+    defaultRoofColor = defaultWallColor.setLightness(1.2),
 
-            wallColor = new Color(200, 190, 180),
-            altColor = wallColor.adjustLightness(0.8),
-            roofColor = wallColor.adjustLightness(1.2),
-            //red: roofColor = new Color(240, 200, 180),
-            //green: roofColor = new Color(210, 240, 220),
+    wallColorAlpha = defaultWallColor + '',
+    altColorAlpha  = defaultAltColor + '',
+    roofColorAlpha = defaultRoofColor + '',
 
-            wallColorAlpha = wallColor + '',
-            altColorAlpha  = altColor + '',
-            roofColorAlpha = roofColor + '',
+    fadeFactor = 1,
+    animTimer,
+    zoomAlpha = 1,
 
-            shadows = false,
+    minZoom = MIN_ZOOM,
+    maxZoom = 20,
+    maxHeight,
 
-            rawData,
-            meta, data,
+    camX, camY, camZ,
 
-            fadeFactor = 1, fadeTimer,
-            zoomAlpha = 1,
-
-            minZoom = MIN_ZOOM,
-            maxZoom = 20,
-            maxHeight,
-
-            camX, camY, camZ,
-
-            isZooming
-        ;
+    isZooming;
