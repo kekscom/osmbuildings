@@ -5,17 +5,20 @@
             context.clearRect(0, 0, width, height);
             context.strokeStyle = altColorAlpha;
 
-            p = geoToPixel(52.52179, 13.39503);
-            x = p.x-originX;
-            y = p.y-originY;
-            cylinder(x, y, 20, 100);
+//            p = geoToPixel(52.52179, 13.39503);
+//            x = p.x-originX;
+//            y = p.y-originY;
+//            cylinder(x, y, 20, 100);
+//
+//            p = geoToPixel(52.52230, 13.39550);
+//            x = p.x-originX;
+//            y = p.y-originY;
+//            cylinder(x-60, y, 30, 10);
 
             p = geoToPixel(52.52230, 13.39550);
             x = p.x-originX;
             y = p.y-originY;
-            cylinder(x-60, y, 30, 10);
-
-            dome(x, y, 30);
+            dome(x, y, 30, 10);
         }
 
         //*** finished methods ************************************************
@@ -237,40 +240,82 @@
 
 
         var KAPPA = 0.5522847498;
+
+        function dome2(x, y, r, h) {
+            if (!h) {
+                h = r;
+            }
+
+            var kh = h*KAPPA,
+//                _kh = camZ / (camZ-h+kh),
+                _h = camZ / (camZ-h);
+
+            var apex = project(x, y, _h);
+
+            context.fillStyle = roofColorAlpha;
+            circle(x, y, r, TRUE);
+
+            line([x, y], [apex.x, apex.y]);
+        }
+
+        var KAPPA = 0.5522847498;
         function dome(x, y, r, h) {
             if (!h) {
                 h = r;
             }
 
-            var k = h * KAPPA,
+            var k = h*KAPPA,
                 g = 1,
-                n = camZ / (camZ - (h - k)),
-                m = camZ / (camZ - h),
-                _r = r * m,
-                _k = _r * KAPPA
-            ;
+                n = camZ / (camZ-h+k),
+                m = camZ / (camZ-h),
+                _r = r*m,
+                _k = _r*KAPPA;
 
-var apex = project(x, y, m);
+            var apex = project(x, y, m);
 
             // VERTICAL TANGENT POINTS ON SPHERE:
             // side view at scenario:
             // sphere at x/y & radius   => circle at y/camZ & height (+ minHeight)
             // cam    at camX/camY/camZ => point  at camY/0
-            var t = getTangentsFromPoint(y, camZ, r, camY, 0);
 
-var Y = t[0][0];
-var H = (camZ - t[0][1]);
+            var t = getTangentsFromPoint(y, 0, r, camY, camZ);
+            var ty = t[0][0];
+            var tz = t[0][1]*0.6;
 
-var p = project(x, Y, camZ / (camZ - H));
-line([x, Y], [p.x, p.y]);
-debugMarker(p.x, p.y);
+            var p = project(x, ty, camZ / (camZ-tz));
+            debugMarker(p.x, p.y);
 
-//******************************************************************************
+            context.fillStyle = roofColorAlpha;
+            circle(x, y, r, TRUE);
+            line([x, y], [apex.x, apex.y]);
+//            debugMarker(apex.x, apex.y);
 
-context.fillStyle = roofColorAlpha;
-circle(x, y, r, TRUE);
+            // querlinie durch den sichtpunkt
+//            line([p.x, p.y], [p.x-_r, p.y]);
+//            line([p.x, p.y], [p.x+_r, p.y]);
 
-line([x, y], [apex.x, apex.y]);
+            // vertikale kanten zu den querlinienenden
+//            line([x-r, y], [p.x - _r, p.y]);
+//            line([x+r, y], [p.x + _r, p.y]);
+
+            // hor. anchors
+//            debugMarker(p.x-_k, p.y);
+//            debugMarker(p.x+_k, p.y);
+
+            // ver. anchors
+//            debugMarker(x-r, y - (y-p.y)*KAPPA);
+//            debugMarker(x+r, y - (y-p.y)*KAPPA);
+
+            context.beginPath();
+
+            context.moveTo(x-r, y);
+            context.bezierCurveTo(x-r, y - (y-p.y)*KAPPA, p.x-_k, p.y, p.x, p.y);
+
+            context.moveTo(x+r, y);
+            context.bezierCurveTo(x+r, y - (y-p.y)*KAPPA, p.x+_k, p.y, p.x, p.y);
+
+            context.stroke();
+return;
 
 //******************************************************************************
 
