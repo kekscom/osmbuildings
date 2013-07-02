@@ -16,6 +16,11 @@ function setOrigin(x, y) {
     originY = y;
 }
 
+function setCamOffset(x, y) {
+    camX = halfWidth + x;
+    camY = height    + y;
+}
+
 function setZoom(z) {
     zoom = z;
     size = MAP_TILE_SIZE <<zoom;

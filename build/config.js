@@ -29,7 +29,6 @@ exports.srcFiles = [
     srcPath + '/Layers.js',
     srcPath + '/properties.js',
     srcPath + '/events.js',
-    srcPath + '/public.js',
     srcPath + '/engines/{engine}.js',
     srcPath + '/suffix.js'
 ];

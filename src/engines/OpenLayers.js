@@ -80,25 +80,3 @@ proto.moveByPx = function(dx, dy) {
     render();
     return result;
 };
-
-// TODO: refactor these ugly bindings
-
-proto.setStyle = function(style)  {
-    setStyle(style);
-    return this;
-};
-
-proto.setDate = function(date)  {
-    setDate(date);
-    return this;
-};
-
-proto.loadData = function(url) {
-    loadData(url);
-    return this;
-};
-
-proto.geoJSON = function(data) {
-    setData(data);
-    return this;
-};

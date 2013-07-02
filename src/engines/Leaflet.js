@@ -108,25 +108,3 @@ proto.onRemove = function(map) {
 
     this.container.parentNode.removeChild(this.container);
 };
-
-// TODO: refactor these ugly bindings
-
-proto.setStyle = function(style)  {
-    setStyle(style);
-    return this;
-};
-
-proto.setDate = function(date)  {
-    setDate(date);
-    return this;
-};
-
-proto.loadData = function(url) {
-    loadData(url);
-    return this;
-};
-
-proto.geoJSON = function(data) {
-    setData(data);
-    return this;
-};
