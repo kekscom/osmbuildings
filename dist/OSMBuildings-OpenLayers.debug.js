@@ -692,10 +692,10 @@ var VERSION      = '0.1.8a',
 
     LAT = 'latitude', LON = 'longitude',
 
-    DEFAULT_HEIGHT = 15,
-    HEIGHT_SCALE = 3,
+    TRUE = true, FALSE = false,
 
-    TRUE = true, FALSE = false;
+    DEFAULT_HEIGHT = 5,
+    HEIGHT_SCALE = 1;
 
 
 //****** file: geometry.js ******
@@ -826,11 +826,6 @@ function makeWinding(points, direction) {
 }
 
 
-//****** file: class.js ******
-
-    var osmb = function(url) {
-
-
 //****** file: variables.js ******
 
 // private variables, specific to an instance
@@ -859,7 +854,7 @@ var width = 0, height = 0,
     maxZoom = 20,
     maxHeight,
 
-    camX, camY, camZ,
+    camX, camY, camZ = 450,
 
     isZooming;
 
@@ -870,14 +865,14 @@ function pixelToGeo(x, y) {
     var res = {};
     x /= size;
     y /= size;
-    res[LAT] = y <= 0  ? 90 : y >= 1 ? -90 : RAD * (2 * atan(exp(PI * (1 - 2 * y))) - HALF_PI),
-    res[LON] = (x === 1 ?  1 : (x % 1 + 1) % 1) * 360 - 180;
+    res[LAT] = y <= 0  ? 90 : y >= 1 ? -90 : RAD * (2 * atan(exp(PI * (1 - 2*y))) - HALF_PI),
+    res[LON] = (x === 1 ?  1 : (x%1 + 1) % 1) * 360 - 180;
     return res;
 }
 
 function geoToPixel(lat, lon) {
     var latitude  = min(1, max(0, 0.5 - (log(tan(QUARTER_PI + HALF_PI * lat / 180)) / PI) / 2)),
-        longitude = lon / 360 + 0.5;
+        longitude = lon/360 + 0.5;
     return {
         x: longitude*size <<0,
         y: latitude *size <<0
@@ -983,34 +978,6 @@ var Cache = (function() {
 
 
 //****** file: Data.js ******
-
-// http://overpass-api.de/api/interpreter?data=[out:json];(way[%22building%22](52.405,13.35,52.410,13.4);node(w);way[%22building:part%22=%22yes%22](52.405,13.35,52.410,13.4);node(w);relation[%22building%22](52.405,13.35,52.410,13.4);way(r);node(w););out;
-// http://overpass.osm.rambler.ru/cgi/xapi?
-
-/*
-// http://graphviz-dev.appspot.com/
-digraph g{
-    CityGML -> XML
-    KML -> XML
-    OSM -> XML [style=dotted]
-    XML -> SQL
-    Shape -> SQL
-    SQL -> GeoJSON
-    CartoDB -> GeoJSON
-    GeoJSON -> Client
-    OSM -> XAPI
-    XAPI -> JSON
-    XAPI -> XML [style=dotted]
-    CartoDB -> JSON [style=dotted]
-    JSON -> Client
-
-    CartoDB [shape=box]
-    SQL [shape=box]
-    XAPI [shape=box]
-
-    Client [shape=box,fillcolor="green",style="filled,rounded"]
-}
-*/
 
 var Data = (function() {
 
@@ -1424,17 +1391,20 @@ function debugLine(ax, ay, bx, by, color) {
             context.clearRect(0, 0, width, height);
             context.strokeStyle = altColorAlpha;
 
-            p = geoToPixel(52.52179, 13.39503);
-            x = p.x-originX;
-            y = p.y-originY;
-            cylinder(x, y, 20, 100);
+//            p = geoToPixel(52.52179, 13.39503);
+//            x = p.x-originX;
+//            y = p.y-originY;
+//            cylinder(x, y, 20, 100);
+//
+//            p = geoToPixel(52.52230, 13.39550);
+//            x = p.x-originX;
+//            y = p.y-originY;
+//            cylinder(x-60, y, 30, 10);
 
             p = geoToPixel(52.52230, 13.39550);
             x = p.x-originX;
             y = p.y-originY;
-            cylinder(x-60, y, 30, 10);
-
-            dome(x, y, 30);
+            dome(x, y, 30, 10);
         }
 
         //*** finished methods ************************************************
@@ -1656,40 +1626,82 @@ function debugLine(ax, ay, bx, by, color) {
 
 
         var KAPPA = 0.5522847498;
+
+        function dome2(x, y, r, h) {
+            if (!h) {
+                h = r;
+            }
+
+            var kh = h*KAPPA,
+//                _kh = camZ / (camZ-h+kh),
+                _h = camZ / (camZ-h);
+
+            var apex = project(x, y, _h);
+
+            context.fillStyle = roofColorAlpha;
+            circle(x, y, r, TRUE);
+
+            line([x, y], [apex.x, apex.y]);
+        }
+
+        var KAPPA = 0.5522847498;
         function dome(x, y, r, h) {
             if (!h) {
                 h = r;
             }
 
-            var k = h * KAPPA,
+            var k = h*KAPPA,
                 g = 1,
-                n = camZ / (camZ - (h - k)),
-                m = camZ / (camZ - h),
-                _r = r * m,
-                _k = _r * KAPPA
-            ;
+                n = camZ / (camZ-h+k),
+                m = camZ / (camZ-h),
+                _r = r*m,
+                _k = _r*KAPPA;
 
-var apex = project(x, y, m);
+            var apex = project(x, y, m);
 
             // VERTICAL TANGENT POINTS ON SPHERE:
             // side view at scenario:
             // sphere at x/y & radius   => circle at y/camZ & height (+ minHeight)
             // cam    at camX/camY/camZ => point  at camY/0
-            var t = getTangentsFromPoint(y, camZ, r, camY, 0);
 
-var Y = t[0][0];
-var H = (camZ - t[0][1]);
+            var t = getTangentsFromPoint(y, 0, r, camY, camZ);
+            var ty = t[0][0];
+            var tz = t[0][1]*0.6;
 
-var p = project(x, Y, camZ / (camZ - H));
-line([x, Y], [p.x, p.y]);
-debugMarker(p.x, p.y);
+            var p = project(x, ty, camZ / (camZ-tz));
+            debugMarker(p.x, p.y);
 
-//******************************************************************************
+            context.fillStyle = roofColorAlpha;
+            circle(x, y, r, TRUE);
+            line([x, y], [apex.x, apex.y]);
+//            debugMarker(apex.x, apex.y);
 
-context.fillStyle = roofColorAlpha;
-circle(x, y, r, TRUE);
+            // querlinie durch den sichtpunkt
+//            line([p.x, p.y], [p.x-_r, p.y]);
+//            line([p.x, p.y], [p.x+_r, p.y]);
 
-line([x, y], [apex.x, apex.y]);
+            // vertikale kanten zu den querlinienenden
+//            line([x-r, y], [p.x - _r, p.y]);
+//            line([x+r, y], [p.x + _r, p.y]);
+
+            // hor. anchors
+//            debugMarker(p.x-_k, p.y);
+//            debugMarker(p.x+_k, p.y);
+
+            // ver. anchors
+//            debugMarker(x-r, y - (y-p.y)*KAPPA);
+//            debugMarker(x+r, y - (y-p.y)*KAPPA);
+
+            context.beginPath();
+
+            context.moveTo(x-r, y);
+            context.bezierCurveTo(x-r, y - (y-p.y)*KAPPA, p.x-_k, p.y, p.x, p.y);
+
+            context.moveTo(x+r, y);
+            context.bezierCurveTo(x+r, y - (y-p.y)*KAPPA, p.x+_k, p.y, p.x, p.y);
+
+            context.stroke();
+return;
 
 //******************************************************************************
 
@@ -1977,6 +1989,7 @@ var Shadows = (function() {
                     by = b.y;
                 }
 
+                // mode 0: floor edges, mode 1: roof edges
                 if ((bx-ax) * (_a.y-ay) > (_a.x-ax) * (by-ay)) {
                     if (mode === 1) {
                         _context.lineTo(ax, ay);
@@ -2118,23 +2131,10 @@ var FlatBuildings = (function() {
 
 var Layers = (function() {
 
-    var _container = doc.createElement('DIV');
-    _container.style.pointerEvents = 'none';
-    _container.style.position = 'absolute';
-    _container.style.left = 0;
-    _container.style.top  = 0;
-
-    var _items = [];
-
-    // TODO: improve this to _createItem(Layer) => layer.setContext(context)
-    Shadows.setContext(      _createItem());
-    FlatBuildings.setContext(_createItem());
-    context = _createItem(); // default (global) render context
-
     function _createItem() {
         var canvas = doc.createElement('CANVAS');
         canvas.style.webkitTransform = 'translate3d(0,0,0)'; // turn on hw acceleration
-        canvas.style.imageRendering = 'optimizeSpeed';
+        canvas.style.imageRendering  = 'optimizeSpeed';
         canvas.style.position = 'absolute';
         canvas.style.left = 0;
         canvas.style.top  = 0;
@@ -2153,11 +2153,27 @@ var Layers = (function() {
         return context;
     }
 
+    var _container = doc.createElement('DIV');
+    _container.style.pointerEvents = 'none';
+    _container.style.position = 'absolute';
+    _container.style.left = 0;
+    _container.style.top  = 0;
+
+    var _items = [];
+
+    // TODO: improve this to _createItem(Layer) => layer.setContext(context)
+    Shadows.setContext(      _createItem());
+    FlatBuildings.setContext(_createItem());
+    context = _createItem(); // default (global) render context
+
     var me = {};
 
     me.appendTo = function(parentNode) {
         parentNode.appendChild(_container);
-        return _container;
+    };
+
+    me.remove = function() {
+        _container.parentNode.removeChild(_container);
     };
 
     me.setSize = function(w, h) {
@@ -2167,6 +2183,12 @@ var Layers = (function() {
         }
     };
 
+    // usually called after move: container jumps by move delta, cam is reset
+    me.setPosition = function(x, y) {
+        _container.style.left = x + 'px';
+        _container.style.top  = y + 'px';
+    };
+
     return me;
 
 }());
@@ -2174,22 +2196,25 @@ var Layers = (function() {
 
 //****** file: properties.js ******
 
-function setSize(w, h) {
-    width  = w;
-    height = h;
+function setOrigin(origin) {
+    originX = origin.x;
+    originY = origin.y;
+}
+
+function setCamOffset(offset) {
+    camX = halfWidth + offset.x;
+    camY = height    + offset.y;
+}
+
+function setSize(size) {
+    width  = size.w;
+    height = size.h;
     halfWidth  = width /2 <<0;
     halfHeight = height/2 <<0;
     camX = halfWidth;
     camY = height;
-    camZ = width / (1.5 / (window.devicePixelRatio || 1)) / tan(90/2) <<0; // adapting cam pos to field of view (90°), 1.5 is an empirical correction factor
     Layers.setSize(width, height);
-    // TODO: change of maxHeight needs to adjust building heights!
     maxHeight = camZ-50;
-}
-
-function setOrigin(x, y) {
-    originX = x;
-    originY = y;
 }
 
 function setZoom(z) {
@@ -2201,11 +2226,6 @@ function setZoom(z) {
     wallColorAlpha = defaultWallColor.setAlpha(zoomAlpha) + '';
     altColorAlpha  = defaultAltColor.setAlpha( zoomAlpha) + '';
     roofColorAlpha = defaultRoofColor.setAlpha(zoomAlpha) + '';
-}
-
-function setCam(x, y) {
-    camX = x;
-    camY = y;
 }
 
 function setStyle(style) {
@@ -2247,9 +2267,10 @@ function onMoveEnd(e) {
     Data.update(); // => fadeIn() => renderAll()
 }
 
-function onZoomStart(e) {
+function onZoomStart() {
     isZooming = true;
     // effectively clears because of isZooming flag
+    // TODO: introduce explicit clear()
     renderAll();
 }
 
@@ -2261,171 +2282,125 @@ function onZoomEnd(e) {
 }
 
 
-//****** file: public.js ******
+//****** file: OpenLayers.js ******
 
-this.setStyle = function(style) {
-    setStyle(style);
+// based on a pull request from Jérémy Judéaux (https://github.com/Volune)
+
+var parent = OpenLayers.Layer.prototype;
+
+var osmb = function(map) {
+    this.offset = { x:0, y:0 }; // cumulative cam offset during moveBy
+
+    parent.initialize.call(this, this.name, { projection:'EPSG:900913' });
+	map.addLayer(this);
 };
 
-this.setCamOffset = function(x, y) {
-    camX = halfWidth + x;
-    camY = height    + y;
+var proto = osmb.prototype = new OpenLayers.Layer();
+
+proto.name          = 'OSM Buildings';
+proto.attribution   = ATTRIBUTION;
+proto.isBaseLayer   = false;
+proto.alwaysInRange = true;
+
+proto.setOrigin = function() {
+    var map = this.map,
+        origin = map.getLonLatFromPixel(new OpenLayers.Pixel(0, 0)),
+        res = map.resolution,
+        ext = this.maxExtent,
+        x = (origin.lon - ext.left) / res <<0,
+        y = (ext.top - origin.lat)  / res <<0;
+    setOrigin({ x:x, y:y });
 };
 
-this.setMaxZoom = function(z) {
-    maxZoom = z;
+proto.setMap = function(map) {
+    if (!this.map) {
+        parent.setMap.call(this, map);
+    }
+    Layers.appendTo(this.div);
+    maxZoom = map.baseLayer.numZoomLevels;
+    setSize(map.size);
+    setZoom(map.zoom);
+    this.setOrigin();
+
+    Data.update();
+    renderAll();
 };
 
-this.setDate = function(date) {
-    Shadows.setDate(date);
+proto.removeMap = function(map) {
+    Layers.remove();
+    parent.removeMap.call(this, map);
+    this.map = null;
 };
 
-this.appendTo = function(parentNode) {
-    return Layers.appendTo(parentNode);
+proto.onMapResize = function() {
+    var map = this.map;
+    parent.onMapResize.call(this);
+    onResize({ width:map.size.w, height:map.size.h });
 };
 
-this.loadData = function(url) {
-    Data.load(url);
+proto.moveTo = function(bounds, zoomChanged, isDragging) {
+    var map = this.map,
+        res = parent.moveTo.call(this, bounds, zoomChanged, isDragging);
+
+    if (!isDragging) {
+        var offsetLeft = parseInt(map.layerContainerDiv.style.left, 10),
+            offsetTop  = parseInt(map.layerContainerDiv.style.top,  10);
+
+        this.div.style.left = -offsetLeft + 'px';
+        this.div.style.top  = -offsetTop  + 'px';
+    }
+
+    this.setOrigin();
+    this.offset.x = 0;
+    this.offset.y = 0;
+    setCamOffset(this.offset);
+
+    if (zoomChanged) {
+        onZoomEnd({ zoom:map.zoom });
+    } else {
+        onMoveEnd();
+    }
+
+    return res;
 };
 
-this.setData = function(data) {
-    Data.set(data);
+proto.moveByPx = function(dx, dy) {
+    this.offset.x += dx;
+    this.offset.y += dy;
+    var res = parent.moveByPx.call(this, dx, dy);
+    setCamOffset(this.offset);
+    render();
+    return res;
 };
-
-this.onMoveEnd   = onMoveEnd;
-this.onZoomEnd   = onZoomEnd;
-this.onZoomStart = onZoomStart;
-this.setOrigin   = setOrigin;
-this.setSize     = setSize;
-this.setZoom     = setZoom;
-this.render      = render;
 
 
 //****** file: suffix.js ******
 
-    };
+proto.setStyle = function(style) {
+    setStyle(style);
+    return this;
+};
 
-    osmb.VERSION     = VERSION;
-    osmb.ATTRIBUTION = ATTRIBUTION;
+proto.setDate = function(date) {
+    Shadows.setDate(date);
+    return this;
+};
 
-    return osmb;
+proto.loadData = function(url) {
+    Data.load(url);
+    return this;
+};
+
+proto.setData = function(data) {
+    Data.set(data);
+    return this;
+};
+
+osmb.VERSION     = VERSION;
+osmb.ATTRIBUTION = ATTRIBUTION;
+
+return osmb;
 
 }());
-
-
-//****** file: OpenLayers.js ******
-
-/**
- * basing on a pull request from Jérémy Judéaux (https://github.com/Volune)
- */
-
-OpenLayers.Layer.Buildings = OpenLayers.Class(OpenLayers.Layer, {
-
-    CLASS_NAME: 'OpenLayers.Layer.Buildings',
-
-    name: 'OSM Buildings',
-    attribution: OSMBuildings.ATTRIBUTION,
-
-    isBaseLayer: false,
-    alwaysInRange: true,
-
-    dxSum: 0, // for cumulative cam offset during moveBy
-    dySum: 0, // for cumulative cam offset during moveBy
-
-    initialize: function(options) {
-        options = options || {};
-        options.projection = 'EPSG:900913';
-        OpenLayers.Layer.prototype.initialize.call(this, this.name, options);
-    },
-
-    setOrigin: function() {
-        var origin = this.map.getLonLatFromPixel(new OpenLayers.Pixel(0, 0)),
-            res = this.map.resolution,
-            ext = this.maxExtent,
-            x = Math.round((origin.lon - ext.left) / res),
-            y = Math.round((ext.top - origin.lat) / res)
-        ;
-        this.osmb.setOrigin(x, y);
-    },
-
-    setMap: function(map) {
-        if (!this.map) {
-            OpenLayers.Layer.prototype.setMap.call(this, map);
-        }
-        if (!this.osmb) {
-            this.osmb = new OSMBuildings();
-            this.container = this.osmb.appendTo(this.div);
-        }
-        this.osmb.setSize(this.map.size.w, this.map.size.h);
-        this.osmb.setZoom(this.map.zoom);
-        this.setOrigin();
-    },
-
-    removeMap: function(map) {
-        this.container.parentNode.removeChild(this.container);
-        OpenLayers.Layer.prototype.removeMap.call(this, map);
-    },
-
-    onMapResize: function() {
-        OpenLayers.Layer.prototype.onMapResize.call(this);
-        this.osmb.onResize({ width: this.map.size.w, height: this.map.size.h });
-    },
-
-    moveTo: function(bounds, zoomChanged, dragging) {
-        var result = OpenLayers.Layer.prototype.moveTo.call(this, bounds, zoomChanged, dragging);
-        if (!dragging) {
-            var
-                offsetLeft = parseInt(this.map.layerContainerDiv.style.left, 10),
-                offsetTop  = parseInt(this.map.layerContainerDiv.style.top, 10)
-            ;
-            this.div.style.left = -offsetLeft + 'px';
-            this.div.style.top  = -offsetTop  + 'px';
-        }
-
-        this.setOrigin();
-        this.dxSum = 0;
-        this.dySum = 0;
-        this.osmb.setCamOffset(this.dxSum, this.dySum);
-
-        if (zoomChanged) {
-            this.osmb.onZoomEnd({ zoom: this.map.zoom });
-        } else {
-            this.osmb.onMoveEnd();
-        }
-
-        return result;
-    },
-
-    moveByPx: function(dx, dy) {
-        this.dxSum += dx;
-        this.dySum += dy;
-        var result = OpenLayers.Layer.prototype.moveByPx.call(this, dx, dy);
-        this.osmb.setCamOffset(this.dxSum, this.dySum);
-        this.osmb.render();
-        return result;
-    },
-
-    // TODO: refactor these ugly bindings
-
-    setStyle: function(style)  {
-        this.osmb.setStyle(style);
-        return this;
-    },
-
-    setDate: function(date)  {
-        this.osmb.setDate(date);
-        return this;
-    },
-
-    load: function(url) {
-        this.osmb.loadData(url);
-        return this;
-    },
-
-    geoJSON: function(data) {
-        this.osmb.setData(data);
-        return this;
-    }
-});
 
 
