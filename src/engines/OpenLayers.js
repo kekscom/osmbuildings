@@ -3,8 +3,7 @@
 var parent = OpenLayers.Layer.prototype;
 
 var osmb = function(map) {
-    this.dxSum = 0; // for cumulative cam offset during moveBy
-    this.dySum = 0; // for cumulative cam offset during moveBy
+    this.offset = { x:0, y:0 }; // cumulative cam offset during moveBy
 
     parent.initialize.call(this, this.name, { projection:'EPSG:900913' });
 	map.addLayer(this);
@@ -22,9 +21,9 @@ proto.setOrigin = function() {
         origin = map.getLonLatFromPixel(new OpenLayers.Pixel(0, 0)),
         res = map.resolution,
         ext = this.maxExtent,
-        x = Math.round((origin.lon - ext.left) / res),
-        y = Math.round((ext.top - origin.lat)  / res);
-    setOrigin(x, y);
+        x = (origin.lon - ext.left) / res <<0,
+        y = (ext.top - origin.lat)  / res <<0;
+    setOrigin({ x:x, y:y });
 };
 
 proto.setMap = function(map) {
@@ -33,7 +32,7 @@ proto.setMap = function(map) {
     }
     Layers.appendTo(this.div);
     maxZoom = map.baseLayer.numZoomLevels;
-    setSize(map.size.w, map.size.h);
+    setSize(map.size);
     setZoom(map.zoom);
     this.setOrigin();
 
@@ -66,9 +65,9 @@ proto.moveTo = function(bounds, zoomChanged, isDragging) {
     }
 
     this.setOrigin();
-    this.dxSum = 0;
-    this.dySum = 0;
-    setCamOffset(this.dxSum, this.dySum);
+    this.offset.x = 0;
+    this.offset.y = 0;
+    setCamOffset(this.offset);
 
     if (zoomChanged) {
         onZoomEnd({ zoom:map.zoom });
@@ -80,10 +79,10 @@ proto.moveTo = function(bounds, zoomChanged, isDragging) {
 };
 
 proto.moveByPx = function(dx, dy) {
-    this.dxSum += dx;
-    this.dySum += dy;
+    this.offset.x += dx;
+    this.offset.y += dy;
     var res = parent.moveByPx.call(this, dx, dy);
-    setCamOffset(this.dxSum, this.dySum);
+    setCamOffset(this.offset);
     render();
     return res;
 };

@@ -1,22 +1,21 @@
-function setOrigin(x, y) {
-    originX = x;
-    originY = y;
+function setOrigin(origin) {
+    originX = origin.x;
+    originY = origin.y;
 }
 
-function setCamOffset(x, y) {
-    camX = halfWidth + x;
-    camY = height    + y;
+function setCamOffset(offset) {
+    camX = halfWidth + offset.x;
+    camY = height    + offset.y;
 }
 
-function setSize(w, h) {
-    width  = w;
-    height = h;
+function setSize(size) {
+    width  = size.w;
+    height = size.h;
     halfWidth  = width /2 <<0;
     halfHeight = height/2 <<0;
     camX = halfWidth;
     camY = height;
     Layers.setSize(width, height);
-    // TODO: change of maxHeight needs to adjust building heights!
     maxHeight = camZ-50;
 }
 
