@@ -39,7 +39,10 @@ var Layers = (function() {
 
     me.appendTo = function(parentNode) {
         parentNode.appendChild(_container);
-        return _container;
+    };
+
+    me.remove = function() {
+        _container.parentNode.removeChild(_container);
     };
 
     me.setSize = function(w, h) {
@@ -47,6 +50,12 @@ var Layers = (function() {
             _items[i].width  = w;
             _items[i].height = h;
         }
+    };
+
+    // usually called after move: container jumps by move delta, cam is reset
+    me.setPosition = function(x, y) {
+        _container.style.left = x + 'px';
+        _container.style.top  = y + 'px';
     };
 
     return me;

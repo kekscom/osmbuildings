@@ -15,7 +15,6 @@ function setSize(w, h) {
     halfHeight = height/2 <<0;
     camX = halfWidth;
     camY = height;
-    camZ = width / (1.5 / (window.devicePixelRatio || 1)) / tan(90/2) <<0; // adapting cam pos to field of view (90°), 1.5 is an empirical correction factor
     Layers.setSize(width, height);
     // TODO: change of maxHeight needs to adjust building heights!
     maxHeight = camZ-50;
