@@ -2,7 +2,7 @@
 
 var parent = OpenLayers.Layer.prototype;
 
-var OSMBuildings = function(map) {
+var osmb = function(map) {
     this.name = 'OSM Buildings';
     this.attribution = OSMB.ATTRIBUTION;
 
@@ -23,21 +23,17 @@ proto.setOrigin = function() {
         res = this.map.resolution,
         ext = this.maxExtent,
         x = Math.round((origin.lon - ext.left) / res),
-        y = Math.round((ext.top - origin.lat) / res)
-    ;
-    this.osmb.setOrigin(x, y);
+        y = Math.round((ext.top - origin.lat)  / res);
+    setOrigin(x, y);
 };
 
 proto.setMap = function(map) {
     if (!this.map) {
         OpenLayers.Layer.prototype.setMap.call(this, map);
     }
-    if (!this.osmb) {
-        this.osmb = new OSMB();
-        this.container = this.osmb.appendTo(this.div);
-    }
-    this.osmb.setSize(this.map.size.w, this.map.size.h);
-    this.osmb.setZoom(this.map.zoom);
+    this.container = Layers.appendTo(this.div);
+    setSize(this.map.size.w, this.map.size.h);
+    setZoom(this.map.zoom);
     this.setOrigin();
 };
 
@@ -48,7 +44,7 @@ proto.removeMap = function(map) {
 
 proto.onMapResize = function() {
     OpenLayers.Layer.prototype.onMapResize.call(this);
-    this.osmb.onResize({ width:this.map.size.w, height:this.map.size.h });
+    onResize({ width:this.map.size.w, height:this.map.size.h });
 };
 
 proto.moveTo = function(bounds, zoomChanged, dragging) {
@@ -65,12 +61,12 @@ proto.moveTo = function(bounds, zoomChanged, dragging) {
     this.setOrigin();
     this.dxSum = 0;
     this.dySum = 0;
-    this.osmb.setCamOffset(this.dxSum, this.dySum);
+    setCamOffset(this.dxSum, this.dySum);
 
     if (zoomChanged) {
-        this.osmb.onZoomEnd({ zoom:this.map.zoom });
+        onZoomEnd({ zoom:this.map.zoom });
     } else {
-        this.osmb.onMoveEnd();
+        onMoveEnd();
     }
 
     return result;
@@ -80,29 +76,29 @@ proto.moveByPx = function(dx, dy) {
     this.dxSum += dx;
     this.dySum += dy;
     var result = OpenLayers.Layer.prototype.moveByPx.call(this, dx, dy);
-    this.osmb.setCamOffset(this.dxSum, this.dySum);
-    this.osmb.render();
+    setCamOffset(this.dxSum, this.dySum);
+    render();
     return result;
 };
 
 // TODO: refactor these ugly bindings
 
 proto.setStyle = function(style)  {
-    this.osmb.setStyle(style);
+    setStyle(style);
     return this;
 };
 
 proto.setDate = function(date)  {
-    this.osmb.setDate(date);
+    setDate(date);
     return this;
 };
 
 proto.loadData = function(url) {
-    this.osmb.loadData(url);
+    loadData(url);
     return this;
 };
 
 proto.geoJSON = function(data) {
-    this.osmb.setData(data);
+    setData(data);
     return this;
 };

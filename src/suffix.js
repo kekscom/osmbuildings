@@ -1,4 +1,3 @@
-    };
 
     osmb.VERSION     = VERSION;
     osmb.ATTRIBUTION = ATTRIBUTION;

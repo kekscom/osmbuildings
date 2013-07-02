@@ -1,3 +1,3 @@
-var OSMB = (function() {
+var OSMBuildings = (function() {
 
     'use strict';
