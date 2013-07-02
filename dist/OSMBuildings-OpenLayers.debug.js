@@ -687,8 +687,8 @@ var VERSION      = '0.1.8a',
 
     LAT = 'latitude', LON = 'longitude',
 
-    DEFAULT_HEIGHT = 15,
-    HEIGHT_SCALE = 3;
+    DEFAULT_HEIGHT = 5,
+    HEIGHT_SCALE = 1;
 
 
 //****** file: geometry.js ******

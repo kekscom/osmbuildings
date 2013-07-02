@@ -17,7 +17,7 @@
 	}
 	</style>
     <script src="http://www.openlayers.org/api/OpenLayers.js"></script>
-    <!--script src="../dist/OpenLayers.Layer.Buildings.js"></script-->
+    <!--script src="../dist/OSMBuildings-OpenLayers.js"></script-->
     <script src="scripts.js.php"></script>
 </head>
 
