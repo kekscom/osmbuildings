@@ -9,9 +9,10 @@ function onMoveEnd(e) {
     Data.update(); // => fadeIn() => renderAll()
 }
 
-function onZoomStart(e) {
+function onZoomStart() {
     isZooming = true;
     // effectively clears because of isZooming flag
+    // TODO: introduce explicit clear()
     renderAll();
 }
 

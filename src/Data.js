@@ -1,31 +1,3 @@
-// http://overpass-api.de/api/interpreter?data=[out:json];(way[%22building%22](52.405,13.35,52.410,13.4);node(w);way[%22building:part%22=%22yes%22](52.405,13.35,52.410,13.4);node(w);relation[%22building%22](52.405,13.35,52.410,13.4);way(r);node(w););out;
-// http://overpass.osm.rambler.ru/cgi/xapi?
-
-/*
-// http://graphviz-dev.appspot.com/
-digraph g{
-    CityGML -> XML
-    KML -> XML
-    OSM -> XML [style=dotted]
-    XML -> SQL
-    Shape -> SQL
-    SQL -> GeoJSON
-    CartoDB -> GeoJSON
-    GeoJSON -> Client
-    OSM -> XAPI
-    XAPI -> JSON
-    XAPI -> XML [style=dotted]
-    CartoDB -> JSON [style=dotted]
-    JSON -> Client
-
-    CartoDB [shape=box]
-    SQL [shape=box]
-    XAPI [shape=box]
-
-    Client [shape=box,fillcolor="green",style="filled,rounded"]
-}
-*/
-
 var Data = (function() {
 
     var _url;

@@ -24,6 +24,6 @@ var width = 0, height = 0,
     maxZoom = 20,
     maxHeight,
 
-    camX, camY, camZ,
+    camX, camY, camZ = 450,
 
     isZooming;

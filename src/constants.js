@@ -16,7 +16,7 @@ var VERSION      = /*<version=*/'0.1.8a'/*>*/,
 
     LAT = 'latitude', LON = 'longitude',
 
-    DEFAULT_HEIGHT = 15,
-    HEIGHT_SCALE = 3,
+    TRUE = true, FALSE = false,
 
-    TRUE = true, FALSE = false;
+    DEFAULT_HEIGHT = 5,
+    HEIGHT_SCALE = 1;

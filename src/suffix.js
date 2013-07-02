@@ -1,8 +1,26 @@
-    };
+proto.setStyle = function(style) {
+    setStyle(style);
+    return this;
+};
 
-    osmb.VERSION     = VERSION;
-    osmb.ATTRIBUTION = ATTRIBUTION;
+proto.setDate = function(date) {
+    Shadows.setDate(date);
+    return this;
+};
 
-    return osmb;
+proto.loadData = function(url) {
+    Data.load(url);
+    return this;
+};
+
+proto.setData = function(data) {
+    Data.set(data);
+    return this;
+};
+
+osmb.VERSION     = VERSION;
+osmb.ATTRIBUTION = ATTRIBUTION;
+
+return osmb;
 
 }());

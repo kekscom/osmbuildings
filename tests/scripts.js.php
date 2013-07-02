@@ -10,22 +10,19 @@ $srcFiles = array(
     $srcPath . "/import/OSMXAPI.js",
     $srcPath . "/constants.js",
     $srcPath . "/geometry.js",
-        $srcPath . "/class.js",
-        $srcPath . "/variables.js",
-        $srcPath . "/functions.js",
-        $srcPath . "/Cache.js",
-        $srcPath . "/Data.js",
-        $srcPath . "/render.js",
-        $srcPath . "/objects.js", // TODO move up when finished
-        $srcPath . "/Shadows.js",
-        $srcPath . "/FlatBuildings.js",
-        $srcPath . "/Layers.js",
-        $srcPath . "/properties.js",
-        $srcPath . "/events.js",
-        $srcPath . "/public.js",
-    $srcPath . "/suffix.js",
-//    $srcPath . "/engines/OpenLayers.js"
-    $srcPath . "/engines/Leaflet.js"
+    $srcPath . "/variables.js",
+    $srcPath . "/functions.js",
+    $srcPath . "/Cache.js",
+    $srcPath . "/Data.js",
+    $srcPath . "/render.js",
+    $srcPath . "/objects.js", // TODO: clean up when finished
+    $srcPath . "/Shadows.js",
+    $srcPath . "/FlatBuildings.js",
+    $srcPath . "/Layers.js",
+    $srcPath . "/properties.js",
+    $srcPath . "/events.js",
+    $srcPath . "/engines/".$_GET["engine"].".js",
+    $srcPath . "/suffix.js"
 );
 
 
