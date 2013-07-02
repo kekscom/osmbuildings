@@ -12,10 +12,9 @@ var osmb = function(map) {
 
 var proto = osmb.prototype = new OpenLayers.Layer();
 
-proto.name = 'OSM Buildings';
-proto.attribution = ATTRIBUTION;
-
-proto.isBaseLayer = false;
+proto.name          = 'OSM Buildings';
+proto.attribution   = ATTRIBUTION;
+proto.isBaseLayer   = false;
 proto.alwaysInRange = true;
 
 proto.setOrigin = function() {
@@ -32,14 +31,18 @@ proto.setMap = function(map) {
     if (!this.map) {
         parent.setMap.call(this, map);
     }
-    this.container = Layers.appendTo(this.div);
+    Layers.appendTo(this.div);
+    maxZoom = map.baseLayer.numZoomLevels;
     setSize(map.size.w, map.size.h);
     setZoom(map.zoom);
     this.setOrigin();
+
+    Data.update();
+    renderAll();
 };
 
 proto.removeMap = function(map) {
-    this.container.parentNode.removeChild(this.container);
+    Layers.remove();
     parent.removeMap.call(this, map);
     this.map = null;
 };

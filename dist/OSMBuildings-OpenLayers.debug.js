@@ -847,7 +847,7 @@ var width = 0, height = 0,
     maxZoom = 20,
     maxHeight,
 
-    camX, camY, camZ,
+    camX, camY, camZ = 450,
 
     isZooming;
 
@@ -1681,7 +1681,10 @@ var Layers = (function() {
 
     me.appendTo = function(parentNode) {
         parentNode.appendChild(_container);
-        return _container;
+    };
+
+    me.remove = function() {
+        _container.parentNode.removeChild(_container);
     };
 
     me.setSize = function(w, h) {
@@ -1689,6 +1692,12 @@ var Layers = (function() {
             _items[i].width  = w;
             _items[i].height = h;
         }
+    };
+
+    // usually called after move: container jumps by move delta, cam is reset
+    me.setPosition = function(x, y) {
+        _container.style.left = x + 'px';
+        _container.style.top  = y + 'px';
     };
 
     return me;
@@ -1715,7 +1724,6 @@ function setSize(w, h) {
     halfHeight = height/2 <<0;
     camX = halfWidth;
     camY = height;
-    camZ = width / (1.5 / (window.devicePixelRatio || 1)) / tan(90/2) <<0; // adapting cam pos to field of view (90°), 1.5 is an empirical correction factor
     Layers.setSize(width, height);
     // TODO: change of maxHeight needs to adjust building heights!
     maxHeight = camZ-50;
@@ -1793,12 +1801,6 @@ function onZoomEnd(e) {
 var parent = OpenLayers.Layer.prototype;
 
 var osmb = function(map) {
-    this.name = 'OSM Buildings';
-    this.attribution = ATTRIBUTION;
-
-    this.isBaseLayer = false;
-    this.alwaysInRange = true;
-
     this.dxSum = 0; // for cumulative cam offset during moveBy
     this.dySum = 0; // for cumulative cam offset during moveBy
 
@@ -1808,9 +1810,15 @@ var osmb = function(map) {
 
 var proto = osmb.prototype = new OpenLayers.Layer();
 
+proto.name          = 'OSM Buildings';
+proto.attribution   = ATTRIBUTION;
+proto.isBaseLayer   = false;
+proto.alwaysInRange = true;
+
 proto.setOrigin = function() {
-    var origin = this.map.getLonLatFromPixel(new OpenLayers.Pixel(0, 0)),
-        res = this.map.resolution,
+    var map = this.map,
+        origin = map.getLonLatFromPixel(new OpenLayers.Pixel(0, 0)),
+        res = map.resolution,
         ext = this.maxExtent,
         x = Math.round((origin.lon - ext.left) / res),
         y = Math.round((ext.top - origin.lat)  / res);
@@ -1819,31 +1827,40 @@ proto.setOrigin = function() {
 
 proto.setMap = function(map) {
     if (!this.map) {
-        OpenLayers.Layer.prototype.setMap.call(this, map);
+        parent.setMap.call(this, map);
     }
-    this.container = Layers.appendTo(this.div);
-    setSize(this.map.size.w, this.map.size.h);
-    setZoom(this.map.zoom);
+    Layers.appendTo(this.div);
+//    this.container = Layers.appendTo(this.div);
+    maxZoom = map.baseLayer.numZoomLevels;
+    setSize(map.size.w, map.size.h);
+    setZoom(map.zoom);
     this.setOrigin();
+
+    Data.update();
+    renderAll();
 };
 
 proto.removeMap = function(map) {
-    this.container.parentNode.removeChild(this.container);
-    OpenLayers.Layer.prototype.removeMap.call(this, map);
+    Layers.remove();
+//    this.container.parentNode.removeChild(this.container);
+    parent.removeMap.call(this, map);
+    this.map = null;
 };
 
 proto.onMapResize = function() {
-    OpenLayers.Layer.prototype.onMapResize.call(this);
-    onResize({ width:this.map.size.w, height:this.map.size.h });
+    var map = this.map;
+    parent.onMapResize.call(this);
+    onResize({ width:map.size.w, height:map.size.h });
 };
 
-proto.moveTo = function(bounds, zoomChanged, dragging) {
-    var result = OpenLayers.Layer.prototype.moveTo.call(this, bounds, zoomChanged, dragging);
-    if (!dragging) {
-        var
-            offsetLeft = parseInt(this.map.layerContainerDiv.style.left, 10),
-            offsetTop  = parseInt(this.map.layerContainerDiv.style.top, 10)
-        ;
+proto.moveTo = function(bounds, zoomChanged, isDragging) {
+    var map = this.map,
+        res = parent.moveTo.call(this, bounds, zoomChanged, isDragging);
+
+    if (!isDragging) {
+        var offsetLeft = parseInt(map.layerContainerDiv.style.left, 10),
+            offsetTop  = parseInt(map.layerContainerDiv.style.top,  10);
+
         this.div.style.left = -offsetLeft + 'px';
         this.div.style.top  = -offsetTop  + 'px';
     }
@@ -1854,21 +1871,21 @@ proto.moveTo = function(bounds, zoomChanged, dragging) {
     setCamOffset(this.dxSum, this.dySum);
 
     if (zoomChanged) {
-        onZoomEnd({ zoom:this.map.zoom });
+        onZoomEnd({ zoom:map.zoom });
     } else {
         onMoveEnd();
     }
 
-    return result;
+    return res;
 };
 
 proto.moveByPx = function(dx, dy) {
     this.dxSum += dx;
     this.dySum += dy;
-    var result = OpenLayers.Layer.prototype.moveByPx.call(this, dx, dy);
+    var res = parent.moveByPx.call(this, dx, dy);
     setCamOffset(this.dxSum, this.dySum);
     render();
-    return result;
+    return res;
 };
 
 
