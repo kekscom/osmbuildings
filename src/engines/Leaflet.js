@@ -107,7 +107,7 @@ L.BuildingsLayer = L.Class.extend({
 //        }
 
         this.map.attributionControl.addAttribution(OSMBuildings.ATTRIBUTION);
-        this.osmb.render(); // in case of for re-adding this layer
+        this.osmb.renderAll(); // in case of for re-adding this layer
     },
 
     onRemove: function(map) {

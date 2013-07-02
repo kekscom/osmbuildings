@@ -34,3 +34,4 @@ this.setOrigin   = setOrigin;
 this.setSize     = setSize;
 this.setZoom     = setZoom;
 this.render      = render;
+this.renderAll   = renderAll;
