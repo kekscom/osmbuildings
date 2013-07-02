@@ -1,3 +1,13 @@
+function setOrigin(x, y) {
+    originX = x;
+    originY = y;
+}
+
+function setCamOffset(x, y) {
+    camX = halfWidth + x;
+    camY = height    + y;
+}
+
 function setSize(w, h) {
     width  = w;
     height = h;
@@ -11,16 +21,6 @@ function setSize(w, h) {
     maxHeight = camZ-50;
 }
 
-function setOrigin(x, y) {
-    originX = x;
-    originY = y;
-}
-
-function setCamOffset(x, y) {
-    camX = halfWidth + x;
-    camY = height    + y;
-}
-
 function setZoom(z) {
     zoom = z;
     size = MAP_TILE_SIZE <<zoom;
@@ -30,11 +30,6 @@ function setZoom(z) {
     wallColorAlpha = defaultWallColor.setAlpha(zoomAlpha) + '';
     altColorAlpha  = defaultAltColor.setAlpha( zoomAlpha) + '';
     roofColorAlpha = defaultRoofColor.setAlpha(zoomAlpha) + '';
-}
-
-function setCam(x, y) {
-    camX = x;
-    camY = y;
 }
 
 function setStyle(style) {

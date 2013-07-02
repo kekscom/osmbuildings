@@ -1698,6 +1698,16 @@ var Layers = (function() {
 
 //****** file: properties.js ******
 
+function setOrigin(x, y) {
+    originX = x;
+    originY = y;
+}
+
+function setCamOffset(x, y) {
+    camX = halfWidth + x;
+    camY = height    + y;
+}
+
 function setSize(w, h) {
     width  = w;
     height = h;
@@ -1711,11 +1721,6 @@ function setSize(w, h) {
     maxHeight = camZ-50;
 }
 
-function setOrigin(x, y) {
-    originX = x;
-    originY = y;
-}
-
 function setZoom(z) {
     zoom = z;
     size = MAP_TILE_SIZE <<zoom;
@@ -1725,11 +1730,6 @@ function setZoom(z) {
     wallColorAlpha = defaultWallColor.setAlpha(zoomAlpha) + '';
     altColorAlpha  = defaultAltColor.setAlpha( zoomAlpha) + '';
     roofColorAlpha = defaultRoofColor.setAlpha(zoomAlpha) + '';
-}
-
-function setCam(x, y) {
-    camX = x;
-    camY = y;
 }
 
 function setStyle(style) {
@@ -1782,30 +1782,6 @@ function onZoomEnd(e) {
     setZoom(e.zoom);
     Data.update(); // => fadeIn()
     renderAll();
-}
-
-
-//****** file: public.js ******
-
-function setCamOffset(x, y) {
-    camX = halfWidth + x;
-    camY = height    + y;
-}
-
-function setMaxZoom(z) {
-    maxZoom = z;
-}
-
-function setDate(date) {
-    Shadows.setDate(date);
-}
-
-function loadData(url) {
-    Data.load(url);
-}
-
-function setData(data) {
-    Data.set(data);
 }
 
 
@@ -1922,36 +1898,33 @@ proto.onRemove = function(map) {
     this.container.parentNode.removeChild(this.container);
 };
 
-// TODO: refactor these ugly bindings
 
-proto.setStyle = function(style)  {
+//****** file: suffix.js ******
+
+proto.setStyle = function(style) {
     setStyle(style);
     return this;
 };
 
-proto.setDate = function(date)  {
-    setDate(date);
+proto.setDate = function(date) {
+    Shadows.setDate(date);
     return this;
 };
 
 proto.loadData = function(url) {
-    loadData(url);
+    Data.load(url);
     return this;
 };
 
-proto.geoJSON = function(data) {
-    setData(data);
+proto.setData = function(data) {
+    Data.set(data);
     return this;
 };
 
+osmb.VERSION     = VERSION;
+osmb.ATTRIBUTION = ATTRIBUTION;
 
-//****** file: suffix.js ******
-
-
-    osmb.VERSION     = VERSION;
-    osmb.ATTRIBUTION = ATTRIBUTION;
-
-    return osmb;
+return osmb;
 
 }());
 
