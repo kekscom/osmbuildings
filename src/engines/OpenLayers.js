@@ -4,7 +4,7 @@ var parent = OpenLayers.Layer.prototype;
 
 var osmb = function(map) {
     this.name = 'OSM Buildings';
-    this.attribution = OSMB.ATTRIBUTION;
+    this.attribution = ATTRIBUTION;
 
     this.isBaseLayer = false;
     this.alwaysInRange = true;
@@ -16,7 +16,7 @@ var osmb = function(map) {
 	map.addLayer(this);
 };
 
-var proto = OSMBuildings.prototype = new OpenLayers.Layer();
+var proto = osmb.prototype = new OpenLayers.Layer();
 
 proto.setOrigin = function() {
     var origin = this.map.getLonLatFromPixel(new OpenLayers.Pixel(0, 0)),
