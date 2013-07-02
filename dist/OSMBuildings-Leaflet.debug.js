@@ -1645,7 +1645,7 @@ var Layers = (function() {
     function _createItem() {
         var canvas = doc.createElement('CANVAS');
         canvas.style.webkitTransform = 'translate3d(0,0,0)'; // turn on hw acceleration
-        canvas.style.imageRendering = 'optimizeSpeed';
+        canvas.style.imageRendering  = 'optimizeSpeed';
         canvas.style.position = 'absolute';
         canvas.style.left = 0;
         canvas.style.top  = 0;
@@ -1771,9 +1771,10 @@ function onMoveEnd(e) {
     Data.update(); // => fadeIn() => renderAll()
 }
 
-function onZoomStart(e) {
+function onZoomStart() {
     isZooming = true;
     // effectively clears because of isZooming flag
+    // TODO: introduce explicit clear()
     renderAll();
 }
 
