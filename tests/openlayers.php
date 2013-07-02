@@ -4,21 +4,21 @@
     <title>OSM Buildings - OpenLayers</title>
     <meta http-equiv="content-type" content="text/html; charset=utf-8">
 	<style>
-	body {
-		margin: 0;
-		padding: 0;
-		font-family: Arial, Helvetica, sans-serif;
-	}
-	#map {
-		width: 700px;
-		height: 400px;
-		margin: 0 auto !important;
-		border: 1px solid #ccc;
-	}
-	</style>
+    html, body {
+        border: 0;
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+    }
+    #map {
+        height: 100%;
+    }
+    </style>
     <script src="http://www.openlayers.org/api/OpenLayers.js"></script>
     <!--script src="../dist/OSMBuildings-OpenLayers.js"></script-->
-    <script src="scripts.js.php"></script>
+    <script src="scripts.js.php?engine=OpenLayers"></script>
 </head>
 
 <body>

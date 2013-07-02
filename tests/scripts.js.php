@@ -20,8 +20,7 @@ $srcFiles = array(
     $srcPath . "/Layers.js",
     $srcPath . "/properties.js",
     $srcPath . "/events.js",
-    //$srcPath . "/engines/OpenLayers.js",
-    $srcPath . "/engines/Leaflet.js",
+    $srcPath . "/engines/".$_GET["engine"].".js",
     $srcPath . "/suffix.js"
 );
 

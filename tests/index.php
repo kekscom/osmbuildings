@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>OSM Buildings - Sandbox</title>
+    <title>OSM Buildings</title>
     <meta http-equiv="content-type" content="text/html; charset=utf-8">
     <style type="text/css">
     html, body {
@@ -18,7 +18,7 @@
     </style>
     <link rel="stylesheet" href="leaflet-0.5.1/leaflet.css">
     <script src="leaflet-0.5.1/leaflet-src.js"></script>
-	<script src="scripts.js.php"></script>
+	<script src="scripts.js.php?engine=Leaflet"></script>
 </head>
 
 <body>
