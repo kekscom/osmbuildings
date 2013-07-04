@@ -46,7 +46,8 @@ Add the buildings layer.
 new L.BuildingsLayer().addTo(map).load();
 ~~~
 
-As a popular alternative, you could pass a <a href="http://www.geojson.org/geojson-spec.html">GeoJSON</a> data object. Make sure the building coordinates are projected in <b><a href="http://spatialreference.org/ref/epsg/4326/">EPSG:4326</a></b>, and the height specified in <b>meters</b>.
+As a popular alternative, you could pass a <a href="http://www.geojson.org/geojson-spec.html">GeoJSON</a> data object.<br>
+Make sure the building coordinates are projected in <b><a href="http://spatialreference.org/ref/epsg/4326/">EPSG:4326</a></b>, and the height specified in <b>meters</b>.
 
 ~~~ javascript
 var data = {
