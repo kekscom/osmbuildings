@@ -108,18 +108,18 @@
          * @returns {array} list of two tangents as points on each circle
          */
         function getTangents(x1, y1, r1, x2, y2, r2) {
-            var sqd = (x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2);
-            if (sqd <= (r1 - r2) * (r1 - r2)) {
+            var sqd = (x1-x2) * (x1-x2) + (y1-y2) * (y1-y2);
+
+            if (sqd <= (r1-r2) * (r1-r2)) {
                 return;
             }
 
             var d = sqrt(sqd),
-                vx = (x2 - x1) / d,
-                vy = (y2 - y1) / d,
+                vx = (x2-x1) / d,
+                vy = (y2-y1) / d,
                 res = [],
-                c = (r1 - r2) / d,
-                h, nx, ny
-            ;
+                c = (r1-r2) / d,
+                h, nx, ny;
 
             // Let A, B be the centers, and C, D be points at which the tangent
             // touches first and second circle, and n be the normal vector to it.
@@ -142,8 +142,8 @@
                 nx = vx * c - sign * h * vy;
                 ny = vy * c + sign * h * vx;
                 res.push([
-                    x1 + r1 * nx << 0, y1 + r1 * ny << 0,
-                    x2 + r2 * nx << 0, y2 + r2 * ny << 0
+                    x1 + r1*nx << 0, y1 + r1*ny << 0,
+                    x2 + r2*nx << 0, y2 + r2*ny << 0
                 ]);
             }
 
@@ -239,31 +239,29 @@
         }
 
 
-        var KAPPA = 0.5522847498;
 
-        function dome2(x, y, r, h) {
-            if (!h) {
-                h = r;
-            }
 
-            var kh = h*KAPPA,
-//                _kh = camZ / (camZ-h+kh),
-                _h = camZ / (camZ-h);
+var m = Math,
+  sin = m.sin, cos = m.cos, atan = m.atan;
+function rotation(x, y, angle) {
+  var
+    dx = x-camX, dy = y-camY,
+    ms = sin(angle), mc = cos(angle);
+  return {
+    x: camX + mc*dx - ms*dy <<0,
+    y: camY + ms*dx + mc*dy <<0
+  };
+}
 
-            var apex = project(x, y, _h);
 
-            context.fillStyle = roofColorAlpha;
-            circle(x, y, r, TRUE);
-
-            line([x, y], [apex.x, apex.y]);
-        }
 
         var KAPPA = 0.5522847498;
         function dome(x, y, r, h) {
             if (!h) {
                 h = r;
             }
-
+x = camX + 300;
+y = camY - 300;
             var k = h*KAPPA,
                 g = 1,
                 n = camZ / (camZ-h+k),
@@ -283,28 +281,50 @@
             var tz = t[0][1]*0.6;
 
             var p = project(x, ty, camZ / (camZ-tz));
-            debugMarker(p.x, p.y);
+//            debugMarker(p.x, p.y);
+
+            debugMarker(camX, camY, 'green', 10);
 
             context.fillStyle = roofColorAlpha;
             circle(x, y, r, TRUE);
+
+
+var dx = camX-x;
+var dy = camY-y;
+
+var angle = -atan(dx/dy);
+
             line([x, y], [apex.x, apex.y]);
-//            debugMarker(apex.x, apex.y);
+            debugMarker(apex.x, apex.y);
 
             // querlinie durch den sichtpunkt
-//            line([p.x, p.y], [p.x-_r, p.y]);
-//            line([p.x, p.y], [p.x+_r, p.y]);
+//            line([p.x-_r, p.y], [p.x+_r, p.y]);
+
+            var P1 = rotation(p.x-_r, p.y, angle);
+            var P2 = rotation(p.x+_r, p.y, angle);
+            line([P1.x, P1.y], [P2.x, P2.y]);
+
+debugMarker(p.x-_r, p.y, 'red', 10);
+debugMarker(p.x+_r, p.y, 'red', 10);
+debugMarker(P1.x, P1.y, 'yellow', 10);
+debugMarker(P2.x, P2.y, 'yellow', 10);
+
+return;
+
+
+
 
             // vertikale kanten zu den querlinienenden
-//            line([x-r, y], [p.x - _r, p.y]);
-//            line([x+r, y], [p.x + _r, p.y]);
+            line([x-r, y], [p.x - _r, p.y]);
+            line([x+r, y], [p.x + _r, p.y]);
 
             // hor. anchors
-//            debugMarker(p.x-_k, p.y);
-//            debugMarker(p.x+_k, p.y);
+            debugMarker(p.x-_k, p.y);
+            debugMarker(p.x+_k, p.y);
 
             // ver. anchors
-//            debugMarker(x-r, y - (y-p.y)*KAPPA);
-//            debugMarker(x+r, y - (y-p.y)*KAPPA);
+            debugMarker(x-r, y - (y-p.y)*KAPPA);
+            debugMarker(x+r, y - (y-p.y)*KAPPA);
 
             context.beginPath();
 
@@ -315,6 +335,8 @@
             context.bezierCurveTo(x+r, y - (y-p.y)*KAPPA, p.x+_k, p.y, p.x, p.y);
 
             context.stroke();
+
+
 return;
 
 //******************************************************************************
