@@ -9,6 +9,19 @@ Everything is stabilizing now, entering beta state.
 http://osmbuildings.org/
 
 
+## Deprecation notice!
+
+With version 0.1.9a ahead, there are a few changes regarding files and API.<br>
+It's about aligning, functionality stays the same.
+
+1. Files are now named `OSMBuildings-<ENGINE>.js`- where engine is `Leaflet` or `OpenLayers` at the moment.
+2. Initialization is just `new OSMBuildings(map)` - no more addTo(...) 
+3. Loading data from external GeoJSON source is done by `loadData(<URL>)`
+3. Setting GeoJSON or alike formatted data is done by `setData(<DATA>)`
+
+For details, see documentation below.
+
+
 ## Files
 
 Release version 0.1.8a https://github.com/kekscom/osmbuildings/tree/v0.1.8a<br>
@@ -27,7 +40,7 @@ Link Leaflet and OSM Buildings files in your HTML head section.
 <head>
   <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.5.1/leaflet.css">
   <script src="http://cdn.leafletjs.com/leaflet-0.5.1/leaflet.js"></script>
-  <script src="L.BuildingsLayer.js"></script>
+  <script src="OSMBuildings-Leaflet.js"></script>
 </head>
 ~~~
 
@@ -86,7 +99,7 @@ Link OpenLayers and OSM Buildings files in your HTML head section.
 ~~~ html
 <head>
   <script src="http://www.openlayers.org/api/OpenLayers.js"></script>
-  <script src="Openlayers.Layer.Buildings.js"></script>
+  <script src="OSMBuildings-OpenLayers.js"></script>
 </head>
 ~~~
 
@@ -129,7 +142,7 @@ new OSMBuildings(map).loadData();
 
 <tr>
 <td>new OSMBuildings(map)</td>
-<td>Initializes the buildings layer for a given ap engine.<br>
+<td>Initializes the buildings layer for a given map engine.<br>
 Currently Leaflet and OpenLayers are supported.</td>
 </tr>
 </table>
