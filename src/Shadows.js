@@ -67,8 +67,8 @@ var Shadows = (function() {
 
         _context.beginPath();
 
-        for (i = 0, il = Data.renderItems.length; i < il; i++) {
-            item = Data.renderItems[i];
+        for (i = 0, il = renderItems.length; i < il; i++) {
+            item = renderItems[i];
 
 // TODO: no shadows when buildings are too flat => don't add them to renderItems then
 //        if (item.height <= FlatBuildings.MAX_HEIGHT) {

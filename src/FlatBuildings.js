@@ -28,8 +28,8 @@ var FlatBuildings = (function() {
 
         _context.beginPath();
 
-        for (i = 0, il = Data.renderItems.length; i < il; i++) {
-            item = Data.renderItems[i];
+        for (i = 0, il = renderItems.length; i < il; i++) {
+            item = renderItems[i];
 
             if (item.height > me.MAX_HEIGHT) {
                 continue;

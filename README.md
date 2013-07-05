@@ -43,7 +43,7 @@ new L.TileLayer('http://{s}.tiles.mapbox.com/v3/<YOUR MAPBOX KEY HERE>/{z}/{x}/{
 Add the buildings layer.
 
 ~~~ javascript
-new L.BuildingsLayer().addTo(map).load();
+new OSMBuildings(map).loadData();
 ~~~
 
 As a popular alternative, you could pass a <a href="http://www.geojson.org/geojson-spec.html">GeoJSON</a> data object.<br>
@@ -52,7 +52,7 @@ Make sure the building coordinates are projected in <a href="http://spatialrefer
 and the height specified in <b>meters</b>.
 
 ~~~ javascript
-var data = {
+var geoJSON = {
   "type": "FeatureCollection",
   "features": [{
     "type": "Feature",
@@ -75,7 +75,7 @@ var data = {
   }]
 };
 
-new L.BuildingsLayer().addTo(map).geoJSON(data);
+new OSMBuildings(map).setData(geoJSON);
 ~~~
 
 
@@ -113,9 +113,7 @@ map.setCenter(
 Add the buildings layer.
 
 ~~~ javascript
-var osmb = new OpenLayers.Layer.Buildings();
-map.addLayer(osmb);
-osmb.load();
+new OSMBuildings(map).loadData();
 ~~~
 
 
@@ -130,13 +128,9 @@ osmb.load();
 </tr>
 
 <tr>
-<td>new L.BuildingsLayer()</td>
-<td>Initializes the buildings layer for Leaflet.</td>
-</tr>
-
-<tr>
-<td>new OpenLayers.Layer.Buildings()</td>
-<td>Initializes the buildings layer for OpenLayers.</td>
+<td>new OSMBuildings(map)</td>
+<td>Initializes the buildings layer for a given ap engine.<br>
+Currently Leaflet and OpenLayers are supported.</td>
 </tr>
 </table>
 
@@ -181,15 +175,15 @@ Methods
 </tr>
 
 <tr>
-<td>geoJSON({Object})</td>
-<td>Just add a geoJSON data to your map.</td>
+<td>setData({GeoJSON})</td>
+<td>Just add GeoJSON data to your map.</td>
 </tr>
 
 <tr>
-<td>load({String})</td>
+<td>loadData({String})</td>
 </td>
 <td>Without parameter, it loads data tiles from OpenStreetMaps. You don't need to care for data anymore.
-As an alternative, pass an URL to <a href="http://cartodb.com/">CartoDB</a>. See below.
+As an alternative, pass an URL to <a href="http://cartodb.com/">CartoDB</a> or any other GeoJSON service. See below.
 </td>
 </tr>
 </table>
