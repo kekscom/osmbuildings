@@ -46,7 +46,8 @@ Add the buildings layer.
 new L.BuildingsLayer().addTo(map).load();
 ~~~
 
-As a popular alternative, you could pass a <a href="http://www.geojson.org/geojson-spec.html">GeoJSON</a> data object.
+As a popular alternative, you could pass a <a href="http://www.geojson.org/geojson-spec.html">GeoJSON</a> data object.<br>
+Feature types Polygon, Multipolygon and Linestring are supported.
 
 ~~~ javascript
 var data = {
@@ -194,8 +195,9 @@ As an alternative, pass an URL to <a href="http://cartodb.com/">CartoDB</a>. See
 CartoDB URL example
 
 ~~~ url
-http://<YOUR CARTODB ACCOUNT HERE>.cartodb.com/api/v2/sql?q=' + ('SELECT cartodb_id AS id, height, ST_AsText(ST_MakePolygon(ST_ExteriorRing(ST_GeometryN(the_geom, 1)))) AS the_geom, color FROM map_polygon WHERE the_geom %26%26 ST_SetSRID(ST_MakeBox2D(ST_Point({w}, {s}), ST_Point({e}, {n})), 4326)') + '&format=geojson
+http://<YOUR CARTODB ACCOUNT HERE>.cartodb.com/api/v2/sql?q=' + ('SELECT cartodb_id AS id, height, ST_AsText(the_geom) AS the_geom FROM <YOURTABLE> WHERE the_geom %26%26 ST_SetSRID(ST_MakeBox2D(ST_Point({w},{s}), ST_Point({e},{n})), 4326)') + '&format=geojson');
 ~~~
+
 
 Styles
 

@@ -6,8 +6,8 @@ var readGeoJSON = function(collection) {
         wallColor, roofColor,
         last,
         height,
-        polygon, footprint, heightSum, holes,
-        lat = 1, lon = 0, alt = 2,
+        polygon, footprint, holes,
+        lat = 1, lon = 0,
         item;
 
     for (i = 0, il = collection.length; i < il; i++) {
@@ -48,17 +48,15 @@ var readGeoJSON = function(collection) {
         }
 
         polygon   = coordinates[0];
-        footprint = [];
         height    = properties.height;
-        heightSum = 0;
+        footprint = [];
         for (j = 0, jl = polygon.length; j < jl; j++) {
             footprint.push(polygon[j][lat], polygon[j][lon]);
-            heightSum += height || polygon[j][alt] || 0;
         }
 
         holes = [];
         for (j = 1, jl = coordinates.length; j < jl; j++) {
-            polygon = coordinates[i];
+            polygon = coordinates[j];
             holes[j-1] = [];
             for (k = 0, kl = polygon.length; k < kl; k++) {
                 holes[j-1].push(polygon[k][lat], polygon[k][lon]);
@@ -71,11 +69,11 @@ var readGeoJSON = function(collection) {
             footprint:makeWinding(footprint, 'CW')
         };
 
-        if (heightSum)            item.height    = heightSum/polygon.length <<0;
+        if (height)               item.height    = height;
         if (properties.minHeight) item.minHeight = properties.minHeight;
         if (wallColor)            item.wallColor = wallColor;
         if (roofColor)            item.roofColor = roofColor;
-        if (holes.length)     item.holes = holes;
+        if (holes.length)         item.holes     = holes;
         res.push(item);
     }
 
