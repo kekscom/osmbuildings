@@ -242,6 +242,144 @@ var getSunPosition = (function() {
 }());
 
 
+//****** file: Import.js ******
+
+var Import = (function() {
+
+    var me = {};
+
+    var _clockwise = 'CW', _counterClockwise = 'CCW';
+
+    // detect winding direction: clockwise or counter clockwise
+    function _getWinding(points) {
+        var x1, y1, x2, y2,
+            a = 0,
+            i, il;
+        for (i = 0, il = points.length-3; i < il; i += 2) {
+            x1 = points[i];
+            y1 = points[i+1];
+            x2 = points[i+2];
+            y2 = points[i+3];
+            a += x1*y2 - x2*y1;
+        }
+        return (a/2) > 0 ? _clockwise : _counterClockwise;
+    }
+
+    // enforce a polygon winding direcetion. Needed for proper backface culling.
+    function _makeWinding(points, direction) {
+        var winding = _getWinding(points);
+        if (winding === direction) {
+            return points;
+        }
+        var revPoints = [];
+        for (var i = points.length-2; i >= 0; i -= 2) {
+            revPoints.push(points[i], points[i+1]);
+        }
+        return revPoints;
+    }
+
+    me.windOuterPolygon = function(points) {
+        return _makeWinding(points, _clockwise);
+    };
+
+    me.windInnerPolygon = function(points) {
+        return _makeWinding(points, _counterClockwise);
+    };
+
+    me.YARD_TO_METER = 0.9144;
+    me.FOOT_TO_METER = 0.3048;
+    me.INCH_TO_METER = 0.0254;
+    me.METERS_PER_LEVEL = 3;
+
+    me.getDimension = function(str) {
+        var value = parseFloat(str);
+        if (value === str) {
+            return value <<0;
+        }
+        if (~str.indexOf('m')) {
+            return value <<0;
+        }
+        if (~str.indexOf('yd')) {
+            return value*me.YARD_TO_METER <<0;
+        }
+        if (~str.indexOf('ft')) {
+            return value*me.FOOT_TO_METER <<0;
+        }
+        if (~str.indexOf('\'')) {
+            var parts = str.split('\'');
+            var res = parts[0]*me.FOOT_TO_METER + parts[1]*me.INCH_TO_METER;
+            return res <<0;
+        }
+        return value <<0;
+    };
+
+    var _materialColors = {
+        brick:'#cc7755',
+        bronze:'#ffeecc',
+        canvas:'#fff8f0',
+        concrete:'#999999',
+        copper:'#a0e0d0',
+        glass:'#e8f8f8',
+        gold:'#ffcc00',
+        plants:'#009933',
+        metal:'#aaaaaa',
+        panel:'#fff8f0',
+        plaster:'#999999',
+        roof_tiles:'#f08060',
+        silver:'#cccccc',
+        slate:'#666666',
+        stone:'#996666',
+        tar_paper:'#333333',
+        wood:'#deb887'
+    };
+
+    var _baseMaterials = {
+        asphalt:'tar_paper',
+        bitumen:'tar_paper',
+        block:'stone',
+        bricks:'brick',
+        glas:'glass',
+        glassfront:'glass',
+        grass:'plants',
+        masonry:'stone',
+        granite:'stone',
+        panels:'panel',
+        paving_stones:'stone',
+        plastered:'plaster',
+        rooftiles:'roof_tiles',
+        roofingfelt:'tar_paper',
+        sandstone:'stone',
+        sheet:'canvas',
+        sheets:'canvas',
+        shingle:'tar_paper',
+        shingles:'tar_paper',
+        slates:'slate',
+        steel:'metal',
+        tar:'tar_paper',
+        tent:'canvas',
+        thatch:'plants',
+        tile:'roof_tiles',
+        tiles:'roof_tiles'
+    };
+
+    // cardboard
+    // eternit
+    // limestone
+    // straw
+
+    me.getMaterialColor = function(str) {
+        str = str.toLowerCase();
+        if (str[0] === '#') {
+            return str;
+        }
+        return _materialColors[_baseMaterials[str] || str] || null;
+    };
+
+    return me;
+
+}());
+
+
 //****** file: GeoJSON.js ******
 
 var readGeoJSON = function(collection) {
@@ -252,8 +390,8 @@ var readGeoJSON = function(collection) {
         wallColor, roofColor,
         last,
         height,
-        polygon, footprint, heightSum, holes,
-        lat = 1, lon = 0, alt = 2,
+        polygon, footprint, holes,
+        lat = 1, lon = 0,
         item;
 
     for (i = 0, il = collection.length; i < il; i++) {
@@ -295,33 +433,32 @@ var readGeoJSON = function(collection) {
 
         polygon   = coordinates[0];
         footprint = [];
-        height    = properties.height;
-        heightSum = 0;
         for (j = 0, jl = polygon.length; j < jl; j++) {
             footprint.push(polygon[j][lat], polygon[j][lon]);
-            heightSum += height || polygon[j][alt] || 0;
         }
 
         holes = [];
         for (j = 1, jl = coordinates.length; j < jl; j++) {
-            polygon = coordinates[i];
+            polygon = coordinates[j];
             holes[j-1] = [];
             for (k = 0, kl = polygon.length; k < kl; k++) {
                 holes[j-1].push(polygon[k][lat], polygon[k][lon]);
+
             }
+            holes[j-1] = Import.windInnerPolygon(holes[j-1]);
         }
 
         // one item per coordinates ring (usually just one ring)
         item = {
             id:properties.id || (footprint[0] + ',' + footprint[1]),
-            footprint:makeWinding(footprint, 'CW')
+            footprint:Import.windOuterPolygon(footprint)
         };
 
-        if (heightSum)            item.height    = heightSum/polygon.length <<0;
-        if (properties.minHeight) item.minHeight = properties.minHeight;
+        if (properties.height)    item.height    = Import.getDimension(properties.height);
+        if (properties.minHeight) item.minHeight = Import.getDimension(properties.minHeight);
         if (wallColor)            item.wallColor = wallColor;
         if (roofColor)            item.roofColor = roofColor;
-        if (holes.length)     item.holes = holes;
+        if (holes.length)         item.holes     = holes;
         res.push(item);
     }
 
@@ -332,93 +469,6 @@ var readGeoJSON = function(collection) {
 //****** file: OSMXAPI.js ******
 
 var readOSMXAPI = (function() {
-
-    var YARD_TO_METER = 0.9144,
-        FOOT_TO_METER = 0.3048,
-        INCH_TO_METER = 0.0254,
-        METERS_PER_LEVEL = 3;
-
-    function parseDimension(str) {
-        var value = parseFloat(str);
-
-        if (~str.indexOf('m')) {
-            return value <<0;
-        }
-        if (~str.indexOf('yd')) {
-            return value*YARD_TO_METER <<0;
-        }
-        if (~str.indexOf('ft')) {
-            return value*FOOT_TO_METER <<0;
-        }
-        if (~str.indexOf('\'')) {
-            var parts = str.split('\'');
-            var res = parts[0]*FOOT_TO_METER + parts[1]*INCH_TO_METER;
-            return res <<0;
-        }
-        return value <<0;
-    }
-
-    var baseMaterials = {
-        asphalt:'tar_paper',
-        bitumen:'tar_paper',
-        block:'stone',
-        bricks:'brick',
-        glas:'glass',
-        glassfront:'glass',
-        grass:'plants',
-        masonry:'stone',
-        granite:'stone',
-        panels:'panel',
-        paving_stones:'stone',
-        plastered:'plaster',
-        rooftiles:'roof_tiles',
-        roofingfelt:'tar_paper',
-        sandstone:'stone',
-        sheet:'canvas',
-        sheets:'canvas',
-        shingle:'tar_paper',
-        shingles:'tar_paper',
-        slates:'slate',
-        steel:'metal',
-        tar:'tar_paper',
-        tent:'canvas',
-        thatch:'plants',
-        tile:'roof_tiles',
-        tiles:'roof_tiles'
-    };
-
-    // cardboard
-    // eternit
-    // limestone
-    // straw
-
-    var materialColors = {
-        brick:'#cc7755',
-        bronze:'#ffeecc',
-        canvas:'#fff8f0',
-        concrete:'#999999',
-        copper:'#a0e0d0',
-        glass:'#e8f8f8',
-        gold:'#ffcc00',
-        plants:'#009933',
-        metal:'#aaaaaa',
-        panel:'#fff8f0',
-        plaster:'#999999',
-        roof_tiles:'#f08060',
-        silver:'#cccccc',
-        slate:'#666666',
-        stone:'#996666',
-        tar_paper:'#333333',
-        wood:'#deb887'
-    };
-
-    function parseMaterial(str) {
-        str = str.toLowerCase();
-        if (str[0] === '#') {
-            return str;
-        }
-        return materialColors[baseMaterials[str] || str] || null;
-    }
 
     function isBuilding(data) {
         var tags = data.tags;
@@ -517,45 +567,45 @@ var readOSMXAPI = (function() {
         var height = 0, minHeight = 0;
 
         if (tags.height) {
-            height = parseDimension(tags.height);
+            height = Import.getDimension(tags.height);
         }
         if (!height && tags['building:height']) {
-            height = parseDimension(tags['building:height']);
+            height = Import.getDimension(tags['building:height']);
         }
 
         if (!height && tags.levels) {
-            height = tags.levels*METERS_PER_LEVEL <<0;
+            height = tags.levels*Import.METERS_PER_LEVEL <<0;
         }
         if (!height && tags['building:levels']) {
-            height = tags['building:levels']*METERS_PER_LEVEL <<0;
+            height = tags['building:levels']*Import.METERS_PER_LEVEL <<0;
         }
 
         // min_height
         if (tags.min_height) {
-            minHeight = parseDimension(tags.min_height);
+            minHeight = Import.getDimension(tags.min_height);
         }
         if (!minHeight && tags['building:min_height']) {
-            minHeight = parseDimension(tags['building:min_height']);
+            minHeight = Import.getDimension(tags['building:min_height']);
         }
 
         if (!minHeight && tags.min_level) {
-            minHeight = tags.min_level*METERS_PER_LEVEL <<0;
+            minHeight = tags.min_level*Import.METERS_PER_LEVEL <<0;
         }
         if (!minHeight && tags['building:min_level']) {
-            minHeight = tags['building:min_level']*METERS_PER_LEVEL <<0;
+            minHeight = tags['building:min_level']*Import.METERS_PER_LEVEL <<0;
         }
 
         var wallColor, roofColor;
 
         // wall material
         if (tags['building:material']) {
-            wallColor = parseMaterial(tags['building:material']);
+            wallColor = Import.getMaterialColor(tags['building:material']);
         }
         if (tags['building:facade:material']) {
-            wallColor = parseMaterial(tags['building:facade:material']);
+            wallColor = Import.getMaterialColor(tags['building:facade:material']);
         }
         if (tags['building:cladding']) {
-            wallColor = parseMaterial(tags['building:cladding']);
+            wallColor = Import.getMaterialColor(tags['building:cladding']);
         }
         // wall color
         if (tags['building:color']) {
@@ -567,10 +617,10 @@ var readOSMXAPI = (function() {
 
         // roof material
         if (tags['roof:material']) {
-            roofColor = parseMaterial(tags['roof:material']);
+            roofColor = Import.getMaterialColor(tags['roof:material']);
         }
         if (tags['building:roof:material']) {
-            roofColor = parseMaterial(tags['building:roof:material']);
+            roofColor = Import.getMaterialColor(tags['building:roof:material']);
         }
         // roof color
         if (tags['roof:color']) {
@@ -625,7 +675,7 @@ var readOSMXAPI = (function() {
                         tags = mergeTags(tags, relTags);
                         for (var i = 0, il = relationWays.inner.length; i < il; i++) {
                             if ((innerFootprint = getFootprint(relationWays.inner[i].nodes))) {
-                                holes.push(makeWinding(innerFootprint, 'CCW'));
+                                holes.push(Import.windInnerPolygon(innerFootprint));
                             }
                         }
                         addResult(outerWay.id, tags, outerFootprint, holes.length ? holes : null);
@@ -636,12 +686,12 @@ var readOSMXAPI = (function() {
     }
 
     function addResult(id, tags, footprint, holes) {
-        var item = { id:id, footprint:makeWinding(footprint, 'CW'), holes:holes };
+        var item = { id:id, footprint:Import.windOuterPolygon(footprint), holes:holes };
         if (tags.height)    item.height    = tags.height;
         if (tags.minHeight) item.minHeight = tags.minHeight;
         if (tags.wallColor) item.wallColor = tags.wallColor;
         if (tags.roofColor) item.roofColor = tags.roofColor;
-        if (holes)      item.holes = holes;
+        if (holes)          item.holes     = holes;
         res.push(item);
     }
 
@@ -788,34 +838,6 @@ function simplify(points) {
     }
 
     return newPoints;
-}
-
-// detect polygon winding direction: clockwise or counter clockwise
-function getWinding(points) {
-    var x1, y1, x2, y2,
-        a = 0,
-        i, il;
-    for (i = 0, il = points.length-3; i < il; i += 2) {
-        x1 = points[i];
-        y1 = points[i+1];
-        x2 = points[i+2];
-        y2 = points[i+3];
-        a += x1*y2 - x2*y1;
-    }
-    return (a/2) > 0 ? 'CW' : 'CCW';
-}
-
-// make polygon winding clockwise. This is needed for proper backface culling on client side.
-function makeWinding(points, direction) {
-    var winding = getWinding(points);
-    if (winding === direction) {
-        return points;
-    }
-    var revPoints = [];
-    for (var i = points.length-2; i >= 0; i -= 2) {
-        revPoints.push(points[i], points[i+1]);
-    }
-    return revPoints;
 }
 
 
@@ -1707,25 +1729,24 @@ var Layers = (function() {
 
 //****** file: properties.js ******
 
-function setOrigin(x, y) {
-    originX = x;
-    originY = y;
+function setOrigin(origin) {
+    originX = origin.x;
+    originY = origin.y;
 }
 
-function setCamOffset(x, y) {
-    camX = halfWidth + x;
-    camY = height    + y;
+function setCamOffset(offset) {
+    camX = halfWidth + offset.x;
+    camY = height    + offset.y;
 }
 
-function setSize(w, h) {
-    width  = w;
-    height = h;
+function setSize(size) {
+    width  = size.w;
+    height = size.h;
     halfWidth  = width /2 <<0;
     halfHeight = height/2 <<0;
     camX = halfWidth;
     camY = height;
     Layers.setSize(width, height);
-    // TODO: change of maxHeight needs to adjust building heights!
     maxHeight = camZ-50;
 }
 
@@ -1797,9 +1818,7 @@ function onZoomEnd(e) {
 //****** file: Leaflet.js ******
 
 var osmb = function(map) {
-    this.lastX = 0;
-    this.lastY = 0;
-
+    this.offset = { x:0, y:0 };
     map.addLayer(this);
 };
 
@@ -1810,13 +1829,13 @@ proto.onAdd = function(map) {
     Layers.appendTo(map._panes.overlayPane);
     maxZoom = map._layersMaxZoom;
 
-    var mp = L.DomUtil.getPosition(map._mapPane),
+    var off = this.getOffset(),
         po = map.getPixelOrigin();
-    setSize(map._size.x, map._size.y);
-    setOrigin(po.x-mp.x, po.y-mp.y);
+    setSize({ w:map._size.x, h:map._size.y });
+    setOrigin({ x:po.x-off.x, y:po.y-off.y });
     setZoom(map._zoom);
 
-    Layers.setPosition(-mp.x, -mp.y);
+    Layers.setPosition(-off.x, -off.y);
 
     map.on({
         move:      this.onMove,
@@ -1856,8 +1875,8 @@ proto.onRemove = function() {
 };
 
 proto.onMove = function(e) {
-    var mp = L.DomUtil.getPosition(this.map._mapPane);
-    setCamOffset(this.lastX-mp.x, this.lastY-mp.y);
+    var off = this.getOffset();
+    setCamOffset({ x:this.offset.x-off.x, y:this.offset.y-off.y });
     render();
 };
 
@@ -1868,16 +1887,15 @@ proto.onMoveEnd = function(e) {
     }
 
     var map = this.map,
-        mp = L.DomUtil.getPosition(map._mapPane),
+        off = this.getOffset(),
         po = map.getPixelOrigin();
 
-    this.lastX = mp.x;
-    this.lastY = mp.y;
-    Layers.setPosition(-mp.x, -mp.y);
-    setCamOffset(0, 0);
+    this.offset = off;
+    Layers.setPosition(-off.x, -off.y);
+    setCamOffset({ x:0, y:0 });
 
-    setSize(map._size.x, map._size.y); // in case this is triggered by resize
-    setOrigin(po.x-mp.x, po.y-mp.y);
+    setSize({ w:map._size.x, h:map._size.y }); // in case this is triggered by resize
+    setOrigin({ x:po.x-off.x, y:po.y-off.y });
     onMoveEnd(e);
 };
 
@@ -1892,21 +1910,25 @@ proto.onZoom = function(e) {
 //        viewportPos = map.containerPointToLayerPoint(map.getSize().multiplyBy(-1)),
 //        origin = viewportPos.add(offset).round();
 //
-//    this.container.style[L.DomUtil.TRANSFORM] = L.DomUtil.getTranslateString((origin.multiplyBy(-1).add(L.DomUtil.getPosition(map._mapPane).multiplyBy(-1)).multiplyBy(scale).add(origin))) + ' scale(' + scale + ') ';
+//    this.container.style[L.DomUtil.TRANSFORM] = L.DomUtil.getTranslateString((origin.multiplyBy(-1).add(this.getOffset().multiplyBy(-1)).multiplyBy(scale).add(origin))) + ' scale(' + scale + ') ';
 //    isZooming = true;
 };
 
 proto.onZoomEnd = function(e) {
     var map = this.map,
-        mp = L.DomUtil.getPosition(map._mapPane),
+        off = this.getOffset(),
         po = map.getPixelOrigin();
 
-    setOrigin(po.x-mp.x, po.y-mp.y);
+    setOrigin({ x:po.x-off.x, y:po.y-off.y });
     onZoomEnd({ zoom:map._zoom });
     this.skipMoveEnd = true;
 };
 
 proto.onResize = function() {};
+
+proto.getOffset = function() {
+    return L.DomUtil.getPosition(this.map._mapPane);
+};
 
 
 //****** file: suffix.js ******

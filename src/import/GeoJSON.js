@@ -48,7 +48,6 @@ var readGeoJSON = function(collection) {
         }
 
         polygon   = coordinates[0];
-        height    = properties.height;
         footprint = [];
         for (j = 0, jl = polygon.length; j < jl; j++) {
             footprint.push(polygon[j][lat], polygon[j][lon]);
@@ -60,17 +59,19 @@ var readGeoJSON = function(collection) {
             holes[j-1] = [];
             for (k = 0, kl = polygon.length; k < kl; k++) {
                 holes[j-1].push(polygon[k][lat], polygon[k][lon]);
+
             }
+            holes[j-1] = Import.windInnerPolygon(holes[j-1]);
         }
 
         // one item per coordinates ring (usually just one ring)
         item = {
             id:properties.id || (footprint[0] + ',' + footprint[1]),
-            footprint:makeWinding(footprint, 'CW')
+            footprint:Import.windOuterPolygon(footprint)
         };
 
-        if (height)               item.height    = height;
-        if (properties.minHeight) item.minHeight = properties.minHeight;
+        if (properties.height)    item.height    = Import.getDimension(properties.height);
+        if (properties.minHeight) item.minHeight = Import.getDimension(properties.minHeight);
         if (wallColor)            item.wallColor = wallColor;
         if (roofColor)            item.roofColor = roofColor;
         if (holes.length)         item.holes     = holes;
