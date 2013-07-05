@@ -6,7 +6,7 @@ var Cache = (function() {
 
     var me = {};
 
-    me.add = function(key, data) {
+    me.add = function(data, key) {
         key = key || _static;
         _data[key] = { data:data, time:Date.now() };
     };

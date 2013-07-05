@@ -130,22 +130,27 @@ var Data = (function() {
         _url = url || OSM_XAPI_URL;
         _isStatic = !/(.+\{[nesw]\}){4,}/.test(_url);
         if (_isStatic) {
-            Cache.add(null))) {
+            Cache.add(null);
             xhr(_url, {}, _parse);
         }
         me.update();
     };
 
     me.update = function() {
-        if (!_url || zoom < MIN_ZOOM) {
+        if (zoom < MIN_ZOOM) {
             return;
         }
 
         renderItems = [];
         _index = {};
 
+        var lat, lon,
+            cached, key;
+
         if (_isStatic) {
-            _addRenderItems(Cache.get());
+            if ((cached = Cache.get(key))) {
+                _addRenderItems(cached);
+            }
             return;
         }
 
@@ -160,9 +165,6 @@ var Data = (function() {
             s: floor(se.latitude /sizeLat) * sizeLat,
             w: floor(nw.longitude/sizeLon) * sizeLon
         };
-
-        var lat, lon,
-            cached, key;
 
         for (lat = bounds.s; lat <= bounds.n; lat += sizeLat) {
             for (lon = bounds.w; lon <= bounds.e; lon += sizeLon) {

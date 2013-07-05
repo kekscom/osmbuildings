@@ -965,23 +965,26 @@ function xhr(_url, param, callback) {
 
 var Cache = (function() {
 
-    var _time = new Date();
-    var _data = {};
+    var _time = new Date(),
+        _static = '__STATIC__',
+        _data = {};
 
     var me = {};
 
-    me.add = function(key, data) {
+    me.add = function(data, key) {
+        key = key || _static;
         _data[key] = { data:data, time:Date.now() };
     };
 
     me.get = function(key) {
+        key = key || _static;
         return _data[key] && _data[key].data;
     };
 
     me.purge = function() {
         _time.setMinutes(_time.getMinutes()-5);
         for (var key in _data) {
-            if (_data[key].time < _time) {
+            if (_data[key].time < _time && key !== _static) {
                 delete _data[key];
             }
         }
@@ -996,10 +999,26 @@ var Cache = (function() {
 
 var Data = (function() {
 
-    var _url;
-    var _index = {}; // maintain a list of cached items in order to fade in new ones
+    var _url,
+        _isStatic = true,
+        _index = {}; // maintain a list of cached items in order to fade in new ones
 
-    function _closureParse(cacheKey) {
+    function _getSimpleFootprint(polygon) {
+        var footprint = new Int32Array(polygon.length),
+            px;
+        for (var i = 0, il = polygon.length-1; i < il; i+=2) {
+            px = geoToPixel(polygon[i], polygon[i+1]);
+            footprint[i]   = px.x;
+            footprint[i+1] = px.y;
+        }
+        footprint = simplify(footprint);
+        if (footprint.length < 8) { // 3 points + end==start (*2)
+            return;
+        }
+        return footprint;
+    }
+
+    function _closureForParse(cacheKey) {
         return function(res) {
             _parse(res, cacheKey);
         };
@@ -1017,37 +1036,18 @@ var Data = (function() {
             items = readOSMXAPI(data.elements);
         }
 
-        if (cacheKey) {
-            Cache.add(cacheKey, items);
-        }
-
-        _add(items, true);
+        Cache.add(items, cacheKey);
+        _addRenderItems(items, true);
     }
 
-    function _getFootprint(polygon) {
-        var footprint = new Int32Array(polygon.length),
-            px;
-        for (var i = 0, il = polygon.length-1; i < il; i+=2) {
-            px = geoToPixel(polygon[i], polygon[i+1]);
-            footprint[i]   = px.x;
-            footprint[i+1] = px.y;
-        }
-        footprint = simplify(footprint);
-        if (footprint.length < 8) { // 3 points + end==start (*2)
-            return;
-        }
-        return footprint;
-    }
-
-    function _add(data, isNew) {
-        var items = _scale(data, zoom, isNew);
-
-        var item;
-        for (var i = 0, il = items.length; i < il; i++) {
-            item = items[i];
+    function _addRenderItems(data, isNew) {
+        var scaledItems = _scale(data, zoom, isNew),
+            item;
+        for (var i = 0, il = scaledItems.length; i < il; i++) {
+            item = scaledItems[i];
             if (!_index[item.id]) {
                 item.scale = isNew ? 0 : 1;
-                me.renderItems.push(items[i]);
+                renderItems.push(item);
                 _index[item.id] = 1;
             }
         }
@@ -1077,14 +1077,14 @@ var Data = (function() {
                 continue;
             }
 
-            if (!(footprint = _getFootprint(item.footprint))) {
+            if (!(footprint = _getSimpleFootprint(item.footprint))) {
                 continue;
             }
 
             holes = [];
             if (item.holes) {
                 for (j = 0, jl = item.holes.length; j < jl; j++) {
-                    if ((innerFootprint = _getFootprint(item.holes[j]))) {
+                    if ((innerFootprint = _getSimpleFootprint(item.holes[j]))) {
                         holes.push(innerFootprint);
                     }
                 }
@@ -1125,15 +1125,31 @@ var Data = (function() {
 
     var me = {};
 
-    me.renderItems = []; // TODO: move to renderer
-
     me.load = function(url) {
         _url = url || OSM_XAPI_URL;
+        _isStatic = !/(.+\{[nesw]\}){4,}/.test(_url);
+        if (_isStatic) {
+            Cache.add(null);
+            xhr(_url, {}, _parse);
+        }
         me.update();
     };
 
     me.update = function() {
-        if (!_url || zoom < MIN_ZOOM) {
+        if (zoom < MIN_ZOOM) {
+            return;
+        }
+
+        renderItems = [];
+        _index = {};
+
+        var lat, lon,
+            cached, key;
+
+        if (_isStatic) {
+            if ((cached = Cache.get(key))) {
+                _addRenderItems(cached);
+            }
             return;
         }
 
@@ -1149,32 +1165,28 @@ var Data = (function() {
             w: floor(nw.longitude/sizeLon) * sizeLon
         };
 
-        Cache.purge();
-        me.renderItems = [];
-        _index = {};
-
-        var lat, lon,
-            cached, key;
-
         for (lat = bounds.s; lat <= bounds.n; lat += sizeLat) {
             for (lon = bounds.w; lon <= bounds.e; lon += sizeLon) {
                 key = lat + ',' + lon;
                 if ((cached = Cache.get(key))) {
-                    _add(cached);
+                    _addRenderItems(cached);
                 } else {
                     xhr(_url, {
                         n: crop(lat+sizeLat),
                         e: crop(lon+sizeLon),
                         s: crop(lat),
                         w: crop(lon)
-                    }, _closureParse(key));
+                    }, _closureForParse(key));
                 }
             }
         }
+
+        Cache.purge();
     };
 
     me.set = function(data) {
-        me.renderItems = [];
+        _isStatic = true;
+        renderItems = [];
         _index = {};
         _parse(data);
     };
@@ -1186,6 +1198,7 @@ var Data = (function() {
 
 //****** file: render.js ******
 
+var renderItems = [];
 
 function fadeIn() {
     if (animTimer) {
@@ -1194,8 +1207,8 @@ function fadeIn() {
 
     animTimer = setInterval(function() {
         var item, needed = false;
-        for (var i = 0, il = Data.renderItems.length; i < il; i++) {
-            item = Data.renderItems[i];
+        for (var i = 0, il = renderItems.length; i < il; i++) {
+            item = renderItems[i];
             if (item.scale < 1) {
                 item.scale += 0.5*0.2; // amount*easing
                 if (item.scale > 1) {
@@ -1244,12 +1257,12 @@ function render() {
         wallColor, altColor;
 
     // TODO: FlatBuildings are drawn separately, data has to be split
-    Data.renderItems.sort(function(a, b) {
+    renderItems.sort(function(a, b) {
         return getDistance(b.center, sortCam)/b.height - getDistance(a.center, sortCam)/a.height;
     });
 
-    for (i = 0, il = Data.renderItems.length; i < il; i++) {
-        item = Data.renderItems[i];
+    for (i = 0, il = renderItems.length; i < il; i++) {
+        item = renderItems[i];
 
         if (item.height <= flatMaxHeight) {
             continue;
@@ -1469,8 +1482,8 @@ var Shadows = (function() {
 
         _context.beginPath();
 
-        for (i = 0, il = Data.renderItems.length; i < il; i++) {
-            item = Data.renderItems[i];
+        for (i = 0, il = renderItems.length; i < il; i++) {
+            item = renderItems[i];
 
 // TODO: no shadows when buildings are too flat => don't add them to renderItems then
 //        if (item.height <= FlatBuildings.MAX_HEIGHT) {
@@ -1611,8 +1624,8 @@ var FlatBuildings = (function() {
 
         _context.beginPath();
 
-        for (i = 0, il = Data.renderItems.length; i < il; i++) {
-            item = Data.renderItems[i];
+        for (i = 0, il = renderItems.length; i < il; i++) {
+            item = renderItems[i];
 
             if (item.height > me.MAX_HEIGHT) {
                 continue;
@@ -1928,6 +1941,35 @@ proto.setData = function(data) {
     Data.set(data);
     return this;
 };
+
+// TODO: remove deprecated method
+proto.load = function(url) {
+    console.warn('OSMBuildings: load() is deprecated, use loadData() instead');
+    Data.load(url);
+    return this;
+};
+
+// TODO: remove deprecated method
+proto.geoJSON = function(data) {
+    console.warn('OSMBuildings: geoJSON() is deprecated, use setData() instead');
+    Data.set(data);
+    return this;
+};
+
+// TODO: remove deprecated code
+var oldProto;
+if (window.OpenLayers) {
+    oldProto = window.OpenLayers.Layer.Buildings = function() {};
+}
+if (window.L) {
+    oldProto = window.L.BuildingsLayer = function() {};
+}
+if (oldProto) {
+    oldProto.addTo = function(map) {
+        console.warn('OSMBuildings: addTo(map) is deprecated, just use new OSMBuildings(map) instead');
+        return new OSMBuildings(map);
+    };
+}
 
 osmb.VERSION     = VERSION;
 osmb.ATTRIBUTION = ATTRIBUTION;
