@@ -5,7 +5,6 @@ var readGeoJSON = function(collection) {
         geometry, properties, coordinates,
         wallColor, roofColor,
         last,
-        height,
         polygon, footprint, holes,
         lat = 1, lon = 0,
         item;
