@@ -48,8 +48,8 @@ new L.BuildingsLayer().addTo(map).load();
 
 As a popular alternative, you could pass a <a href="http://www.geojson.org/geojson-spec.html">GeoJSON</a> data object.<br>
 Feature types Polygon, Multipolygon and Linestring are supported.<br>
-Make sure the building coordinates are projected in <a href="http://spatialreference.org/ref/epsg/4326/">EPSG:4326</a>,<br>
-and the height specified in <b>meters</b>.
+Make sure the building coordinates are projected in <a href="http://spatialreference.org/ref/epsg/4326/">EPSG:4326</a>.<br>
+Height units m, km, ft, yd, mi are accepted, no given unit defaults to meters.
 
 ~~~ javascript
 var data = {
