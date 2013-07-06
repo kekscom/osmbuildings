@@ -18,6 +18,21 @@ proto.setData = function(data) {
     return this;
 };
 
+proto.setFlatBuildingMaxHeight = function(maxFlatHeight) {
+    FlatBuildings.MAX_HEIGHT = maxFlatHeight;
+    return this;
+};
+
+proto.enableFlatBuildingColor = function() {
+	FlatBuildings.USE_COLORS = true;
+	return this;
+};
+
+proto.disableFlatBuildingColor = function() {
+	FlatBuildings.USE_COLORS = false;
+	return this;
+};
+
 osmb.VERSION     = VERSION;
 osmb.ATTRIBUTION = ATTRIBUTION;
 
