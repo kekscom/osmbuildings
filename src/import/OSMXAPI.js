@@ -216,7 +216,7 @@ var readOSMXAPI = (function() {
     }
 
     function addResult(id, tags, footprint, holes) {
-        var item = { id:id, footprint:Import.windOuterPolygon(footprint), holes:holes };
+        var item = { id:id, footprint:Import.windOuterPolygon(footprint) };
         if (tags.height)    item.height    = tags.height;
         if (tags.minHeight) item.minHeight = tags.minHeight;
         if (tags.wallColor) item.wallColor = tags.wallColor;

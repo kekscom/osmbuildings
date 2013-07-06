@@ -29,7 +29,6 @@ var readGeoJSON = function(collection) {
             coordinates = geometry.coordinates;
         }
 
-        // just use the outer ring
         if (geometry.type === 'MultiPolygon') {
             coordinates = geometry.coordinates[0];
         }
