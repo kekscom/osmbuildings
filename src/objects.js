@@ -239,19 +239,20 @@
         }
 
 
-
-
-var m = Math,
-  sin = m.sin, cos = m.cos, atan = m.atan;
-function rotation(x, y, angle) {
-  var
-    dx = x-camX, dy = y-camY,
-    ms = sin(angle), mc = cos(angle);
-  return {
-    x: camX + mc*dx - ms*dy <<0,
-    y: camY + ms*dx + mc*dy <<0
-  };
+function rotation(x, y, cx, cy, a) {
+    var sin = Math.sin(a), cos = Math.cos(a);
+    x -= cx;
+    y -= cy;
+    return {
+        x: x* cos + y*sin + cx,
+        y: x*-sin + y*cos + cy
+    };
 }
+
+
+
+
+
 
 
 
@@ -260,8 +261,7 @@ function rotation(x, y, angle) {
             if (!h) {
                 h = r;
             }
-x = camX + 300;
-y = camY - 300;
+
             var k = h*KAPPA,
                 g = 1,
                 n = camZ / (camZ-h+k),
@@ -291,14 +291,19 @@ y = camY - 300;
 
 var dx = camX-x;
 var dy = camY-y;
+var angle = atan(dx/dy);
+console.log(angle / Math.PI*180);
 
-var angle = -atan(dx/dy);
+var P = rotation(x, y-r, x, y, angle);
+debugMarker(P.x, P.y, 'red', 10);
+
 
             line([x, y], [apex.x, apex.y]);
             debugMarker(apex.x, apex.y);
 
             // querlinie durch den sichtpunkt
-//            line([p.x-_r, p.y], [p.x+_r, p.y]);
+            line([p.x-_r, p.y], [p.x+_r, p.y]);
+return;
 
             var P1 = rotation(p.x-_r, p.y, angle);
             var P2 = rotation(p.x+_r, p.y, angle);
