@@ -94,31 +94,3 @@ function simplify(points) {
 
     return newPoints;
 }
-
-// detect polygon winding direction: clockwise or counter clockwise
-function getWinding(points) {
-    var x1, y1, x2, y2,
-        a = 0,
-        i, il;
-    for (i = 0, il = points.length-3; i < il; i += 2) {
-        x1 = points[i];
-        y1 = points[i+1];
-        x2 = points[i+2];
-        y2 = points[i+3];
-        a += x1*y2 - x2*y1;
-    }
-    return (a/2) > 0 ? 'CW' : 'CCW';
-}
-
-// make polygon winding clockwise. This is needed for proper backface culling on client side.
-function makeWinding(points, direction) {
-    var winding = getWinding(points);
-    if (winding === direction) {
-        return points;
-    }
-    var revPoints = [];
-    for (var i = points.length-2; i >= 0; i -= 2) {
-        revPoints.push(points[i], points[i+1]);
-    }
-    return revPoints;
-}

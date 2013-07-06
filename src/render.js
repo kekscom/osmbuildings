@@ -1,3 +1,4 @@
+var renderItems = [];
 
 function fadeIn() {
     if (animTimer) {
@@ -6,8 +7,8 @@ function fadeIn() {
 
     animTimer = setInterval(function() {
         var item, needed = false;
-        for (var i = 0, il = Data.renderItems.length; i < il; i++) {
-            item = Data.renderItems[i];
+        for (var i = 0, il = renderItems.length; i < il; i++) {
+            item = renderItems[i];
             if (item.scale < 1) {
                 item.scale += 0.5*0.2; // amount*easing
                 if (item.scale > 1) {
@@ -56,12 +57,12 @@ function render() {
         wallColor, altColor;
 
     // TODO: FlatBuildings are drawn separately, data has to be split
-    Data.renderItems.sort(function(a, b) {
+    renderItems.sort(function(a, b) {
         return getDistance(b.center, sortCam)/b.height - getDistance(a.center, sortCam)/a.height;
     });
 
-    for (i = 0, il = Data.renderItems.length; i < il; i++) {
-        item = Data.renderItems[i];
+    for (i = 0, il = renderItems.length; i < il; i++) {
+        item = renderItems[i];
 
         if (item.height <= flatMaxHeight) {
             continue;

@@ -15,6 +15,7 @@ exports.srcFiles = [
     srcPath + '/shortcuts.js',
     srcPath + '/lib/Color.js',
     srcPath + '/lib/SunPosition.js',
+    srcPath + '/Import.js',
     srcPath + '/import/GeoJSON.js',
     srcPath + '/import/OSMXAPI.js',
     srcPath + '/constants.js',

@@ -17,6 +17,9 @@ var Int32Array = Int32Array || Array,
 
 /*<debug*/
 if (!console) {
-    console = { log:function() {} };
+    console = {
+        log:function() {},
+        warn:function() {}
+    };
 }
 /*>*/
