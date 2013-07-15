@@ -109,15 +109,18 @@ var Data = (function() {
             }
 
             res.push({
-                id:        item.id,
-                footprint: footprint,
-                height:    min(height, maxHeight),
-                minHeight: minHeight,
-                wallColor: wallColor,
-                altColor:  altColor,
-                roofColor: roofColor,
-                center:    getCenter(footprint),
-                holes:     holes.length ? holes : null
+                id:         item.id,
+                footprint:  footprint,
+                height:     min(height, maxHeight),
+                minHeight:  minHeight,
+                wallColor:  wallColor,
+                altColor:   altColor,
+                roofColor:  roofColor,
+                center:     getCenter(footprint),
+                holes:      holes.length ? holes : null,
+                roofShape:  item.roofShape,
+                roofHeight: item.roofHeight,
+                roofRadius: item.roofRadius  // http://wiki.openstreetmap.org/wiki/Zoom_levels
             });
         }
 

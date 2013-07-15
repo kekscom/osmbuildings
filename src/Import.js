@@ -45,7 +45,7 @@ var Import = (function() {
     me.INCH_TO_METER = 0.0254;
     me.METERS_PER_LEVEL = 3;
 
-    me.getDimension = function(str) {
+    me.toMeters = function(str) {
         var value = parseFloat(str);
         if (value === str) {
             return value <<0;
@@ -65,6 +65,17 @@ var Import = (function() {
             return res <<0;
         }
         return value <<0;
+    };
+
+
+
+    me.getRadius = function(points) {
+        var minLat = 90, maxLat = -90;
+        for (var i = 0, il = points.length; i < il; i += 2) {
+            minLat = min(minLat, points[i]);
+            maxLat = max(maxLat, points[i]);
+        }
+        return round((maxLat-minLat) / RAD * 6378137 / 2); // 6378137 = Earth radius
     };
 
     var _materialColors = {

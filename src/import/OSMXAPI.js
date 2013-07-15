@@ -12,31 +12,31 @@ var readOSMXAPI = (function() {
 //  nonliving:'tar_paper',
 //  worship:'copper'
 
-    function getBuildingType(tags) {
-        if (tags.amenity === 'place_of_worship') {
-            return 'worship';
-        }
-
-        var type = tags.building;
-        if (type === 'yes' || type === 'roof') {
-            type = tags['building:use'];
-        }
-        if (!type) {
-            type = tags.amenity;
-        }
-
-        switch (type) {
-            case 'apartments':
-            case 'house':
-            case 'residential':
-            case 'hut':
-                return 'living';
-            case 'church':
-                return 'worship';
-        }
-
-        return 'nonliving';
-    }
+//    function getBuildingType(tags) {
+//        if (tags.amenity === 'place_of_worship') {
+//            return 'worship';
+//        }
+//
+//        var type = tags.building;
+//        if (type === 'yes' || type === 'roof') {
+//            type = tags['building:use'];
+//        }
+//        if (!type) {
+//            type = tags.amenity;
+//        }
+//
+//        switch (type) {
+//            case 'apartments':
+//            case 'house':
+//            case 'residential':
+//            case 'hut':
+//                return 'living';
+//            case 'church':
+//                return 'worship';
+//        }
+//
+//        return 'nonliving';
+//    }
 
     function getRelationWays(members) {
         var m, outer, inner = [];
@@ -84,7 +84,7 @@ var readOSMXAPI = (function() {
         return footprint;
     }
 
-    function mergeTags(dst, src) {
+    function mergeItems(dst, src) {
         for (var p in src) {
             if (!dst[p]) {
                 dst[p] = src[p];
@@ -93,85 +93,98 @@ var readOSMXAPI = (function() {
         return dst;
     }
 
-    function filterTags(tags) {
-        var height = 0, minHeight = 0;
+    function filterItem(item, footprint) {
+        var res = {},
+            tags = item.tags;
+
+        if (item.id) {
+            res.id = item.id;
+        }
+
+        if (footprint) {
+            res.footprint = Import.windOuterPolygon(footprint);
+        }
 
         if (tags.height) {
-            height = Import.getDimension(tags.height);
+            res.height = Import.toMeters(tags.height);
         }
-        if (!height && tags['building:height']) {
-            height = Import.getDimension(tags['building:height']);
+        if (!res.height && tags['building:height']) {
+            res.height = Import.toMeters(tags['building:height']);
         }
 
-        if (!height && tags.levels) {
-            height = tags.levels*Import.METERS_PER_LEVEL <<0;
+        if (!res.height && tags.levels) {
+            res.height = tags.levels*Import.METERS_PER_LEVEL <<0;
         }
-        if (!height && tags['building:levels']) {
-            height = tags['building:levels']*Import.METERS_PER_LEVEL <<0;
+        if (!res.height && tags['building:levels']) {
+            res.height = tags['building:levels']*Import.METERS_PER_LEVEL <<0;
         }
 
         // min_height
         if (tags.min_height) {
-            minHeight = Import.getDimension(tags.min_height);
+            res.minHeight = Import.toMeters(tags.min_height);
         }
-        if (!minHeight && tags['building:min_height']) {
-            minHeight = Import.getDimension(tags['building:min_height']);
-        }
-
-        if (!minHeight && tags.min_level) {
-            minHeight = tags.min_level*Import.METERS_PER_LEVEL <<0;
-        }
-        if (!minHeight && tags['building:min_level']) {
-            minHeight = tags['building:min_level']*Import.METERS_PER_LEVEL <<0;
+        if (!res.minHeight && tags['building:min_height']) {
+            res.minHeight = Import.toMeters(tags['building:min_height']);
         }
 
-        var wallColor, roofColor;
+        if (!res.minHeight && tags.min_level) {
+            res.minHeight = tags.min_level*Import.METERS_PER_LEVEL <<0;
+        }
+        if (!res.minHeight && tags['building:min_level']) {
+            res.minHeight = tags['building:min_level']*Import.METERS_PER_LEVEL <<0;
+        }
 
         // wall material
         if (tags['building:material']) {
-            wallColor = Import.getMaterialColor(tags['building:material']);
+            res.wallColor = Import.getMaterialColor(tags['building:material']);
         }
         if (tags['building:facade:material']) {
-            wallColor = Import.getMaterialColor(tags['building:facade:material']);
+            res.wallColor = Import.getMaterialColor(tags['building:facade:material']);
         }
         if (tags['building:cladding']) {
-            wallColor = Import.getMaterialColor(tags['building:cladding']);
+            res.wallColor = Import.getMaterialColor(tags['building:cladding']);
         }
         // wall color
         if (tags['building:color']) {
-            wallColor = tags['building:color'];
+            res.wallColor = tags['building:color'];
         }
         if (tags['building:colour']) {
-            wallColor = tags['building:colour'];
+            res.wallColor = tags['building:colour'];
         }
 
         // roof material
         if (tags['roof:material']) {
-            roofColor = Import.getMaterialColor(tags['roof:material']);
+            res.roofColor = Import.getMaterialColor(tags['roof:material']);
         }
         if (tags['building:roof:material']) {
-            roofColor = Import.getMaterialColor(tags['building:roof:material']);
+            res.roofColor = Import.getMaterialColor(tags['building:roof:material']);
         }
         // roof color
         if (tags['roof:color']) {
-            roofColor = tags['roof:color'];
+            res.roofColor = tags['roof:color'];
         }
         if (tags['roof:colour']) {
-            roofColor = tags['roof:colour'];
+            res.roofColor = tags['roof:colour'];
         }
         if (tags['building:roof:color']) {
-            roofColor = tags['building:roof:color'];
+            res.roofColor = tags['building:roof:color'];
         }
         if (tags['building:roof:colour']) {
-            roofColor = tags['building:roof:colour'];
+            res.roofColor = tags['building:roof:colour'];
         }
 
-        return {
-            height:    height,
-            minHeight: minHeight,
-            wallColor: wallColor,
-            roofColor: roofColor
-        };
+        if (tags['roof:shape'] === 'dome') {
+            res.roofShape = tags['roof:shape'];
+            if (tags['roof:height']) {
+                res.roofHeight = Import.toMeters(tags['roof:height']);
+                res.height = max(0, res.height-res.roofHeight);
+            }
+            if (res.footprint) {
+                res.roofRadius = Import.getRadius(res.footprint);
+            }
+        }
+
+        return res;
     }
 
     function processNode(node) {
@@ -179,49 +192,49 @@ var readOSMXAPI = (function() {
     }
 
     function processWay(way) {
-        var tags, footprint;
         if (isBuilding(way)) {
-            tags = filterTags(way.tags);
+            var item, footprint;
             if ((footprint = getFootprint(way.nodes))) {
-                addResult(way.id, tags, footprint);
+                item = filterItem(way, footprint);
+                addResult(item);
             }
-        } else {
-            tags = way.tags;
-            if (!tags || (!tags.highway && !tags.railway && !tags.landuse)) { // TODO: add more filters
-                ways[way.id] = way;
-            }
+            return;
+        }
+
+        var tags = way.tags;
+        if (!tags || (!tags.highway && !tags.railway && !tags.landuse)) { // TODO: add more filters
+            ways[way.id] = way;
         }
     }
 
     function processRelation(relation) {
         var relationWays, outerWay, holes = [],
-            tags, outerFootprint, innerFootprint;
-        if (isBuilding(relation) && (relation.tags.type === 'multipolygon' || relation.tags.type === 'building')) {
-            if ((relationWays = getRelationWays(relation.members))) {
-                var relTags = filterTags(relation.tags);
-                if ((outerWay = relationWays.outer)) {
-                    tags = filterTags(outerWay.tags);
-                    if ((outerFootprint = getFootprint(outerWay.nodes))) {
-                        tags = mergeTags(tags, relTags);
-                        for (var i = 0, il = relationWays.inner.length; i < il; i++) {
-                            if ((innerFootprint = getFootprint(relationWays.inner[i].nodes))) {
-                                holes.push(Import.windInnerPolygon(innerFootprint));
-                            }
+            item, relItem, outerFootprint, innerFootprint;
+
+        if (!isBuilding(relation) || (relation.tags.type !== 'multipolygon' && relation.tags.type !== 'building')) {
+            return;
+        }
+
+        if ((relationWays = getRelationWays(relation.members))) {
+            relItem = filterItem(relation);
+            if ((outerWay = relationWays.outer)) {
+                if ((outerFootprint = getFootprint(outerWay.nodes))) {
+                    item = filterItem(outerWay, outerFootprint)
+                    for (var i = 0, il = relationWays.inner.length; i < il; i++) {
+                        if ((innerFootprint = getFootprint(relationWays.inner[i].nodes))) {
+                            holes.push(Import.windInnerPolygon(innerFootprint));
                         }
-                        addResult(outerWay.id, tags, outerFootprint, holes.length ? holes : null);
                     }
+                    addResult(mergeItems(item, relItem), holes);
                 }
             }
         }
     }
 
-    function addResult(id, tags, footprint, holes) {
-        var item = { id:id, footprint:Import.windOuterPolygon(footprint) };
-        if (tags.height)    item.height    = tags.height;
-        if (tags.minHeight) item.minHeight = tags.minHeight;
-        if (tags.wallColor) item.wallColor = tags.wallColor;
-        if (tags.roofColor) item.roofColor = tags.roofColor;
-        if (holes)          item.holes     = holes;
+    function addResult(item, holes) {
+        if (holes && holes.length) {
+            item.holes = holes;
+        }
         res.push(item);
     }
 

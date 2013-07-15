@@ -68,8 +68,8 @@ var readGeoJSON = function(collection) {
             footprint:Import.windOuterPolygon(footprint)
         };
 
-        if (properties.height)    item.height    = Import.getDimension(properties.height);
-        if (properties.minHeight) item.minHeight = Import.getDimension(properties.minHeight);
+        if (properties.height)    item.height    = Import.toMeters(properties.height);
+        if (properties.minHeight) item.minHeight = Import.toMeters(properties.minHeight);
         if (wallColor)            item.wallColor = wallColor;
         if (roofColor)            item.roofColor = roofColor;
         if (holes.length)         item.holes     = holes;

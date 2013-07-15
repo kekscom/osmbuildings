@@ -1,5 +1,5 @@
 
-        function render() {
+        function render2() {
             var p, x, y;
 
             context.clearRect(0, 0, width, height);
@@ -18,12 +18,7 @@
             p = geoToPixel(52.52230, 13.39550);
             x = p.x-originX;
             y = p.y-originY;
-            dome(x, y, 50, -50);
-
-            p = geoToPixel(52.52230, 13.39550);
-            x = p.x-originX;
-            y = p.y-originY;
-            dome(x, y, 50, 50);
+            dome({ x:x, y:y }, 30, 30);
         }
 
         //*** finished methods ************************************************
@@ -65,7 +60,7 @@
                     ty = t[i][1];
                     ax = (x - tx) * (isAlt ? 1 : -1);
                     ay = (y - ty) * (isAlt ? 1 : -1);
-                    ta = Math.atan2(ay, ax) + (isAlt ? PI : 0);
+                    ta = atan2(ay, ax) + (isAlt ? PI : 0);
 
                     // tangent not visible, avoid flickering
                     if (ax < 0) {
@@ -92,13 +87,13 @@
          * @param r {float} radius (in pixels)
          * @param stroke {boolean} optionally stroke circle's outline
          */
-        function circle(x, y, r, stroke) {
+        function circle(c, r, stroke) {
             context.beginPath();
-            context.arc(x, y, r, 0, 360);
+            context.arc(c.x, c.y, r, 0, 360);
             if (stroke) {
                 context.stroke();
             }
-            context.fill();
+            //context.fill();
         }
 
         /**
@@ -192,27 +187,25 @@
 
         //*********************************************************************
 
-        function cone(x, y, r, h, minHeight) {
+        function cone(c, r, h, minHeight) {
             // TODO: min height
-            var apex = project(x, y, camZ / (camZ - h)),
+            var apex = project(c.x, c.y, camZ / (camZ - h)),
                 _x = apex.x,
-                _y = apex.y
-            ;
+                _y = apex.y;
 
-            var t = getTangentsFromPoint(x, y, r, _x, _y),
+            var t = getTangentsFromPoint(c, r, _x, _y),
                 tx, ty, ta,
                 isAlt,
-                ax, ay
-            ;
+                ax, ay;
 
             // draw normal and alternative colored wall segments
             for (var i = 0; i < 2; i++) {
                 isAlt = !!i;
-                tx = t[i][0];
-                ty = t[i][1];
-                ax = (x - tx) * (isAlt ? 1 : -1);
-                ay = (y - ty) * (isAlt ? 1 : -1);
-                ta = Math.atan2(ay, ax) + (isAlt ? PI : 0);
+                tx = t[i].x;
+                ty = t[i].y;
+                ax = (c.x - tx) * (isAlt ? 1 : -1);
+                ay = (c.y - ty) * (isAlt ? 1 : -1);
+                ta = atan2(ay, ax) + (isAlt ? PI : 0);
 
                 // tangent not visible, avoid flickering
                 if (ax < 0) {
@@ -222,265 +215,150 @@
                 context.fillStyle = !isAlt ? wallColorAlpha : altColorAlpha;
                 context.beginPath();
                 context.moveTo(tx, ty);
-                context.arc(x, y, r, ta, HALF_PI, isAlt);
+                context.arc(c.x, c.y, r, ta, HALF_PI, isAlt);
                 context.arc(_x, _y, 0, HALF_PI, ta, !isAlt);
                 context.closePath();
                 context.fill();
             }
 
-//            circle(x, y, r);
+//            circle(c.x, c.y, r);
 //
 //            context.beginPath();
-//            context.moveTo(x - r, y);
+//            context.moveTo(c.x - r, c.y);
 //            context.lineTo(_x, _y);
-//            context.lineTo(x + r, y);
+//            context.lineTo(c.x + r, c.y);
 //            context.stroke();
 //
 //            context.beginPath();
-//            context.moveTo(x, y - r);
+//            context.moveTo(c.x, c.y - r);
 //            context.lineTo(_x, _y);
-//            context.lineTo(x, y + r);
+//            context.lineTo(c.x, c.y + r);
 //            context.stroke();
         }
 
-
-        function rotation(x, y, cx, cy, a) {
-            var sin = Math.sin(a), cos = Math.cos(a);
-            x -= cx;
-            y -= cy;
+        function rotation(p, c, a) {
+            var ms = sin(a), mc = cos(a);
+            p.x -= c.x;
+            p.y -= c.y;
             return {
-                x: x* cos + y*sin + cx,
-                y: x*-sin + y*cos + cy
+                x: p.x* mc + p.y*ms + c.x,
+                y: p.x*-ms + p.y*mc + c.y
             };
         }
 
         var KAPPA = 0.5522847498;
-        function domeWithVisline(cx, cy, r, h) {
+
+        function dome(c, r, h, minHeight) {
             if (!h) {
                 h = r;
             }
 
-            debugMarker(camX, camY, 'green', 5);
+            minHeight = minHeight || 0;
 
-            context.fillStyle = roofColorAlpha;
-            circle(cx, cy, r, TRUE);
-
-            var apex = project(cx, cy, camZ / (camZ-h));
-//            line([cx, cy], [apex.x, apex.y]);
-            debugMarker(apex.x, apex.y);
-
+            h *= 2.387;
+            r *= 2.387;
+h = r;
             // VERTICAL TANGENT POINTS ON SPHERE:
             // side view at scenario:
-            // sphere at cx,cy & radius => circle at cy,0
+            // sphere at c.x,c.y & radius => circle at c.y,minHeight
             // cam    at camX/camY/camZ => point  at camY/camZ
+var simpleEllipsisSize = (r+h)/2;
+            var t = getTangentsFromPoint({ x:c.y, y:minHeight }, simpleEllipsisSize, { x:camY, y:camZ })[0];
 
-            var t = getTangentsFromPoint(cy, 0, h, camY, camZ),
-                vx = t[0][0],
-                vy = t[0][1];
-
-
-            var angle = atan((camX-cx)/(camY-cy));
-
-            var v = rotation(cx, vx, cx, cy, angle);
-            var _v = project(v.x, v.y, camZ / (camZ-vy));
-//            debugMarker(_v.x, _v.y, 'red');
-
-            // querlinie durch den sichtpunkt
-            var q1 = rotation(cx-r, vx, cx, cy, angle);
-            var _q1 = project(q1.x, q1.y, camZ / (camZ-vy));
-//          debugMarker(_q1.x, _q1.y, 'green');
-
-            var q2 = rotation(cx+r, vx, cx, cy, angle);
-            var _q2 = project(q2.x, q2.y, camZ / (camZ-vy));
-//          debugMarker(_q2.x, _q2.y, 'green');
-
-//            line([_q1.x, _q1.y], [_q2.x, _q2.y]);
-
-            // vertikale kanten zu den querlinien
-            var p1 = rotation(cx-r, cy, cx, cy, angle);
-            var p2 = rotation(cx+r, cy, cx, cy, angle);
-//            debugMarker(p1.x, p1.y, 'blue');
-//            debugMarker(p2.x, p2.y, 'blue');
-//            line([1p1.x, p1.y], [_q1.x, _q1.y]);
-//            line([p2.x, p2.y], [_q2.x, _q2.y]);
-
-            // hor. anchors
-            var v1 = rotation(cx-r*KAPPA, vx, cx, cy, angle);
-            var _v1 = project(v1.x, v1.y, camZ / (camZ-vy));
-//            debugMarker(_v1.x, _v1.y, 'green');
-            var H1 = _v1;
-
-            var v2 = rotation(cx+r*KAPPA, vx, cx, cy, angle);
-            var _v2 = project(v2.x, v2.y, camZ / (camZ-vy));
-//            debugMarker(_v2.x, _v2.y, 'green');
-            var H2 = _v2;
-
-            var dx = (p1.x-_q1.x)*KAPPA;
-            var dy = (p1.y-_q1.y)*KAPPA;
-
-//            debugMarker(p1.x-dx, p1.y-dy, 'blue');
-            var V1 = { x:p1.x-dx, y:p1.y-dy };
-
-//            debugMarker(p2.x-dx, p2.y-dy, 'blue');
-            var V2 = { x:p2.x-dx, y:p2.y-dy };
-/*
-            context.beginPath();
-
-            context.moveTo(_v.x, _v.y);
-            context.bezierCurveTo(H1.x, H1.y, V1.x, V1.y, p1.x, p1.y);
-
-            context.moveTo(_v.x, _v.y);
-            context.bezierCurveTo(H2.x, H2.y, V2.x, V2.y, p2.x, p2.y);
-
-            context.stroke();
-*/
-
-/*
-            // shape contours
-            context.beginPath();
-
-            context.moveTo(cx-r, cy);
-            var P1 = project(cx-r, cy, camZ / (camZ-(h*KAPPA)));
-            var P2 = project(cx-r + r*KAPPA, cy, camZ / (camZ-h));
-            context.bezierCurveTo(P1.x, P1.y, P2.x, P2.y, apex.x, apex.y);
-
-            context.moveTo(cx+r, cy);
-            var P1 = project(cx+r, cy, camZ / (camZ-(h*KAPPA)));
-            var P2 = project(cx+r - r*KAPPA, cy, camZ / (camZ-h));
-            context.bezierCurveTo(P1.x, P1.y, P2.x, P2.y, apex.x, apex.y);
-
-            context.moveTo(cx, cy-r);
-            var P1 = project(cx, cy-r, camZ / (camZ-(h*KAPPA)));
-            var P2 = project(cx, cy - r*KAPPA, camZ / (camZ-h));
-            context.bezierCurveTo(P1.x, P1.y, P2.x, P2.y, apex.x, apex.y);
-
-            context.moveTo(cx, cy+r);
-            var P1 = project(cx, cy+r, camZ / (camZ-(h*KAPPA)));
-            var P2 = project(cx, cy + r*KAPPA, camZ / (camZ-h));
-            context.bezierCurveTo(P1.x, P1.y, P2.x, P2.y, apex.x, apex.y);
-
-            context.stroke();
-*/
-
-
-            // shape contours
-            context.beginPath();
-
-            var _P1 = rotation(cx-r, cy, cx, cy, angle);
-            var _P2 = rotation(cx-r + r*KAPPA, cy, cx, cy, angle);
-            var P1 = project(_P1.x, _P1.y, camZ / (camZ-(h*KAPPA)));
-            var P2 = project(_P2.x, _P2.y, camZ / (camZ-h));
-            context.moveTo(_P1.x, _P1.y);
-            context.bezierCurveTo(P1.x, P1.y, P2.x, P2.y, apex.x, apex.y);
-
-            var _P1 = rotation(cx+r, cy, cx, cy, angle);
-            var _P2 = rotation(cx+r - r*KAPPA, cy, cx, cy, angle);
-            var P1 = project(_P1.x, _P1.y, camZ / (camZ-(h*KAPPA)));
-            var P2 = project(_P2.x, _P2.y, camZ / (camZ-h));
-            context.moveTo(_P1.x, _P1.y);
-            context.bezierCurveTo(P1.x, P1.y, P2.x, P2.y, apex.x, apex.y);
-
-
-/*
-            var _P1 = rotation(cx, cy-r, cx, cy, angle);
-            var _P2 = rotation(cx, cy-r + r*KAPPA, cx, cy, angle);
-            var P1 = project(_P1.x, _P1.y, camZ / (camZ-(h*KAPPA)));
-            var P2 = project(_P2.x, _P2.y, camZ / (camZ-h));
-//            context.moveTo(_P1.x, _P1.y);
-  //          context.bezierCurveTo(P1.x, P1.y, P2.x, P2.y, apex.x, apex.y);
-
-            var _P1 = rotation(cx, cy+r, cx, cy, angle);
-            var _P2 = rotation(cx, cy+r - r*KAPPA, cx, cy, angle);
-            var P1 = project(_P1.x, _P1.y, camZ / (camZ-(h*KAPPA)));
-            var P2 = project(_P2.x, _P2.y, camZ / (camZ-h));
-            context.moveTo(_P1.x, _P1.y);
-            context.bezierCurveTo(P1.x, P1.y, P2.x, P2.y, apex.x, apex.y);
-*/
-
-            var P1 = rotation(cx, cy-r, cx, cy, angle);
-            context.moveTo(P1.x, P1.y);
-            context.lineTo(apex.x, apex.y);
-
-            var P1 = rotation(cx, cy+r, cx, cy, angle);
-            var P2 = project(_P2.x, _P2.y, camZ / (camZ-h));
-            context.moveTo(P1.x, P1.y);
-            context.lineTo(apex.x, apex.y);
-
-
-
-            context.stroke();
-            context.fillStyle = roofColorAlpha;
-            context.fill();
-        }
-
-
-        function dome(cx, cy, r, h) {
-            if (!h) {
-                h = r;
+            if (minHeight) {
+                c = project(c.x, c.y, camZ / (camZ-minHeight));
+                r *= camZ / (camZ-minHeight);
             }
-h /= 2;
-            context.fillStyle = roofColorAlpha;
-            circle(cx, cy, r, TRUE);
 
-            var apex = project(cx, cy, camZ / (camZ-h));
-            // debugMarker(apex.x, apex.y);
+h = r;
+            circle(c, r, TRUE);
 
-            var angle = atan((camX-cx)/(camY-cy));
+            var _h = camZ / (camZ-h),
+              hfK = camZ / (camZ-(h*KAPPA));
 
-            var p1, p2, _p1, _p2;
+            var apex = project(c.x, c.y, _h);
+//debugMarker(apex.x, apex.y);
 
-            // shape contours
+            var angle = atan((camX-c.x)/(camY-c.y));
+
             context.beginPath();
 
-            p1 = rotation(cx-r, cy, cx, cy, angle);
-            p2 = rotation(cx-r + r*KAPPA, cy, cx, cy, angle);
-            _p1 = project(p1.x, p1.y, camZ / (camZ-(h*KAPPA)));
-            _p2 = project(p2.x, p2.y, camZ / (camZ-h));
-            context.moveTo(p1.x, p1.y);
-            context.bezierCurveTo(_p1.x, _p1.y, _p2.x, _p2.y, apex.x, apex.y);
+            var _th = camZ / (camZ-t.y);
 
-            p1 = rotation(cx+r, cy, cx, cy, angle);
-            p2 = rotation(cx+r - r*KAPPA, cy, cx, cy, angle);
-            _p1 = project(p1.x, p1.y, camZ / (camZ-(h*KAPPA)));
-            _p2 = project(p2.x, p2.y, camZ / (camZ-h));
-            context.moveTo(p1.x, p1.y);
-            context.bezierCurveTo(_p1.x, _p1.y, _p2.x, _p2.y, apex.x, apex.y);
+            // ausgerichteter sichtrand!
+            var p = rotation({ x:c.x, y:t.x }, c, angle);
+            var _p = project(p.x, p.y, _th);
+//debugMarker(_p.x, _p.y);
+            var p1h = rotation({ x:c.x-r, y:t.x }, c, angle);
+            var _p1h = project(p1h.x, p1h.y, _th);
+//debugMarker(_p1h.x, _p1h.y);
+            var p2h = rotation({ x:c.x+r, y:t.x }, c, angle);
+            var _p2h = project(p2h.x, p2h.y, _th);
+//debugMarker(_p2h.x, _p2h.y);
+            var p1v = rotation({ x:c.x-r, y:c.y }, c, angle);
+//debugMarker(p1v.x, p1v.y);
+            var p2v = rotation({ x:c.x+r, y:c.y }, c, angle);
+//debugMarker(p2v.x, p2v.y);
 
-            context.fillStyle = roofColorAlpha;
-            context.fill();
+            context.moveTo(p1v.x, p1v.y);
+            context.bezierCurveTo(
+                p1v.x + (_p1h.x-p1v.x) * KAPPA,
+                p1v.y + (_p1h.y-p1v.y) * KAPPA,
+                _p.x + (_p1h.x-_p.x) * KAPPA,
+                _p.y + (_p1h.y-_p.y) * KAPPA,
+                _p.x, _p.y);
 
-            p1 = rotation(cx, cy-r, cx, cy, angle);
-            context.moveTo(p1.x, p1.y);
-            context.lineTo(apex.x, apex.y);
+            context.moveTo(p2v.x, p2v.y);
+            context.bezierCurveTo(
+                p2v.x + (_p1h.x-p1v.x) * KAPPA,
+                p2v.y + (_p1h.y-p1v.y) * KAPPA,
+                _p.x + (_p2h.x-_p.x) * KAPPA,
+                _p.y + (_p2h.y-_p.y) * KAPPA,
+                _p.x, _p.y);
 
-            p1 = rotation(cx, cy+r, cx, cy, angle);
-            context.moveTo(p1.x, p1.y);
-            context.lineTo(apex.x, apex.y);
+//          drawMeridian(c, r, _h, hfK, apex,  45/RAD);
+//          drawMeridian(c, r, _h, hfK, apex, 135/RAD);
 
+            for (var i = 0; i <= 180; i+=30) {
+//                drawMeridian(c, r, _h, hfK, apex, i*RAD);
+            }
+
+//          context.fill();
             context.stroke();
         }
 
+        function drawMeridian(c, r, _h, hfK, apex, angle) {
+            drawHalfMeridian(c, r, _h, hfK, apex, angle);
+            drawHalfMeridian(c, r, _h, hfK, apex, angle + PI);
+        }
 
-        function getTangentsFromPoint(x1, y1, r, x2, y2) {
-            var sqd = (x1-x2) * (x1-x2) + (y1-y2) * (y1-y2);
+        function drawHalfMeridian(c, r, _h, hfK, apex, angle) {
+            var p1 = rotation({ x:c.x, y:c.y-r },       c, angle);
+            var p2 = rotation({ x:c.x, y:c.y-r*KAPPA }, c, angle);
+            var _p1 = project(p1.x, p1.y, hfK);
+            var _p2 = project(p2.x, p2.y, _h);
+            context.moveTo(p1.x, p1.y);
+            context.bezierCurveTo(_p1.x, _p1.y, _p2.x, _p2.y, apex.x, apex.y);
+        }
 
-            var d = sqrt(sqd),
-                vx = (x2-x1) / d,
-                vy = (y2-y1) / d,
+
+
+
+//http://jsfiddle.net/a8ZS4/3/
+
+        function getTangentsFromPoint(c, r, p) {
+            var a = c.x-p.x, b = c.y-p.y,
+                u = sqrt(a*a + b*b),
+                ur = r/u,
+                ux = -a/u, uy = -b/u,
                 res = [],
-                c = r/d,
-                h, nx, ny;
-
-            h = sqrt(max(0, 1 - c*c));
+                h = sqrt(max(0, 1 - ur*ur)),
+                nx, ny;
             for (var sign = 1; sign >= -1; sign -= 2) {
-                nx = vx*c - sign*h*vy;
-                ny = vy*c + sign*h*vx;
-                res.push([
-                    x1 + r*nx << 0, y1 + r*ny << 0,
-                    x2, y2
-                ]);
+                nx = ux*ur - sign*h*uy;
+                ny = uy*ur + sign*h*ux;
+                res.push({ x:c.x + r*nx <<0, y: c.y + r*ny <<0 });
             }
-
             return res;
         }
 
