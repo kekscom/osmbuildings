@@ -196,7 +196,7 @@ var readOSMXAPI = (function() {
             var item, footprint;
             if ((footprint = getFootprint(way.nodes))) {
                 item = filterItem(way, footprint);
-                addResult(item);
+                res.push(item);
             }
             return;
         }
@@ -225,17 +225,13 @@ var readOSMXAPI = (function() {
                             holes.push(Import.windInnerPolygon(innerFootprint));
                         }
                     }
-                    addResult(mergeItems(item, relItem), holes);
+                    if (holes.length) {
+                        item.holes = holes;
+                    }
+                    res.push(mergeItems(item, relItem));
                 }
             }
         }
-    }
-
-    function addResult(item, holes) {
-        if (holes && holes.length) {
-            item.holes = holes;
-        }
-        res.push(item);
     }
 
     var nodes, ways, res;
