@@ -67,8 +67,6 @@ var Import = (function() {
         return value <<0;
     };
 
-
-
     me.getRadius = function(points) {
         var minLat = 90, maxLat = -90;
         for (var i = 0, il = points.length; i < il; i += 2) {

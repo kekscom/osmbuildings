@@ -62,7 +62,8 @@ var Data = (function() {
             height, minHeight, footprint,
             color, wallColor, altColor, roofColor,
             holes, innerFootprint,
-            zoomDelta = maxZoom-zoom;
+            zoomDelta = maxZoom-zoom,
+            meterToPixel = 156412 / Math.pow(2, zoom) * 1.5; // http://wiki.openstreetmap.org/wiki/Zoom_levels, TODO: without factor 1.5, numbers don't match (Berlin)
 
         for (i = 0, il = items.length; i < il; i++) {
 
@@ -120,7 +121,7 @@ var Data = (function() {
                 holes:      holes.length ? holes : null,
                 roofShape:  item.roofShape,
                 roofHeight: item.roofHeight,
-                roofRadius: item.roofRadius  // http://wiki.openstreetmap.org/wiki/Zoom_levels
+                roofRadius: item.roofRadius/meterToPixel
             });
         }
 

@@ -97,10 +97,14 @@ function render() {
         altColor  = item.altColor  || altColorAlpha;
 
         if (item.roofShape && item.roofShape === 'dome') {
-            context.fillStyle   = item.roofColor || roofColorAlpha;
+            context.fillStyle = item.roofColor || roofColorAlpha;
             context.strokeStyle = altColor;
-
-            dome({ x:item.center[0]-originX, y:item.center[1]-originY }, item.roofRadius, item.roofHeight || item.height, item.minHeight);
+            dome({
+                x:item.center[0]-originX, y:item.center[1]-originY },
+                item.roofRadius,
+                item.roofHeight || item.height,
+                item.minHeight
+            );
             continue;
         }
 

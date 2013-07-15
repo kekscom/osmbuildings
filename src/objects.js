@@ -247,7 +247,6 @@
         }
 
         var KAPPA = 0.5522847498;
-
         function dome(c, r, h, minHeight) {
             if (!h) {
                 h = r;
@@ -255,8 +254,6 @@
 
             minHeight = minHeight || 0;
 
-            h *= 2.387;
-            r *= 2.387;
 h = r;
             // VERTICAL TANGENT POINTS ON SPHERE:
             // side view at scenario:
@@ -345,6 +342,7 @@ h = r;
 
 
 //http://jsfiddle.net/a8ZS4/3/
+//http://jsfiddle.net/a8ZS4/6/
 
         function getTangentsFromPoint(c, r, p) {
             var a = c.x-p.x, b = c.y-p.y,
