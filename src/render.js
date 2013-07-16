@@ -43,7 +43,7 @@ function render() {
 
     var i, il, j, jl,
         item,
-        h, _h, mh, _mh,
+        h, _h, mh, _mh, rh,
         flatMaxHeight = FlatBuildings.MAX_HEIGHT,
         sortCam = [camX+originX, camY+originY],
         vp = {
@@ -93,34 +93,39 @@ function render() {
             _mh = camZ / (camZ-mh);
         }
 
-        wallColor = item.wallColor || wallColorAlpha;
-        altColor  = item.altColor  || altColorAlpha;
+        if (mh < h) {
+            wallColor = item.wallColor || wallColorAlpha;
+            altColor  = item.altColor  || altColorAlpha;
 
-        if (item.roofShape && item.roofShape === 'dome') {
-            context.fillStyle = item.roofColor || roofColorAlpha;
-            context.strokeStyle = altColor;
-            dome({
-                x:item.center[0]-originX, y:item.center[1]-originY },
-                item.roofRadius,
-                item.roofHeight || item.height,
-                item.minHeight
-            );
-            continue;
-        }
+            roof = renderPolygon(footprint, _h, _mh, wallColor, altColor);
 
-        roof = renderPolygon(footprint, _h, _mh, wallColor, altColor);
-
-        holes = [];
-        if (item.holes) {
-            for (j = 0, jl = item.holes.length; j < jl; j++) {
-                holes[j] = renderPolygon(item.holes[j], _h, _mh, wallColor, altColor);
+            holes = [];
+            if (item.holes) {
+                for (j = 0, jl = item.holes.length; j < jl; j++) {
+                    holes[j] = renderPolygon(item.holes[j], _h, _mh, wallColor, altColor);
+                }
             }
         }
 
-        // fill roof and optionally stroke it
-        context.fillStyle   = item.roofColor || roofColorAlpha;
+        context.fillStyle = item.roofColor || roofColorAlpha;
         context.strokeStyle = altColor;
-        drawShape(roof, true, holes);
+
+        rh = 0;
+        if (item.roofHeight && item.roofShape && item.roofShape === 'dome') {
+            rh = item.scale < 1 ? item.roofHeight*item.scale : item.roofHeight;
+
+        		// TODO: roof shape dome should set building shape to cylinder
+        		if (rh) {
+         		   dome({
+              		  x:item.center[0]-originX, y:item.center[1]-originY },
+             		   item.roofRadius,
+              		 rh,
+             		   h
+          		  );
+      		  }
+        } else {
+        		drawShape(roof, true, holes);
+				}
     }
 }
 

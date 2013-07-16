@@ -173,13 +173,14 @@ var readOSMXAPI = (function() {
             res.roofColor = tags['building:roof:colour'];
         }
 
+        res.height = res.height || Import.DEFAULT_HEIGHT;
+
         if (tags['roof:shape'] === 'dome') {
             res.roofShape  = tags['roof:shape'];
-            res.roofHeight = Import.toMeters(tags['roof:height']);
             res.roofRadius = Import.getRadius(res.footprint);
+            res.roofHeight = Import.toMeters(tags['roof:height']);
+            res.height = res.height-res.roofHeight;
         }
-
-        res.height = min(res.height, Import.DEFAULT_HEIGHT);
 
         return res;
     }
