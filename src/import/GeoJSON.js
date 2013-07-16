@@ -63,9 +63,7 @@ var readGeoJSON = function(collection) {
             item.holes = holes;
         }
 
-        if (properties.height) {
-            item.height = Import.toMeters(properties.height);
-        }
+        item.height = Import.toMeters(properties.height) || Import.DEFAULT_HEIGHT;
 
         if (properties.minHeight) {
             item.minHeight = Import.toMeters(properties.minHeight);

@@ -2,6 +2,8 @@ var Import = (function() {
 
     var me = {};
 
+    me.DEFAULT_HEIGHT = 5;
+
     var _clockwise = 'CW', _counterClockwise = 'CCW';
 
     // detect winding direction: clockwise or counter clockwise
@@ -46,6 +48,7 @@ var Import = (function() {
     me.METERS_PER_LEVEL = 3;
 
     me.toMeters = function(str) {
+        str = '' + str;
         var value = parseFloat(str);
         if (value === str) {
             return value <<0;

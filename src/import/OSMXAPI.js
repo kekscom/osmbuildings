@@ -174,15 +174,12 @@ var readOSMXAPI = (function() {
         }
 
         if (tags['roof:shape'] === 'dome') {
-            res.roofShape = tags['roof:shape'];
-            if (tags['roof:height']) {
-                res.roofHeight = Import.toMeters(tags['roof:height']);
-                res.height = max(0, res.height-res.roofHeight);
-            }
-            if (res.footprint) {
-                res.roofRadius = Import.getRadius(res.footprint);
-            }
+            res.roofShape  = tags['roof:shape'];
+            res.roofHeight = Import.toMeters(tags['roof:height']);
+            res.roofRadius = Import.getRadius(res.footprint);
         }
+
+        res.height = min(res.height, Import.DEFAULT_HEIGHT);
 
         return res;
     }
