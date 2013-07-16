@@ -32,13 +32,6 @@ var Int32Array = Int32Array || Array,
     doc = document;
 
 
-if (!console) {
-    console = {
-        log:function() {},
-        warn:function() {}
-    };
-}
-
 
 
 //****** file: Color.js ******
@@ -402,6 +395,8 @@ var Import = (function() {
 
     var me = {};
 
+    me.DEFAULT_HEIGHT = 5;
+
     var _clockwise = 'CW', _counterClockwise = 'CCW';
 
     // detect winding direction: clockwise or counter clockwise
@@ -446,6 +441,7 @@ var Import = (function() {
     me.METERS_PER_LEVEL = 3;
 
     me.toMeters = function(str) {
+        str = '' + str;
         var value = parseFloat(str);
         if (value === str) {
             return value <<0;
@@ -610,9 +606,7 @@ var readGeoJSON = function(collection) {
             item.holes = holes;
         }
 
-        if (properties.height) {
-            item.height = Import.toMeters(properties.height);
-        }
+        item.height = Import.toMeters(properties.height) || Import.DEFAULT_HEIGHT;
 
         if (properties.minHeight) {
             item.minHeight = Import.toMeters(properties.minHeight);
@@ -810,14 +804,15 @@ var readOSMXAPI = (function() {
             res.roofColor = tags['building:roof:colour'];
         }
 
-        if (tags['roof:shape'] === 'dome') {
-            res.roofShape = tags['roof:shape'];
-            if (tags['roof:height']) {
+        res.height = res.height || Import.DEFAULT_HEIGHT;
+
+        if (tags['roof:shape'] === 'dome' || tags['building:shape'] === 'cylinder' || tags['building:shape'] === 'sphere') {
+            res.shape = 'cylinder';
+            res.radius = Import.getRadius(res.footprint);
+            if (tags['roof:shape'] === 'dome' && tags['roof:height']) {
+                res.roofShape = 'cylinder';
                 res.roofHeight = Import.toMeters(tags['roof:height']);
                 res.height = max(0, res.height-res.roofHeight);
-            }
-            if (res.footprint) {
-                res.roofRadius = Import.getRadius(res.footprint);
             }
         }
 
@@ -856,7 +851,7 @@ var readOSMXAPI = (function() {
             relItem = filterItem(relation);
             if ((outerWay = relationWays.outer)) {
                 if ((outerFootprint = getFootprint(outerWay.nodes))) {
-                    item = filterItem(outerWay, outerFootprint)
+                    item = filterItem(outerWay, outerFootprint);
                     for (var i = 0, il = relationWays.inner.length; i < il; i++) {
                         if ((innerFootprint = getFootprint(relationWays.inner[i].nodes))) {
                             holes.push(Import.windInnerPolygon(innerFootprint));
@@ -913,22 +908,15 @@ var VERSION      = '0.1.8a',
 
     LAT = 'latitude', LON = 'longitude',
 
-    TRUE = true, FALSE = false,
-
-    DEFAULT_HEIGHT = 5,
-    HEIGHT_SCALE = 1;
+    TRUE = true, FALSE = false;
 
 
 //****** file: geometry.js ******
 
 function getDistance(p1, p2) {
-    var dx = p1[0]-p2[0],
-        dy = p1[1]-p2[1];
+    var dx = p1.x-p2.x,
+        dy = p1.y-p2.y;
     return dx*dx + dy*dy;
-}
-
-function crop(num) {
-    return (num*10000 << 0) / 10000;
 }
 
 function getCenter(points) {
@@ -938,7 +926,11 @@ function getCenter(points) {
         y += points[i+1];
     }
     len = (points.length-2) / 2;
-    return [x/len <<0, y/len <<0];
+    return { x:x/len <<0, y:y/len <<0 };
+}
+
+function crop(num) {
+    return (num*10000 << 0) / 10000;
 }
 
 function getSquareSegmentDistance(px, py, p1x, p1y, p2x, p2y) {
@@ -1237,21 +1229,18 @@ var Data = (function() {
             res = [],
             item,
             height, minHeight, footprint,
-            color, wallColor, altColor, roofColor,
+            color, wallColor, altColor,
+            roofColor, roofHeight,
             holes, innerFootprint,
             zoomDelta = maxZoom-zoom,
-            meterToPixel = 156412 / Math.pow(2, zoom) * 1.5; // http://wiki.openstreetmap.org/wiki/Zoom_levels, TODO: without factor 1.5, numbers don't match (Berlin)
+            meterToPixel = 156412 / Math.pow(2, zoom) / 1.5; // http://wiki.openstreetmap.org/wiki/Zoom_levels, TODO: without factor 1.5, numbers don't match (lat/lon: Berlin)
 
         for (i = 0, il = items.length; i < il; i++) {
-
             item = items[i];
 
-            height = (item.height || DEFAULT_HEIGHT)*HEIGHT_SCALE >> zoomDelta;
-            if (!height) {
-                continue;
-            }
+            height = item.height >>zoomDelta;
 
-            minHeight = item.minHeight*HEIGHT_SCALE >> zoomDelta;
+            minHeight = item.minHeight >>zoomDelta;
             if (minHeight > maxHeight) {
                 continue;
             }
@@ -1286,6 +1275,13 @@ var Data = (function() {
                 }
             }
 
+            roofHeight = item.roofHeight >>zoomDelta;
+
+            // TODO: move buildings without height to FlatBuildings
+            if (height <= minHeight && roofHeight <= 0) {
+                continue;
+            }
+
             res.push({
                 id:         item.id,
                 footprint:  footprint,
@@ -1294,11 +1290,12 @@ var Data = (function() {
                 wallColor:  wallColor,
                 altColor:   altColor,
                 roofColor:  roofColor,
+                roofShape:  item.roofShape,
+                roofHeight: roofHeight,
                 center:     getCenter(footprint),
                 holes:      holes.length ? holes : null,
-                roofShape:  item.roofShape,
-                roofHeight: item.roofHeight,
-                roofRadius: item.roofRadius/meterToPixel
+                shape:      item.shape, // TODO: drop footprint
+                radius:     item.radius/meterToPixel
             });
         }
 
@@ -1370,7 +1367,7 @@ var Data = (function() {
         _isStatic = true;
         renderItems = [];
         _index = {};
-        _parse(data);
+        _parse(data, null);
     };
 
     return me;
@@ -1427,7 +1424,7 @@ function render() {
         item,
         h, _h, mh, _mh,
         flatMaxHeight = FlatBuildings.MAX_HEIGHT,
-        sortCam = [camX+originX, camY+originY],
+        sortCam = { x:camX+originX, y:camY+originY },
         vp = {
             minX: originX,
             maxX: originX+width,
@@ -1436,7 +1433,7 @@ function render() {
         },
         footprint, roof, holes,
         isVisible,
-        wallColor, altColor;
+        wallColor, altColor, roofColor;
 
     // TODO: FlatBuildings are drawn separately, data has to be split
     renderItems.sort(function(a, b) {
@@ -1446,7 +1443,7 @@ function render() {
     for (i = 0, il = renderItems.length; i < il; i++) {
         item = renderItems[i];
 
-        if (item.height <= flatMaxHeight) {
+        if (item.height+item.roofHeight <= flatMaxHeight) {
             continue;
         }
 
@@ -1469,6 +1466,7 @@ function render() {
         // precalculating projection height factor
         _h = camZ / (camZ-h);
 
+        mh = 0;
         _mh = 0;
         if (item.minHeight) {
             mh = item.scale < 1 ? item.minHeight*item.scale : item.minHeight;
@@ -1477,36 +1475,41 @@ function render() {
 
         wallColor = item.wallColor || wallColorAlpha;
         altColor  = item.altColor  || altColorAlpha;
-
-        if (item.roofShape && item.roofShape === 'dome') {
-            context.fillStyle = item.roofColor || roofColorAlpha;
-            context.strokeStyle = altColor;
-            dome({
-                x:item.center[0]-originX, y:item.center[1]-originY },
-                item.roofRadius,
-                item.roofHeight || item.height,
-                item.minHeight
-            );
-            continue;
-        }
-
-        roof = renderPolygon(footprint, _h, _mh, wallColor, altColor);
-
-        holes = [];
-        if (item.holes) {
-            for (j = 0, jl = item.holes.length; j < jl; j++) {
-                holes[j] = renderPolygon(item.holes[j], _h, _mh, wallColor, altColor);
-            }
-        }
-
-        // fill roof and optionally stroke it
-        context.fillStyle   = item.roofColor || roofColorAlpha;
+        roofColor = item.roofColor || roofColorAlpha;
         context.strokeStyle = altColor;
-        drawShape(roof, true, holes);
+
+        if (item.shape === 'cylinder') {
+            roof = cylinder(
+                { x:item.center.x-originX, y:item.center.y-originY },
+                item.radius,
+                h, mh,
+                wallColor, altColor
+            );
+            if (item.roofShape === 'cylinder') {
+                roof = cylinder(
+                    { x:item.center.x-originX, y:item.center.y-originY },
+                    item.radius,
+                    h+item.roofHeight, h,
+                    roofColor
+                );
+            }
+            context.fillStyle = roofColor;
+            drawCircle(roof.c, roof.r, true);
+        } else {
+            roof = buildingPart(footprint, _h, _mh, wallColor, altColor);
+            holes = [];
+            if (item.holes) {
+                for (j = 0, jl = item.holes.length; j < jl; j++) {
+                    holes[j] = buildingPart(item.holes[j], _h, _mh, wallColor, altColor);
+                }
+            }
+            context.fillStyle = roofColor;
+            drawPolygon(roof, true, holes);
+        }
     }
 }
 
-function renderPolygon(polygon, h, mh, wallColor, altColor) {
+function buildingPart(polygon, _h, _mh, color, altColor) {
     var a = { x:0, y:0 }, b = { x:0, y:0 },
         _a, _b,
         roof = [];
@@ -1517,12 +1520,12 @@ function renderPolygon(polygon, h, mh, wallColor, altColor) {
         b.y = polygon[i+3]-originY;
 
         // project 3d to 2d on extruded footprint
-        _a = project(a.x, a.y, h);
-        _b = project(b.x, b.y, h);
+        _a = project(a.x, a.y, _h);
+        _b = project(b.x, b.y, _h);
 
-        if (mh) {
-            a = project(a.x, a.y, mh);
-            b = project(b.x, b.y, mh);
+        if (_mh) {
+            a = project(a.x, a.y, _mh);
+            b = project(b.x, b.y, _mh);
         }
 
         // backface culling check
@@ -1531,9 +1534,9 @@ function renderPolygon(polygon, h, mh, wallColor, altColor) {
             if ((a.x < b.x && a.y < b.y) || (a.x > b.x && a.y > b.y)) {
                 context.fillStyle = altColor;
             } else {
-                context.fillStyle = wallColor;
+                context.fillStyle = color;
             }
-            drawShape([
+            drawPolygon([
                 b.x, b.y,
                 a.x, a.y,
                 _a.x, _a.y,
@@ -1547,7 +1550,7 @@ function renderPolygon(polygon, h, mh, wallColor, altColor) {
     return roof;
 }
 
-function drawShape(points, stroke, holes) {
+function drawPolygon(points, stroke, holes) {
     if (!points.length) {
         return;
     }
@@ -1578,6 +1581,15 @@ function drawShape(points, stroke, holes) {
     context.fill();
 }
 
+function drawCircle(c, r, stroke) {
+    context.beginPath();
+    context.arc(c.x, c.y, r, 0, PI*2);
+    if (stroke) {
+        context.stroke();
+    }
+    context.fill();
+}
+
 function project(x, y, m) {
     return {
         x: (x-camX) * m + camX <<0,
@@ -1585,181 +1597,127 @@ function project(x, y, m) {
     };
 }
 
-
-function debugMarker(x, y, color, size) {
+function debugMarker(p, color, size) {
     context.fillStyle = color || '#ffcc00';
     context.beginPath();
-    context.arc(x, y, size || 3, 0, PI*2, true);
+    context.arc(p.x, p.y, size || 3, 0, PI*2, true);
     context.closePath();
     context.fill();
 }
 
-function debugLine(ax, ay, bx, by, color) {
+function debugLine(a, b, color) {
     context.strokeStyle = color || '#ff0000';
     context.beginPath();
-    context.moveTo(ax, ay);
-    context.lineTo(bx, by);
+    context.moveTo(a.x, a.y);
+    context.lineTo(b.x, b.y);
     context.closePath();
     context.stroke();
+}
+
+function cylinder(c, r, h, minHeight, color, altColor) {
+    var _h = camZ / (camZ-h),
+        _c = project(c.x, c.y, _h),
+        _r = r*_h,
+        a1, a2, col;
+
+    if (minHeight) {
+        var _mh = camZ / (camZ-minHeight);
+        c = project(c.x, c.y, _mh);
+        r = r*_mh;
+    }
+
+    var t = getTangents(c, r, _c, _r); // common tangents for ground and roof circle
+
+    // no tangents? roof overlaps everything near cam position
+    if (t) {
+        a1 = atan2(t[0].y1-c.y, t[0].x1-c.x);
+        a2 = atan2(t[1].y1-c.y, t[1].x1-c.x);
+
+        if (!altColor) {
+            col = Color.parse(color);
+            altColor = '' + col.setLightness(0.8);
+        }
+
+        context.fillStyle = color;
+        context.beginPath();
+        context.arc(_c.x, _c.y, _r, HALF_PI, a1, true);
+        context.arc(c.x, c.y, r, a1, HALF_PI);
+        context.closePath();
+        context.fill();
+
+        context.fillStyle = altColor;
+        context.beginPath();
+        context.arc(_c.x, _c.y, _r, a2, HALF_PI, true);
+        context.arc(c.x, c.y, r, HALF_PI, a2);
+        context.closePath();
+        context.fill();
+    }
+
+    return { c:_c, r:_r };
+}
+
+// http://en.wikibooks.org/wiki/Algorithm_Implementation/Geometry/Tangents_between_two_circles
+function getTangents(c1, r1, c2, r2) {
+    var dx = c1.x-c2.x,
+        dy = c1.y-c2.y,
+        dr = r1-r2,
+        sqdist = (dx*dx) + (dy*dy);
+
+    if (sqdist <= dr*dr) {
+        return;
+    }
+
+    var dist = sqrt(sqdist),
+        vx = -dx/dist,
+        vy = -dy/dist,
+        c  =  dr/dist,
+        res = [],
+        h, nx, ny;
+
+    // Let A, B be the centers, and C, D be points at which the tangent
+    // touches first and second circle, and n be the normal vector to it.
+    //
+    // We have the system:
+    //   n * n = 1      (n is a unit vector)
+    //   C = A + r1 * n
+    //   D = B + r2 * n
+    //   n * CD = 0     (common orthogonality)
+    //
+    // n * CD = n * (AB + r2*n - r1*n) = AB*n - (r1 -/+ r2) = 0,  <=>
+    // AB * n = (r1 -/+ r2), <=>
+    // v * n = (r1 -/+ r2) / d,  where v = AB/|AB| = AB/d
+    // This is a linear equation in unknown vector n.
+    // Now we're just intersecting a line with a circle: v*n=c, n*n=1
+
+    h = sqrt(max(0, 1 - c*c));
+    for (var sign = 1; sign >= -1; sign -= 2) {
+        nx = vx*c - sign*h*vy;
+        ny = vy*c + sign*h*vx;
+        res.push({
+            x1: c1.x + r1*nx <<0,
+            y1: c1.y + r1*ny <<0,
+            x2: c2.x + r2*nx <<0,
+            y2: c2.y + r2*ny <<0
+        });
+    }
+
+    return res;
 }
 
 
 //****** file: objects.js ******
 
+function render2() {
+    var p, x, y;
 
-        function render2() {
-            var p, x, y;
+    context.clearRect(0, 0, width, height);
+    context.strokeStyle = altColorAlpha;
 
-            context.clearRect(0, 0, width, height);
-            context.strokeStyle = altColorAlpha;
-
-//            p = geoToPixel(52.52179, 13.39503);
-//            x = p.x-originX;
-//            y = p.y-originY;
-//            cylinder(x, y, 50, 50);
-
-//            p = geoToPixel(52.52230, 13.39550);
-//            x = p.x-originX;
-//            y = p.y-originY;
-//            cylinder(x, y, 50, 50);
-
-            p = geoToPixel(52.52230, 13.39550);
-            x = p.x-originX;
-            y = p.y-originY;
-            dome({ x:x, y:y }, 30, 30);
-        }
-
-        //*** finished methods ************************************************
-
-        /**
-         * @param x {float} position on ground level (in pixels)
-         * @param y {float} position on ground level (in pixels)
-         * @param r {float} radius (in pixels)
-         * @param h {float} height in (in pixels)
-         */
-        function cylinder(x, y, r, h, minHeight) {
-            var m = camZ / (camZ-h),
-                p = project(x, y, m),
-                _x = p.x,
-                _y = p.y,
-                _r = r*m;
-
-            if (minHeight) {
-                var $x = x;
-                m = camZ / (camZ-minHeight),
-                p = project(x, y, m);
-                x = p.x;
-                y = p.y;
-                p = project($x-r, y, m);
-                r = x-p.x;
-            }
-
-            var t = getTangents(x, y, r, _x, _y, _r), // common tangents for ground and roof circle
-                tx, ty, ta,
-                isAlt,
-                ax, ay;
-
-            // no tangents? roof overlaps everything near cam position
-            if (t) {
-                // draw normal and alternative colored wall segments
-                for (var i = 0; i < 2; i++) {
-                    isAlt = !!i;
-                    tx = t[i][0];
-                    ty = t[i][1];
-                    ax = (x - tx) * (isAlt ? 1 : -1);
-                    ay = (y - ty) * (isAlt ? 1 : -1);
-                    ta = atan2(ay, ax) + (isAlt ? PI : 0);
-
-                    // tangent not visible, avoid flickering
-                    if (ax < 0) {
-                        continue;
-                    }
-
-                    context.fillStyle = !isAlt ? wallColorAlpha : altColorAlpha;
-                    context.beginPath();
-                    context.moveTo(tx, ty);
-                    context.arc(x, y, r, ta, HALF_PI, isAlt);
-                    context.arc(_x, _y, _r, HALF_PI, ta, !isAlt);
-                    context.closePath();
-                    context.fill();
-                }
-            }
-
-            context.fillStyle = roofColorAlpha;
-            circle(_x, _y, _r, TRUE);
-        }
-
-        /**
-         * @param x {float} position (in pixels)
-         * @param y {float} position (in pixels)
-         * @param r {float} radius (in pixels)
-         * @param stroke {boolean} optionally stroke circle's outline
-         */
-        function circle(c, r, stroke) {
-            context.beginPath();
-            context.arc(c.x, c.y, r, 0, 360);
-            if (stroke) {
-                context.stroke();
-            }
-            //context.fill();
-        }
-
-        /**
-         * @see http://en.wikibooks.org/wiki/Algorithm_Implementation/Geometry/Tangents_between_two_circles
-         *
-         * @param x1 {float} position circle 1
-         * @param y1 {float} position circle 1
-         * @param r1 {float} radius circle 1
-         * @param x2 {float} position circle 2
-         * @param y2 {float} position circle 2
-         * @param r2 {float} radius circle 2
-         * @returns {array} list of two tangents as points on each circle
-         */
-        function getTangents(x1, y1, r1, x2, y2, r2) {
-            var sqd = (x1-x2) * (x1-x2) + (y1-y2) * (y1-y2);
-
-            if (sqd <= (r1-r2) * (r1-r2)) {
-                return;
-            }
-
-            var d = sqrt(sqd),
-                vx = (x2-x1) / d,
-                vy = (y2-y1) / d,
-                res = [],
-                c = (r1-r2) / d,
-                h, nx, ny;
-
-            // Let A, B be the centers, and C, D be points at which the tangent
-            // touches first and second circle, and n be the normal vector to it.
-            //
-            // We have the system:
-            //   n * n = 1          (n is a unit vector)
-            //   C = A + r1 * n
-            //   D = B + r2 * n
-            //   n * CD = 0         (common orthogonality)
-            //
-            // n * CD = n * (AB + r2*n - r1*n) = AB*n - (r1 -/+ r2) = 0,  <=>
-            // AB * n = (r1 -/+ r2), <=>
-            // v * n = (r1 -/+ r2) / d,  where v = AB/|AB| = AB/d
-            // This is a linear equation in unknown vector n.
-
-            // Now we're just intersecting a line with a circle: v*n=c, n*n=1
-
-            h = sqrt(max(0, 1 - c * c));
-            for (var sign = 1; sign >= -1; sign -= 2) {
-                nx = vx * c - sign * h * vy;
-                ny = vy * c + sign * h * vx;
-                res.push([
-                    x1 + r1*nx << 0, y1 + r1*ny << 0,
-                    x2 + r2*nx << 0, y2 + r2*ny << 0
-                ]);
-            }
-
-            return res;
-        }
-
-
-        //*** helpers *********************************************************
+    p = geoToPixel(52.52230, 13.39550);
+    x = p.x-originX;
+    y = p.y-originY;
+    dome({ x:x, y:y }, 30, 30);
+}
 
 //        function ellipse(x, y, w, h, stroke) {
 //            var
@@ -1786,50 +1744,48 @@ function debugLine(ax, ay, bx, by, color) {
 //            }
 //        }
 
-        function line(a, b) {
-            context.beginPath();
-            context.moveTo(a[0], a[1]);
-            context.lineTo(b[0], b[1]);
-            context.stroke();
+function line(a, b) {
+    context.beginPath();
+    context.moveTo(a.x, a.y);
+    context.lineTo(b.x, b.y);
+    context.stroke();
+}
+
+function cone(c, r, h, minHeight) {
+    // TODO: min height
+    var apex = project(c.x, c.y, camZ / (camZ - h)),
+        _x = apex.x,
+        _y = apex.y;
+
+    var t = getTangentsFromPoint(c, r, _x, _y),
+        tx, ty, ta,
+        isAlt,
+        ax, ay;
+
+    // draw normal and alternative colored wall segments
+    for (var i = 0; i < 2; i++) {
+        isAlt = !!i;
+        tx = t[i].x;
+        ty = t[i].y;
+        ax = (c.x - tx) * (isAlt ? 1 : -1);
+        ay = (c.y - ty) * (isAlt ? 1 : -1);
+        ta = atan2(ay, ax) + (isAlt ? PI : 0);
+
+        // tangent not visible, avoid flickering
+        if (ax < 0) {
+            continue;
         }
 
-        //*********************************************************************
+        context.fillStyle = !isAlt ? wallColorAlpha : altColorAlpha;
+        context.beginPath();
+        context.moveTo(tx, ty);
+        context.arc(c.x, c.y, r, ta, HALF_PI, isAlt);
+        context.arc(_x, _y, 0, HALF_PI, ta, !isAlt);
+        context.closePath();
+        context.fill();
+    }
 
-        function cone(c, r, h, minHeight) {
-            // TODO: min height
-            var apex = project(c.x, c.y, camZ / (camZ - h)),
-                _x = apex.x,
-                _y = apex.y;
-
-            var t = getTangentsFromPoint(c, r, _x, _y),
-                tx, ty, ta,
-                isAlt,
-                ax, ay;
-
-            // draw normal and alternative colored wall segments
-            for (var i = 0; i < 2; i++) {
-                isAlt = !!i;
-                tx = t[i].x;
-                ty = t[i].y;
-                ax = (c.x - tx) * (isAlt ? 1 : -1);
-                ay = (c.y - ty) * (isAlt ? 1 : -1);
-                ta = atan2(ay, ax) + (isAlt ? PI : 0);
-
-                // tangent not visible, avoid flickering
-                if (ax < 0) {
-                    continue;
-                }
-
-                context.fillStyle = !isAlt ? wallColorAlpha : altColorAlpha;
-                context.beginPath();
-                context.moveTo(tx, ty);
-                context.arc(c.x, c.y, r, ta, HALF_PI, isAlt);
-                context.arc(_x, _y, 0, HALF_PI, ta, !isAlt);
-                context.closePath();
-                context.fill();
-            }
-
-//            circle(c.x, c.y, r);
+//            drawCircle(c.x, c.y, r);
 //
 //            context.beginPath();
 //            context.moveTo(c.x - r, c.y);
@@ -1842,7 +1798,7 @@ function debugLine(ax, ay, bx, by, color) {
 //            context.lineTo(_x, _y);
 //            context.lineTo(c.x, c.y + r);
 //            context.stroke();
-        }
+}
 
         function rotation(p, c, a) {
             var ms = sin(a), mc = cos(a);
@@ -1862,48 +1818,47 @@ function debugLine(ax, ay, bx, by, color) {
 
             minHeight = minHeight || 0;
 
-h = r;
             // VERTICAL TANGENT POINTS ON SPHERE:
             // side view at scenario:
             // sphere at c.x,c.y & radius => circle at c.y,minHeight
             // cam    at camX/camY/camZ => point  at camY/camZ
-var simpleEllipsisSize = (r+h)/2;
-            var t = getTangentsFromPoint({ x:c.y, y:minHeight }, simpleEllipsisSize, { x:camY, y:camZ })[0];
+            var t = getEllipseTangent(r, h, camY-c.y, camZ-minHeight);
+            t.x += c.y;
+            t.y += minHeight;
 
             if (minHeight) {
                 c = project(c.x, c.y, camZ / (camZ-minHeight));
                 r *= camZ / (camZ-minHeight);
             }
 
-h = r;
-            circle(c, r, TRUE);
+// radialGradient(c, r, roofColorAlpha)
+            drawCircle(c, r, TRUE);
 
             var _h = camZ / (camZ-h),
               hfK = camZ / (camZ-(h*KAPPA));
 
             var apex = project(c.x, c.y, _h);
-//debugMarker(apex.x, apex.y);
+debugMarker(apex);
 
             var angle = atan((camX-c.x)/(camY-c.y));
 
             context.beginPath();
 
-            var _th = camZ / (camZ-t.y);
-
             // ausgerichteter sichtrand!
+            var _th = camZ / (camZ-t.y);
             var p = rotation({ x:c.x, y:t.x }, c, angle);
             var _p = project(p.x, p.y, _th);
-//debugMarker(_p.x, _p.y);
+//debugMarker(_p);
             var p1h = rotation({ x:c.x-r, y:t.x }, c, angle);
             var _p1h = project(p1h.x, p1h.y, _th);
-//debugMarker(_p1h.x, _p1h.y);
+//debugMarker(_p1h);
             var p2h = rotation({ x:c.x+r, y:t.x }, c, angle);
             var _p2h = project(p2h.x, p2h.y, _th);
-//debugMarker(_p2h.x, _p2h.y);
+//debugMarker(_p2h);
             var p1v = rotation({ x:c.x-r, y:c.y }, c, angle);
-//debugMarker(p1v.x, p1v.y);
+//debugMarker(p1v);
             var p2v = rotation({ x:c.x+r, y:c.y }, c, angle);
-//debugMarker(p2v.x, p2v.y);
+//debugMarker(p2v);
 
             context.moveTo(p1v.x, p1v.y);
             context.bezierCurveTo(
@@ -1921,123 +1876,140 @@ h = r;
                 _p.y + (_p2h.y-_p.y) * KAPPA,
                 _p.x, _p.y);
 
-//          drawMeridian(c, r, _h, hfK, apex,  45/RAD);
-//          drawMeridian(c, r, _h, hfK, apex, 135/RAD);
+
+//            drawMeridian(c, r, _h, hfK, apex,  45/RAD);
+//            drawMeridian(c, r, _h, hfK, apex, 135/RAD);
 
             for (var i = 0; i <= 180; i+=30) {
-//                drawMeridian(c, r, _h, hfK, apex, i*RAD);
+                drawMeridian(c, r, _h, hfK, apex, i*RAD);
             }
 
-//          context.fill();
+//            for (var i = 0; i <= 180; i+=30) {
+//                drawMeridian(c, r, _h, hfK, apex, i*RAD);
+//            }
+
+//            context.fill();
             context.stroke();
         }
 
-        function drawMeridian(c, r, _h, hfK, apex, angle) {
-            drawHalfMeridian(c, r, _h, hfK, apex, angle);
-            drawHalfMeridian(c, r, _h, hfK, apex, angle + PI);
+function drawMeridian(c, r, _h, hfK, apex, angle) {
+    drawHalfMeridian(c, r, _h, hfK, apex, angle);
+    drawHalfMeridian(c, r, _h, hfK, apex, angle + PI);
+}
+
+function drawHalfMeridian(c, r, _h, hfK, apex, angle) {
+    var p1 = rotation({ x:c.x, y:c.y-r },       c, angle);
+    var p2 = rotation({ x:c.x, y:c.y-r*KAPPA }, c, angle);
+    var _p1 = project(p1.x, p1.y, hfK);
+    var _p2 = project(p2.x, p2.y, _h);
+    context.moveTo(p1.x, p1.y);
+    context.bezierCurveTo(_p1.x, _p1.y, _p2.x, _p2.y, apex.x, apex.y);
+}
+
+function getEllipseTangent(a, b, x, y) {
+    var C = (x*x) / (a*a) + (y*y) / (b*b),
+        R = Math.sqrt(C-1),
+        yabR = y*(a/b)*R,
+        xbaR = x*(b/a)*R;
+    return {
+        x: (x + (  yabR < 0 ? yabR : -yabR)) / C,
+        y: (y + (y+xbaR > 0 ? xbaR : -xbaR)) / C
+    };
+}
+
+function radialGradient(c, r, color) {
+    var col = Color.parse(color);
+    var gradient = context.createRadialGradient(
+        c.x-r/3,
+        c.y-r/3,
+        r/5,
+        c.x-r/3,
+        c.y-r/3,
+        r*2
+    );
+    gradient.addColorStop(0,   col.setLightness(1.2));
+    gradient.addColorStop(0.4, col);
+    gradient.addColorStop(0.8, col.setLightness(0.9));
+    context.fillStyle = gradient;
+}
+
+function getTangentsFromPoint(c, r, p) {
+    var a = c.x-p.x, b = c.y-p.y,
+        u = sqrt(a*a + b*b),
+        ur = r/u,
+        ux = -a/u, uy = -b/u,
+        res = [],
+        h = sqrt(max(0, 1 - ur*ur)),
+        nx, ny;
+    for (var sign = 1; sign >= -1; sign -= 2) {
+        nx = ux*ur - sign*h*uy;
+        ny = uy*ur + sign*h*ux;
+        res.push({ x:c.x + r*nx <<0, y: c.y + r*ny <<0 });
+    }
+    return res;
+}
+
+function drawPyramidalRoof(points, height, strokeRoofs) {
+    if (height <= 20) {
+        context.fillStyle = 'rgba(225,175,175,0.5)';
+    }
+
+    if (points.length > 8 || height > 20) {
+        drawPolygon(points, strokeRoofs);
+        return;
+    }
+
+    var h = height*1.3,
+        cx = 0, cy = 0,
+        num = points.length/2,
+        apex;
+
+    for (var i = 0, il = points.length - 1; i < il; i += 2) {
+        cx += points[i];
+        cy += points[i+1];
+    }
+
+    apex = project(cx/num, cy/num, camZ / (camZ-h));
+
+    var ax,bx,ay,by;
+    for (i = 0, il = points.length-3; i < il; i += 2) {
+        ax = points[i];
+        bx = points[i+2];
+        ay = points[i+1];
+        by = points[i+3];
+
+        //if ((ax - bx) > (ay - by)) {
+        if ((ax < bx && ay < by) || (ax > bx && ay > by)) {
+            context.fillStyle = 'rgba(200,100,100,0.25)';
+        } else {
+            context.fillStyle = 'rgba(200,175,175,0.25)';
         }
 
-        function drawHalfMeridian(c, r, _h, hfK, apex, angle) {
-            var p1 = rotation({ x:c.x, y:c.y-r },       c, angle);
-            var p2 = rotation({ x:c.x, y:c.y-r*KAPPA }, c, angle);
-            var _p1 = project(p1.x, p1.y, hfK);
-            var _p2 = project(p2.x, p2.y, _h);
-            context.moveTo(p1.x, p1.y);
-            context.bezierCurveTo(_p1.x, _p1.y, _p2.x, _p2.y, apex.x, apex.y);
-        }
+        drawPolygon([
+            points[i],   points[i+1],
+            points[i+2], points[i+3],
+            apex.x, apex.y
+        ], strokeRoofs);
+    }
 
+    ax = points[i];
+    bx = points[0];
+    ay = points[i + 1];
+    by = points[1];
 
+    if ((ax - bx) > (ay - by)) {
+        context.fillStyle = 'rgba(250,0,0,0.25)';
+    } else {
+        context.fillStyle = 'rgba(250,100,100,0.25)';
+    }
 
+    drawPolygon([
+        points[i], points[i + 1],
+        points[0], points[1],
+        apex.x, apex.y
+    ], strokeRoofs);
+}
 
-//http://jsfiddle.net/a8ZS4/3/
-//http://jsfiddle.net/a8ZS4/6/
-
-        function getTangentsFromPoint(c, r, p) {
-            var a = c.x-p.x, b = c.y-p.y,
-                u = sqrt(a*a + b*b),
-                ur = r/u,
-                ux = -a/u, uy = -b/u,
-                res = [],
-                h = sqrt(max(0, 1 - ur*ur)),
-                nx, ny;
-            for (var sign = 1; sign >= -1; sign -= 2) {
-                nx = ux*ur - sign*h*uy;
-                ny = uy*ur + sign*h*ux;
-                res.push({ x:c.x + r*nx <<0, y: c.y + r*ny <<0 });
-            }
-            return res;
-        }
-
-
-        function drawPyramidalRoof(points, height, strokeRoofs) {
-            if (height <= 20) {
-                context.fillStyle = 'rgba(225,175,175,0.5)';
-            }
-
-            if (points.length > 8 || height > 20) {
-                drawShape(points, strokeRoofs);
-                return;
-            }
-
-            var h = height * 1.3,
-                cx = 0, cy = 0,
-                num = points.length / 2,
-                apex
-            ;
-
-            for (var i = 0, il = points.length - 1; i < il; i += 2) {
-                cx += points[i];
-                cy += points[i + 1];
-            }
-
-            apex = project(cx / num, cy / num, camZ / (camZ - h));
-
-            for (var i = 0, il = points.length - 3; i < il; i += 2) {
-                var ax = points[i];
-                var bx = points[i + 2];
-                var ay = points[i + 1];
-                var by = points[i + 3];
-
-                //if ((ax - bx) > (ay - by)) {
-                if ((ax < bx && ay < by) || (ax > bx && ay > by)) {
-                    context.fillStyle = 'rgba(200,100,100,0.25)';
-                } else {
-                    context.fillStyle = 'rgba(200,175,175,0.25)';
-                }
-
-                drawShape([
-                    points[i],     points[i + 1],
-                    points[i + 2], points[i + 3],
-                    apex.x, apex.y
-                ], strokeRoofs);
-            }
-
-            var ax = points[i];
-            var bx = points[0];
-            var ay = points[i + 1];
-            var by = points[1];
-
-            if ((ax - bx) > (ay - by)) {
-                context.fillStyle = 'rgba(250,0,0,0.25)';
-            } else {
-                context.fillStyle = 'rgba(250,100,100,0.25)';
-            }
-
-            drawShape([
-                points[i], points[i + 1],
-                points[0], points[1],
-                apex.x, apex.y
-            ], strokeRoofs);
-        }
-
-        function prism() {
-        }
-
-        function pyramid() {
-        }
-
-        function sphere() {
-        }
 
 //****** file: Shadows.js ******
 
@@ -2054,6 +2026,27 @@ var Shadows = (function() {
             x: x + _direction.x*h,
             y: y + _direction.y*h
         };
+    }
+
+    function _cylinder(c, r, h, mh) {
+        var _c = _project(c.x, c.y, h),
+            a1, a2;
+
+        if (mh) {
+            c = _project(c.x, c.y, mh);
+        }
+
+        var t = getTangents(c, r, _c, r); // common tangents for ground and roof circle
+
+        // no tangents? roof overlaps everything near cam position
+        if (t) {
+            a1 = atan2(t[0].y1-c.y, t[0].x1-c.x);
+            a2 = atan2(t[1].y1-c.y, t[1].x1-c.x);
+
+            _context.moveTo(t[1].x2, t[1].y2);
+            _context.arc(_c.x, _c.y, r, a2, a1);
+            _context.arc( c.x,  c.y, r, a1, a2);
+        }
     }
 
     var me = {};
@@ -2098,7 +2091,7 @@ var Shadows = (function() {
 
         var i, il, j, jl,
             item,
-            f, h, g,
+            f, h, mh,
             x, y,
             footprint,
             mode,
@@ -2106,8 +2099,10 @@ var Shadows = (function() {
             ax, ay, bx, by,
             a, b, _a, _b,
             points,
+            specialItems = [],
             allFootprints = [];
 
+        _context.fillStyle = colorStr;
         _context.beginPath();
 
         for (i = 0, il = renderItems.length; i < il; i++) {
@@ -2138,13 +2133,25 @@ var Shadows = (function() {
             // when fading in, use a dynamic height
             h = item.scale < 1 ? item.height*item.scale : item.height;
 
-            // prepare same calculations for min_height if applicable
+            mh = 0;
             if (item.minHeight) {
-                g = item.scale < 1 ? item.minHeight*item.scale : item.minHeight;
+                mh = item.scale < 1 ? item.minHeight*item.scale : item.minHeight;
+            }
+
+            if (item.shape === 'cylinder') {
+                if (item.roofShape === 'cylinder') {
+                    h += item.roofHeight;
+                }
+                specialItems.push({
+                    shape:item.shape,
+                    center:{ x:item.center.x-originX, y:item.center.y-originY },
+                    radius:item.radius,
+                    h:h, mh:mh
+                });
+                continue;
             }
 
             mode = null;
-
             for (j = 0, jl = footprint.length-3; j < jl; j += 2) {
                 ax = footprint[j];
                 ay = footprint[j+1];
@@ -2154,9 +2161,9 @@ var Shadows = (function() {
                 _a = _project(ax, ay, h);
                 _b = _project(bx, by, h);
 
-                if (item.minHeight) {
-                    a = _project(ax, ay, g);
-                    b = _project(bx, by, g);
+                if (mh) {
+                    a = _project(ax, ay, mh);
+                    b = _project(bx, by, mh);
                     ax = a.x;
                     ay = a.y;
                     bx = b.x;
@@ -2185,12 +2192,16 @@ var Shadows = (function() {
                 }
             }
 
-            _context.closePath();
-
             allFootprints.push(footprint);
         }
 
-        _context.fillStyle = colorStr;
+        for (i = 0, il = specialItems.length; i < il; i++) {
+            item = specialItems[i];
+            if (item.shape === 'cylinder') {
+                _cylinder(item.center, item.radius, item.h, item.mh);
+            }
+        }
+
         _context.fill();
 
         // now draw all the footprints as negative clipping mask
@@ -2255,7 +2266,7 @@ var FlatBuildings = (function() {
         for (i = 0, il = renderItems.length; i < il; i++) {
             item = renderItems[i];
 
-            if (item.height > me.MAX_HEIGHT) {
+            if (item.height+item.roofHeight > me.MAX_HEIGHT) {
                 continue;
             }
 

@@ -173,14 +173,15 @@ var readOSMXAPI = (function() {
             res.roofColor = tags['building:roof:colour'];
         }
 
-        if (tags['roof:shape'] === 'dome') {
-            res.roofShape = tags['roof:shape'];
-            if (tags['roof:height']) {
+        res.height = res.height || Import.DEFAULT_HEIGHT;
+
+        if (tags['roof:shape'] === 'dome' || tags['building:shape'] === 'cylinder' || tags['building:shape'] === 'sphere') {
+            res.shape = 'cylinder';
+            res.radius = Import.getRadius(res.footprint);
+            if (tags['roof:shape'] === 'dome' && tags['roof:height']) {
+                res.roofShape = 'cylinder';
                 res.roofHeight = Import.toMeters(tags['roof:height']);
                 res.height = max(0, res.height-res.roofHeight);
-            }
-            if (res.footprint) {
-                res.roofRadius = Import.getRadius(res.footprint);
             }
         }
 
@@ -219,7 +220,7 @@ var readOSMXAPI = (function() {
             relItem = filterItem(relation);
             if ((outerWay = relationWays.outer)) {
                 if ((outerFootprint = getFootprint(outerWay.nodes))) {
-                    item = filterItem(outerWay, outerFootprint)
+                    item = filterItem(outerWay, outerFootprint);
                     for (var i = 0, il = relationWays.inner.length; i < il; i++) {
                         if ((innerFootprint = getFootprint(relationWays.inner[i].nodes))) {
                             holes.push(Import.windInnerPolygon(innerFootprint));
