@@ -45,7 +45,7 @@ function render() {
         item,
         h, _h, mh, _mh, rh,
         flatMaxHeight = FlatBuildings.MAX_HEIGHT,
-        sortCam = [camX+originX, camY+originY],
+        sortCam = { x:camX+originX, y:camY+originY },
         vp = {
             minX: originX,
             maxX: originX+width,
@@ -93,7 +93,7 @@ function render() {
             _mh = camZ / (camZ-mh);
         }
 
-        if (mh < h) {
+//        if (mh < h) {
             wallColor = item.wallColor || wallColorAlpha;
             altColor  = item.altColor  || altColorAlpha;
 
@@ -105,27 +105,27 @@ function render() {
                     holes[j] = renderPolygon(item.holes[j], _h, _mh, wallColor, altColor);
                 }
             }
-        }
+//        }
 
         context.fillStyle = item.roofColor || roofColorAlpha;
         context.strokeStyle = altColor;
 
-        rh = 0;
+
         if (item.roofHeight && item.roofShape && item.roofShape === 'dome') {
             rh = item.scale < 1 ? item.roofHeight*item.scale : item.roofHeight;
 
-        		// TODO: roof shape dome should set building shape to cylinder
-        		if (rh) {
-         		   dome({
-              		  x:item.center[0]-originX, y:item.center[1]-originY },
-             		   item.roofRadius,
-              		 rh,
-             		   h
-          		  );
-      		  }
+            // TODO: roof shape dome should set building shape to cylinder
+            if (rh) {
+               dome({
+                   x:item.center.x-originX, y:item.center.y-originY },
+                   item.roofRadius,
+                   rh,
+                   h
+               );
+            }
         } else {
-        		drawShape(roof, true, holes);
-				}
+            drawShape(roof, true, holes);
+        }
     }
 }
 
