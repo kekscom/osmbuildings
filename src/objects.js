@@ -267,6 +267,7 @@
                 r *= camZ / (camZ-minHeight);
             }
 
+// radialGradient(c, r, roofColorAlpha)
             circle(c, r, TRUE);
 
             var _h = camZ / (camZ-h),
@@ -279,10 +280,8 @@ debugMarker(apex.x, apex.y);
 
             context.beginPath();
 
-            var _th = camZ / (camZ-t.y);
-
-
             // ausgerichteter sichtrand!
+            var _th = camZ / (camZ-t.y);
             var p = rotation({ x:c.x, y:t.x }, c, angle);
             var _p = project(p.x, p.y, _th);
 //debugMarker(_p.x, _p.y);
@@ -314,15 +313,18 @@ debugMarker(apex.x, apex.y);
                 _p.x, _p.y);
 
 
+//            drawMeridian(c, r, _h, hfK, apex,  45/RAD);
+//            drawMeridian(c, r, _h, hfK, apex, 135/RAD);
 
-            drawMeridian(c, r, _h, hfK, apex,  45/RAD);
-            drawMeridian(c, r, _h, hfK, apex, 135/RAD);
+            for (var i = 0; i <= 180; i+=30) {
+                drawMeridian(c, r, _h, hfK, apex, i*RAD);
+            }
 
 //            for (var i = 0; i <= 180; i+=30) {
 //                drawMeridian(c, r, _h, hfK, apex, i*RAD);
 //            }
 
-            context.fill();
+//            context.fill();
             context.stroke();
         }
 
@@ -351,6 +353,21 @@ debugMarker(apex.x, apex.y);
             };
         }
 
+        function radialGradient(c, r, color) {
+            var color = Color.parse(color);
+            var gradient = context.createRadialGradient(
+                c.x-r/3,
+                c.y-r/3,
+                r/5,
+                c.x-r/3,
+                c.y-r/3,
+                r*2
+            );
+            gradient.addColorStop(0,   color.setLightness(1.2));
+            gradient.addColorStop(0.4, color);
+            gradient.addColorStop(0.8, color.setLightness(0.9));
+            context.fillStyle = gradient;
+        }
 
 
 
