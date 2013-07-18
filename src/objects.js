@@ -254,33 +254,33 @@
 
             minHeight = minHeight || 0;
 
-h = r;
             // VERTICAL TANGENT POINTS ON SPHERE:
             // side view at scenario:
             // sphere at c.x,c.y & radius => circle at c.y,minHeight
             // cam    at camX/camY/camZ => point  at camY/camZ
-var simpleEllipsisSize = (r+h)/2;
-            var t = getTangentsFromPoint({ x:c.y, y:minHeight }, simpleEllipsisSize, { x:camY, y:camZ })[0];
+            var t = getEllipseTangent(r, h, camY-c.y, camZ-minHeight);
+            t.x += c.y;
+            t.y += minHeight;
 
             if (minHeight) {
                 c = project(c.x, c.y, camZ / (camZ-minHeight));
                 r *= camZ / (camZ-minHeight);
             }
 
-h = r;
             circle(c, r, TRUE);
 
             var _h = camZ / (camZ-h),
               hfK = camZ / (camZ-(h*KAPPA));
 
             var apex = project(c.x, c.y, _h);
-//debugMarker(apex.x, apex.y);
+debugMarker(apex.x, apex.y);
 
             var angle = atan((camX-c.x)/(camY-c.y));
 
             context.beginPath();
 
             var _th = camZ / (camZ-t.y);
+
 
             // ausgerichteter sichtrand!
             var p = rotation({ x:c.x, y:t.x }, c, angle);
@@ -313,14 +313,16 @@ h = r;
                 _p.y + (_p2h.y-_p.y) * KAPPA,
                 _p.x, _p.y);
 
-//          drawMeridian(c, r, _h, hfK, apex,  45/RAD);
-//          drawMeridian(c, r, _h, hfK, apex, 135/RAD);
 
-            for (var i = 0; i <= 180; i+=30) {
+
+            drawMeridian(c, r, _h, hfK, apex,  45/RAD);
+            drawMeridian(c, r, _h, hfK, apex, 135/RAD);
+
+//            for (var i = 0; i <= 180; i+=30) {
 //                drawMeridian(c, r, _h, hfK, apex, i*RAD);
-            }
+//            }
 
-//          context.fill();
+            context.fill();
             context.stroke();
         }
 
@@ -338,11 +340,20 @@ h = r;
             context.bezierCurveTo(_p1.x, _p1.y, _p2.x, _p2.y, apex.x, apex.y);
         }
 
+        function getEllipseTangent(a, b, x, y) {
+            var C = (x*x) / (a*a) + (y*y) / (b*b),
+                R = Math.sqrt(C-1),
+                yabR = y*(a/b)*R,
+                xbaR = x*(b/a)*R;
+            return {
+                x: (x + (  yabR < 0 ? yabR : -yabR)) / C,
+                y: (y + (y+xbaR > 0 ? xbaR : -xbaR)) / C
+            };
+        }
 
 
 
-//http://jsfiddle.net/a8ZS4/3/
-//http://jsfiddle.net/a8ZS4/6/
+
 
         function getTangentsFromPoint(c, r, p) {
             var a = c.x-p.x, b = c.y-p.y,
@@ -359,7 +370,6 @@ h = r;
             }
             return res;
         }
-
 
         function drawPyramidalRoof(points, height, strokeRoofs) {
             if (height <= 20) {

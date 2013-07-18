@@ -179,7 +179,7 @@ var readOSMXAPI = (function() {
             res.roofShape  = tags['roof:shape'];
             res.roofRadius = Import.getRadius(res.footprint);
             res.roofHeight = Import.toMeters(tags['roof:height']);
-            res.height = res.height-res.roofHeight;
+            res.height = max(0, res.height-res.roofHeight);
         }
 
         return res;

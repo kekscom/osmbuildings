@@ -64,7 +64,7 @@ function render() {
     for (i = 0, il = renderItems.length; i < il; i++) {
         item = renderItems[i];
 
-        if (item.height <= flatMaxHeight) {
+        if (item.height+item.roofHeight <= flatMaxHeight) {
             continue;
         }
 
@@ -110,8 +110,8 @@ function render() {
         context.fillStyle = item.roofColor || roofColorAlpha;
         context.strokeStyle = altColor;
 
-
         if (item.roofHeight && item.roofShape && item.roofShape === 'dome') {
+
             rh = item.scale < 1 ? item.roofHeight*item.scale : item.roofHeight;
 
             // TODO: roof shape dome should set building shape to cylinder
