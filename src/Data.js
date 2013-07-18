@@ -123,9 +123,8 @@ var Data = (function() {
                 roofColor:  roofColor,
                 center:     getCenter(footprint),
                 holes:      holes.length ? holes : null,
-                roofShape:  item.roofShape,
-                roofHeight: roofHeight,
-                roofRadius: item.roofRadius/meterToPixel
+                shape:      item.shape, // TODO: drop footprint
+                radius:     item.radius/meterToPixel
             });
         }
 
