@@ -43,7 +43,7 @@ function render() {
 
     var i, il, j, jl,
         item,
-        h, _h, mh, _mh, rh,
+        h, _h, mh, _mh,
         flatMaxHeight = FlatBuildings.MAX_HEIGHT,
         sortCam = { x:camX+originX, y:camY+originY },
         vp = {
@@ -93,43 +93,30 @@ function render() {
             _mh = camZ / (camZ-mh);
         }
 
-//        if (mh < h) {
-            wallColor = item.wallColor || wallColorAlpha;
-            altColor  = item.altColor  || altColorAlpha;
+        wallColor = item.wallColor || wallColorAlpha;
+        altColor  = item.altColor  || altColorAlpha;
 
-            roof = renderPolygon(footprint, _h, _mh, wallColor, altColor);
+        if (item.shape === 'cylinder') {
+            cylinder({ x:item.center.x-originX, y:item.center.y-originY }, item.radius, h, mh);
+        } else {
+            roof = buildingPart(footprint, _h, _mh, wallColor, altColor);
 
             holes = [];
             if (item.holes) {
                 for (j = 0, jl = item.holes.length; j < jl; j++) {
-                    holes[j] = renderPolygon(item.holes[j], _h, _mh, wallColor, altColor);
+                    holes[j] = buildingPart(item.holes[j], _h, _mh, wallColor, altColor);
                 }
             }
-//        }
 
-        context.fillStyle = item.roofColor || roofColorAlpha;
-        context.strokeStyle = altColor;
+            context.fillStyle = item.roofColor || roofColorAlpha;
+            context.strokeStyle = altColor;
 
-        if (item.roofHeight && item.roofShape && item.roofShape === 'dome') {
-
-            rh = item.scale < 1 ? item.roofHeight*item.scale : item.roofHeight;
-
-            // TODO: roof shape dome should set building shape to cylinder
-            if (rh) {
-               dome({
-                   x:item.center.x-originX, y:item.center.y-originY },
-                   item.roofRadius,
-                   rh,
-                   h
-               );
-            }
-        } else {
-            drawShape(roof, true, holes);
+            drawPolygon(roof, true, holes);
         }
     }
 }
 
-function renderPolygon(polygon, h, mh, wallColor, altColor) {
+function buildingPart(polygon, h, mh, wallColor, altColor) {
     var a = { x:0, y:0 }, b = { x:0, y:0 },
         _a, _b,
         roof = [];
@@ -156,7 +143,7 @@ function renderPolygon(polygon, h, mh, wallColor, altColor) {
             } else {
                 context.fillStyle = wallColor;
             }
-            drawShape([
+            drawPolygon([
                 b.x, b.y,
                 a.x, a.y,
                 _a.x, _a.y,
@@ -170,7 +157,7 @@ function renderPolygon(polygon, h, mh, wallColor, altColor) {
     return roof;
 }
 
-function drawShape(points, stroke, holes) {
+function drawPolygon(points, stroke, holes) {
     if (!points.length) {
         return;
     }
@@ -201,6 +188,15 @@ function drawShape(points, stroke, holes) {
     context.fill();
 }
 
+function drawCircle(c, r, stroke) {
+    context.beginPath();
+    context.arc(c.x, c.y, r, 0, 360);
+    if (stroke) {
+        context.stroke();
+    }
+    context.fill();
+}
+
 function project(x, y, m) {
     return {
         x: (x-camX) * m + camX <<0,
@@ -208,11 +204,10 @@ function project(x, y, m) {
     };
 }
 
-
-function debugMarker(x, y, color, size) {
+function debugMarker(p, color, size) {
     context.fillStyle = color || '#ffcc00';
     context.beginPath();
-    context.arc(x, y, size || 3, 0, PI*2, true);
+    context.arc(p.x, p.y, size || 3, 0, PI*2, true);
     context.closePath();
     context.fill();
 }
@@ -224,4 +219,125 @@ function debugLine(ax, ay, bx, by, color) {
     context.lineTo(bx, by);
     context.closePath();
     context.stroke();
+}
+
+function cylinder(c, r, h, minHeight) {
+    var _h = camZ / (camZ-h),
+        _c = project(c.x, c.y, _h),
+        _r = r*_h;
+
+//    if (minHeight) {
+//        var _mh = camZ / (camZ-minHeight);
+//        c = project(c.x, c.y, _mh);
+//        r = r*_mh;
+//    }
+
+
+    var t = getTangents(c, r, _c, _r), // common tangents for ground and roof circle
+        tx, ty, ta,
+        isAlt,
+        ax, ay;
+
+    // no tangents? roof overlaps everything near cam position
+    if (t) {
+        line(t[0][0], t[0][1]);
+        line(t[1][0], t[1][1]);
+
+
+        var t1 = atan2(t[0][0].y, t[0][0].x);
+        var t2 = atan2(t[1][0].y, t[1][0].x);
+console.log(t1, t2)
+
+        context.beginPath();
+debugMarker(t[0][0])
+        context.moveTo(t[0][0].x, t[0][0].y);
+        context.arc(c.x, c.y, r, t1, t2, true);
+//        context.closePath();
+        context.stroke();
+
+//        line(t[0][0], t[1][0]);
+//        line(t[0][1], t[1][1]);
+
+
+
+/*
+        // draw normal and alternative colored wall segments
+        for (var i = 0; i < 2; i++) {
+            isAlt = !!i;
+            tx = t[i].x1;
+            ty = t[i].y1;
+            ax = (c.x-tx) * (isAlt ? 1 : -1);
+            ay = (c.y-ty) * (isAlt ? 1 : -1);
+            ta = atan2(ay, ax) + (isAlt ? PI : 0);
+
+            // tangent not visible, avoid flickering
+            if (ax < 0) {
+                continue;
+            }
+
+context.strokeStyle = '#000000';
+            context.fillStyle = !isAlt ? wallColorAlpha : altColorAlpha;
+            context.beginPath();
+            context.moveTo(tx, ty);
+            context.arc( c.x,  c.y,  r, ta, HALF_PI,  isAlt);
+            context.arc(_c.x, _c.y, _r, HALF_PI, ta, !isAlt);
+            context.closePath();
+            context.fill();
+            context.stroke();
+        }
+*/
+    }
+
+    context.fillStyle = roofColorAlpha;
+    drawCircle(_c.x, _c.y, _r, TRUE);
+}
+
+
+// http://en.wikibooks.org/wiki/Algorithm_Implementation/Geometry/Tangents_between_two_circles
+function getTangents(c1, r1, c2, r2) {
+    var dx = c1.x-c2.x,
+        dy = c1.y-c2.y,
+        dr = r1-r2,
+        sqdist = (dx*dx) + (dy*dy);
+
+    if (sqdist <= dr*dr) {
+        return;
+    }
+
+    var dist = sqrt(sqdist),
+        vx = -dx/dist,
+        vy = -dy/dist,
+        c  =  dr/dist,
+        res = [],
+        h, nx, ny;
+
+    // Let A, B be the centers, and C, D be points at which the tangent
+    // touches first and second circle, and n be the normal vector to it.
+    //
+    // We have the system:
+    //   n * n = 1      (n is a unit vector)
+    //   C = A + r1 * n
+    //   D = B + r2 * n
+    //   n * CD = 0     (common orthogonality)
+    //
+    // n * CD = n * (AB + r2*n - r1*n) = AB*n - (r1 -/+ r2) = 0,  <=>
+    // AB * n = (r1 -/+ r2), <=>
+    // v * n = (r1 -/+ r2) / d,  where v = AB/|AB| = AB/d
+    // This is a linear equation in unknown vector n.
+    // Now we're just intersecting a line with a circle: v*n=c, n*n=1
+
+    h = sqrt(max(0, 1 - c*c));
+    for (var sign = 1; sign >= -1; sign -= 2) {
+        nx = vx*c - sign*h*vy;
+        ny = vy*c + sign*h*vx;
+        res.push([{
+            x: c1.x + r1*nx <<0,
+            y: c1.y + r1*ny <<0
+        },{
+            x: c2.x + r2*nx <<0,
+            y: c2.y + r2*ny <<0
+        }]);
+    }
+
+    return res;
 }
