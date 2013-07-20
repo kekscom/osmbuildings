@@ -1,4 +1,5 @@
 var renderItems = [];
+var animTimer;
 
 function fadeIn() {
     if (animTimer) {

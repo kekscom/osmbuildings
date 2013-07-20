@@ -53,7 +53,7 @@ var Layers = (function() {
     };
 
     me.screenshot = function() {
-        var canvas = document.createElement('CANVAS');
+        var canvas = doc.createElement('CANVAS');
         canvas.width  = width;
         canvas.height = height;
         var context = canvas.getContext('2d');

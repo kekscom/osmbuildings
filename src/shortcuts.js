@@ -12,11 +12,11 @@ var Int32Array = Int32Array || Array,
     max = m.max,
     ceil = m.ceil,
     floor = m.floor,
-    doc = document;
+    doc = win.document;
 
 /*<debug*/
-if (!console) {
-    console = {
+if (!win.console) {
+    win.console = {
         log:function() {},
         warn:function() {}
     };

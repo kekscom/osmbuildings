@@ -21,7 +21,7 @@ proto.setData = function(data) {
 proto.screenshot = function(download) {
     var dataURL = Layers.screenshot();
     if (download) {
-        location.href = dataURL.replace('image/png', 'image/octet-stream');
+        win.location.href = dataURL.replace('image/png', 'image/octet-stream');
     }
     return dataURL;
 };
@@ -31,4 +31,4 @@ osmb.ATTRIBUTION = ATTRIBUTION;
 
 return osmb;
 
-}());
+}(this));

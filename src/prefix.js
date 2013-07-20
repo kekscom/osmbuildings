@@ -1,3 +1,3 @@
-var OSMBuildings = (function() {
+var OSMBuildings = (function(win) {
 
     'use strict';
