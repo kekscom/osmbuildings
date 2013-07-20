@@ -52,6 +52,20 @@ var Layers = (function() {
         }
     };
 
+    me.screenshot = function() {
+        var canvas = document.createElement('CANVAS');
+        canvas.width  = width;
+        canvas.height = height;
+        var context = canvas.getContext('2d');
+
+        renderAll();
+        for (var i = 0, il = _items.length; i < il; i++) {
+            context.drawImage(_items[i], 0, 0);
+        }
+
+        return canvas.toDataURL('image/png');
+    };
+
     // usually called after move: container jumps by move delta, cam is reset
     me.setPosition = function(x, y) {
         _container.style.left = x + 'px';

@@ -18,15 +18,12 @@ proto.setData = function(data) {
     return this;
 };
 
-proto.screenshot = function(queue) {
-    queue.push(function(context) {
-        renderAll();
-        var items = Layers.items;
-        for (var i = 0, il = items.length; i < il; i++) {
-            context.drawImage(items[i], 0, 0);
-        }
-        queue.next();
-    });
+proto.screenshot = function(download) {
+    var dataURL = Layers.screenshot();
+    if (download) {
+        location.href = dataURL.replace('image/png', 'image/octet-stream');
+    }
+    return dataURL;
 };
 
 osmb.VERSION     = VERSION;
