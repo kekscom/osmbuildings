@@ -15,30 +15,82 @@ exports.srcFiles = [
     srcPath + '/shortcuts.js',
     srcPath + '/lib/Color.js',
     srcPath + '/lib/SunPosition.js',
+    srcPath + '/Import.js',
+    srcPath + '/import/GeoJSON.js',
+    srcPath + '/import/OSMXAPI.js',
     srcPath + '/constants.js',
     srcPath + '/geometry.js',
-        srcPath + '/prefix.class.js',
-        srcPath + '/variables.js',
-        srcPath + '/functions.js',
-        srcPath + '/Layers.js',
-        srcPath + '/data.js',
-        srcPath + '/properties.js',
-        srcPath + '/events.js',
-        srcPath + '/render.js',
-        srcPath + '/Shadows.js',
-        srcPath + '/FlatBuildings.js',
-        srcPath + '/public.js',
-        srcPath + '/suffix.class.js',
+    srcPath + '/variables.js',
+    srcPath + '/functions.js',
+    srcPath + '/Cache.js',
+    srcPath + '/Data.js',
+    srcPath + '/render.js',
+    srcPath + '/Shadows.js',
+    srcPath + '/FlatBuildings.js',
+    srcPath + '/Layers.js',
+    srcPath + '/properties.js',
+    srcPath + '/events.js',
+    srcPath + '/engines/{engine}.js',
     srcPath + '/suffix.js'
 ];
 
-exports.engines = {
-    Leaflet: {
-        srcFile: srcPath + '/engines/Leaflet.js',
-        dstFile: dstPath + '/L.BuildingsLayer'
-    },
-    OpenLayers: {
-        srcFile: srcPath + '/engines/OpenLayers.js',
-        dstFile: dstPath + '/OpenLayers.Layer.Buildings'
-    }
+exports.dstFiles = {
+    debug:    dstPath + '/OSMBuildings-{engine}.debug.js',
+    minified: dstPath + '/OSMBuildings-{engine}.js',
+    gzipped:  dstPath + '/OSMBuildings-{engine}.js.gz'
+};
+
+exports.engines = ['Leaflet', 'OpenLayers'];
+
+exports.jshint = {
+	"browser": true,
+	"node": true,
+	"predef": ["XDomainRequest", "L", "OpenLayers", "google"],
+//    "unused": true,
+
+	"debug": false,
+	"devel": false,
+
+	"es5": false,
+	"strict": false,
+	"globalstrict": false,
+
+	"asi": false,
+	"laxbreak": false,
+	"bitwise": false,
+	"boss": false,
+	"curly": false,
+	"eqnull": false,
+	"evil": false,
+	"expr": false,
+	"forin": true,
+	"immed": true,
+	"latedef": true,
+	"loopfunc": false,
+	"noarg": true,
+	"regexp": true,
+	"regexdash": false,
+	"scripturl": false,
+	"shadow": false,
+	"supernew": false,
+	"undef": true,
+	"funcscope": false,
+
+	"newcap": true,
+	"noempty": true,
+	"nonew": true,
+	"nomen": false,
+	"onevar": false,
+	"plusplus": false,
+	"sub": false,
+//	"indent": 4,
+
+	"eqeqeq": true,
+//	"trailing": true,
+//	"white": false,
+	"smarttabs": true
+};
+
+exports.closure = {
+    compilation_level: 'SIMPLE_OPTIMIZATIONS'	// WHITESPACE_ONLY, ADVANCED_OPTIMIZATIONS, SIMPLE_OPTIMIZATIONS
 };

@@ -1,35 +1,44 @@
-var Shadows = {
+var Shadows = (function() {
 
-    context: null,
-    color: new Color(0, 0, 0),
-    colorStr: this.color + '',
-    date: null,
-    alpha: 1,
-    length: 0,
-    directionX: 0,
-    directionY: 0,
+    var _context;
+    var _enabled = true;
+    var _color = new Color(0, 0, 0);
+    var _date = null;
+    var _direction = { x:0, y:0 };
 
-    init: function (context) {
-        this.context = context;
-        this.setDate(new Date().setHours(10)); // => render()
-    },
+    function _project(x, y, h) {
+        return {
+            x: x + _direction.x*h,
+            y: y + _direction.y*h
+        };
+    }
 
-    render: function () {
-        var context = this.context,
-            center, sun, length, alpha, colorStr;
+    var me = {};
 
-        context.clearRect(0, 0, width, height);
+    me.setContext = function(context) {
+        _context = context;
+        // TODO: fix bad Date() syntax
+        me.setDate(new Date().setHours(10)); // => render()
+    };
 
-        // data needed for rendering
-        if (!meta || !data ||
-            // show on high zoom levels only and avoid rendering during zoom
-            zoom < minZoom || isZooming) {
+    me.enable = function(flag) {
+        _enabled = !!flag;
+        // should call me.render() but it is usually set by setStyle() and there a renderAll() is called
+    };
+
+    me.render = function() {
+        var center, sun, length, alpha, colorStr;
+
+        _context.clearRect(0, 0, width, height);
+
+        // show on high zoom levels only and avoid rendering during zoom
+        if (!_enabled || zoom < minZoom || isZooming) {
             return;
         }
 
-        // TODO: at some point, calculate this just on demand
-        center = pixelToGeo(originX + halfWidth, originY + halfHeight);
-        sun = getSunPosition(this.date, center.latitude, center.longitude);
+        // TODO: at some point, calculate me just on demand
+        center = pixelToGeo(originX+halfWidth, originY+halfHeight);
+        sun = getSunPosition(_date, center.latitude, center.longitude);
 
         if (sun.altitude <= 0) {
             return;
@@ -37,39 +46,41 @@ var Shadows = {
 
         length = 1 / tan(sun.altitude);
         alpha = 0.4 / length;
-        this.directionX = cos(sun.azimuth) * length;
-        this.directionY = sin(sun.azimuth) * length;
+        _direction.x = cos(sun.azimuth) * length;
+        _direction.y = sin(sun.azimuth) * length;
 
         // TODO: maybe introduce Color.setAlpha()
-        this.color.a = alpha;
-        colorStr = this.color + '';
+        _color.a = alpha;
+        colorStr = _color + '';
 
         var i, il, j, jl,
             item,
-            f, h,
+            f, h, g,
             x, y,
-            offX = originX - meta.x,
-            offY = originY - meta.y,
             footprint,
             mode,
             isVisible,
             ax, ay, bx, by,
             a, b, _a, _b,
             points,
-            allFootprints = []
-        ;
+            allFootprints = [];
 
-        context.beginPath();
+        _context.beginPath();
 
-        for (i = 0, il = data.length; i < il; i++) {
-            item = data[i];
+        for (i = 0, il = renderItems.length; i < il; i++) {
+            item = renderItems[i];
+
+// TODO: no shadows when buildings are too flat => don't add them to renderItems then
+//        if (item.height <= FlatBuildings.MAX_HEIGHT) {
+//            continue;
+//        }
 
             isVisible = false;
-            f = item[FOOTPRINT];
+            f = item.footprint;
             footprint = [];
             for (j = 0, jl = f.length - 1; j < jl; j += 2) {
-                footprint[j]     = x = (f[j]     - offX);
-                footprint[j + 1] = y = (f[j + 1] - offY);
+                footprint[j]   = x = f[j]  -originX;
+                footprint[j+1] = y = f[j+1]-originY;
 
                 // TODO: checking footprint is sufficient for visibility - NOT VALID FOR SHADOWS!
                 if (!isVisible) {
@@ -82,88 +93,85 @@ var Shadows = {
             }
 
             // when fading in, use a dynamic height
-            h = item[IS_NEW] ? item[HEIGHT] * fadeFactor : item[HEIGHT];
+            h = item.scale < 1 ? item.height*item.scale : item.height;
 
             // prepare same calculations for min_height if applicable
-            if (item[MIN_HEIGHT]) {
-                h = item[IS_NEW] ? item[MIN_HEIGHT] * fadeFactor : item[MIN_HEIGHT];
+            if (item.minHeight) {
+                g = item.scale < 1 ? item.minHeight*item.scale : item.minHeight;
             }
 
             mode = null;
 
-            for (j = 0, jl = footprint.length - 3; j < jl; j += 2) {
+            for (j = 0, jl = footprint.length-3; j < jl; j += 2) {
                 ax = footprint[j];
-                ay = footprint[j + 1];
-                bx = footprint[j + 2];
-                by = footprint[j + 3];
+                ay = footprint[j+1];
+                bx = footprint[j+2];
+                by = footprint[j+3];
 
-                _a = this.project(ax, ay, h);
-                _b = this.project(bx, by, h);
+                _a = _project(ax, ay, h);
+                _b = _project(bx, by, h);
 
-                if (item[MIN_HEIGHT]) {
-                    a = this.project(ax, ay, h);
-                    b = this.project(bx, by, h);
+                if (item.minHeight) {
+                    a = _project(ax, ay, g);
+                    b = _project(bx, by, g);
                     ax = a.x;
                     ay = a.y;
                     bx = b.x;
                     by = b.y;
                 }
 
-                if ((bx - ax) * (_a.y - ay) > (_a.x - ax) * (by - ay)) {
+                // mode 0: floor edges, mode 1: roof edges
+                if ((bx-ax) * (_a.y-ay) > (_a.x-ax) * (by-ay)) {
                     if (mode === 1) {
-                        context.lineTo(ax, ay);
+                        _context.lineTo(ax, ay);
                     }
                     mode = 0;
                     if (!j) {
-                        context.moveTo(ax, ay);
+                        _context.moveTo(ax, ay);
                     }
-                    context.lineTo(bx, by);
+                    _context.lineTo(bx, by);
                 } else {
                     if (mode === 0) {
-                        context.lineTo(_a.x, _a.y);
+                        _context.lineTo(_a.x, _a.y);
                     }
                     mode = 1;
                     if (!j) {
-                        context.moveTo(_a.x, _a.y);
+                        _context.moveTo(_a.x, _a.y);
                     }
-                    context.lineTo(_b.x, _b.y);
+                    _context.lineTo(_b.x, _b.y);
                 }
             }
 
-            context.closePath();
+            _context.closePath();
 
             allFootprints.push(footprint);
         }
 
-        context.fillStyle = colorStr;
-        context.fill();
+        _context.fillStyle = colorStr;
+        _context.fill();
 
         // now draw all the footprints as negative clipping mask
-        context.globalCompositeOperation = 'destination-out';
-        context.beginPath();
+        _context.globalCompositeOperation = 'destination-out';
+        _context.beginPath();
         for (i = 0, il = allFootprints.length; i < il; i++) {
             points = allFootprints[i];
-            context.moveTo(points[0], points[1]);
+            _context.moveTo(points[0], points[1]);
             for (j = 2, jl = points.length; j < jl; j += 2) {
-                context.lineTo(points[j], points[j + 1]);
+                _context.lineTo(points[j], points[j+1]);
             }
-            context.lineTo(points[0], points[1]);
-            context.closePath();
+            _context.lineTo(points[0], points[1]);
+            _context.closePath();
         }
-        context.fillStyle = '#00ff00';
-        context.fill();
-        context.globalCompositeOperation = 'source-over';
-    },
+        _context.fillStyle = '#00ff00';
+        _context.fill();
+        _context.globalCompositeOperation = 'source-over';
+    };
 
-    project: function (x, y, h) {
-        return {
-            x: x + this.directionX * h,
-            y: y + this.directionY * h
-        };
-    },
+    me.setDate = function(date) {
+        _date = date;
+        me.render();
+    };
 
-    setDate: function(date) {
-        this.date = date;
-        this.render();
-    }
-};
+    return me;
+
+}());

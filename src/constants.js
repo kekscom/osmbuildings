@@ -1,16 +1,20 @@
 // constants, shared to all instances
-var VERSION = /*<version=*/'0.1.8a'/*>*/,
-    ATTRIBUTION = '&copy; <a href="http://osmbuildings.org">OSM Buildings</a>',
+var VERSION      = /*<version=*/'0.1.8a'/*>*/,
+    ATTRIBUTION  = '&copy; <a href="http://osmbuildings.org">OSM Buildings</a>',
+    OSM_XAPI_URL = 'http://overpass-api.de/api/interpreter?data=[out:json];(way[%22building%22]({s},{w},{n},{e});node(w);way[%22building:part%22=%22yes%22]({s},{w},{n},{e});node(w);relation[%22building%22]({s},{w},{n},{e});way(r);node(w););out;',
+//  OSM_XAPI_URL = 'http://overpass.osm.rambler.ru/cgi/interpreter?data=[out:json];(way[%22building%22]({s},{w},{n},{e});node(w);way[%22building:part%22=%22yes%22]({s},{w},{n},{e});node(w);relation[%22building%22]({s},{w},{n},{e});way(r);node(w););out;',
 
-    PI = Math.PI,
-    HALF_PI = PI / 2,
-    QUARTER_PI = PI / 4,
-    RAD = 180 / PI,
+    PI         = Math.PI,
+    HALF_PI    = PI/2,
+    QUARTER_PI = PI/4,
+    RAD        = 180/PI,
 
-    TILE_SIZE = 256,
-    MIN_ZOOM = 14, // for buildings data only, GeoJSON should not be affected
+    MAP_TILE_SIZE  = 256,    // map tile size in pixels
+    DATA_TILE_SIZE = 0.0075, // data tile size in geo coordinates, smaller: less data to load but more requests
+
+    MIN_ZOOM = 15,
 
     LAT = 'latitude', LON = 'longitude',
 
-//  HEIGHT = 0, FOOTPRINT = 1, COLOR = 2, CENTER = 3, IS_NEW = 4, RENDER_COLOR = 5, MIN_HEIGHT = 6;
-    HEIGHT = 0, MIN_HEIGHT = 1, FOOTPRINT = 2, COLOR = 3, CENTER = 4, IS_NEW = 5, RENDER_COLOR = 6;
+    DEFAULT_HEIGHT = 5,
+    HEIGHT_SCALE = 1;

@@ -1,2 +1,0 @@
-#!/bin/bash
-node convert.js --pg-username postgres --pg-password --pg-host localhost:5432 --pg-database postgis20 --pg-table buildings --pg-height-field COALESCE(height, "building:height") --pg-minheight-field COALESCE(min_height, "building:min_height") --pg-footprint-field the_geom --pg-coords lon,lat --pg-bbox --pg-filter 1=1 --my-table buildings --my-region berlin --my-file berlin.sql

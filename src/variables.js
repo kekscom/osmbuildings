@@ -4,32 +4,26 @@ var width = 0, height = 0,
     originX = 0, originY = 0,
     zoom, size,
 
-    req,
+    activeRequest,
 
     context,
 
-    url,
+    defaultWallColor = new Color(200, 190, 180),
+    defaultAltColor  = defaultWallColor.setLightness(0.8),
+    defaultRoofColor = defaultWallColor.setLightness(1.2),
 
-    wallColor = new Color(200, 190, 180),
-    altColor = wallColor.adjustLightness(0.8),
-    roofColor = wallColor.adjustLightness(1.2),
-    //red: roofColor = new Color(240, 200, 180),
-    //green: roofColor = new Color(210, 240, 220),
+    wallColorAlpha = defaultWallColor + '',
+    altColorAlpha  = defaultAltColor + '',
+    roofColorAlpha = defaultRoofColor + '',
 
-    wallColorAlpha = wallColor + '',
-    altColorAlpha  = altColor + '',
-    roofColorAlpha = roofColor + '',
-
-    rawData,
-    meta, data,
-
-    fadeFactor = 1, fadeTimer,
+    fadeFactor = 1,
+    animTimer,
     zoomAlpha = 1,
 
     minZoom = MIN_ZOOM,
     maxZoom = 20,
     maxHeight,
 
-    camX, camY, camZ,
+    camX, camY, camZ = 450,
 
     isZooming;

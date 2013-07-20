@@ -1,4 +1,3 @@
-/*jshint bitwise:false */
+var OSMBuildings = (function() {
 
-(function (global) {
     'use strict';

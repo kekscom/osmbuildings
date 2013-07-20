@@ -1,52 +1,70 @@
-var getSunPosition = (function () {
+// calculations are based on http://aa.quae.nl/en/reken/zonpositie.html
+// code credits to Vladimir Agafonkin (@mourner)
+
+var getSunPosition = (function() {
 
     var m = Math,
-        sin = m.sin,
-        cos = m.cos,
-        tan = m.tan,
-        asin = m.asin,
-        atan2 = m.atan2,
-        PI = m.PI,
-        RAD = 180 / PI;
+      PI = m.PI,
+      sin = m.sin,
+      cos = m.cos,
+      tan = m.tan,
+      asin = m.asin,
+      atan = m.atan2;
 
-    var dayMS = 1000 * 60 * 60 * 24,
-        J1970 = 2440588,
-        J2000 = 2451545,
-        M0    = 357.5291 / RAD,
-        M1    = 0.98560028 / RAD,
-        C1    = 1.9148 / RAD,
-        C2    = 0.0200 / RAD,
-        C3    = 0.0003 / RAD,
-        P     = 102.9372 / RAD,
-        e     = 23.45 / RAD,
-        th0   = 280.1600 / RAD,
-        th1   = 360.9856235 / RAD;
+    var rad = PI/180,
+      dayMs = 1000*60*60*24,
+      J1970 = 2440588,
+      J2000 = 2451545,
+      e = rad*23.4397; // obliquity of the Earth
 
-    function dateToJulianDate(date) {     return date.valueOf() / dayMS - 0.5 + J1970; }
-    function getSolarMeanAnomaly(Js) {    return M0 + M1 * (Js - J2000); }
-    function getEquationOfCenter(M) {     return C1 * sin(M) + C2 * sin(2 * M) + C3 * sin(3 * M); }
-    function getEclipticLongitude(M, C) { return M + P + C + PI; }
-    function getSunDeclination(Ls) {      return asin(sin(Ls) * sin(e)); }
-    function getRightAscension(Ls) {      return atan2(sin(Ls) * cos(e), cos(Ls)); }
-    function getSiderealTime(J, lw) {     return th0 + th1 * (J - J2000) - lw; }
-    function getAzimuth(H, phi, d) {      return atan2(sin(H), cos(H) * sin(phi) - tan(d) * cos(phi)); }
-    function getAltitude(H, phi, d) {     return asin(sin(phi) * sin(d) + cos(phi) * cos(d) * cos(H)); }
+    function toJulian(date) {
+      return date.valueOf()/dayMs - 0.5+J1970;
+    }
+    function toDays(date) {
+      return toJulian(date)-J2000;
+    }
+    function getRightAscension(l, b) {
+      return atan(sin(l)*cos(e) - tan(b)*sin(e), cos(l));
+    }
+    function getDeclination(l, b) {
+      return asin(sin(b)*cos(e) + cos(b)*sin(e)*sin(l));
+    }
+    function getAzimuth(H, phi, dec) {
+      return atan(sin(H), cos(H)*sin(phi) - tan(dec)*cos(phi));
+    }
+    function getAltitude(H, phi, dec) {
+      return asin(sin(phi)*sin(dec) + cos(phi)*cos(dec)*cos(H));
+    }
+    function getSiderealTime(d, lw) {
+      return rad * (280.16 + 360.9856235*d) - lw;
+    }
+    function getSolarMeanAnomaly(d) {
+      return rad * (357.5291 + 0.98560028*d);
+    }
+    function getEquationOfCenter(M) {
+      return rad * (1.9148*sin(M) + 0.0200 * sin(2*M) + 0.0003 * sin(3*M));
+    }
+    function getEclipticLongitude(M, C) {
+      var P = rad*102.9372; // perihelion of the Earth
+      return M+C+P+PI;
+    }
 
-    return function (date, lat, lon) {
-        var lw  = -lon / RAD,
-            phi = lat / RAD,
-            J   = dateToJulianDate(date),
-            M   = getSolarMeanAnomaly(J),
-            C   = getEquationOfCenter(M),
-            Ls  = getEclipticLongitude(M, C),
-            d   = getSunDeclination(Ls),
-            a   = getRightAscension(Ls),
-            th  = getSiderealTime(J, lw),
-            H   = th - a;
+    return function getSunPosition(date, lat, lon) {
+      var lw = rad*-lon,
+        phi = rad*lat,
+        d = toDays(date),
+        M = getSolarMeanAnomaly(d),
+        C = getEquationOfCenter(M),
+        L = getEclipticLongitude(M, C),
+        D = getDeclination(L, 0),
+        A = getRightAscension(L, 0),
+        t = getSiderealTime(d, lw),
+        H = t-A;
 
-        return {
-            altitude: getAltitude(H, phi, d),
-            azimuth:  getAzimuth(H,  phi, d) - PI / 2 // origin: north
-        };
+      return {
+        altitude: getAltitude(H, phi, D),
+        azimuth: getAzimuth(H, phi, D) - PI/2 // origin: north
+      };
     };
-})();
+
+}());
