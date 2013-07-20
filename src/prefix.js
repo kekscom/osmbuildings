@@ -1,3 +1,3 @@
-var OSMBuildings = (function(win) {
+(typeof exports !== 'undefined' ? module : window).OSMBuildings = (function(win) {
 
     'use strict';

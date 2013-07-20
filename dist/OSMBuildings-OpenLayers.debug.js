@@ -5,7 +5,7 @@
  */
 //****** file: prefix.js ******
 
-var OSMBuildings = (function() {
+(typeof exports !== 'undefined' ? module : window).OSMBuildings = (function(win) {
 
     'use strict';
 
@@ -26,7 +26,7 @@ var Int32Array = Int32Array || Array,
     max = m.max,
     ceil = m.ceil,
     floor = m.floor,
-    doc = document;
+    doc = win.document;
 
 
 
@@ -1004,7 +1004,6 @@ var width = 0, height = 0,
     roofColorAlpha = defaultRoofColor + '',
 
     fadeFactor = 1,
-    animTimer,
     zoomAlpha = 1,
 
     minZoom = MIN_ZOOM,
@@ -1048,10 +1047,10 @@ function xhr(_url, param, callback) {
         return param[key] || tag;
     });
 
-    var req = 'XDomainRequest' in window ? new XDomainRequest() : new XMLHttpRequest();
+    var req = 'XDomainRequest' in win ? new XDomainRequest() : new XMLHttpRequest();
 
     function changeState(state) {
-        if ('XDomainRequest' in window && state !== req.readyState) {
+        if ('XDomainRequest' in win && state !== req.readyState) {
             req.readyState = state;
             if (req.onreadystatechange) {
                 req.onreadystatechange();
@@ -1201,20 +1200,18 @@ var Data = (function() {
             res = [],
             item,
             height, minHeight, footprint,
-            color, wallColor, altColor, roofColor,
+            color, wallColor, altColor,
+            roofColor, roofHeight,
             holes, innerFootprint,
-            zoomDelta = maxZoom-zoom;
+            zoomDelta = maxZoom-zoom,
+            meterToPixel = 156412 / Math.pow(2, zoom) / 1.5; // http://wiki.openstreetmap.org/wiki/Zoom_levels, TODO: without factor 1.5, numbers don't match (lat/lon: Berlin)
 
         for (i = 0, il = items.length; i < il; i++) {
-
             item = items[i];
 
-            height = (item.height || DEFAULT_HEIGHT)*HEIGHT_SCALE >> zoomDelta;
-            if (!height) {
-                continue;
-            }
+            height = item.height >>zoomDelta;
 
-            minHeight = item.minHeight*HEIGHT_SCALE >> zoomDelta;
+            minHeight = item.minHeight >>zoomDelta;
             if (minHeight > maxHeight) {
                 continue;
             }
@@ -1249,16 +1246,25 @@ var Data = (function() {
                 }
             }
 
+            roofHeight = item.roofHeight >>zoomDelta;
+
+            // TODO: move buildings without height to FlatBuildings
+            if (height <= minHeight && roofHeight <= 0) {
+                continue;
+            }
+
             res.push({
-                id:        item.id,
-                footprint: footprint,
-                height:    min(height, maxHeight),
-                minHeight: minHeight,
-                wallColor: wallColor,
-                altColor:  altColor,
-                roofColor: roofColor,
-                center:    getCenter(footprint),
-                holes:     holes.length ? holes : null
+                id:         item.id,
+                footprint:  footprint,
+                height:     min(height, maxHeight),
+                minHeight:  minHeight,
+                wallColor:  wallColor,
+                altColor:   altColor,
+                roofColor:  roofColor,
+                center:     getCenter(footprint),
+                holes:      holes.length ? holes : null,
+                shape:      item.shape, // TODO: drop footprint
+                radius:     item.radius/meterToPixel
             });
         }
 
@@ -1341,6 +1347,7 @@ var Data = (function() {
 //****** file: render.js ******
 
 var renderItems = [];
+var animTimer;
 
 function fadeIn() {
     if (animTimer) {
@@ -1871,6 +1878,20 @@ var Layers = (function() {
         }
     };
 
+    me.screenshot = function() {
+        var canvas = doc.createElement('CANVAS');
+        canvas.width  = width;
+        canvas.height = height;
+        var context = canvas.getContext('2d');
+
+        renderAll();
+        for (var i = 0, il = _items.length; i < il; i++) {
+            context.drawImage(_items[i], 0, 0);
+        }
+
+        return canvas.toDataURL('image/png');
+    };
+
     // usually called after move: container jumps by move delta, cam is reset
     me.setPosition = function(x, y) {
         _container.style.left = x + 'px';
@@ -2084,11 +2105,19 @@ proto.setData = function(data) {
     return this;
 };
 
+proto.screenshot = function(download) {
+    var dataURL = Layers.screenshot();
+    if (download) {
+        win.location.href = dataURL.replace('image/png', 'image/octet-stream');
+    }
+    return dataURL;
+};
+
 osmb.VERSION     = VERSION;
 osmb.ATTRIBUTION = ATTRIBUTION;
 
 return osmb;
 
-}());
+}(this));
 
 
