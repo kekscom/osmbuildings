@@ -1,41 +1,2130 @@
-("undefined"!==typeof exports?module:window).OSMBuildings=function(ca){function Ka(a,c){var b=a[0]-c[0],e=a[1]-c[1];return b*b+e*e}function ob(a){for(var c=0,b=0,e=0,d=a.length-3;e<d;e+=2)c+=a[e],b+=a[e+1];a=(a.length-2)/2;return[c/a<<0,b/a<<0]}function ra(a,c){var b={};a/=U;c/=U;b[pb]=0>=c?90:1<=c?-90:qb*(2*rb(sb(V*(1-2*c)))-La);b[tb]=360*(1===a?1:(a%1+1)%1)-180;return b}function Ma(a,c,b){function e(a){if("XDomainRequest"in ca&&a!==d.readyState&&(d.readyState=a,d.onreadystatechange))d.onreadystatechange()}
-a=a.replace(/\{ *([\w_]+) *\}/g,function(a,b){return c[b]||a});var d="XDomainRequest"in ca?new XDomainRequest:new XMLHttpRequest;d.onerror=function(){d.status=500;d.statusText="Error";e(4)};d.ontimeout=function(){d.status=408;d.statusText="Timeout";e(4)};d.onprogress=function(){e(3)};d.onload=function(){d.status=200;d.statusText="Ok";e(4)};d.onreadystatechange=function(){4===d.readyState&&d.status&&!(200>d.status||299<d.status)&&b&&d.responseText&&b(JSON.parse(d.responseText))};e(0);d.open("GET",
-a);e(1);d.send(null);e(2);return d}function J(){W.render();da.render();Na()}function Na(){s.clearRect(0,0,x,r);if(!(E<ea||fa)){var a,c,b,e,d,f,h,g=da.MAX_HEIGHT,k=[N+y,O+z],t=y,j=y+x,p=z,ub=z+r,q,l,u,m;w.sort(function(a,b){return Ka(b.center,k)/b.height-Ka(a.center,k)/a.height});a=0;for(c=w.length;a<c;a++)if(d=w[a],!(d.height<=g)){f=!1;q=d.footprint;b=0;for(e=q.length-1;b<e;b+=2)f||(f=q[b]>t&&q[b]<j&&q[b+1]>p&&q[b+1]<ub);if(f){b=1>d.scale?d.height*d.scale:d.height;f=X/(X-b);h=0;d.minHeight&&(b=1>
-d.scale?d.minHeight*d.scale:d.minHeight,h=X/(X-b));u=d.wallColor||sa;m=d.altColor||ga;q=Pa(q,f,h,u,m);l=[];if(d.holes){b=0;for(e=d.holes.length;b<e;b++)l[b]=Pa(d.holes[b],f,h,u,m)}s.fillStyle=d.roofColor||Y;s.strokeStyle=m;Qa(q,!0,l)}}}}function Pa(a,c,b,e,d){for(var f={x:0,y:0},h={x:0,y:0},g,k,t=[],j=0,p=a.length-3;j<p;j+=2)f.x=a[j]-y,f.y=a[j+1]-z,h.x=a[j+2]-y,h.y=a[j+3]-z,g=ha(f.x,f.y,c),k=ha(h.x,h.y,c),b&&(f=ha(f.x,f.y,b),h=ha(h.x,h.y,b)),(h.x-f.x)*(g.y-f.y)>(g.x-f.x)*(h.y-f.y)&&(s.fillStyle=f.x<
-h.x&&f.y<h.y||f.x>h.x&&f.y>h.y?d:e,Qa([h.x,h.y,f.x,f.y,g.x,g.y,k.x,k.y])),t[j]=g.x,t[j+1]=g.y;return t}function Qa(a,c,b){if(a.length){var e,d,f,h;s.beginPath();s.moveTo(a[0],a[1]);e=2;for(d=a.length;e<d;e+=2)s.lineTo(a[e],a[e+1]);if(b){e=0;for(d=b.length;e<d;e++){a=b[e];s.moveTo(a[0],a[1]);f=2;for(h=a.length;f<h;f+=2)s.lineTo(a[f],a[f+1])}}s.closePath();c&&s.stroke();s.fill()}}function ha(a,c,b){return{x:(a-N)*b+N<<0,y:(c-O)*b+O<<0}}function Ra(a){x=a.w;r=a.h;Z=x/2<<0;Sa=r/2<<0;N=Z;O=r;$.setSize(x,
-r);ta=X-50}function Ta(a){E=a;U=vb<<E;a=E;var c=ea,b=ua;a=ia(va(a,c),b);A=1-ia(va(0+0.3*((a-c)/(b-c)),0),0.3);sa=I.setAlpha(A)+"";ga=ja.setAlpha(A)+"";Y=P.setAlpha(A)+""}var Ua=Ua||Array,Va=Va||Array,B=Math,sb=B.exp,wb=B.log,xb=B.sin,yb=B.cos,Wa=B.tan,rb=B.atan,ia=B.min,va=B.max,Xa=B.ceil,Ya=B.floor,wa=ca.document,K,Za=function(a){var c,b,e;if(0===a.s)c=b=e=a.l;else{e=0.5>a.l?a.l*(1+a.s):a.l+a.s-a.l*a.s;var d=2*a.l-e;a.h/=360;c=xa(d,e,a.h+1/3);b=xa(d,e,a.h);e=xa(d,e,a.h-1/3)}return new F(255*c<<0,
-255*b<<0,255*e<<0,a.a)},xa=function(a,c,b){0>b&&(b+=1);1<b&&(b-=1);return b<1/6?a+6*(c-a)*b:0.5>b?c:b<2/3?a+6*(c-a)*(2/3-b):a},F=function(a,c,b,e){this.r=a;this.g=c;this.b=b;this.a=4>arguments.length?1:e},zb={aliceblue:"#f0f8ff",antiquewhite:"#faebd7",aqua:"#00ffff",aquamarine:"#7fffd4",azure:"#f0ffff",beige:"#f5f5dc",bisque:"#ffe4c4",black:"#000000",blanchedalmond:"#ffebcd",blue:"#0000ff",blueviolet:"#8a2be2",brown:"#a52a2a",burlywood:"#deb887",cadetblue:"#5f9ea0",chartreuse:"#7fff00",chocolate:"#d2691e",
-coral:"#ff7f50",cornflowerblue:"#6495ed",cornsilk:"#fff8dc",crimson:"#dc143c",cyan:"#00ffff",darkblue:"#00008b",darkcyan:"#008b8b",darkgoldenrod:"#b8860b",darkgray:"#a9a9a9",darkgreen:"#006400",darkkhaki:"#bdb76b",darkmagenta:"#8b008b",darkolivegreen:"#556b2f",darkorange:"#ff8c00",darkorchid:"#9932cc",darkred:"#8b0000",darksalmon:"#e9967a",darkseagreen:"#8fbc8f",darkslateblue:"#483d8b",darkslategray:"#2f4f4f",darkturquoise:"#00ced1",darkviolet:"#9400d3",deeppink:"#ff1493",deepskyblue:"#00bfff",dimgray:"#696969",
-dodgerblue:"#1e90ff",firebrick:"#b22222",floralwhite:"#fffaf0",forestgreen:"#228b22",fuchsia:"#ff00ff",gainsboro:"#dcdcdc",ghostwhite:"#f8f8ff",gold:"#ffd700",goldenrod:"#daa520",gray:"#808080",green:"#008000",greenyellow:"#adff2f",honeydew:"#f0fff0",hotpink:"#ff69b4",indianred:"#cd5c5c",indigo:"#4b0082",ivory:"#fffff0",khaki:"#f0e68c",lavender:"#e6e6fa",lavenderblush:"#fff0f5",lawngreen:"#7cfc00",lemonchiffon:"#fffacd",lightblue:"#add8e6",lightcoral:"#f08080",lightcyan:"#e0ffff",lightgoldenrodyellow:"#fafad2",
-lightgray:"#d3d3d3",lightgreen:"#90ee90",lightpink:"#ffb6c1",lightsalmon:"#ffa07a",lightseagreen:"#20b2aa",lightskyblue:"#87cefa",lightslategray:"#778899",lightsteelblue:"#b0c4de",lightyellow:"#ffffe0",lime:"#00ff00",limegreen:"#32cd32",linen:"#faf0e6",magenta:"#ff00ff",maroon:"#800000",mediumaquamarine:"#66cdaa",mediumblue:"#0000cd",mediumorchid:"#ba55d3",mediumpurple:"#9370db",mediumseagreen:"#3cb371",mediumslateblue:"#7b68ee",mediumspringgreen:"#00fa9a",mediumturquoise:"#48d1cc",mediumvioletred:"#c71585",
-midnightblue:"#191970",mintcream:"#f5fffa",mistyrose:"#ffe4e1",moccasin:"#ffe4b5",navajowhite:"#ffdead",navy:"#000080",oldlace:"#fdf5e6",olive:"#808000",olivedrab:"#6b8e23",orange:"#ffa500",orangered:"#ff4500",orchid:"#da70d6",palegoldenrod:"#eee8aa",palegreen:"#98fb98",paleturquoise:"#afeeee",palevioletred:"#db7093",papayawhip:"#ffefd5",peachpuff:"#ffdab9",peru:"#cd853f",pink:"#ffc0cb",plum:"#dda0dd",powderblue:"#b0e0e6",purple:"#800080",red:"#ff0000",rosybrown:"#bc8f8f",royalblue:"#4169e1",saddlebrown:"#8b4513",
-salmon:"#fa8072",sandybrown:"#f4a460",seagreen:"#2e8b57",seashell:"#fff5ee",sienna:"#a0522d",silver:"#c0c0c0",skyblue:"#87ceeb",slateblue:"#6a5acd",slategray:"#708090",snow:"#fffafa",springgreen:"#00ff7f",steelblue:"#4682b4",tan:"#d2b48c",teal:"#008080",thistle:"#d8bfd8",tomato:"#ff6347",turquoise:"#40e0d0",violet:"#ee82ee",wheat:"#f5deb3",white:"#ffffff",whitesmoke:"#f5f5f5",yellow:"#ffff00",yellowgreen:"#9acd32"},ya=F.prototype;ya.toString=function(){return"rgba("+[this.r<<0,this.g<<0,this.b<<0,
-this.a.toFixed(2)].join()+")"};ya.setLightness=function(a){var c=F.toHSLA(this);c.l*=a;c.l=Math.min(1,Math.max(0,c.l));return Za(c)};ya.setAlpha=function(a){return new F(this.r,this.g,this.b,this.a*a)};F.parse=function(a){var c;a+="";a=zb[a]||a;if(~a.indexOf("#")&&(c=a.match(/^#?(\w{2})(\w{2})(\w{2})(\w{2})?$/)))return new F(parseInt(c[1],16),parseInt(c[2],16),parseInt(c[3],16),c[4]?parseInt(c[4],16)/255:1);if(c=a.match(/rgba?\((\d+)\D+(\d+)\D+(\d+)(\D+([\d.]+))?\)/))return new F(parseInt(c[1],10),
-parseInt(c[2],10),parseInt(c[3],10),c[4]?parseFloat(c[5]):1);if(c=a.match(/hsla?\(([\d.]+)\D+([\d.]+)\D+([\d.]+)(\D+([\d.]+))?\)/))return Za({h:parseInt(c[1],10),s:parseFloat(c[2]),l:parseFloat(c[3]),a:c[4]?parseFloat(c[5]):1})};F.toHSLA=function(a){var c=a.r/255,b=a.g/255,e=a.b/255,d=Math.max(c,b,e),f=Math.min(c,b,e),h,g=(d+f)/2,k;if(d===f)h=f=0;else{k=d-f;f=0.5<g?k/(2-d-f):k/(d+f);switch(d){case c:h=(b-e)/k+(b<e?6:0);break;case b:h=(e-c)/k+2;break;case e:h=(c-b)/k+4}h/=6}return{h:360*h,s:f,l:g,
-a:a.a}};K=F;var $a,Q=Math,za=Q.PI,v=Q.sin,G=Q.cos,ab=Q.tan,bb=Q.asin,cb=Q.atan2,L=za/180,ka=23.4397*L;$a=function(a,c,b){b=L*-b;c*=L;a=a.valueOf()/864E5-0.5+2440588-2451545;var e=L*(357.5291+0.98560028*a),d=L*(1.9148*v(e)+0.02*v(2*e)+3E-4*v(3*e)),d=e+d+102.9372*L+za,e=bb(v(0)*G(ka)+G(0)*v(ka)*v(d)),d=cb(v(d)*G(ka)-ab(0)*v(ka),G(d));b=L*(280.16+360.9856235*a)-b-d;return{altitude:bb(v(c)*v(e)+G(c)*G(e)*G(b)),azimuth:cb(v(b),G(b)*v(c)-ab(e)*G(c))-za/2}};var fb=function(a,c){var b,e,d,f,h=0,g,k;g=0;for(k=
-a.length-3;g<k;g+=2)b=a[g],e=a[g+1],d=a[g+2],f=a[g+3],h+=b*f-d*e;if((0<h/2?db:eb)===c)return a;b=[];for(e=a.length-2;0<=e;e-=2)b.push(a[e],a[e+1]);return b},l={},db="CW",eb="CCW";l.windOuterPolygon=function(a){return fb(a,db)};l.windInnerPolygon=function(a){return fb(a,eb)};l.YARD_TO_METER=0.9144;l.FOOT_TO_METER=0.3048;l.INCH_TO_METER=0.0254;l.METERS_PER_LEVEL=3;l.getDimension=function(a){var c=parseFloat(a);return c===a||~a.indexOf("m")?c<<0:~a.indexOf("yd")?c*l.YARD_TO_METER<<0:~a.indexOf("ft")?
-c*l.FOOT_TO_METER<<0:~a.indexOf("'")?(a=a.split("'"),a[0]*l.FOOT_TO_METER+a[1]*l.INCH_TO_METER<<0):c<<0};var Ab={brick:"#cc7755",bronze:"#ffeecc",canvas:"#fff8f0",concrete:"#999999",copper:"#a0e0d0",glass:"#e8f8f8",gold:"#ffcc00",plants:"#009933",metal:"#aaaaaa",panel:"#fff8f0",plaster:"#999999",roof_tiles:"#f08060",silver:"#cccccc",slate:"#666666",stone:"#996666",tar_paper:"#333333",wood:"#deb887"},Bb={asphalt:"tar_paper",bitumen:"tar_paper",block:"stone",bricks:"brick",glas:"glass",glassfront:"glass",
-grass:"plants",masonry:"stone",granite:"stone",panels:"panel",paving_stones:"stone",plastered:"plaster",rooftiles:"roof_tiles",roofingfelt:"tar_paper",sandstone:"stone",sheet:"canvas",sheets:"canvas",shingle:"tar_paper",shingles:"tar_paper",slates:"slate",steel:"metal",tar:"tar_paper",tent:"canvas",thatch:"plants",tile:"roof_tiles",tiles:"roof_tiles"};l.getMaterialColor=function(a){a=a.toLowerCase();return"#"===a[0]?a:Ab[Bb[a]||a]||null};var gb,hb=function(a){return(a=a.tags)&&!a.landuse&&(a.building||
-a["building:part"])&&(!a.layer||0<=a.layer)},Ba=function(a){if(a){for(var c=[],b,e=0,d=a.length;e<d;e++)b=Aa[a[e]],c.push(b[0],b[1]);c[c.length-2]!==c[0]&&c[c.length-1]!==c[1]&&c.push(c[0],c[1]);if(!(8>c.length))return c}},Ca=function(a){var c=0,b=0;a.height&&(c=l.getDimension(a.height));!c&&a["building:height"]&&(c=l.getDimension(a["building:height"]));!c&&a.levels&&(c=a.levels*l.METERS_PER_LEVEL<<0);!c&&a["building:levels"]&&(c=a["building:levels"]*l.METERS_PER_LEVEL<<0);a.min_height&&(b=l.getDimension(a.min_height));
-!b&&a["building:min_height"]&&(b=l.getDimension(a["building:min_height"]));!b&&a.min_level&&(b=a.min_level*l.METERS_PER_LEVEL<<0);!b&&a["building:min_level"]&&(b=a["building:min_level"]*l.METERS_PER_LEVEL<<0);var e,d;a["building:material"]&&(e=l.getMaterialColor(a["building:material"]));a["building:facade:material"]&&(e=l.getMaterialColor(a["building:facade:material"]));a["building:cladding"]&&(e=l.getMaterialColor(a["building:cladding"]));a["building:color"]&&(e=a["building:color"]);a["building:colour"]&&
-(e=a["building:colour"]);a["roof:material"]&&(d=l.getMaterialColor(a["roof:material"]));a["building:roof:material"]&&(d=l.getMaterialColor(a["building:roof:material"]));a["roof:color"]&&(d=a["roof:color"]);a["roof:colour"]&&(d=a["roof:colour"]);a["building:roof:color"]&&(d=a["building:roof:color"]);a["building:roof:colour"]&&(d=a["building:roof:colour"]);return{height:c,minHeight:b,wallColor:e,roofColor:d}},ib=function(a,c,b,e){a={id:a,footprint:l.windOuterPolygon(b)};c.height&&(a.height=c.height);
-c.minHeight&&(a.minHeight=c.minHeight);c.wallColor&&(a.wallColor=c.wallColor);c.roofColor&&(a.roofColor=c.roofColor);e&&(a.holes=e);Da.push(a)},Aa,aa,Da;gb=function(a){Aa={};aa={};Da=[];for(var c,b=0,e=a.length;b<e;b++)switch(c=a[b],c.type){case "node":Aa[c.id]=[c.lat,c.lon];break;case "way":var d=void 0,f=void 0;if(hb(c))d=Ca(c.tags),(f=Ba(c.nodes))&&ib(c.id,d,f);else if(d=c.tags,!d||!d.highway&&!d.railway&&!d.landuse)aa[c.id]=c;break;case "relation":var f=c,h=void 0,g=void 0;c=[];var k=void 0,t=
-void 0,d=void 0;if(hb(f)&&("multipolygon"===f.tags.type||"building"===f.tags.type)){for(var h=f.members,t=g=void 0,k=[],j=0,p=h.length;j<p;j++)g=h[j],"way"===g.type&&aa[g.ref]&&(!g.role||"outer"===g.role?t=aa[g.ref]:("inner"===g.role||"enclave"===g.role)&&k.push(aa[g.ref]));h=t&&t.tags?{outer:t,inner:k}:void 0;if(h&&(j=Ca(f.tags),g=h.outer))if(k=Ca(g.tags),t=Ba(g.nodes)){f=k;k=j;j=void 0;for(j in k)f[j]||(f[j]=k[j]);k=f;f=0;for(j=h.inner.length;f<j;f++)(d=Ba(h.inner[f].nodes))&&c.push(l.windInnerPolygon(d));
-ib(g.id,k,t,c.length?c:null)}}}return Da};var V=Math.PI,La=V/2,Cb=V/4,qb=180/V,vb=256,pb="latitude",tb="longitude",x=0,r=0,Z=0,Sa=0,y=0,z=0,E,U,s,I=new K(200,190,180),ja=I.setLightness(0.8),P=I.setLightness(1.2),sa=I+"",ga=ja+"",Y=P+"",A=1,ea=15,ua=20,ta,N,O,X=450,fa,Ea=new Date,R={},ba={add:function(a,c){R[c||"__STATIC__"]={data:a,time:Date.now()}},get:function(a){a=a||"__STATIC__";return R[a]&&R[a].data},purge:function(){Ea.setMinutes(Ea.getMinutes()-5);for(var a in R)R[a].time<Ea&&"__STATIC__"!==
-a&&delete R[a]}},jb=function(a){for(var c,b,e=new Ua(a.length),d=0,f=a.length-1;d<f;d+=2)c=a[d+1],b=ia(1,va(0,0.5-wb(Wa(Cb+La*a[d]/180))/V/2)),c=(c/360+0.5)*U<<0,b=b*U<<0,e[d]=c,e[d+1]=b;a=e;e=a.length/2;d=new Va(e);f=0;c=e-1;var h,g,k,t=[],j=[],p=[];for(d[f]=d[c]=1;c;){h=0;for(b=f+1;b<c;b++){g=a[2*b];var l=a[2*b+1],q=a[2*f],m=a[2*f+1],u=a[2*c],Oa=a[2*c+1],n=u-q,H=Oa-m,r=void 0;if(0!==n||0!==H)r=((g-q)*n+(l-m)*H)/(n*n+H*H),1<r?(q=u,m=Oa):0<r&&(q+=n*r,m+=H*r);n=g-q;H=l-m;g=n*n+H*H;g>h&&(k=b,h=g)}2<
-h&&(d[k]=1,t.push(f),j.push(k),t.push(k),j.push(c));f=t.pop();c=j.pop()}for(b=0;b<e;b++)d[b]&&p.push(a[2*b],a[2*b+1]);e=p;if(!(8>e.length))return e},Db=function(a){return function(c){Fa(c,a)}},Fa=function(a,c){if(a){var b;if("FeatureCollection"===a.type){b=a.features;var e,d,f,h,g,k,t=[],j,p,m,q,n,u,r;e=0;for(d=b.length;e<d;e++)if(j=b[e],"Feature"===j.type&&(p=j.geometry,j=j.properties,"LineString"===p.type&&(f=m.length-1,m[0][0]===m[f][0]&&m[0][1]===m[f][1]&&(m=p.coordinates)),"Polygon"===p.type&&
-(m=p.coordinates),"MultiPolygon"===p.type&&(m=p.coordinates[0]),m)){if(j.color||j.wallColor)q=j.color||j.wallColor;j.roofColor&&(n=j.roofColor);u=m[0];r=[];f=0;for(h=u.length;f<h;f++)r.push(u[f][1],u[f][0]);p=[];f=1;for(h=m.length;f<h;f++){u=m[f];p[f-1]=[];g=0;for(k=u.length;g<k;g++)p[f-1].push(u[g][1],u[g][0]);p[f-1]=l.windInnerPolygon(p[f-1])}f={id:j.id||r[0]+","+r[1],footprint:l.windOuterPolygon(r)};j.height&&(f.height=l.getDimension(j.height));j.minHeight&&(f.minHeight=l.getDimension(j.minHeight));
-q&&(f.wallColor=q);n&&(f.roofColor=n);p.length&&(f.holes=p);t.push(f)}b=t}else a.osm3s&&(b=gb(a.elements));ba.add(b,c);Ga(b,!0)}},Ga=function(a,c){var b,e,d,f,h=[],g,k,m,j,p,l,q,n,r,s=ua-E,v=156412/Math.pow(2,E)/1.5;b=0;for(e=a.length;b<e;b++)if(g=a[b],k=g.height>>s,m=g.minHeight>>s,!(m>ta)&&(j=jb(g.footprint))){n=[];if(g.holes){d=0;for(f=g.holes.length;d<f;d++)(r=jb(g.holes[d]))&&n.push(r)}f=d=null;if(g.wallColor&&(p=K.parse(g.wallColor)))d=p.setAlpha(A),f=""+d.setLightness(0.8),d=""+d;l=null;if(g.roofColor&&
-(p=K.parse(g.roofColor)))l=""+p.setAlpha(A);q=g.roofHeight>>s;k<=m&&0>=q||h.push({id:g.id,footprint:j,height:ia(k,ta),minHeight:m,wallColor:d,altColor:f,roofColor:l,center:ob(j),holes:n.length?n:null,shape:g.shape,radius:g.radius/v})}e=0;for(g=h.length;e<g;e++)b=h[e],la[b.id]||(b.scale=c?0:1,w.push(b),la[b.id]=1);ma||(ma=setInterval(function(){for(var a,b=!1,c=0,d=w.length;c<d;c++)a=w[c],1>a.scale&&(a.scale+=0.1,1<a.scale&&(a.scale=1),b=!0);J();b||(clearInterval(ma),ma=null)},33))},na,Ha=!0,la={},
-M={load:function(a){na=a||"http://overpass-api.de/api/interpreter?data=[out:json];(way[%22building%22]({s},{w},{n},{e});node(w);way[%22building:part%22=%22yes%22]({s},{w},{n},{e});node(w);relation[%22building%22]({s},{w},{n},{e});way(r);node(w););out;";if(Ha=!/(.+\{[nesw]\}){4,}/.test(na))ba.add(null),Ma(na,{},Fa);M.update()},update:function(){if(!(15>E)){w=[];la={};var a,c,b,e;if(Ha)(b=ba.get(e))&&Ga(b);else{var d=ra(y,z);a=ra(y+x,z+r);var f=0.0075*Xa(d.latitude/0.0075),h=0.015*Xa(a.longitude/0.015);
-a=0.0075*Ya(a.latitude/0.0075);for(d=0.015*Ya(d.longitude/0.015);a<=f;a+=0.0075)for(c=d;c<=h;c+=0.015)e=a+","+c,(b=ba.get(e))?Ga(b):Ma(na,{n:(1E4*(a+0.0075)<<0)/1E4,e:(1E4*(c+0.015)<<0)/1E4,s:(1E4*a<<0)/1E4,w:(1E4*c<<0)/1E4},Db(e));ba.purge()}}},set:function(a){Ha=!0;w=[];la={};Fa(a)}},w=[],ma,W,pa=function(a,c,b){return{x:a+oa.x*b,y:c+oa.y*b}},m,kb=!0,lb=new K(0,0,0),mb=null,oa={x:0,y:0},Ia={setContext:function(a){m=a;Ia.setDate((new Date).setHours(10))},enable:function(a){kb=!!a},render:function(){var a,
-c,b,e;m.clearRect(0,0,x,r);if(kb&&!(E<ea||fa))if(a=ra(y+Z,z+Sa),a=$a(mb,a.latitude,a.longitude),!(0>=a.altitude)){c=1/Wa(a.altitude);b=0.4/c;oa.x=yb(a.azimuth)*c;oa.y=xb(a.azimuth)*c;lb.a=b;e=lb+"";var d,f,h,g,k,l,j,p,n,q,s,u,v=[];m.beginPath();a=0;for(c=w.length;a<c;a++){f=w[a];p=!1;h=f.footprint;j=[];b=0;for(d=h.length-1;b<d;b+=2)j[b]=k=h[b]-y,j[b+1]=l=h[b+1]-z,p||(p=0<k&&k<x&&0<l&&l<r);if(p){h=1>f.scale?f.height*f.scale:f.height;f.minHeight&&(g=1>f.scale?f.minHeight*f.scale:f.minHeight);k=null;
-b=0;for(d=j.length-3;b<d;b+=2)l=j[b],n=j[b+1],p=j[b+2],q=j[b+3],s=pa(l,n,h),u=pa(p,q,h),f.minHeight&&(n=pa(l,n,g),q=pa(p,q,g),l=n.x,n=n.y,p=q.x,q=q.y),(p-l)*(s.y-n)>(s.x-l)*(q-n)?(1===k&&m.lineTo(l,n),k=0,b||m.moveTo(l,n),m.lineTo(p,q)):(0===k&&m.lineTo(s.x,s.y),k=1,b||m.moveTo(s.x,s.y),m.lineTo(u.x,u.y));m.closePath();v.push(j)}}m.fillStyle=e;m.fill();m.globalCompositeOperation="destination-out";m.beginPath();a=0;for(c=v.length;a<c;a++){g=v[a];m.moveTo(g[0],g[1]);b=2;for(d=g.length;b<d;b+=2)m.lineTo(g[b],
-g[b+1]);m.lineTo(g[0],g[1]);m.closePath()}m.fillStyle="#00ff00";m.fill();m.globalCompositeOperation="source-over"}},setDate:function(a){mb=a;Ia.render()}};W=Ia;var da,C,nb={MAX_HEIGHT:8,setContext:function(a){C=a},render:function(){C.clearRect(0,0,x,r);if(!(E<ea||fa)){var a,c,b,e,d,f,h,g,k;C.beginPath();a=0;for(c=w.length;a<c;a++)if(b=w[a],!(b.height>nb.MAX_HEIGHT)){k=!1;d=b.footprint;g=[];b=0;for(e=d.length-1;b<e;b+=2)g[b]=f=d[b]-y,g[b+1]=h=d[b+1]-z,k||(k=0<f&&f<x&&0<h&&h<r);if(k){b=0;for(e=g.length-
-3;b<e;b+=2)k=g[b],d=g[b+1],b?C.lineTo(k,d):C.moveTo(k,d);C.closePath()}}C.fillStyle=Y;C.strokeStyle=ga;C.stroke();C.fill()}}};da=nb;var $,Ja=function(){var a=wa.createElement("CANVAS");a.style.webkitTransform="translate3d(0,0,0)";a.style.imageRendering="optimizeSpeed";a.style.position="absolute";a.style.left=0;a.style.top=0;var c=a.getContext("2d");c.lineCap="round";c.lineJoin="round";c.lineWidth=1;c.mozImageSmoothingEnabled=!1;c.webkitImageSmoothingEnabled=!1;S.push(a);D.appendChild(a);return c},
-D=wa.createElement("DIV");D.style.pointerEvents="none";D.style.position="absolute";D.style.left=0;D.style.top=0;var S=[];W.setContext(Ja());da.setContext(Ja());s=Ja();$={appendTo:function(a){a.appendChild(D)},remove:function(){D.parentNode.removeChild(D)},setSize:function(a,c){for(var b=0,e=S.length;b<e;b++)S[b].width=a,S[b].height=c},screenshot:function(){var a=wa.createElement("CANVAS");a.width=x;a.height=r;var c=a.getContext("2d");J();for(var b=0,e=S.length;b<e;b++)c.drawImage(S[b],0,0);return a.toDataURL("image/png")},
-setPosition:function(a,c){D.style.left=a+"px";D.style.top=c+"px"}};var T=OpenLayers.Layer.prototype,qa=function(a){this.offset={x:0,y:0};T.initialize.call(this,this.name,{projection:"EPSG:900913"});a.addLayer(this)},n=qa.prototype=new OpenLayers.Layer;n.name="OSM Buildings";n.attribution='&copy; <a href="http://osmbuildings.org">OSM Buildings</a>';n.isBaseLayer=!1;n.alwaysInRange=!0;n.setOrigin=function(){var a=this.map,c=a.getLonLatFromPixel(new OpenLayers.Pixel(0,0)),a=a.resolution,b=this.maxExtent,
-e=(b.top-c.lat)/a<<0;y=(c.lon-b.left)/a<<0;z=e};n.setMap=function(a){this.map||T.setMap.call(this,a);$.appendTo(this.div);ua=a.baseLayer.numZoomLevels;Ra(a.size);Ta(a.zoom);this.setOrigin();M.update();J()};n.removeMap=function(a){$.remove();T.removeMap.call(this,a);this.map=null};n.onMapResize=function(){var a=this.map;T.onMapResize.call(this);Ra(a.size.w,a.size.h);J();M.update()};n.moveTo=function(a,c,b){var e=this.map;a=T.moveTo.call(this,a,c,b);if(!b){b=parseInt(e.layerContainerDiv.style.left,
-10);var d=parseInt(e.layerContainerDiv.style.top,10);this.div.style.left=-b+"px";this.div.style.top=-d+"px"}this.setOrigin();this.offset.x=0;this.offset.y=0;b=this.offset;N=Z+b.x;O=r+b.y;c?(c=e.zoom,fa=!1,Ta(c),M.update(),J()):(J(),M.update());return a};n.moveByPx=function(a,c){this.offset.x+=a;this.offset.y+=c;var b=T.moveByPx.call(this,a,c),e=this.offset;N=Z+e.x;O=r+e.y;Na();return b};n.setStyle=function(a){a=a||{};if(a.color||a.wallColor)I=K.parse(a.color||a.wallColor),sa=I.setAlpha(A)+"",ja=I.setLightness(0.8),
-ga=ja.setAlpha(A)+"",P=I.setLightness(1.2),Y=P.setAlpha(A)+"";a.roofColor&&(P=K.parse(a.roofColor),Y=P.setAlpha(A)+"");void 0!==a.shadows&&W.enable(a.shadows);J();return this};n.setDate=function(a){W.setDate(a);return this};n.loadData=function(a){M.load(a);return this};n.setData=function(a){M.set(a);return this};n.screenshot=function(a){var c=$.screenshot();a&&(ca.location.href=c.replace("image/png","image/octet-stream"));return c};qa.VERSION="0.1.8a";qa.ATTRIBUTION='&copy; <a href="http://osmbuildings.org">OSM Buildings</a>';
-return qa}(this);
+/**
+ * Copyright (C) 2013 OSM Buildings, Jan Marsch
+ * A leightweight JavaScript library for visualizing 3D building geometry on interactive maps.
+ * @osmbuildings, http://osmbuildings.org
+ */
+//****** file: prefix.js ******
+
+(exports || window).OSMBuildings = (function(win) {
+
+    'use strict';
+
+
+//****** file: shortcuts.js ******
+
+// object access shortcuts
+var Int32Array = Int32Array || Array,
+    Uint8Array = Uint8Array || Array,
+    m = Math,
+    exp = m.exp,
+    log = m.log,
+    sin = m.sin,
+    cos = m.cos,
+    tan = m.tan,
+    atan = m.atan,
+    min = m.min,
+    max = m.max,
+    ceil = m.ceil,
+    floor = m.floor,
+    doc = win.document;
+
+
+if (!win.console) {
+    win.console = {
+        log:function() {},
+        warn:function() {}
+    };
+}
+
+
+
+//****** file: Color.js ******
+
+var Color = (function() {
+
+    var w3cColors = {
+        aliceblue:'#f0f8ff',
+        antiquewhite:'#faebd7',
+        aqua:'#00ffff',
+        aquamarine:'#7fffd4',
+        azure:'#f0ffff',
+        beige:'#f5f5dc',
+        bisque:'#ffe4c4',
+        black:'#000000',
+        blanchedalmond:'#ffebcd',
+        blue:'#0000ff',
+        blueviolet:'#8a2be2',
+        brown:'#a52a2a',
+        burlywood:'#deb887',
+        cadetblue:'#5f9ea0',
+        chartreuse:'#7fff00',
+        chocolate:'#d2691e',
+        coral:'#ff7f50',
+        cornflowerblue:'#6495ed',
+        cornsilk:'#fff8dc',
+        crimson:'#dc143c',
+        cyan:'#00ffff',
+        darkblue:'#00008b',
+        darkcyan:'#008b8b',
+        darkgoldenrod:'#b8860b',
+        darkgray:'#a9a9a9',
+        darkgreen:'#006400',
+        darkkhaki:'#bdb76b',
+        darkmagenta:'#8b008b',
+        darkolivegreen:'#556b2f',
+        darkorange:'#ff8c00',
+        darkorchid:'#9932cc',
+        darkred:'#8b0000',
+        darksalmon:'#e9967a',
+        darkseagreen:'#8fbc8f',
+        darkslateblue:'#483d8b',
+        darkslategray:'#2f4f4f',
+        darkturquoise:'#00ced1',
+        darkviolet:'#9400d3',
+        deeppink:'#ff1493',
+        deepskyblue:'#00bfff',
+        dimgray:'#696969',
+        dodgerblue:'#1e90ff',
+        firebrick:'#b22222',
+        floralwhite:'#fffaf0',
+        forestgreen:'#228b22',
+        fuchsia:'#ff00ff',
+        gainsboro:'#dcdcdc',
+        ghostwhite:'#f8f8ff',
+        gold:'#ffd700',
+        goldenrod:'#daa520',
+        gray:'#808080',
+        green:'#008000',
+        greenyellow:'#adff2f',
+        honeydew:'#f0fff0',
+        hotpink:'#ff69b4',
+        indianred :'#cd5c5c',
+        indigo :'#4b0082',
+        ivory:'#fffff0',
+        khaki:'#f0e68c',
+        lavender:'#e6e6fa',
+        lavenderblush:'#fff0f5',
+        lawngreen:'#7cfc00',
+        lemonchiffon:'#fffacd',
+        lightblue:'#add8e6',
+        lightcoral:'#f08080',
+        lightcyan:'#e0ffff',
+        lightgoldenrodyellow:'#fafad2',
+        lightgray:'#d3d3d3',
+        lightgreen:'#90ee90',
+        lightpink:'#ffb6c1',
+        lightsalmon:'#ffa07a',
+        lightseagreen:'#20b2aa',
+        lightskyblue:'#87cefa',
+        lightslategray:'#778899',
+        lightsteelblue:'#b0c4de',
+        lightyellow:'#ffffe0',
+        lime:'#00ff00',
+        limegreen:'#32cd32',
+        linen:'#faf0e6',
+        magenta:'#ff00ff',
+        maroon:'#800000',
+        mediumaquamarine:'#66cdaa',
+        mediumblue:'#0000cd',
+        mediumorchid:'#ba55d3',
+        mediumpurple:'#9370db',
+        mediumseagreen:'#3cb371',
+        mediumslateblue:'#7b68ee',
+        mediumspringgreen:'#00fa9a',
+        mediumturquoise:'#48d1cc',
+        mediumvioletred:'#c71585',
+        midnightblue:'#191970',
+        mintcream:'#f5fffa',
+        mistyrose:'#ffe4e1',
+        moccasin:'#ffe4b5',
+        navajowhite:'#ffdead',
+        navy:'#000080',
+        oldlace:'#fdf5e6',
+        olive:'#808000',
+        olivedrab:'#6b8e23',
+        orange:'#ffa500',
+        orangered:'#ff4500',
+        orchid:'#da70d6',
+        palegoldenrod:'#eee8aa',
+        palegreen:'#98fb98',
+        paleturquoise:'#afeeee',
+        palevioletred:'#db7093',
+        papayawhip:'#ffefd5',
+        peachpuff:'#ffdab9',
+        peru:'#cd853f',
+        pink:'#ffc0cb',
+        plum:'#dda0dd',
+        powderblue:'#b0e0e6',
+        purple:'#800080',
+        red:'#ff0000',
+        rosybrown:'#bc8f8f',
+        royalblue:'#4169e1',
+        saddlebrown:'#8b4513',
+        salmon:'#fa8072',
+        sandybrown:'#f4a460',
+        seagreen:'#2e8b57',
+        seashell:'#fff5ee',
+        sienna:'#a0522d',
+        silver:'#c0c0c0',
+        skyblue:'#87ceeb',
+        slateblue:'#6a5acd',
+        slategray:'#708090',
+        snow:'#fffafa',
+        springgreen:'#00ff7f',
+        steelblue:'#4682b4',
+        tan:'#d2b48c',
+        teal:'#008080',
+        thistle:'#d8bfd8',
+        tomato:'#ff6347',
+        turquoise:'#40e0d0',
+        violet:'#ee82ee',
+        wheat:'#f5deb3',
+        white:'#ffffff',
+        whitesmoke:'#f5f5f5',
+        yellow:'#ffff00',
+        yellowgreen:'#9acd32'
+    };
+
+    function hsla2rgb(hsla) { // h belongs to [0, 360]; s,l,a belong to [0, 1]
+        var r, g, b;
+
+        if (hsla.s === 0) {
+            r = g = b = hsla.l; // achromatic
+        } else {
+            var q = hsla.l < 0.5 ? hsla.l * (1+hsla.s) : hsla.l + hsla.s - hsla.l * hsla.s,
+                p = 2 * hsla.l-q;
+            hsla.h /= 360;
+            r = hue2rgb(p, q, hsla.h + 1/3);
+            g = hue2rgb(p, q, hsla.h);
+            b = hue2rgb(p, q, hsla.h - 1/3);
+        }
+        return new Color(
+            r * 255 <<0,
+            g * 255 <<0,
+            b * 255 <<0,
+            hsla.a
+        );
+    }
+
+    function hue2rgb(p, q, t) {
+        if (t < 0) {
+            t += 1;
+        }
+        if (t > 1) {
+            t -= 1;
+        }
+        if (t < 1 / 6) {
+            return p + (q-p) * 6 * t;
+        }
+        if (t < 1 / 2) {
+            return q;
+        }
+        if (t < 2 / 3) {
+            return p + (q-p) * (2/3 - t) * 6;
+        }
+        return p;
+    }
+
+    function Color(r, g, b, a) { // r,g,b belong to [0, 255]; a belongs to [0,1]
+        this.r = r;
+        this.g = g;
+        this.b = b;
+        this.a = arguments.length < 4 ? 1 : a;
+    }
+
+    var proto = Color.prototype;
+
+    proto.toString = function() {
+//        if (this.a === 1) {
+//            return '#' + ((1 << 24) + (this.r << 16) + (this.g << 8) + this.b).toString(16).slice(1, 7);
+//        }
+        return 'rgba(' + [this.r <<0, this.g <<0, this.b <<0, this.a.toFixed(2)].join(',') + ')';
+    };
+
+    proto.setLightness = function(l) {
+        var hsla = Color.toHSLA(this);
+        hsla.l *= l;
+        hsla.l = Math.min(1, Math.max(0, hsla.l));
+        return hsla2rgb(hsla);
+    };
+
+    proto.setAlpha = function(a) {
+        return new Color(this.r, this.g, this.b, this.a * a);
+    };
+
+    /*
+     * str can be in any of the following forms:
+     * "#[00-ff][00-ff][00-ff]", "#[00-ff][00-ff][00-ff][00-ff]",
+     * "rgb([0-255],[0-255],[0-255])", "rgba([0-255],[0-255],[0-255],[0-1])",
+     * "hsl([0-360],[0-1],[0-1])", "hsla([0-360],[0-1],[0-1],[0-1])"
+     */
+    Color.parse = function(str) {
+        var m;
+        str += '';
+        str = w3cColors[str] || str;
+        if (~str.indexOf('#') && (m = str.match(/^#?(\w{2})(\w{2})(\w{2})(\w{2})?$/))) {
+            return new Color(
+                parseInt(m[1], 16),
+                parseInt(m[2], 16),
+                parseInt(m[3], 16),
+                m[4] ? parseInt(m[4], 16) / 255 : 1
+            );
+        }
+
+        if ((m = str.match(/rgba?\((\d+)\D+(\d+)\D+(\d+)(\D+([\d.]+))?\)/))) {
+            return new Color(
+                parseInt(m[1], 10),
+                parseInt(m[2], 10),
+                parseInt(m[3], 10),
+                m[4] ? parseFloat(m[5]) : 1
+            );
+        }
+
+        if ((m = str.match(/hsla?\(([\d.]+)\D+([\d.]+)\D+([\d.]+)(\D+([\d.]+))?\)/))) {
+            return hsla2rgb({
+                h: parseInt(m[1], 10),
+                s: parseFloat(m[2]),
+                l: parseFloat(m[3]),
+                a: m[4] ? parseFloat(m[5]) : 1
+            });
+        }
+    };
+
+    Color.toHSLA = function(rgba) { // r,g,b belong to [0, 255]; a belongs to [0,1]
+        var r = rgba.r/255,
+            g = rgba.g/255,
+            b = rgba.b/255,
+            max = Math.max(r, g, b), min = Math.min(r, g, b),
+            h, s, l = (max+min) / 2,
+            d;
+
+        if (max === min) {
+            h = s = 0; // achromatic
+        } else {
+            d = max-min;
+            s = l > 0.5 ? d / (2-max-min) : d / (max+min);
+            switch (max) {
+                case r: h = (g-b) / d + (g < b ? 6 : 0); break;
+                case g: h = (b-r) / d + 2; break;
+                case b: h = (r-g) / d + 4; break;
+            }
+            h /= 6;
+        }
+
+        return { h:h*360, s:s, l:l, a:rgba.a };
+    };
+
+    return Color;
+
+}());
+
+
+//****** file: SunPosition.js ******
+
+// calculations are based on http://aa.quae.nl/en/reken/zonpositie.html
+// code credits to Vladimir Agafonkin (@mourner)
+
+var getSunPosition = (function() {
+
+    var m = Math,
+      PI = m.PI,
+      sin = m.sin,
+      cos = m.cos,
+      tan = m.tan,
+      asin = m.asin,
+      atan = m.atan2;
+
+    var rad = PI/180,
+      dayMs = 1000*60*60*24,
+      J1970 = 2440588,
+      J2000 = 2451545,
+      e = rad*23.4397; // obliquity of the Earth
+
+    function toJulian(date) {
+      return date.valueOf()/dayMs - 0.5+J1970;
+    }
+    function toDays(date) {
+      return toJulian(date)-J2000;
+    }
+    function getRightAscension(l, b) {
+      return atan(sin(l)*cos(e) - tan(b)*sin(e), cos(l));
+    }
+    function getDeclination(l, b) {
+      return asin(sin(b)*cos(e) + cos(b)*sin(e)*sin(l));
+    }
+    function getAzimuth(H, phi, dec) {
+      return atan(sin(H), cos(H)*sin(phi) - tan(dec)*cos(phi));
+    }
+    function getAltitude(H, phi, dec) {
+      return asin(sin(phi)*sin(dec) + cos(phi)*cos(dec)*cos(H));
+    }
+    function getSiderealTime(d, lw) {
+      return rad * (280.16 + 360.9856235*d) - lw;
+    }
+    function getSolarMeanAnomaly(d) {
+      return rad * (357.5291 + 0.98560028*d);
+    }
+    function getEquationOfCenter(M) {
+      return rad * (1.9148*sin(M) + 0.0200 * sin(2*M) + 0.0003 * sin(3*M));
+    }
+    function getEclipticLongitude(M, C) {
+      var P = rad*102.9372; // perihelion of the Earth
+      return M+C+P+PI;
+    }
+
+    return function getSunPosition(date, lat, lon) {
+      var lw = rad*-lon,
+        phi = rad*lat,
+        d = toDays(date),
+        M = getSolarMeanAnomaly(d),
+        C = getEquationOfCenter(M),
+        L = getEclipticLongitude(M, C),
+        D = getDeclination(L, 0),
+        A = getRightAscension(L, 0),
+        t = getSiderealTime(d, lw),
+        H = t-A;
+
+      return {
+        altitude: getAltitude(H, phi, D),
+        azimuth: getAzimuth(H, phi, D) - PI/2 // origin: north
+      };
+    };
+
+}());
+
+
+//****** file: Import.js ******
+
+var Import = (function() {
+
+    var me = {};
+
+    var _clockwise = 'CW', _counterClockwise = 'CCW';
+
+    // detect winding direction: clockwise or counter clockwise
+    function _getWinding(points) {
+        var x1, y1, x2, y2,
+            a = 0,
+            i, il;
+        for (i = 0, il = points.length-3; i < il; i += 2) {
+            x1 = points[i];
+            y1 = points[i+1];
+            x2 = points[i+2];
+            y2 = points[i+3];
+            a += x1*y2 - x2*y1;
+        }
+        return (a/2) > 0 ? _clockwise : _counterClockwise;
+    }
+
+    // enforce a polygon winding direcetion. Needed for proper backface culling.
+    function _makeWinding(points, direction) {
+        var winding = _getWinding(points);
+        if (winding === direction) {
+            return points;
+        }
+        var revPoints = [];
+        for (var i = points.length-2; i >= 0; i -= 2) {
+            revPoints.push(points[i], points[i+1]);
+        }
+        return revPoints;
+    }
+
+    me.windOuterPolygon = function(points) {
+        return _makeWinding(points, _clockwise);
+    };
+
+    me.windInnerPolygon = function(points) {
+        return _makeWinding(points, _counterClockwise);
+    };
+
+    me.YARD_TO_METER = 0.9144;
+    me.FOOT_TO_METER = 0.3048;
+    me.INCH_TO_METER = 0.0254;
+    me.METERS_PER_LEVEL = 3;
+
+    me.getDimension = function(str) {
+        var value = parseFloat(str);
+        if (value === str) {
+            return value <<0;
+        }
+        if (~str.indexOf('m')) {
+            return value <<0;
+        }
+        if (~str.indexOf('yd')) {
+            return value*me.YARD_TO_METER <<0;
+        }
+        if (~str.indexOf('ft')) {
+            return value*me.FOOT_TO_METER <<0;
+        }
+        if (~str.indexOf('\'')) {
+            var parts = str.split('\'');
+            var res = parts[0]*me.FOOT_TO_METER + parts[1]*me.INCH_TO_METER;
+            return res <<0;
+        }
+        return value <<0;
+    };
+
+    var _materialColors = {
+        brick:'#cc7755',
+        bronze:'#ffeecc',
+        canvas:'#fff8f0',
+        concrete:'#999999',
+        copper:'#a0e0d0',
+        glass:'#e8f8f8',
+        gold:'#ffcc00',
+        plants:'#009933',
+        metal:'#aaaaaa',
+        panel:'#fff8f0',
+        plaster:'#999999',
+        roof_tiles:'#f08060',
+        silver:'#cccccc',
+        slate:'#666666',
+        stone:'#996666',
+        tar_paper:'#333333',
+        wood:'#deb887'
+    };
+
+    var _baseMaterials = {
+        asphalt:'tar_paper',
+        bitumen:'tar_paper',
+        block:'stone',
+        bricks:'brick',
+        glas:'glass',
+        glassfront:'glass',
+        grass:'plants',
+        masonry:'stone',
+        granite:'stone',
+        panels:'panel',
+        paving_stones:'stone',
+        plastered:'plaster',
+        rooftiles:'roof_tiles',
+        roofingfelt:'tar_paper',
+        sandstone:'stone',
+        sheet:'canvas',
+        sheets:'canvas',
+        shingle:'tar_paper',
+        shingles:'tar_paper',
+        slates:'slate',
+        steel:'metal',
+        tar:'tar_paper',
+        tent:'canvas',
+        thatch:'plants',
+        tile:'roof_tiles',
+        tiles:'roof_tiles'
+    };
+
+    // cardboard
+    // eternit
+    // limestone
+    // straw
+
+    me.getMaterialColor = function(str) {
+        str = str.toLowerCase();
+        if (str[0] === '#') {
+            return str;
+        }
+        return _materialColors[_baseMaterials[str] || str] || null;
+    };
+
+    return me;
+
+}());
+
+
+//****** file: GeoJSON.js ******
+
+var readGeoJSON = function(collection) {
+    var i, il, j, jl, k, kl,
+        res = [],
+        feature,
+        geometry, properties, coordinates,
+        wallColor, roofColor,
+        last,
+        polygon, footprint, holes,
+        lat = 1, lon = 0,
+        item;
+
+    for (i = 0, il = collection.length; i < il; i++) {
+        feature = collection[i];
+        if (feature.type !== 'Feature') {
+            continue;
+        }
+
+        geometry = feature.geometry;
+        properties = feature.properties;
+
+        if (geometry.type === 'LineString') {
+            last = coordinates.length-1;
+            if (coordinates[0][0] === coordinates[last][0] && coordinates[0][1] === coordinates[last][1]) {
+                coordinates = geometry.coordinates;
+            }
+        }
+
+        if (geometry.type === 'Polygon') {
+            coordinates = geometry.coordinates;
+        }
+
+        if (geometry.type === 'MultiPolygon') {
+            coordinates = geometry.coordinates[0];
+        }
+
+        if (!coordinates) {
+            continue;
+        }
+
+        if (properties.color || properties.wallColor) {
+            wallColor = properties.color || properties.wallColor;
+        }
+
+        if (properties.roofColor) {
+            roofColor = properties.roofColor;
+        }
+
+        polygon   = coordinates[0];
+        footprint = [];
+        for (j = 0, jl = polygon.length; j < jl; j++) {
+            footprint.push(polygon[j][lat], polygon[j][lon]);
+        }
+
+        holes = [];
+        for (j = 1, jl = coordinates.length; j < jl; j++) {
+            polygon = coordinates[j];
+            holes[j-1] = [];
+            for (k = 0, kl = polygon.length; k < kl; k++) {
+                holes[j-1].push(polygon[k][lat], polygon[k][lon]);
+
+            }
+            holes[j-1] = Import.windInnerPolygon(holes[j-1]);
+        }
+
+        // one item per coordinates ring (usually just one ring)
+        item = {
+            id:properties.id || (footprint[0] + ',' + footprint[1]),
+            footprint:Import.windOuterPolygon(footprint)
+        };
+
+        if (properties.height)    item.height    = Import.getDimension(properties.height);
+        if (properties.minHeight) item.minHeight = Import.getDimension(properties.minHeight);
+        if (wallColor)            item.wallColor = wallColor;
+        if (roofColor)            item.roofColor = roofColor;
+        if (holes.length)         item.holes     = holes;
+        res.push(item);
+    }
+
+    return res;
+};
+
+
+//****** file: OSMXAPI.js ******
+
+var readOSMXAPI = (function() {
+
+    function isBuilding(data) {
+        var tags = data.tags;
+        return (tags &&
+            !tags.landuse &&
+            (tags.building || tags['building:part']) &&
+            (!tags.layer || tags.layer >= 0));
+    }
+
+//  living:'bricks',
+//  nonliving:'tar_paper',
+//  worship:'copper'
+
+    function getBuildingType(tags) {
+        if (tags.amenity === 'place_of_worship') {
+            return 'worship';
+        }
+
+        var type = tags.building;
+        if (type === 'yes' || type === 'roof') {
+            type = tags['building:use'];
+        }
+        if (!type) {
+            type = tags.amenity;
+        }
+
+        switch (type) {
+            case 'apartments':
+            case 'house':
+            case 'residential':
+            case 'hut':
+                return 'living';
+            case 'church':
+                return 'worship';
+        }
+
+        return 'nonliving';
+    }
+
+    function getRelationWays(members) {
+        var m, outer, inner = [];
+        for (var i = 0, il = members.length; i < il; i++) {
+            m = members[i];
+            if (m.type !== 'way' || !ways[m.ref]) {
+                continue;
+            }
+            if (!m.role || m.role === 'outer') {
+                outer = ways[m.ref];
+                continue;
+            }
+            if (m.role === 'inner' || m.role === 'enclave') {
+                inner.push(ways[m.ref]);
+                continue;
+            }
+        }
+        if (!outer || !outer.tags) {
+            return;
+        }
+        return { outer:outer, inner:inner };
+    }
+
+    function getFootprint(points) {
+        if (!points) {
+            return;
+        }
+
+        var footprint = [], p;
+        for (var i = 0, il = points.length; i < il; i++) {
+            p = nodes[ points[i] ];
+            footprint.push(p[0], p[1]);
+        }
+
+        // do not close polygon yet
+        if (footprint[footprint.length-2] !== footprint[0] && footprint[footprint.length-1] !== footprint[1]) {
+            footprint.push(footprint[0], footprint[1]);
+        }
+
+        // can't span a polygon with just 2 points (+ start & end)
+        if (footprint.length < 8) {
+            return;
+        }
+
+        return footprint;
+    }
+
+    function mergeTags(dst, src) {
+        for (var p in src) {
+            if (!dst[p]) {
+                dst[p] = src[p];
+            }
+        }
+        return dst;
+    }
+
+    function filterTags(tags) {
+        var height = 0, minHeight = 0;
+
+        if (tags.height) {
+            height = Import.getDimension(tags.height);
+        }
+        if (!height && tags['building:height']) {
+            height = Import.getDimension(tags['building:height']);
+        }
+
+        if (!height && tags.levels) {
+            height = tags.levels*Import.METERS_PER_LEVEL <<0;
+        }
+        if (!height && tags['building:levels']) {
+            height = tags['building:levels']*Import.METERS_PER_LEVEL <<0;
+        }
+
+        // min_height
+        if (tags.min_height) {
+            minHeight = Import.getDimension(tags.min_height);
+        }
+        if (!minHeight && tags['building:min_height']) {
+            minHeight = Import.getDimension(tags['building:min_height']);
+        }
+
+        if (!minHeight && tags.min_level) {
+            minHeight = tags.min_level*Import.METERS_PER_LEVEL <<0;
+        }
+        if (!minHeight && tags['building:min_level']) {
+            minHeight = tags['building:min_level']*Import.METERS_PER_LEVEL <<0;
+        }
+
+        var wallColor, roofColor;
+
+        // wall material
+        if (tags['building:material']) {
+            wallColor = Import.getMaterialColor(tags['building:material']);
+        }
+        if (tags['building:facade:material']) {
+            wallColor = Import.getMaterialColor(tags['building:facade:material']);
+        }
+        if (tags['building:cladding']) {
+            wallColor = Import.getMaterialColor(tags['building:cladding']);
+        }
+        // wall color
+        if (tags['building:color']) {
+            wallColor = tags['building:color'];
+        }
+        if (tags['building:colour']) {
+            wallColor = tags['building:colour'];
+        }
+
+        // roof material
+        if (tags['roof:material']) {
+            roofColor = Import.getMaterialColor(tags['roof:material']);
+        }
+        if (tags['building:roof:material']) {
+            roofColor = Import.getMaterialColor(tags['building:roof:material']);
+        }
+        // roof color
+        if (tags['roof:color']) {
+            roofColor = tags['roof:color'];
+        }
+        if (tags['roof:colour']) {
+            roofColor = tags['roof:colour'];
+        }
+        if (tags['building:roof:color']) {
+            roofColor = tags['building:roof:color'];
+        }
+        if (tags['building:roof:colour']) {
+            roofColor = tags['building:roof:colour'];
+        }
+
+        return {
+            height:    height,
+            minHeight: minHeight,
+            wallColor: wallColor,
+            roofColor: roofColor
+        };
+    }
+
+    function processNode(node) {
+        nodes[node.id] = [node.lat, node.lon];
+    }
+
+    function processWay(way) {
+        var tags, footprint;
+        if (isBuilding(way)) {
+            tags = filterTags(way.tags);
+            if ((footprint = getFootprint(way.nodes))) {
+                addResult(way.id, tags, footprint);
+            }
+        } else {
+            tags = way.tags;
+            if (!tags || (!tags.highway && !tags.railway && !tags.landuse)) { // TODO: add more filters
+                ways[way.id] = way;
+            }
+        }
+    }
+
+    function processRelation(relation) {
+        var relationWays, outerWay, holes = [],
+            tags, outerFootprint, innerFootprint;
+        if (isBuilding(relation) && (relation.tags.type === 'multipolygon' || relation.tags.type === 'building')) {
+            if ((relationWays = getRelationWays(relation.members))) {
+                var relTags = filterTags(relation.tags);
+                if ((outerWay = relationWays.outer)) {
+                    tags = filterTags(outerWay.tags);
+                    if ((outerFootprint = getFootprint(outerWay.nodes))) {
+                        tags = mergeTags(tags, relTags);
+                        for (var i = 0, il = relationWays.inner.length; i < il; i++) {
+                            if ((innerFootprint = getFootprint(relationWays.inner[i].nodes))) {
+                                holes.push(Import.windInnerPolygon(innerFootprint));
+                            }
+                        }
+                        addResult(outerWay.id, tags, outerFootprint, holes.length ? holes : null);
+                    }
+                }
+            }
+        }
+    }
+
+    function addResult(id, tags, footprint, holes) {
+        var item = { id:id, footprint:Import.windOuterPolygon(footprint) };
+        if (tags.height)    item.height    = tags.height;
+        if (tags.minHeight) item.minHeight = tags.minHeight;
+        if (tags.wallColor) item.wallColor = tags.wallColor;
+        if (tags.roofColor) item.roofColor = tags.roofColor;
+        if (holes)          item.holes     = holes;
+        res.push(item);
+    }
+
+    var nodes, ways, res;
+
+    return function(data) {
+        nodes = {};
+        ways = {};
+        res = [];
+
+        var item;
+        for (var i = 0, il = data.length; i < il; i++) {
+            item = data[i];
+            switch(item.type ) {
+                case 'node':     processNode(item);     break;
+                case 'way':      processWay(item);      break;
+                case 'relation': processRelation(item); break;
+            }
+        }
+
+        return res;
+    };
+})();
+
+
+//****** file: constants.js ******
+
+// constants, shared to all instances
+var VERSION      = '0.1.8a',
+    ATTRIBUTION  = '&copy; <a href="http://osmbuildings.org">OSM Buildings</a>',
+    OSM_XAPI_URL = 'http://overpass-api.de/api/interpreter?data=[out:json];(way[%22building%22]({s},{w},{n},{e});node(w);way[%22building:part%22=%22yes%22]({s},{w},{n},{e});node(w);relation[%22building%22]({s},{w},{n},{e});way(r);node(w););out;',
+//  OSM_XAPI_URL = 'http://overpass.osm.rambler.ru/cgi/interpreter?data=[out:json];(way[%22building%22]({s},{w},{n},{e});node(w);way[%22building:part%22=%22yes%22]({s},{w},{n},{e});node(w);relation[%22building%22]({s},{w},{n},{e});way(r);node(w););out;',
+
+    PI         = Math.PI,
+    HALF_PI    = PI/2,
+    QUARTER_PI = PI/4,
+    RAD        = 180/PI,
+
+    MAP_TILE_SIZE  = 256,    // map tile size in pixels
+    DATA_TILE_SIZE = 0.0075, // data tile size in geo coordinates, smaller: less data to load but more requests
+
+    MIN_ZOOM = 15,
+
+    LAT = 'latitude', LON = 'longitude',
+
+    DEFAULT_HEIGHT = 5,
+    HEIGHT_SCALE = 1;
+
+
+//****** file: geometry.js ******
+
+function getDistance(p1, p2) {
+    var dx = p1[0]-p2[0],
+        dy = p1[1]-p2[1];
+    return dx*dx + dy*dy;
+}
+
+function crop(num) {
+    return (num*10000 << 0) / 10000;
+}
+
+function getCenter(points) {
+    var len, x = 0, y = 0;
+    for (var i = 0, il = points.length-3; i < il; i += 2) {
+        x += points[i];
+        y += points[i+1];
+    }
+    len = (points.length-2) / 2;
+    return [x/len <<0, y/len <<0];
+}
+
+function getSquareSegmentDistance(px, py, p1x, p1y, p2x, p2y) {
+    var dx = p2x-p1x,
+        dy = p2y-p1y,
+        t;
+    if (dx !== 0 || dy !== 0) {
+        t = ((px-p1x) * dx + (py-p1y) * dy) / (dx*dx + dy*dy);
+        if (t > 1) {
+            p1x = p2x;
+            p1y = p2y;
+        } else if (t > 0) {
+            p1x += dx*t;
+            p1y += dy*t;
+        }
+    }
+    dx = px-p1x;
+    dy = py-p1y;
+    return dx*dx + dy*dy;
+}
+
+function simplify(points) {
+    var sqTolerance = 2,
+        len = points.length/2,
+        markers = new Uint8Array(len),
+
+        first = 0,
+        last  = len - 1,
+
+        i,
+        maxSqDist,
+        sqDist,
+        index,
+
+        firstStack = [],
+        lastStack  = [],
+
+        newPoints  = [];
+
+    markers[first] = markers[last] = 1;
+
+    while (last) {
+        maxSqDist = 0;
+
+        for (i = first + 1; i < last; i++) {
+            sqDist = getSquareSegmentDistance(
+                points[i    *2], points[i    *2 + 1],
+                points[first*2], points[first*2 + 1],
+                points[last *2], points[last *2 + 1]
+            );
+            if (sqDist > maxSqDist) {
+                index = i;
+                maxSqDist = sqDist;
+            }
+        }
+
+        if (maxSqDist > sqTolerance) {
+            markers[index] = 1;
+
+            firstStack.push(first);
+            lastStack.push(index);
+
+            firstStack.push(index);
+            lastStack.push(last);
+        }
+
+        first = firstStack.pop();
+        last = lastStack.pop();
+    }
+
+    for (i = 0; i < len; i++) {
+        if (markers[i]) {
+            newPoints.push(points[i*2], points[i*2 + 1]);
+        }
+    }
+
+    return newPoints;
+}
+
+
+//****** file: variables.js ******
+
+// private variables, specific to an instance
+var width = 0, height = 0,
+    halfWidth = 0, halfHeight = 0,
+    originX = 0, originY = 0,
+    zoom, size,
+
+    activeRequest,
+
+    context,
+
+    defaultWallColor = new Color(200, 190, 180),
+    defaultAltColor  = defaultWallColor.setLightness(0.8),
+    defaultRoofColor = defaultWallColor.setLightness(1.2),
+
+    wallColorAlpha = defaultWallColor + '',
+    altColorAlpha  = defaultAltColor + '',
+    roofColorAlpha = defaultRoofColor + '',
+
+    fadeFactor = 1,
+    zoomAlpha = 1,
+
+    minZoom = MIN_ZOOM,
+    maxZoom = 20,
+    maxHeight,
+
+    camX, camY, camZ = 450,
+
+    isZooming;
+
+
+//****** file: functions.js ******
+
+function pixelToGeo(x, y) {
+    var res = {};
+    x /= size;
+    y /= size;
+    res[LAT] = y <= 0  ? 90 : y >= 1 ? -90 : RAD * (2 * atan(exp(PI * (1 - 2*y))) - HALF_PI),
+    res[LON] = (x === 1 ?  1 : (x%1 + 1) % 1) * 360 - 180;
+    return res;
+}
+
+function geoToPixel(lat, lon) {
+    var latitude  = min(1, max(0, 0.5 - (log(tan(QUARTER_PI + HALF_PI * lat / 180)) / PI) / 2)),
+        longitude = lon/360 + 0.5;
+    return {
+        x: longitude*size <<0,
+        y: latitude *size <<0
+    };
+}
+
+function fromRange(sVal, sMin, sMax, dMin, dMax) {
+    sVal = min(max(sVal, sMin), sMax);
+    var rel = (sVal-sMin) / (sMax-sMin),
+        range = dMax-dMin;
+    return min(max(dMin + rel*range, dMin), dMax);
+}
+
+function xhr(_url, param, callback) {
+    var url = _url.replace(/\{ *([\w_]+) *\}/g, function(tag, key) {
+        return param[key] || tag;
+    });
+
+    var req = 'XDomainRequest' in win ? new win.XDomainRequest() : new win.XMLHttpRequest();
+
+    function changeState(state) {
+        if ('XDomainRequest' in win && state !== req.readyState) {
+            req.readyState = state;
+            if (req.onreadystatechange) {
+                req.onreadystatechange();
+            }
+        }
+    }
+
+    req.onerror = function() {
+        req.status = 500;
+        req.statusText = 'Error';
+        changeState(4);
+    };
+
+    req.ontimeout = function() {
+        req.status = 408;
+        req.statusText = 'Timeout';
+        changeState(4);
+    };
+
+    req.onprogress = function() {
+        changeState(3);
+    };
+
+    req.onload = function() {
+        req.status = 200;
+        req.statusText = 'Ok';
+        changeState(4);
+    };
+
+    req.onreadystatechange = function() {
+        if (req.readyState !== 4) {
+            return;
+        }
+        if (!req.status || req.status < 200 || req.status > 299) {
+            return;
+        }
+        if (callback && req.responseText) {
+            callback(JSON.parse(req.responseText));
+        }
+    };
+
+    changeState(0);
+    req.open('GET', url);
+    changeState(1);
+    req.send(null);
+    changeState(2);
+
+    return req;
+}
+
+
+//****** file: Cache.js ******
+
+var Cache = (function() {
+
+    var _time = new Date(),
+        _static = '__STATIC__',
+        _data = {};
+
+    var me = {};
+
+    me.add = function(data, key) {
+        key = key || _static;
+        _data[key] = { data:data, time:Date.now() };
+    };
+
+    me.get = function(key) {
+        key = key || _static;
+        return _data[key] && _data[key].data;
+    };
+
+    me.purge = function() {
+        _time.setMinutes(_time.getMinutes()-5);
+        for (var key in _data) {
+            if (_data[key].time < _time && key !== _static) {
+                delete _data[key];
+            }
+        }
+    };
+
+    return me;
+
+}());
+
+
+//****** file: Data.js ******
+
+var Data = (function() {
+
+    var _url,
+        _isStatic = true,
+        _index = {}; // maintain a list of cached items in order to fade in new ones
+
+    function _getSimpleFootprint(polygon) {
+        var footprint = new Int32Array(polygon.length),
+            px;
+        for (var i = 0, il = polygon.length-1; i < il; i+=2) {
+            px = geoToPixel(polygon[i], polygon[i+1]);
+            footprint[i]   = px.x;
+            footprint[i+1] = px.y;
+        }
+        footprint = simplify(footprint);
+        if (footprint.length < 8) { // 3 points + end==start (*2)
+            return;
+        }
+        return footprint;
+    }
+
+    function _closureForParse(cacheKey) {
+        return function(res) {
+            _parse(res, cacheKey);
+        };
+    }
+
+    function _parse(data, cacheKey) {
+        if (!data) {
+            return;
+        }
+
+        var items;
+        if (data.type === 'FeatureCollection') { // GeoJSON
+            items = readGeoJSON(data.features);
+        } else if (data.osm3s) { // XAPI
+            items = readOSMXAPI(data.elements);
+        }
+
+        Cache.add(items, cacheKey);
+        _addRenderItems(items, true);
+    }
+
+    function _addRenderItems(data, isNew) {
+        var scaledItems = _scale(data, zoom, isNew),
+            item;
+        for (var i = 0, il = scaledItems.length; i < il; i++) {
+            item = scaledItems[i];
+            if (!_index[item.id]) {
+                item.scale = isNew ? 0 : 1;
+                renderItems.push(item);
+                _index[item.id] = 1;
+            }
+        }
+        fadeIn();
+    }
+
+    function _scale(items, zoom) {
+        var i, il, j, jl,
+            res = [],
+            item,
+            height, minHeight, footprint,
+            color, wallColor, altColor,
+            roofColor, roofHeight,
+            holes, innerFootprint,
+            zoomDelta = maxZoom-zoom,
+            meterToPixel = 156412 / Math.pow(2, zoom) / 1.5; // http://wiki.openstreetmap.org/wiki/Zoom_levels, TODO: without factor 1.5, numbers don't match (lat/lon: Berlin)
+
+        for (i = 0, il = items.length; i < il; i++) {
+            item = items[i];
+
+            height = item.height >>zoomDelta;
+
+            minHeight = item.minHeight >>zoomDelta;
+            if (minHeight > maxHeight) {
+                continue;
+            }
+
+            if (!(footprint = _getSimpleFootprint(item.footprint))) {
+                continue;
+            }
+
+            holes = [];
+            if (item.holes) {
+                for (j = 0, jl = item.holes.length; j < jl; j++) {
+                    if ((innerFootprint = _getSimpleFootprint(item.holes[j]))) {
+                        holes.push(innerFootprint);
+                    }
+                }
+            }
+
+            wallColor = null;
+            altColor  = null;
+            if (item.wallColor) {
+                if ((color = Color.parse(item.wallColor))) {
+                    wallColor = color.setAlpha(zoomAlpha);
+                    altColor  = '' + wallColor.setLightness(0.8);
+                    wallColor = '' + wallColor;
+                }
+            }
+
+            roofColor = null;
+            if (item.roofColor) {
+                if ((color = Color.parse(item.roofColor))) {
+                    roofColor = '' + color.setAlpha(zoomAlpha);
+                }
+            }
+
+            roofHeight = item.roofHeight >>zoomDelta;
+
+            // TODO: move buildings without height to FlatBuildings
+            if (height <= minHeight && roofHeight <= 0) {
+                continue;
+            }
+
+            res.push({
+                id:         item.id,
+                footprint:  footprint,
+                height:     min(height, maxHeight),
+                minHeight:  minHeight,
+                wallColor:  wallColor,
+                altColor:   altColor,
+                roofColor:  roofColor,
+                center:     getCenter(footprint),
+                holes:      holes.length ? holes : null,
+                shape:      item.shape, // TODO: drop footprint
+                radius:     item.radius/meterToPixel
+            });
+        }
+
+        return res;
+    }
+
+    var me = {};
+
+    me.load = function(url) {
+        _url = url || OSM_XAPI_URL;
+        _isStatic = !/(.+\{[nesw]\}){4,}/.test(_url);
+        if (_isStatic) {
+            Cache.add(null);
+            xhr(_url, {}, _parse);
+        }
+        me.update();
+    };
+
+    me.update = function() {
+        if (zoom < MIN_ZOOM) {
+            return;
+        }
+
+        renderItems = [];
+        _index = {};
+
+        var lat, lon,
+            cached, key;
+
+        if (_isStatic) {
+            if ((cached = Cache.get(key))) {
+                _addRenderItems(cached);
+            }
+            return;
+        }
+
+        var nw = pixelToGeo(originX,       originY),
+            se = pixelToGeo(originX+width, originY+height),
+            sizeLat = DATA_TILE_SIZE,
+            sizeLon = DATA_TILE_SIZE*2;
+
+        var bounds = {
+            n: ceil( nw.latitude /sizeLat) * sizeLat,
+            e: ceil( se.longitude/sizeLon) * sizeLon,
+            s: floor(se.latitude /sizeLat) * sizeLat,
+            w: floor(nw.longitude/sizeLon) * sizeLon
+        };
+
+        for (lat = bounds.s; lat <= bounds.n; lat += sizeLat) {
+            for (lon = bounds.w; lon <= bounds.e; lon += sizeLon) {
+                key = lat + ',' + lon;
+                if ((cached = Cache.get(key))) {
+                    _addRenderItems(cached);
+                } else {
+                    xhr(_url, {
+                        n: crop(lat+sizeLat),
+                        e: crop(lon+sizeLon),
+                        s: crop(lat),
+                        w: crop(lon)
+                    }, _closureForParse(key));
+                }
+            }
+        }
+
+        Cache.purge();
+    };
+
+    me.set = function(data) {
+        _isStatic = true;
+        renderItems = [];
+        _index = {};
+        _parse(data);
+    };
+
+    return me;
+
+}());
+
+
+//****** file: render.js ******
+
+var renderItems = [];
+var animTimer;
+
+function fadeIn() {
+    if (animTimer) {
+        return;
+    }
+
+    animTimer = setInterval(function() {
+        var item, needed = false;
+        for (var i = 0, il = renderItems.length; i < il; i++) {
+            item = renderItems[i];
+            if (item.scale < 1) {
+                item.scale += 0.5*0.2; // amount*easing
+                if (item.scale > 1) {
+                    item.scale = 1;
+                }
+                needed = true;
+            }
+        }
+
+        renderAll();
+
+        if (!needed) {
+            clearInterval(animTimer);
+            animTimer = null;
+        }
+    }, 33);
+}
+
+function renderAll() {
+    Shadows.render();
+    FlatBuildings.render();
+    render();
+}
+
+function render() {
+    context.clearRect(0, 0, width, height);
+
+    // show on high zoom levels only and avoid rendering during zoom
+    if (zoom < minZoom || isZooming) {
+        return;
+    }
+
+    var i, il, j, jl,
+        item,
+        h, _h, mh, _mh,
+        flatMaxHeight = FlatBuildings.MAX_HEIGHT,
+        sortCam = [camX+originX, camY+originY],
+        vp = {
+            minX: originX,
+            maxX: originX+width,
+            minY: originY,
+            maxY: originY+height
+        },
+        footprint, roof, holes,
+        isVisible,
+        wallColor, altColor;
+
+    // TODO: FlatBuildings are drawn separately, data has to be split
+    renderItems.sort(function(a, b) {
+        return getDistance(b.center, sortCam)/b.height - getDistance(a.center, sortCam)/a.height;
+    });
+
+    for (i = 0, il = renderItems.length; i < il; i++) {
+        item = renderItems[i];
+
+        if (item.height <= flatMaxHeight) {
+            continue;
+        }
+
+        isVisible = false;
+        footprint = item.footprint;
+        for (j = 0, jl = footprint.length - 1; j < jl; j += 2) {
+            // checking footprint is sufficient for visibility
+            // TODO: pre-filter by data tile position
+            if (!isVisible) {
+                isVisible = (footprint[j] > vp.minX && footprint[j] < vp.maxX && footprint[j+1] > vp.minY && footprint[j+1] < vp.maxY);
+            }
+        }
+
+        if (!isVisible) {
+            continue;
+        }
+
+        // when fading in, use a dynamic height
+        h = item.scale < 1 ? item.height*item.scale : item.height;
+        // precalculating projection height factor
+        _h = camZ / (camZ-h);
+
+        _mh = 0;
+        if (item.minHeight) {
+            mh = item.scale < 1 ? item.minHeight*item.scale : item.minHeight;
+            _mh = camZ / (camZ-mh);
+        }
+
+        wallColor = item.wallColor || wallColorAlpha;
+        altColor  = item.altColor  || altColorAlpha;
+
+        roof = renderPolygon(footprint, _h, _mh, wallColor, altColor);
+
+        holes = [];
+        if (item.holes) {
+            for (j = 0, jl = item.holes.length; j < jl; j++) {
+                holes[j] = renderPolygon(item.holes[j], _h, _mh, wallColor, altColor);
+            }
+        }
+
+        // fill roof and optionally stroke it
+        context.fillStyle   = item.roofColor || roofColorAlpha;
+        context.strokeStyle = altColor;
+        drawShape(roof, true, holes);
+    }
+}
+
+function renderPolygon(polygon, h, mh, wallColor, altColor) {
+    var a = { x:0, y:0 }, b = { x:0, y:0 },
+        _a, _b,
+        roof = [];
+    for (var i = 0, il = polygon.length-3; i < il; i += 2) {
+        a.x = polygon[i]  -originX;
+        a.y = polygon[i+1]-originY;
+        b.x = polygon[i+2]-originX;
+        b.y = polygon[i+3]-originY;
+
+        // project 3d to 2d on extruded footprint
+        _a = project(a.x, a.y, h);
+        _b = project(b.x, b.y, h);
+
+        if (mh) {
+            a = project(a.x, a.y, mh);
+            b = project(b.x, b.y, mh);
+        }
+
+        // backface culling check
+        if ((b.x-a.x) * (_a.y-a.y) > (_a.x-a.x) * (b.y-a.y)) {
+            // depending on direction, set wall shading
+            if ((a.x < b.x && a.y < b.y) || (a.x > b.x && a.y > b.y)) {
+                context.fillStyle = altColor;
+            } else {
+                context.fillStyle = wallColor;
+            }
+            drawShape([
+                b.x, b.y,
+                a.x, a.y,
+                _a.x, _a.y,
+                _b.x, _b.y
+            ]);
+        }
+        roof[i]   = _a.x;
+        roof[i+1] = _a.y;
+    }
+
+    return roof;
+}
+
+function drawShape(points, stroke, holes) {
+    if (!points.length) {
+        return;
+    }
+
+    var i, il, j, jl;
+
+    context.beginPath();
+
+    context.moveTo(points[0], points[1]);
+    for (i = 2, il = points.length; i < il; i += 2) {
+        context.lineTo(points[i], points[i+1]);
+    }
+
+    if (holes) {
+        for (i = 0, il = holes.length; i < il; i++) {
+            points = holes[i];
+            context.moveTo(points[0], points[1]);
+            for (j = 2, jl = points.length; j < jl; j += 2) {
+                context.lineTo(points[j], points[j+1]);
+            }
+        }
+    }
+
+    context.closePath();
+    if (stroke) {
+        context.stroke();
+    }
+    context.fill();
+}
+
+function project(x, y, m) {
+    return {
+        x: (x-camX) * m + camX <<0,
+        y: (y-camY) * m + camY <<0
+    };
+}
+
+/*
+function debugMarker(x, y, color, size) {
+    context.fillStyle = color || '#ffcc00';
+    context.beginPath();
+    context.arc(x, y, size || 3, 0, PI*2, true);
+    context.closePath();
+    context.fill();
+}
+
+function debugLine(ax, ay, bx, by, color) {
+    context.strokeStyle = color || '#ff0000';
+    context.beginPath();
+    context.moveTo(ax, ay);
+    context.lineTo(bx, by);
+    context.closePath();
+    context.stroke();
+}
+*/
+
+
+//****** file: Shadows.js ******
+
+var Shadows = (function() {
+
+    var _context;
+    var _enabled = true;
+    var _color = new Color(0, 0, 0);
+    var _date = null;
+    var _direction = { x:0, y:0 };
+
+    function _project(x, y, h) {
+        return {
+            x: x + _direction.x*h,
+            y: y + _direction.y*h
+        };
+    }
+
+    var me = {};
+
+    me.setContext = function(context) {
+        _context = context;
+        // TODO: fix bad Date() syntax
+        me.setDate(new Date().setHours(10)); // => render()
+    };
+
+    me.enable = function(flag) {
+        _enabled = !!flag;
+        // should call me.render() but it is usually set by setStyle() and there a renderAll() is called
+    };
+
+    me.render = function() {
+        var center, sun, length, alpha, colorStr;
+
+        _context.clearRect(0, 0, width, height);
+
+        // show on high zoom levels only and avoid rendering during zoom
+        if (!_enabled || zoom < minZoom || isZooming) {
+            return;
+        }
+
+        // TODO: at some point, calculate me just on demand
+        center = pixelToGeo(originX+halfWidth, originY+halfHeight);
+        sun = getSunPosition(_date, center.latitude, center.longitude);
+
+        if (sun.altitude <= 0) {
+            return;
+        }
+
+        length = 1 / tan(sun.altitude);
+        alpha = 0.4 / length;
+        _direction.x = cos(sun.azimuth) * length;
+        _direction.y = sin(sun.azimuth) * length;
+
+        // TODO: maybe introduce Color.setAlpha()
+        _color.a = alpha;
+        colorStr = _color + '';
+
+        var i, il, j, jl,
+            item,
+            f, h, g,
+            x, y,
+            footprint,
+            mode,
+            isVisible,
+            ax, ay, bx, by,
+            a, b, _a, _b,
+            points,
+            allFootprints = [];
+
+        _context.beginPath();
+
+        for (i = 0, il = renderItems.length; i < il; i++) {
+            item = renderItems[i];
+
+// TODO: no shadows when buildings are too flat => don't add them to renderItems then
+//        if (item.height <= FlatBuildings.MAX_HEIGHT) {
+//            continue;
+//        }
+
+            isVisible = false;
+            f = item.footprint;
+            footprint = [];
+            for (j = 0, jl = f.length - 1; j < jl; j += 2) {
+                footprint[j]   = x = f[j]  -originX;
+                footprint[j+1] = y = f[j+1]-originY;
+
+                // TODO: checking footprint is sufficient for visibility - NOT VALID FOR SHADOWS!
+                if (!isVisible) {
+                    isVisible = (x > 0 && x < width && y > 0 && y < height);
+                }
+            }
+
+            if (!isVisible) {
+                continue;
+            }
+
+            // when fading in, use a dynamic height
+            h = item.scale < 1 ? item.height*item.scale : item.height;
+
+            // prepare same calculations for min_height if applicable
+            if (item.minHeight) {
+                g = item.scale < 1 ? item.minHeight*item.scale : item.minHeight;
+            }
+
+            mode = null;
+
+            for (j = 0, jl = footprint.length-3; j < jl; j += 2) {
+                ax = footprint[j];
+                ay = footprint[j+1];
+                bx = footprint[j+2];
+                by = footprint[j+3];
+
+                _a = _project(ax, ay, h);
+                _b = _project(bx, by, h);
+
+                if (item.minHeight) {
+                    a = _project(ax, ay, g);
+                    b = _project(bx, by, g);
+                    ax = a.x;
+                    ay = a.y;
+                    bx = b.x;
+                    by = b.y;
+                }
+
+                // mode 0: floor edges, mode 1: roof edges
+                if ((bx-ax) * (_a.y-ay) > (_a.x-ax) * (by-ay)) {
+                    if (mode === 1) {
+                        _context.lineTo(ax, ay);
+                    }
+                    mode = 0;
+                    if (!j) {
+                        _context.moveTo(ax, ay);
+                    }
+                    _context.lineTo(bx, by);
+                } else {
+                    if (mode === 0) {
+                        _context.lineTo(_a.x, _a.y);
+                    }
+                    mode = 1;
+                    if (!j) {
+                        _context.moveTo(_a.x, _a.y);
+                    }
+                    _context.lineTo(_b.x, _b.y);
+                }
+            }
+
+            _context.closePath();
+
+            allFootprints.push(footprint);
+        }
+
+        _context.fillStyle = colorStr;
+        _context.fill();
+
+        // now draw all the footprints as negative clipping mask
+        _context.globalCompositeOperation = 'destination-out';
+        _context.beginPath();
+        for (i = 0, il = allFootprints.length; i < il; i++) {
+            points = allFootprints[i];
+            _context.moveTo(points[0], points[1]);
+            for (j = 2, jl = points.length; j < jl; j += 2) {
+                _context.lineTo(points[j], points[j+1]);
+            }
+            _context.lineTo(points[0], points[1]);
+            _context.closePath();
+        }
+        _context.fillStyle = '#00ff00';
+        _context.fill();
+        _context.globalCompositeOperation = 'source-over';
+    };
+
+    me.setDate = function(date) {
+        _date = date;
+        me.render();
+    };
+
+    return me;
+
+}());
+
+
+//****** file: FlatBuildings.js ******
+
+var FlatBuildings = (function() {
+
+    var _context;
+
+    var me = {};
+
+    me.MAX_HEIGHT = 8;
+
+    me.setContext = function(context) {
+        _context = context;
+    };
+
+    me.render = function() {
+        _context.clearRect(0, 0, width, height);
+
+        // show on high zoom levels only and avoid rendering during zoom
+        if (zoom < minZoom || isZooming) {
+            return;
+        }
+
+        var i, il, j, jl,
+            item,
+            f,
+            x, y,
+            footprint,
+            isVisible,
+            ax, ay;
+
+        _context.beginPath();
+
+        for (i = 0, il = renderItems.length; i < il; i++) {
+            item = renderItems[i];
+
+            if (item.height > me.MAX_HEIGHT) {
+                continue;
+            }
+
+            isVisible = false;
+            f = item.footprint;
+            footprint = [];
+            for (j = 0, jl = f.length-1; j < jl; j += 2) {
+                footprint[j]   = x = f[j]  -originX;
+                footprint[j+1] = y = f[j+1]-originY;
+
+                // checking footprint is sufficient for visibility
+                if (!isVisible) {
+                    isVisible = (x > 0 && x < width && y > 0 && y < height);
+                }
+            }
+
+            if (!isVisible) {
+                continue;
+            }
+
+            for (j = 0, jl = footprint.length-3; j < jl; j += 2) {
+                ax = footprint[j];
+                ay = footprint[j + 1];
+                if (!j) {
+                    _context.moveTo(ax, ay);
+                } else {
+                    _context.lineTo(ax, ay);
+                }
+            }
+
+            _context.closePath();
+        }
+
+        _context.fillStyle   = roofColorAlpha;
+        _context.strokeStyle = altColorAlpha;
+
+        _context.stroke();
+        _context.fill();
+    };
+
+    return me;
+
+}());
+
+
+//****** file: Layers.js ******
+
+var Layers = (function() {
+
+    function _createItem() {
+        var canvas = doc.createElement('CANVAS');
+        canvas.style.webkitTransform = 'translate3d(0,0,0)'; // turn on hw acceleration
+        canvas.style.imageRendering  = 'optimizeSpeed';
+        canvas.style.position = 'absolute';
+        canvas.style.left = 0;
+        canvas.style.top  = 0;
+
+        var context = canvas.getContext('2d');
+        context.lineCap   = 'round';
+        context.lineJoin  = 'round';
+        context.lineWidth = 1;
+
+        context.mozImageSmoothingEnabled    = false;
+        context.webkitImageSmoothingEnabled = false;
+
+        _items.push(canvas);
+        _container.appendChild(canvas);
+
+        return context;
+    }
+
+    var _container = doc.createElement('DIV');
+    _container.style.pointerEvents = 'none';
+    _container.style.position = 'absolute';
+    _container.style.left = 0;
+    _container.style.top  = 0;
+
+    var _items = [];
+
+    // TODO: improve this to _createItem(Layer) => layer.setContext(context)
+    Shadows.setContext(      _createItem());
+    FlatBuildings.setContext(_createItem());
+    context = _createItem(); // default (global) render context
+
+    var me = {};
+
+    me.appendTo = function(parentNode) {
+        parentNode.appendChild(_container);
+    };
+
+    me.remove = function() {
+        _container.parentNode.removeChild(_container);
+    };
+
+    me.setSize = function(w, h) {
+        for (var i = 0, il = _items.length; i < il; i++) {
+            _items[i].width  = w;
+            _items[i].height = h;
+        }
+    };
+
+    me.screenshot = function() {
+        var canvas = doc.createElement('CANVAS');
+        canvas.width  = width;
+        canvas.height = height;
+        var context = canvas.getContext('2d');
+
+        renderAll();
+        for (var i = 0, il = _items.length; i < il; i++) {
+            context.drawImage(_items[i], 0, 0);
+        }
+
+        return canvas.toDataURL('image/png');
+    };
+
+    // usually called after move: container jumps by move delta, cam is reset
+    me.setPosition = function(x, y) {
+        _container.style.left = x + 'px';
+        _container.style.top  = y + 'px';
+    };
+
+    return me;
+
+}());
+
+
+//****** file: properties.js ******
+
+function setOrigin(origin) {
+    originX = origin.x;
+    originY = origin.y;
+}
+
+function setCamOffset(offset) {
+    camX = halfWidth + offset.x;
+    camY = height    + offset.y;
+}
+
+function setSize(size) {
+    width  = size.w;
+    height = size.h;
+    halfWidth  = width /2 <<0;
+    halfHeight = height/2 <<0;
+    camX = halfWidth;
+    camY = height;
+    Layers.setSize(width, height);
+    maxHeight = camZ-50;
+}
+
+function setZoom(z) {
+    zoom = z;
+    size = MAP_TILE_SIZE <<zoom;
+
+    zoomAlpha = 1 - fromRange(zoom, minZoom, maxZoom, 0, 0.3);
+
+    wallColorAlpha = defaultWallColor.setAlpha(zoomAlpha) + '';
+    altColorAlpha  = defaultAltColor.setAlpha( zoomAlpha) + '';
+    roofColorAlpha = defaultRoofColor.setAlpha(zoomAlpha) + '';
+}
+
+function setStyle(style) {
+    style = style || {};
+    if (style.color || style.wallColor) {
+        defaultWallColor = Color.parse(style.color || style.wallColor);
+        wallColorAlpha = defaultWallColor.setAlpha(zoomAlpha) + '';
+
+        defaultAltColor = defaultWallColor.setLightness(0.8);
+        altColorAlpha = defaultAltColor.setAlpha(zoomAlpha) + '';
+
+        defaultRoofColor = defaultWallColor.setLightness(1.2);
+        roofColorAlpha = defaultRoofColor.setAlpha(zoomAlpha) + '';
+    }
+
+    if (style.roofColor) {
+        defaultRoofColor = Color.parse(style.roofColor);
+        roofColorAlpha = defaultRoofColor.setAlpha(zoomAlpha) + '';
+    }
+
+    if (style.shadows !== undefined) {
+        Shadows.enable(style.shadows);
+    }
+
+    renderAll();
+}
+
+
+//****** file: events.js ******
+
+function onResize(e) {
+    setSize(e.width, e.height);
+    renderAll();
+    Data.update();
+}
+
+function onMoveEnd(e) {
+    renderAll();
+    Data.update(); // => fadeIn() => renderAll()
+}
+
+function onZoomStart() {
+    isZooming = true;
+    // effectively clears because of isZooming flag
+    // TODO: introduce explicit clear()
+    renderAll();
+}
+
+function onZoomEnd(e) {
+    isZooming = false;
+    setZoom(e.zoom);
+    Data.update(); // => fadeIn()
+    renderAll();
+}
+
+
+//****** file: OpenLayers.js ******
+
+// based on a pull request from Jérémy Judéaux (https://github.com/Volune)
+
+var parent = OpenLayers.Layer.prototype;
+
+var osmb = function(map) {
+    this.offset = { x:0, y:0 }; // cumulative cam offset during moveBy
+
+    parent.initialize.call(this, this.name, { projection:'EPSG:900913' });
+	map.addLayer(this);
+};
+
+var proto = osmb.prototype = new OpenLayers.Layer();
+
+proto.name          = 'OSM Buildings';
+proto.attribution   = ATTRIBUTION;
+proto.isBaseLayer   = false;
+proto.alwaysInRange = true;
+
+proto.setOrigin = function() {
+    var map = this.map,
+        origin = map.getLonLatFromPixel(new OpenLayers.Pixel(0, 0)),
+        res = map.resolution,
+        ext = this.maxExtent,
+        x = (origin.lon - ext.left) / res <<0,
+        y = (ext.top - origin.lat)  / res <<0;
+    setOrigin({ x:x, y:y });
+};
+
+proto.setMap = function(map) {
+    if (!this.map) {
+        parent.setMap.call(this, map);
+    }
+    Layers.appendTo(this.div);
+    maxZoom = map.baseLayer.numZoomLevels;
+    setSize(map.size);
+    setZoom(map.zoom);
+    this.setOrigin();
+
+    Data.update();
+    renderAll();
+};
+
+proto.removeMap = function(map) {
+    Layers.remove();
+    parent.removeMap.call(this, map);
+    this.map = null;
+};
+
+proto.onMapResize = function() {
+    var map = this.map;
+    parent.onMapResize.call(this);
+    onResize({ width:map.size.w, height:map.size.h });
+};
+
+proto.moveTo = function(bounds, zoomChanged, isDragging) {
+    var map = this.map,
+        res = parent.moveTo.call(this, bounds, zoomChanged, isDragging);
+
+    if (!isDragging) {
+        var offsetLeft = parseInt(map.layerContainerDiv.style.left, 10),
+            offsetTop  = parseInt(map.layerContainerDiv.style.top,  10);
+
+        this.div.style.left = -offsetLeft + 'px';
+        this.div.style.top  = -offsetTop  + 'px';
+    }
+
+    this.setOrigin();
+    this.offset.x = 0;
+    this.offset.y = 0;
+    setCamOffset(this.offset);
+
+    if (zoomChanged) {
+        onZoomEnd({ zoom:map.zoom });
+    } else {
+        onMoveEnd();
+    }
+
+    return res;
+};
+
+proto.moveByPx = function(dx, dy) {
+    this.offset.x += dx;
+    this.offset.y += dy;
+    var res = parent.moveByPx.call(this, dx, dy);
+    setCamOffset(this.offset);
+    render();
+    return res;
+};
+
+
+//****** file: suffix.js ******
+
+proto.setStyle = function(style) {
+    setStyle(style);
+    return this;
+};
+
+proto.setDate = function(date) {
+    Shadows.setDate(date);
+    return this;
+};
+
+proto.loadData = function(url) {
+    Data.load(url);
+    return this;
+};
+
+proto.setData = function(data) {
+    Data.set(data);
+    return this;
+};
+
+proto.screenshot = function(download) {
+    var dataURL = Layers.screenshot();
+    if (download) {
+        win.location.href = dataURL.replace('image/png', 'image/octet-stream');
+    }
+    return dataURL;
+};
+
+osmb.VERSION     = VERSION;
+osmb.ATTRIBUTION = ATTRIBUTION;
+
+return osmb;
+
+}(window));
+
+

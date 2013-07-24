@@ -5,7 +5,7 @@
  */
 //****** file: prefix.js ******
 
-(typeof exports !== 'undefined' ? module : window).OSMBuildings = (function(win) {
+(exports || window).OSMBuildings = (function(win) {
 
     'use strict';
 
@@ -28,6 +28,13 @@ var Int32Array = Int32Array || Array,
     floor = m.floor,
     doc = win.document;
 
+
+if (!win.console) {
+    win.console = {
+        log:function() {},
+        warn:function() {}
+    };
+}
 
 
 
@@ -1047,7 +1054,7 @@ function xhr(_url, param, callback) {
         return param[key] || tag;
     });
 
-    var req = 'XDomainRequest' in win ? new XDomainRequest() : new XMLHttpRequest();
+    var req = 'XDomainRequest' in win ? new win.XDomainRequest() : new win.XMLHttpRequest();
 
     function changeState(state) {
         if ('XDomainRequest' in win && state !== req.readyState) {
@@ -1993,7 +2000,7 @@ function onZoomEnd(e) {
 
 //****** file: Static.js ******
 
-var osmb = function(w, h, bbox) {
+var osmb = function() {
     Layers.appendTo(doc.body);
 
 //  maxZoom = 20; => which zoomlevel?
@@ -2002,7 +2009,7 @@ var osmb = function(w, h, bbox) {
 //  var po = map.getPixelOrigin();
     var po = { x:0, y:0 };
 
-    setSize({ w:w, h:h });
+//    setSize({ w:w, h:h });
     setOrigin({ x:po.x, y:po.y });
     setZoom(zoom);
 
@@ -2048,6 +2055,6 @@ osmb.ATTRIBUTION = ATTRIBUTION;
 
 return osmb;
 
-}(this));
+}(window));
 
 

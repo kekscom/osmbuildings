@@ -28,7 +28,7 @@ function xhr(_url, param, callback) {
         return param[key] || tag;
     });
 
-    var req = 'XDomainRequest' in win ? new XDomainRequest() : new XMLHttpRequest();
+    var req = 'XDomainRequest' in win ? new win.XDomainRequest() : new win.XMLHttpRequest();
 
     function changeState(state) {
         if ('XDomainRequest' in win && state !== req.readyState) {

@@ -31,4 +31,4 @@ osmb.ATTRIBUTION = ATTRIBUTION;
 
 return osmb;
 
-}(this));
+}(window));

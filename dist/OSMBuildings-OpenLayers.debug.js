@@ -5,7 +5,7 @@
  */
 //****** file: prefix.js ******
 
-(typeof exports !== 'undefined' ? module : window).OSMBuildings = (function(win) {
+(exports || window).OSMBuildings = (function(win) {
 
     'use strict';
 
@@ -28,6 +28,13 @@ var Int32Array = Int32Array || Array,
     floor = m.floor,
     doc = win.document;
 
+
+if (!win.console) {
+    win.console = {
+        log:function() {},
+        warn:function() {}
+    };
+}
 
 
 
@@ -1047,7 +1054,7 @@ function xhr(_url, param, callback) {
         return param[key] || tag;
     });
 
-    var req = 'XDomainRequest' in win ? new XDomainRequest() : new XMLHttpRequest();
+    var req = 'XDomainRequest' in win ? new win.XDomainRequest() : new win.XMLHttpRequest();
 
     function changeState(state) {
         if ('XDomainRequest' in win && state !== req.readyState) {
@@ -2118,6 +2125,6 @@ osmb.ATTRIBUTION = ATTRIBUTION;
 
 return osmb;
 
-}(this));
+}(window));
 
 
