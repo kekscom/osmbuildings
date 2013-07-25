@@ -226,39 +226,25 @@ function cylinder(c, r, h, minHeight) {
         _c = project(c.x, c.y, _h),
         _r = r*_h;
 
-//    if (minHeight) {
-//        var _mh = camZ / (camZ-minHeight);
-//        c = project(c.x, c.y, _mh);
-//        r = r*_mh;
-//    }
+    if (minHeight) {
+        var _mh = camZ / (camZ-minHeight);
+        c = project(c.x, c.y, _mh);
+        r = r*_mh;
+    }
 
-
-    var t = getTangents(c, r, _c, _r), // common tangents for ground and roof circle
-        tx, ty, ta,
-        isAlt,
-        ax, ay;
+    var t = getTangents(c, r, _c, _r); // common tangents for ground and roof circle
 
     // no tangents? roof overlaps everything near cam position
     if (t) {
-        line(t[0][0], t[0][1]);
-        line(t[1][0], t[1][1]);
-
-
-        var t1 = atan2(t[0][0].y, t[0][0].x);
-        var t2 = atan2(t[1][0].y, t[1][0].x);
-console.log(t1, t2)
+        var a1 = atan2(t[0][0].y-c.y, t[0][0].x-c.x);
+        var a2 = atan2(t[1][0].y-c.y, t[1][0].x-c.x);
 
         context.beginPath();
-debugMarker(t[0][0])
-        context.moveTo(t[0][0].x, t[0][0].y);
-        context.arc(c.x, c.y, r, t1, t2, true);
-//        context.closePath();
-        context.stroke();
-
-//        line(t[0][0], t[1][0]);
-//        line(t[0][1], t[1][1]);
-
-
+        context.arc(_c.x, _c.y, _r, a2, a1, true);
+        context.arc(c.x, c.y, r, a1, a2);
+        context.closePath();
+context.fillStyle = wallColorAlpha;
+        context.fill();
 
 /*
         // draw normal and alternative colored wall segments
@@ -289,7 +275,7 @@ context.strokeStyle = '#000000';
     }
 
     context.fillStyle = roofColorAlpha;
-    drawCircle(_c.x, _c.y, _r, TRUE);
+    drawCircle(_c, _r, TRUE);
 }
 
 
