@@ -236,42 +236,37 @@ function cylinder(c, r, h, minHeight) {
 
     // no tangents? roof overlaps everything near cam position
     if (t) {
-        var a1 = atan2(t[0][0].y-c.y, t[0][0].x-c.x);
-        var a2 = atan2(t[1][0].y-c.y, t[1][0].x-c.x);
+        var a1 = atan2(t[0].y1-c.y, t[0].x1-c.x);
+        var a2 = atan2(t[1].y1-c.y, t[1].x1-c.x);
 
+/*
         context.beginPath();
         context.arc(_c.x, _c.y, _r, a2, a1, true);
         context.arc(c.x, c.y, r, a1, a2);
         context.closePath();
-context.fillStyle = wallColorAlpha;
+        context.fill();
+        context.stroke();
+*/
+
+        context.fillStyle = altColorAlpha;
+
+        context.beginPath();
+        context.arc(_c.x, _c.y, _r, a2, HALF_PI, true);
+        context.arc(c.x, c.y, r, HALF_PI, a2);
+        context.closePath();
         context.fill();
 
-/*
-        // draw normal and alternative colored wall segments
-        for (var i = 0; i < 2; i++) {
-            isAlt = !!i;
-            tx = t[i].x1;
-            ty = t[i].y1;
-            ax = (c.x-tx) * (isAlt ? 1 : -1);
-            ay = (c.y-ty) * (isAlt ? 1 : -1);
-            ta = atan2(ay, ax) + (isAlt ? PI : 0);
+        context.fillStyle = wallColorAlpha;
 
-            // tangent not visible, avoid flickering
-            if (ax < 0) {
-                continue;
-            }
+        context.beginPath();
+        context.arc(_c.x, _c.y, _r, HALF_PI, a1, true);
+        context.arc(c.x, c.y, r, a1, HALF_PI);
+        context.closePath();
+        context.fill();
 
-context.strokeStyle = '#000000';
-            context.fillStyle = !isAlt ? wallColorAlpha : altColorAlpha;
-            context.beginPath();
-            context.moveTo(tx, ty);
-            context.arc( c.x,  c.y,  r, ta, HALF_PI,  isAlt);
-            context.arc(_c.x, _c.y, _r, HALF_PI, ta, !isAlt);
-            context.closePath();
-            context.fill();
-            context.stroke();
-        }
-*/
+
+
+
     }
 
     context.fillStyle = roofColorAlpha;
@@ -316,13 +311,12 @@ function getTangents(c1, r1, c2, r2) {
     for (var sign = 1; sign >= -1; sign -= 2) {
         nx = vx*c - sign*h*vy;
         ny = vy*c + sign*h*vx;
-        res.push([{
-            x: c1.x + r1*nx <<0,
-            y: c1.y + r1*ny <<0
-        },{
-            x: c2.x + r2*nx <<0,
-            y: c2.y + r2*ny <<0
-        }]);
+        res.push({
+            x1: c1.x + r1*nx <<0,
+            y1: c1.y + r1*ny <<0,
+            x2: c2.x + r2*nx <<0,
+            y2: c2.y + r2*ny <<0
+        });
     }
 
     return res;
