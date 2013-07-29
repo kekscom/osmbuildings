@@ -16,7 +16,6 @@ $srcFiles = array(
     $srcPath . "/Cache.js",
     $srcPath . "/Data.js",
     $srcPath . "/render.js",
-    $srcPath . "/objects.js", // TODO: clean up when finished
     $srcPath . "/Shadows.js",
     $srcPath . "/FlatBuildings.js",
     $srcPath . "/Layers.js",
