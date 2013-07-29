@@ -1917,22 +1917,6 @@ function getEllipseTangent(a, b, x, y) {
     };
 }
 
-function radialGradient(c, r, color) {
-    var col = Color.parse(color);
-    var gradient = context.createRadialGradient(
-        c.x-r/3,
-        c.y-r/3,
-        r/5,
-        c.x-r/3,
-        c.y-r/3,
-        r*2
-    );
-    gradient.addColorStop(0,   col.setLightness(1.2));
-    gradient.addColorStop(0.4, col);
-    gradient.addColorStop(0.8, col.setLightness(0.9));
-    context.fillStyle = gradient;
-}
-
 function getTangentsFromPoint(c, r, p) {
     var a = c.x-p.x, b = c.y-p.y,
         u = sqrt(a*a + b*b),
