@@ -220,7 +220,7 @@ var readOSMXAPI = (function() {
             relItem = filterItem(relation);
             if ((outerWay = relationWays.outer)) {
                 if ((outerFootprint = getFootprint(outerWay.nodes))) {
-                    item = filterItem(outerWay, outerFootprint)
+                    item = filterItem(outerWay, outerFootprint);
                     for (var i = 0, il = relationWays.inner.length; i < il; i++) {
                         if ((innerFootprint = getFootprint(relationWays.inner[i].nodes))) {
                             holes.push(Import.windInnerPolygon(innerFootprint));

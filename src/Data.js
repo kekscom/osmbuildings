@@ -198,7 +198,7 @@ var Data = (function() {
         _isStatic = true;
         renderItems = [];
         _index = {};
-        _parse(data);
+        _parse(data, null);
     };
 
     return me;
