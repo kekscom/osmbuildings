@@ -179,7 +179,7 @@ var readOSMXAPI = (function() {
             res.shape = 'cylinder';
             res.radius = Import.getRadius(res.footprint);
             if (tags['roof:shape'] === 'dome' && tags['roof:height']) {
-                res.roofShape = 'cylinder';
+                res.roofShape = 'dome';
                 res.roofHeight = Import.toMeters(tags['roof:height']);
                 res.height = max(0, res.height-res.roofHeight);
             }
