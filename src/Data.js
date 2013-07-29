@@ -121,6 +121,8 @@ var Data = (function() {
                 wallColor:  wallColor,
                 altColor:   altColor,
                 roofColor:  roofColor,
+                roofShape:  item.roofShape,
+                roofHeight: roofHeight,
                 center:     getCenter(footprint),
                 holes:      holes.length ? holes : null,
                 shape:      item.shape, // TODO: drop footprint

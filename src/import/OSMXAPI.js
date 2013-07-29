@@ -178,6 +178,11 @@ var readOSMXAPI = (function() {
         if (tags['roof:shape'] === 'dome' || tags['building:shape'] === 'cylinder' || tags['building:shape'] === 'sphere') {
             res.shape = 'cylinder';
             res.radius = Import.getRadius(res.footprint);
+            if (tags['roof:shape'] === 'dome' && tags['roof:height']) {
+                res.roofShape = 'cylinder';
+                res.roofHeight = Import.toMeters(tags['roof:height']);
+                res.height = max(0, res.height-res.roofHeight);
+            }
         }
 
         return res;

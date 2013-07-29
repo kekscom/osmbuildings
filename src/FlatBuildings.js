@@ -31,7 +31,7 @@ var FlatBuildings = (function() {
         for (i = 0, il = renderItems.length; i < il; i++) {
             item = renderItems[i];
 
-            if (item.height > me.MAX_HEIGHT) {
+            if (item.height+item.roofHeight > me.MAX_HEIGHT) {
                 continue;
             }
 

@@ -54,7 +54,7 @@ function render() {
         },
         footprint, roof, holes,
         isVisible,
-        wallColor, altColor;
+        wallColor, altColor, roofColor;
 
     // TODO: FlatBuildings are drawn separately, data has to be split
     renderItems.sort(function(a, b) {
@@ -87,6 +87,7 @@ function render() {
         // precalculating projection height factor
         _h = camZ / (camZ-h);
 
+        mh = 0;
         _mh = 0;
         if (item.minHeight) {
             mh = item.scale < 1 ? item.minHeight*item.scale : item.minHeight;
@@ -95,28 +96,41 @@ function render() {
 
         wallColor = item.wallColor || wallColorAlpha;
         altColor  = item.altColor  || altColorAlpha;
+        roofColor = item.roofColor || roofColorAlpha;
+        context.strokeStyle = altColor;
 
         if (item.shape === 'cylinder') {
-            cylinder({ x:item.center.x-originX, y:item.center.y-originY }, item.radius, h, mh);
+            roof = cylinder(
+                { x:item.center.x-originX, y:item.center.y-originY },
+                item.radius,
+                h, mh,
+                wallColor, altColor
+            );
+            if (item.roofShape === 'cylinder') {
+                roof = cylinder(
+                    { x:item.center.x-originX, y:item.center.y-originY },
+                    item.radius,
+                    h+item.roofHeight, h,
+                    roofColor
+                );
+            }
+            context.fillStyle = roofColor;
+            drawCircle(roof.c, roof.r, true);
         } else {
             roof = buildingPart(footprint, _h, _mh, wallColor, altColor);
-
             holes = [];
             if (item.holes) {
                 for (j = 0, jl = item.holes.length; j < jl; j++) {
                     holes[j] = buildingPart(item.holes[j], _h, _mh, wallColor, altColor);
                 }
             }
-
-            context.fillStyle = item.roofColor || roofColorAlpha;
-            context.strokeStyle = altColor;
-
+            context.fillStyle = roofColor;
             drawPolygon(roof, true, holes);
         }
     }
 }
 
-function buildingPart(polygon, h, mh, wallColor, altColor) {
+function buildingPart(polygon, _h, _mh, color, altColor) {
     var a = { x:0, y:0 }, b = { x:0, y:0 },
         _a, _b,
         roof = [];
@@ -127,12 +141,12 @@ function buildingPart(polygon, h, mh, wallColor, altColor) {
         b.y = polygon[i+3]-originY;
 
         // project 3d to 2d on extruded footprint
-        _a = project(a.x, a.y, h);
-        _b = project(b.x, b.y, h);
+        _a = project(a.x, a.y, _h);
+        _b = project(b.x, b.y, _h);
 
-        if (mh) {
-            a = project(a.x, a.y, mh);
-            b = project(b.x, b.y, mh);
+        if (_mh) {
+            a = project(a.x, a.y, _mh);
+            b = project(b.x, b.y, _mh);
         }
 
         // backface culling check
@@ -141,7 +155,7 @@ function buildingPart(polygon, h, mh, wallColor, altColor) {
             if ((a.x < b.x && a.y < b.y) || (a.x > b.x && a.y > b.y)) {
                 context.fillStyle = altColor;
             } else {
-                context.fillStyle = wallColor;
+                context.fillStyle = color;
             }
             drawPolygon([
                 b.x, b.y,
@@ -190,7 +204,7 @@ function drawPolygon(points, stroke, holes) {
 
 function drawCircle(c, r, stroke) {
     context.beginPath();
-    context.arc(c.x, c.y, r, 0, 360);
+    context.arc(c.x, c.y, r, 0, PI*2);
     if (stroke) {
         context.stroke();
     }
@@ -212,19 +226,20 @@ function debugMarker(p, color, size) {
     context.fill();
 }
 
-function debugLine(ax, ay, bx, by, color) {
+function debugLine(a, b, color) {
     context.strokeStyle = color || '#ff0000';
     context.beginPath();
-    context.moveTo(ax, ay);
-    context.lineTo(bx, by);
+    context.moveTo(a.x, a.y);
+    context.lineTo(b.x, b.y);
     context.closePath();
     context.stroke();
 }
 
-function cylinder(c, r, h, minHeight) {
+function cylinder(c, r, h, minHeight, color, altColor) {
     var _h = camZ / (camZ-h),
         _c = project(c.x, c.y, _h),
-        _r = r*_h;
+        _r = r*_h,
+        a1, a2, col;
 
     if (minHeight) {
         var _mh = camZ / (camZ-minHeight);
@@ -236,43 +251,31 @@ function cylinder(c, r, h, minHeight) {
 
     // no tangents? roof overlaps everything near cam position
     if (t) {
-        var a1 = atan2(t[0].y1-c.y, t[0].x1-c.x);
-        var a2 = atan2(t[1].y1-c.y, t[1].x1-c.x);
+        a1 = atan2(t[0].y1-c.y, t[0].x1-c.x);
+        a2 = atan2(t[1].y1-c.y, t[1].x1-c.x);
 
-/*
-        context.beginPath();
-        context.arc(_c.x, _c.y, _r, a2, a1, true);
-        context.arc(c.x, c.y, r, a1, a2);
-        context.closePath();
-        context.fill();
-        context.stroke();
-*/
+        if (!altColor) {
+            col = Color.parse(color);
+            altColor = '' + col.setLightness(0.8);
+        }
 
-        context.fillStyle = altColorAlpha;
-
-        context.beginPath();
-        context.arc(_c.x, _c.y, _r, a2, HALF_PI, true);
-        context.arc(c.x, c.y, r, HALF_PI, a2);
-        context.closePath();
-        context.fill();
-
-        context.fillStyle = wallColorAlpha;
-
+        context.fillStyle = color;
         context.beginPath();
         context.arc(_c.x, _c.y, _r, HALF_PI, a1, true);
         context.arc(c.x, c.y, r, a1, HALF_PI);
         context.closePath();
         context.fill();
 
-
-
-
+        context.fillStyle = altColor;
+        context.beginPath();
+        context.arc(_c.x, _c.y, _r, a2, HALF_PI, true);
+        context.arc(c.x, c.y, r, HALF_PI, a2);
+        context.closePath();
+        context.fill();
     }
 
-    context.fillStyle = roofColorAlpha;
-    drawCircle(_c, _r, TRUE);
+    return { c:_c, r:_r };
 }
-
 
 // http://en.wikibooks.org/wiki/Algorithm_Implementation/Geometry/Tangents_between_two_circles
 function getTangents(c1, r1, c2, r2) {
