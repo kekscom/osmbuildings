@@ -22,10 +22,13 @@ var Int32Array = Int32Array || Array,
     cos = m.cos,
     tan = m.tan,
     atan = m.atan,
+    atan2 = m.atan2,
     min = m.min,
     max = m.max,
+    sqrt = m.sqrt,
     ceil = m.ceil,
     floor = m.floor,
+    round = m.round,
     doc = document;
 
 
@@ -34,6 +37,149 @@ var Int32Array = Int32Array || Array,
 //****** file: Color.js ******
 
 var Color = (function() {
+
+    var w3cColors = {
+        aliceblue:'#f0f8ff',
+        antiquewhite:'#faebd7',
+        aqua:'#00ffff',
+        aquamarine:'#7fffd4',
+        azure:'#f0ffff',
+        beige:'#f5f5dc',
+        bisque:'#ffe4c4',
+        black:'#000000',
+        blanchedalmond:'#ffebcd',
+        blue:'#0000ff',
+        blueviolet:'#8a2be2',
+        brown:'#a52a2a',
+        burlywood:'#deb887',
+        cadetblue:'#5f9ea0',
+        chartreuse:'#7fff00',
+        chocolate:'#d2691e',
+        coral:'#ff7f50',
+        cornflowerblue:'#6495ed',
+        cornsilk:'#fff8dc',
+        crimson:'#dc143c',
+        cyan:'#00ffff',
+        darkblue:'#00008b',
+        darkcyan:'#008b8b',
+        darkgoldenrod:'#b8860b',
+        darkgray:'#a9a9a9',
+        darkgreen:'#006400',
+        darkkhaki:'#bdb76b',
+        darkmagenta:'#8b008b',
+        darkolivegreen:'#556b2f',
+        darkorange:'#ff8c00',
+        darkorchid:'#9932cc',
+        darkred:'#8b0000',
+        darksalmon:'#e9967a',
+        darkseagreen:'#8fbc8f',
+        darkslateblue:'#483d8b',
+        darkslategray:'#2f4f4f',
+        darkturquoise:'#00ced1',
+        darkviolet:'#9400d3',
+        deeppink:'#ff1493',
+        deepskyblue:'#00bfff',
+        dimgray:'#696969',
+        dodgerblue:'#1e90ff',
+        firebrick:'#b22222',
+        floralwhite:'#fffaf0',
+        forestgreen:'#228b22',
+        fuchsia:'#ff00ff',
+        gainsboro:'#dcdcdc',
+        ghostwhite:'#f8f8ff',
+        gold:'#ffd700',
+        goldenrod:'#daa520',
+        gray:'#808080',
+        green:'#008000',
+        greenyellow:'#adff2f',
+        honeydew:'#f0fff0',
+        hotpink:'#ff69b4',
+        indianred :'#cd5c5c',
+        indigo :'#4b0082',
+        ivory:'#fffff0',
+        khaki:'#f0e68c',
+        lavender:'#e6e6fa',
+        lavenderblush:'#fff0f5',
+        lawngreen:'#7cfc00',
+        lemonchiffon:'#fffacd',
+        lightblue:'#add8e6',
+        lightcoral:'#f08080',
+        lightcyan:'#e0ffff',
+        lightgoldenrodyellow:'#fafad2',
+        lightgray:'#d3d3d3',
+        lightgreen:'#90ee90',
+        lightpink:'#ffb6c1',
+        lightsalmon:'#ffa07a',
+        lightseagreen:'#20b2aa',
+        lightskyblue:'#87cefa',
+        lightslategray:'#778899',
+        lightsteelblue:'#b0c4de',
+        lightyellow:'#ffffe0',
+        lime:'#00ff00',
+        limegreen:'#32cd32',
+        linen:'#faf0e6',
+        magenta:'#ff00ff',
+        maroon:'#800000',
+        mediumaquamarine:'#66cdaa',
+        mediumblue:'#0000cd',
+        mediumorchid:'#ba55d3',
+        mediumpurple:'#9370db',
+        mediumseagreen:'#3cb371',
+        mediumslateblue:'#7b68ee',
+        mediumspringgreen:'#00fa9a',
+        mediumturquoise:'#48d1cc',
+        mediumvioletred:'#c71585',
+        midnightblue:'#191970',
+        mintcream:'#f5fffa',
+        mistyrose:'#ffe4e1',
+        moccasin:'#ffe4b5',
+        navajowhite:'#ffdead',
+        navy:'#000080',
+        oldlace:'#fdf5e6',
+        olive:'#808000',
+        olivedrab:'#6b8e23',
+        orange:'#ffa500',
+        orangered:'#ff4500',
+        orchid:'#da70d6',
+        palegoldenrod:'#eee8aa',
+        palegreen:'#98fb98',
+        paleturquoise:'#afeeee',
+        palevioletred:'#db7093',
+        papayawhip:'#ffefd5',
+        peachpuff:'#ffdab9',
+        peru:'#cd853f',
+        pink:'#ffc0cb',
+        plum:'#dda0dd',
+        powderblue:'#b0e0e6',
+        purple:'#800080',
+        red:'#ff0000',
+        rosybrown:'#bc8f8f',
+        royalblue:'#4169e1',
+        saddlebrown:'#8b4513',
+        salmon:'#fa8072',
+        sandybrown:'#f4a460',
+        seagreen:'#2e8b57',
+        seashell:'#fff5ee',
+        sienna:'#a0522d',
+        silver:'#c0c0c0',
+        skyblue:'#87ceeb',
+        slateblue:'#6a5acd',
+        slategray:'#708090',
+        snow:'#fffafa',
+        springgreen:'#00ff7f',
+        steelblue:'#4682b4',
+        tan:'#d2b48c',
+        teal:'#008080',
+        thistle:'#d8bfd8',
+        tomato:'#ff6347',
+        turquoise:'#40e0d0',
+        violet:'#ee82ee',
+        wheat:'#f5deb3',
+        white:'#ffffff',
+        whitesmoke:'#f5f5f5',
+        yellow:'#ffff00',
+        yellowgreen:'#9acd32'
+    };
 
     function hsla2rgb(hsla) { // h belongs to [0, 360]; s,l,a belong to [0, 1]
         var r, g, b;
@@ -111,6 +257,7 @@ var Color = (function() {
     Color.parse = function(str) {
         var m;
         str += '';
+        str = w3cColors[str] || str;
         if (~str.indexOf('#') && (m = str.match(/^#?(\w{2})(\w{2})(\w{2})(\w{2})?$/))) {
             return new Color(
                 parseInt(m[1], 16),
@@ -248,6 +395,8 @@ var Import = (function() {
 
     var me = {};
 
+    me.DEFAULT_HEIGHT = 5;
+
     var _clockwise = 'CW', _counterClockwise = 'CCW';
 
     // detect winding direction: clockwise or counter clockwise
@@ -291,7 +440,8 @@ var Import = (function() {
     me.INCH_TO_METER = 0.0254;
     me.METERS_PER_LEVEL = 3;
 
-    me.getDimension = function(str) {
+    me.toMeters = function(str) {
+        str = '' + str;
         var value = parseFloat(str);
         if (value === str) {
             return value <<0;
@@ -311,6 +461,15 @@ var Import = (function() {
             return res <<0;
         }
         return value <<0;
+    };
+
+    me.getRadius = function(points) {
+        var minLat = 90, maxLat = -90;
+        for (var i = 0, il = points.length; i < il; i += 2) {
+            minLat = min(minLat, points[i]);
+            maxLat = max(maxLat, points[i]);
+        }
+        return round((maxLat-minLat) / RAD * 6378137 / 2); // 6378137 = Earth radius
     };
 
     var _materialColors = {
@@ -387,7 +546,6 @@ var readGeoJSON = function(collection) {
         res = [],
         feature,
         geometry, properties, coordinates,
-        wallColor, roofColor,
         last,
         polygon, footprint, holes,
         lat = 1, lon = 0,
@@ -395,9 +553,12 @@ var readGeoJSON = function(collection) {
 
     for (i = 0, il = collection.length; i < il; i++) {
         feature = collection[i];
+
         if (feature.type !== 'Feature') {
             continue;
         }
+
+        item = {};
 
         geometry = feature.geometry;
         properties = feature.properties;
@@ -413,7 +574,6 @@ var readGeoJSON = function(collection) {
             coordinates = geometry.coordinates;
         }
 
-        // just use the outer ring
         if (geometry.type === 'MultiPolygon') {
             coordinates = geometry.coordinates[0];
         }
@@ -422,19 +582,14 @@ var readGeoJSON = function(collection) {
             continue;
         }
 
-        if (properties.color || properties.wallColor) {
-            wallColor = properties.color || properties.wallColor;
-        }
-
-        if (properties.roofColor) {
-            roofColor = properties.roofColor;
-        }
-
-        polygon   = coordinates[0];
+        polygon = coordinates[0];
         footprint = [];
         for (j = 0, jl = polygon.length; j < jl; j++) {
             footprint.push(polygon[j][lat], polygon[j][lon]);
         }
+
+        item.id = properties.id || (footprint[0] + ',' + footprint[1]);
+        item.footprint = Import.windOuterPolygon(footprint);
 
         holes = [];
         for (j = 1, jl = coordinates.length; j < jl; j++) {
@@ -447,17 +602,24 @@ var readGeoJSON = function(collection) {
             holes[j-1] = Import.windInnerPolygon(holes[j-1]);
         }
 
-        // one item per coordinates ring (usually just one ring)
-        item = {
-            id:properties.id || (footprint[0] + ',' + footprint[1]),
-            footprint:Import.windOuterPolygon(footprint)
-        };
+        if (holes.length) {
+            item.holes = holes;
+        }
 
-        if (properties.height)    item.height    = Import.getDimension(properties.height);
-        if (properties.minHeight) item.minHeight = Import.getDimension(properties.minHeight);
-        if (wallColor)            item.wallColor = wallColor;
-        if (roofColor)            item.roofColor = roofColor;
-        if (holes.length)         item.holes     = holes;
+        item.height = Import.toMeters(properties.height) || Import.DEFAULT_HEIGHT;
+
+        if (properties.minHeight) {
+            item.minHeight = Import.toMeters(properties.minHeight);
+        }
+
+        if (properties.color || properties.wallColor) {
+            item.wallColor = properties.color || properties.wallColor;
+        }
+
+        if (properties.roofColor) {
+            item.roofColor = properties.roofColor;
+        }
+
         res.push(item);
     }
 
@@ -481,31 +643,31 @@ var readOSMXAPI = (function() {
 //  nonliving:'tar_paper',
 //  worship:'copper'
 
-    function getBuildingType(tags) {
-        if (tags.amenity === 'place_of_worship') {
-            return 'worship';
-        }
-
-        var type = tags.building;
-        if (type === 'yes' || type === 'roof') {
-            type = tags['building:use'];
-        }
-        if (!type) {
-            type = tags.amenity;
-        }
-
-        switch (type) {
-            case 'apartments':
-            case 'house':
-            case 'residential':
-            case 'hut':
-                return 'living';
-            case 'church':
-                return 'worship';
-        }
-
-        return 'nonliving';
-    }
+//    function getBuildingType(tags) {
+//        if (tags.amenity === 'place_of_worship') {
+//            return 'worship';
+//        }
+//
+//        var type = tags.building;
+//        if (type === 'yes' || type === 'roof') {
+//            type = tags['building:use'];
+//        }
+//        if (!type) {
+//            type = tags.amenity;
+//        }
+//
+//        switch (type) {
+//            case 'apartments':
+//            case 'house':
+//            case 'residential':
+//            case 'hut':
+//                return 'living';
+//            case 'church':
+//                return 'worship';
+//        }
+//
+//        return 'nonliving';
+//    }
 
     function getRelationWays(members) {
         var m, outer, inner = [];
@@ -553,7 +715,7 @@ var readOSMXAPI = (function() {
         return footprint;
     }
 
-    function mergeTags(dst, src) {
+    function mergeItems(dst, src) {
         for (var p in src) {
             if (!dst[p]) {
                 dst[p] = src[p];
@@ -562,85 +724,99 @@ var readOSMXAPI = (function() {
         return dst;
     }
 
-    function filterTags(tags) {
-        var height = 0, minHeight = 0;
+    function filterItem(item, footprint) {
+        var res = {},
+            tags = item.tags;
+
+        if (item.id) {
+            res.id = item.id;
+        }
+
+        if (footprint) {
+            res.footprint = Import.windOuterPolygon(footprint);
+        }
 
         if (tags.height) {
-            height = Import.getDimension(tags.height);
+            res.height = Import.toMeters(tags.height);
         }
-        if (!height && tags['building:height']) {
-            height = Import.getDimension(tags['building:height']);
+        if (!res.height && tags['building:height']) {
+            res.height = Import.toMeters(tags['building:height']);
         }
 
-        if (!height && tags.levels) {
-            height = tags.levels*Import.METERS_PER_LEVEL <<0;
+        if (!res.height && tags.levels) {
+            res.height = tags.levels*Import.METERS_PER_LEVEL <<0;
         }
-        if (!height && tags['building:levels']) {
-            height = tags['building:levels']*Import.METERS_PER_LEVEL <<0;
+        if (!res.height && tags['building:levels']) {
+            res.height = tags['building:levels']*Import.METERS_PER_LEVEL <<0;
         }
 
         // min_height
         if (tags.min_height) {
-            minHeight = Import.getDimension(tags.min_height);
+            res.minHeight = Import.toMeters(tags.min_height);
         }
-        if (!minHeight && tags['building:min_height']) {
-            minHeight = Import.getDimension(tags['building:min_height']);
-        }
-
-        if (!minHeight && tags.min_level) {
-            minHeight = tags.min_level*Import.METERS_PER_LEVEL <<0;
-        }
-        if (!minHeight && tags['building:min_level']) {
-            minHeight = tags['building:min_level']*Import.METERS_PER_LEVEL <<0;
+        if (!res.minHeight && tags['building:min_height']) {
+            res.minHeight = Import.toMeters(tags['building:min_height']);
         }
 
-        var wallColor, roofColor;
+        if (!res.minHeight && tags.min_level) {
+            res.minHeight = tags.min_level*Import.METERS_PER_LEVEL <<0;
+        }
+        if (!res.minHeight && tags['building:min_level']) {
+            res.minHeight = tags['building:min_level']*Import.METERS_PER_LEVEL <<0;
+        }
 
         // wall material
         if (tags['building:material']) {
-            wallColor = Import.getMaterialColor(tags['building:material']);
+            res.wallColor = Import.getMaterialColor(tags['building:material']);
         }
         if (tags['building:facade:material']) {
-            wallColor = Import.getMaterialColor(tags['building:facade:material']);
+            res.wallColor = Import.getMaterialColor(tags['building:facade:material']);
         }
         if (tags['building:cladding']) {
-            wallColor = Import.getMaterialColor(tags['building:cladding']);
+            res.wallColor = Import.getMaterialColor(tags['building:cladding']);
         }
         // wall color
         if (tags['building:color']) {
-            wallColor = tags['building:color'];
+            res.wallColor = tags['building:color'];
         }
         if (tags['building:colour']) {
-            wallColor = tags['building:colour'];
+            res.wallColor = tags['building:colour'];
         }
 
         // roof material
         if (tags['roof:material']) {
-            roofColor = Import.getMaterialColor(tags['roof:material']);
+            res.roofColor = Import.getMaterialColor(tags['roof:material']);
         }
         if (tags['building:roof:material']) {
-            roofColor = Import.getMaterialColor(tags['building:roof:material']);
+            res.roofColor = Import.getMaterialColor(tags['building:roof:material']);
         }
         // roof color
         if (tags['roof:color']) {
-            roofColor = tags['roof:color'];
+            res.roofColor = tags['roof:color'];
         }
         if (tags['roof:colour']) {
-            roofColor = tags['roof:colour'];
+            res.roofColor = tags['roof:colour'];
         }
         if (tags['building:roof:color']) {
-            roofColor = tags['building:roof:color'];
+            res.roofColor = tags['building:roof:color'];
         }
         if (tags['building:roof:colour']) {
-            roofColor = tags['building:roof:colour'];
+            res.roofColor = tags['building:roof:colour'];
         }
 
-        return {
-            height:    height,
-            minHeight: minHeight,
-            wallColor: wallColor,
-            roofColor: roofColor
-        };
+        res.height = res.height || Import.DEFAULT_HEIGHT;
+
+        if (tags['roof:shape'] === 'dome' || tags['building:shape'] === 'cylinder' || tags['building:shape'] === 'sphere') {
+            res.shape = 'cylinder';
+            res.radius = Import.getRadius(res.footprint);
+            if (tags['roof:shape'] === 'dome' && tags['roof:height']) {
+                res.roofShape = 'cylinder';
+                res.roofHeight = Import.toMeters(tags['roof:height']);
+                res.height = max(0, res.height-res.roofHeight);
+            }
+        }
+
+        return res;
     }
 
     function processNode(node) {
@@ -648,50 +824,46 @@ var readOSMXAPI = (function() {
     }
 
     function processWay(way) {
-        var tags, footprint;
         if (isBuilding(way)) {
-            tags = filterTags(way.tags);
+            var item, footprint;
             if ((footprint = getFootprint(way.nodes))) {
-                addResult(way.id, tags, footprint);
+                item = filterItem(way, footprint);
+                res.push(item);
             }
-        } else {
-            tags = way.tags;
-            if (!tags || (!tags.highway && !tags.railway && !tags.landuse)) { // TODO: add more filters
-                ways[way.id] = way;
-            }
+            return;
+        }
+
+        var tags = way.tags;
+        if (!tags || (!tags.highway && !tags.railway && !tags.landuse)) { // TODO: add more filters
+            ways[way.id] = way;
         }
     }
 
     function processRelation(relation) {
         var relationWays, outerWay, holes = [],
-            tags, outerFootprint, innerFootprint;
-        if (isBuilding(relation) && (relation.tags.type === 'multipolygon' || relation.tags.type === 'building')) {
-            if ((relationWays = getRelationWays(relation.members))) {
-                var relTags = filterTags(relation.tags);
-                if ((outerWay = relationWays.outer)) {
-                    tags = filterTags(outerWay.tags);
-                    if ((outerFootprint = getFootprint(outerWay.nodes))) {
-                        tags = mergeTags(tags, relTags);
-                        for (var i = 0, il = relationWays.inner.length; i < il; i++) {
-                            if ((innerFootprint = getFootprint(relationWays.inner[i].nodes))) {
-                                holes.push(Import.windInnerPolygon(innerFootprint));
-                            }
+            item, relItem, outerFootprint, innerFootprint;
+
+        if (!isBuilding(relation) || (relation.tags.type !== 'multipolygon' && relation.tags.type !== 'building')) {
+            return;
+        }
+
+        if ((relationWays = getRelationWays(relation.members))) {
+            relItem = filterItem(relation);
+            if ((outerWay = relationWays.outer)) {
+                if ((outerFootprint = getFootprint(outerWay.nodes))) {
+                    item = filterItem(outerWay, outerFootprint);
+                    for (var i = 0, il = relationWays.inner.length; i < il; i++) {
+                        if ((innerFootprint = getFootprint(relationWays.inner[i].nodes))) {
+                            holes.push(Import.windInnerPolygon(innerFootprint));
                         }
-                        addResult(outerWay.id, tags, outerFootprint, holes.length ? holes : null);
                     }
+                    if (holes.length) {
+                        item.holes = holes;
+                    }
+                    res.push(mergeItems(item, relItem));
                 }
             }
         }
-    }
-
-    function addResult(id, tags, footprint, holes) {
-        var item = { id:id, footprint:Import.windOuterPolygon(footprint), holes:holes };
-        if (tags.height)    item.height    = tags.height;
-        if (tags.minHeight) item.minHeight = tags.minHeight;
-        if (tags.wallColor) item.wallColor = tags.wallColor;
-        if (tags.roofColor) item.roofColor = tags.roofColor;
-        if (holes)          item.holes     = holes;
-        res.push(item);
     }
 
     var nodes, ways, res;
@@ -736,20 +908,15 @@ var VERSION      = '0.1.8a',
 
     LAT = 'latitude', LON = 'longitude',
 
-    DEFAULT_HEIGHT = 5,
-    HEIGHT_SCALE = 1;
+    TRUE = true, FALSE = false;
 
 
 //****** file: geometry.js ******
 
 function getDistance(p1, p2) {
-    var dx = p1[0]-p2[0],
-        dy = p1[1]-p2[1];
+    var dx = p1.x-p2.x,
+        dy = p1.y-p2.y;
     return dx*dx + dy*dy;
-}
-
-function crop(num) {
-    return (num*10000 << 0) / 10000;
 }
 
 function getCenter(points) {
@@ -759,7 +926,11 @@ function getCenter(points) {
         y += points[i+1];
     }
     len = (points.length-2) / 2;
-    return [x/len <<0, y/len <<0];
+    return { x:x/len <<0, y:y/len <<0 };
+}
+
+function crop(num) {
+    return (num*10000 << 0) / 10000;
 }
 
 function getSquareSegmentDistance(px, py, p1x, p1y, p2x, p2y) {
@@ -1058,20 +1229,18 @@ var Data = (function() {
             res = [],
             item,
             height, minHeight, footprint,
-            color, wallColor, altColor, roofColor,
+            color, wallColor, altColor,
+            roofColor, roofHeight,
             holes, innerFootprint,
-            zoomDelta = maxZoom-zoom;
+            zoomDelta = maxZoom-zoom,
+            meterToPixel = 156412 / Math.pow(2, zoom) / 1.5; // http://wiki.openstreetmap.org/wiki/Zoom_levels, TODO: without factor 1.5, numbers don't match (lat/lon: Berlin)
 
         for (i = 0, il = items.length; i < il; i++) {
-
             item = items[i];
 
-            height = (item.height || DEFAULT_HEIGHT)*HEIGHT_SCALE >> zoomDelta;
-            if (!height) {
-                continue;
-            }
+            height = item.height >>zoomDelta;
 
-            minHeight = item.minHeight*HEIGHT_SCALE >> zoomDelta;
+            minHeight = item.minHeight >>zoomDelta;
             if (minHeight > maxHeight) {
                 continue;
             }
@@ -1106,16 +1275,27 @@ var Data = (function() {
                 }
             }
 
+            roofHeight = item.roofHeight >>zoomDelta;
+
+            // TODO: move buildings without height to FlatBuildings
+            if (height <= minHeight && roofHeight <= 0) {
+                continue;
+            }
+
             res.push({
-                id:        item.id,
-                footprint: footprint,
-                height:    min(height, maxHeight),
-                minHeight: minHeight,
-                wallColor: wallColor,
-                altColor:  altColor,
-                roofColor: roofColor,
-                center:    getCenter(footprint),
-                holes:     holes.length ? holes : null
+                id:         item.id,
+                footprint:  footprint,
+                height:     min(height, maxHeight),
+                minHeight:  minHeight,
+                wallColor:  wallColor,
+                altColor:   altColor,
+                roofColor:  roofColor,
+                roofShape:  item.roofShape,
+                roofHeight: roofHeight,
+                center:     getCenter(footprint),
+                holes:      holes.length ? holes : null,
+                shape:      item.shape, // TODO: drop footprint
+                radius:     item.radius/meterToPixel
             });
         }
 
@@ -1187,7 +1367,7 @@ var Data = (function() {
         _isStatic = true;
         renderItems = [];
         _index = {};
-        _parse(data);
+        _parse(data, null);
     };
 
     return me;
@@ -1244,7 +1424,7 @@ function render() {
         item,
         h, _h, mh, _mh,
         flatMaxHeight = FlatBuildings.MAX_HEIGHT,
-        sortCam = [camX+originX, camY+originY],
+        sortCam = { x:camX+originX, y:camY+originY },
         vp = {
             minX: originX,
             maxX: originX+width,
@@ -1253,7 +1433,7 @@ function render() {
         },
         footprint, roof, holes,
         isVisible,
-        wallColor, altColor;
+        wallColor, altColor, roofColor;
 
     // TODO: FlatBuildings are drawn separately, data has to be split
     renderItems.sort(function(a, b) {
@@ -1263,7 +1443,7 @@ function render() {
     for (i = 0, il = renderItems.length; i < il; i++) {
         item = renderItems[i];
 
-        if (item.height <= flatMaxHeight) {
+        if (item.height+item.roofHeight <= flatMaxHeight) {
             continue;
         }
 
@@ -1286,6 +1466,7 @@ function render() {
         // precalculating projection height factor
         _h = camZ / (camZ-h);
 
+        mh = 0;
         _mh = 0;
         if (item.minHeight) {
             mh = item.scale < 1 ? item.minHeight*item.scale : item.minHeight;
@@ -1294,24 +1475,41 @@ function render() {
 
         wallColor = item.wallColor || wallColorAlpha;
         altColor  = item.altColor  || altColorAlpha;
-
-        roof = renderPolygon(footprint, _h, _mh, wallColor, altColor);
-
-        holes = [];
-        if (item.holes) {
-            for (j = 0, jl = item.holes.length; j < jl; j++) {
-                holes[j] = renderPolygon(item.holes[j], _h, _mh, wallColor, altColor);
-            }
-        }
-
-        // fill roof and optionally stroke it
-        context.fillStyle   = item.roofColor || roofColorAlpha;
+        roofColor = item.roofColor || roofColorAlpha;
         context.strokeStyle = altColor;
-        drawShape(roof, true, holes);
+
+        if (item.shape === 'cylinder') {
+            roof = cylinder(
+                { x:item.center.x-originX, y:item.center.y-originY },
+                item.radius,
+                h, mh,
+                wallColor, altColor
+            );
+            if (item.roofShape === 'cylinder') {
+                roof = cylinder(
+                    { x:item.center.x-originX, y:item.center.y-originY },
+                    item.radius,
+                    h+item.roofHeight, h,
+                    roofColor
+                );
+            }
+            context.fillStyle = roofColor;
+            drawCircle(roof.c, roof.r, true);
+        } else {
+            roof = buildingPart(footprint, _h, _mh, wallColor, altColor);
+            holes = [];
+            if (item.holes) {
+                for (j = 0, jl = item.holes.length; j < jl; j++) {
+                    holes[j] = buildingPart(item.holes[j], _h, _mh, wallColor, altColor);
+                }
+            }
+            context.fillStyle = roofColor;
+            drawPolygon(roof, true, holes);
+        }
     }
 }
 
-function renderPolygon(polygon, h, mh, wallColor, altColor) {
+function buildingPart(polygon, _h, _mh, color, altColor) {
     var a = { x:0, y:0 }, b = { x:0, y:0 },
         _a, _b,
         roof = [];
@@ -1322,12 +1520,12 @@ function renderPolygon(polygon, h, mh, wallColor, altColor) {
         b.y = polygon[i+3]-originY;
 
         // project 3d to 2d on extruded footprint
-        _a = project(a.x, a.y, h);
-        _b = project(b.x, b.y, h);
+        _a = project(a.x, a.y, _h);
+        _b = project(b.x, b.y, _h);
 
-        if (mh) {
-            a = project(a.x, a.y, mh);
-            b = project(b.x, b.y, mh);
+        if (_mh) {
+            a = project(a.x, a.y, _mh);
+            b = project(b.x, b.y, _mh);
         }
 
         // backface culling check
@@ -1336,9 +1534,9 @@ function renderPolygon(polygon, h, mh, wallColor, altColor) {
             if ((a.x < b.x && a.y < b.y) || (a.x > b.x && a.y > b.y)) {
                 context.fillStyle = altColor;
             } else {
-                context.fillStyle = wallColor;
+                context.fillStyle = color;
             }
-            drawShape([
+            drawPolygon([
                 b.x, b.y,
                 a.x, a.y,
                 _a.x, _a.y,
@@ -1352,7 +1550,7 @@ function renderPolygon(polygon, h, mh, wallColor, altColor) {
     return roof;
 }
 
-function drawShape(points, stroke, holes) {
+function drawPolygon(points, stroke, holes) {
     if (!points.length) {
         return;
     }
@@ -1383,6 +1581,15 @@ function drawShape(points, stroke, holes) {
     context.fill();
 }
 
+function drawCircle(c, r, stroke) {
+    context.beginPath();
+    context.arc(c.x, c.y, r, 0, PI*2);
+    if (stroke) {
+        context.stroke();
+    }
+    context.fill();
+}
+
 function project(x, y, m) {
     return {
         x: (x-camX) * m + camX <<0,
@@ -1390,24 +1597,112 @@ function project(x, y, m) {
     };
 }
 
-/*
-function debugMarker(x, y, color, size) {
+function debugMarker(p, color, size) {
     context.fillStyle = color || '#ffcc00';
     context.beginPath();
-    context.arc(x, y, size || 3, 0, PI*2, true);
+    context.arc(p.x, p.y, size || 3, 0, PI*2, true);
     context.closePath();
     context.fill();
 }
 
-function debugLine(ax, ay, bx, by, color) {
+function debugLine(a, b, color) {
     context.strokeStyle = color || '#ff0000';
     context.beginPath();
-    context.moveTo(ax, ay);
-    context.lineTo(bx, by);
+    context.moveTo(a.x, a.y);
+    context.lineTo(b.x, b.y);
     context.closePath();
     context.stroke();
 }
-*/
+
+function cylinder(c, r, h, minHeight, color, altColor) {
+    var _h = camZ / (camZ-h),
+        _c = project(c.x, c.y, _h),
+        _r = r*_h,
+        a1, a2, col;
+
+    if (minHeight) {
+        var _mh = camZ / (camZ-minHeight);
+        c = project(c.x, c.y, _mh);
+        r = r*_mh;
+    }
+
+    var t = getTangents(c, r, _c, _r); // common tangents for ground and roof circle
+
+    // no tangents? roof overlaps everything near cam position
+    if (t) {
+        a1 = atan2(t[0].y1-c.y, t[0].x1-c.x);
+        a2 = atan2(t[1].y1-c.y, t[1].x1-c.x);
+
+        if (!altColor) {
+            col = Color.parse(color);
+            altColor = '' + col.setLightness(0.8);
+        }
+
+        context.fillStyle = color;
+        context.beginPath();
+        context.arc(_c.x, _c.y, _r, HALF_PI, a1, true);
+        context.arc(c.x, c.y, r, a1, HALF_PI);
+        context.closePath();
+        context.fill();
+
+        context.fillStyle = altColor;
+        context.beginPath();
+        context.arc(_c.x, _c.y, _r, a2, HALF_PI, true);
+        context.arc(c.x, c.y, r, HALF_PI, a2);
+        context.closePath();
+        context.fill();
+    }
+
+    return { c:_c, r:_r };
+}
+
+// http://en.wikibooks.org/wiki/Algorithm_Implementation/Geometry/Tangents_between_two_circles
+function getTangents(c1, r1, c2, r2) {
+    var dx = c1.x-c2.x,
+        dy = c1.y-c2.y,
+        dr = r1-r2,
+        sqdist = (dx*dx) + (dy*dy);
+
+    if (sqdist <= dr*dr) {
+        return;
+    }
+
+    var dist = sqrt(sqdist),
+        vx = -dx/dist,
+        vy = -dy/dist,
+        c  =  dr/dist,
+        res = [],
+        h, nx, ny;
+
+    // Let A, B be the centers, and C, D be points at which the tangent
+    // touches first and second circle, and n be the normal vector to it.
+    //
+    // We have the system:
+    //   n * n = 1      (n is a unit vector)
+    //   C = A + r1 * n
+    //   D = B + r2 * n
+    //   n * CD = 0     (common orthogonality)
+    //
+    // n * CD = n * (AB + r2*n - r1*n) = AB*n - (r1 -/+ r2) = 0,  <=>
+    // AB * n = (r1 -/+ r2), <=>
+    // v * n = (r1 -/+ r2) / d,  where v = AB/|AB| = AB/d
+    // This is a linear equation in unknown vector n.
+    // Now we're just intersecting a line with a circle: v*n=c, n*n=1
+
+    h = sqrt(max(0, 1 - c*c));
+    for (var sign = 1; sign >= -1; sign -= 2) {
+        nx = vx*c - sign*h*vy;
+        ny = vy*c + sign*h*vx;
+        res.push({
+            x1: c1.x + r1*nx <<0,
+            y1: c1.y + r1*ny <<0,
+            x2: c2.x + r2*nx <<0,
+            y2: c2.y + r2*ny <<0
+        });
+    }
+
+    return res;
+}
 
 
 //****** file: Shadows.js ******
@@ -1425,6 +1720,27 @@ var Shadows = (function() {
             x: x + _direction.x*h,
             y: y + _direction.y*h
         };
+    }
+
+    function _cylinder(c, r, h, mh) {
+        var _c = _project(c.x, c.y, h),
+            a1, a2;
+
+        if (mh) {
+            c = _project(c.x, c.y, mh);
+        }
+
+        var t = getTangents(c, r, _c, r); // common tangents for ground and roof circle
+
+        // no tangents? roof overlaps everything near cam position
+        if (t) {
+            a1 = atan2(t[0].y1-c.y, t[0].x1-c.x);
+            a2 = atan2(t[1].y1-c.y, t[1].x1-c.x);
+
+            _context.moveTo(t[1].x2, t[1].y2);
+            _context.arc(_c.x, _c.y, r, a2, a1);
+            _context.arc( c.x,  c.y, r, a1, a2);
+        }
     }
 
     var me = {};
@@ -1469,7 +1785,7 @@ var Shadows = (function() {
 
         var i, il, j, jl,
             item,
-            f, h, g,
+            f, h, mh,
             x, y,
             footprint,
             mode,
@@ -1477,8 +1793,10 @@ var Shadows = (function() {
             ax, ay, bx, by,
             a, b, _a, _b,
             points,
+            specialItems = [],
             allFootprints = [];
 
+        _context.fillStyle = colorStr;
         _context.beginPath();
 
         for (i = 0, il = renderItems.length; i < il; i++) {
@@ -1509,13 +1827,25 @@ var Shadows = (function() {
             // when fading in, use a dynamic height
             h = item.scale < 1 ? item.height*item.scale : item.height;
 
-            // prepare same calculations for min_height if applicable
+            mh = 0;
             if (item.minHeight) {
-                g = item.scale < 1 ? item.minHeight*item.scale : item.minHeight;
+                mh = item.scale < 1 ? item.minHeight*item.scale : item.minHeight;
+            }
+
+            if (item.shape === 'cylinder') {
+                if (item.roofShape === 'cylinder') {
+                    h += item.roofHeight;
+                }
+                specialItems.push({
+                    shape:item.shape,
+                    center:{ x:item.center.x-originX, y:item.center.y-originY },
+                    radius:item.radius,
+                    h:h, mh:mh
+                });
+                continue;
             }
 
             mode = null;
-
             for (j = 0, jl = footprint.length-3; j < jl; j += 2) {
                 ax = footprint[j];
                 ay = footprint[j+1];
@@ -1525,9 +1855,9 @@ var Shadows = (function() {
                 _a = _project(ax, ay, h);
                 _b = _project(bx, by, h);
 
-                if (item.minHeight) {
-                    a = _project(ax, ay, g);
-                    b = _project(bx, by, g);
+                if (mh) {
+                    a = _project(ax, ay, mh);
+                    b = _project(bx, by, mh);
                     ax = a.x;
                     ay = a.y;
                     bx = b.x;
@@ -1556,12 +1886,16 @@ var Shadows = (function() {
                 }
             }
 
-            _context.closePath();
-
             allFootprints.push(footprint);
         }
 
-        _context.fillStyle = colorStr;
+        for (i = 0, il = specialItems.length; i < il; i++) {
+            item = specialItems[i];
+            if (item.shape === 'cylinder') {
+                _cylinder(item.center, item.radius, item.h, item.mh);
+            }
+        }
+
         _context.fill();
 
         // now draw all the footprints as negative clipping mask
@@ -1626,7 +1960,7 @@ var FlatBuildings = (function() {
         for (i = 0, il = renderItems.length; i < il; i++) {
             item = renderItems[i];
 
-            if (item.height > me.MAX_HEIGHT) {
+            if (item.height+item.roofHeight > me.MAX_HEIGHT) {
                 continue;
             }
 

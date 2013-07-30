@@ -60,20 +60,18 @@ var Data = (function() {
             res = [],
             item,
             height, minHeight, footprint,
-            color, wallColor, altColor, roofColor,
+            color, wallColor, altColor,
+            roofColor, roofHeight,
             holes, innerFootprint,
-            zoomDelta = maxZoom-zoom;
+            zoomDelta = maxZoom-zoom,
+            meterToPixel = 156412 / Math.pow(2, zoom) / 1.5; // http://wiki.openstreetmap.org/wiki/Zoom_levels, TODO: without factor 1.5, numbers don't match (lat/lon: Berlin)
 
         for (i = 0, il = items.length; i < il; i++) {
-
             item = items[i];
 
-            height = (item.height || DEFAULT_HEIGHT)*HEIGHT_SCALE >> zoomDelta;
-            if (!height) {
-                continue;
-            }
+            height = item.height >>zoomDelta;
 
-            minHeight = item.minHeight*HEIGHT_SCALE >> zoomDelta;
+            minHeight = item.minHeight >>zoomDelta;
             if (minHeight > maxHeight) {
                 continue;
             }
@@ -108,16 +106,27 @@ var Data = (function() {
                 }
             }
 
+            roofHeight = item.roofHeight >>zoomDelta;
+
+            // TODO: move buildings without height to FlatBuildings
+            if (height <= minHeight && roofHeight <= 0) {
+                continue;
+            }
+
             res.push({
-                id:        item.id,
-                footprint: footprint,
-                height:    min(height, maxHeight),
-                minHeight: minHeight,
-                wallColor: wallColor,
-                altColor:  altColor,
-                roofColor: roofColor,
-                center:    getCenter(footprint),
-                holes:     holes.length ? holes : null
+                id:         item.id,
+                footprint:  footprint,
+                height:     min(height, maxHeight),
+                minHeight:  minHeight,
+                wallColor:  wallColor,
+                altColor:   altColor,
+                roofColor:  roofColor,
+                roofShape:  item.roofShape,
+                roofHeight: roofHeight,
+                center:     getCenter(footprint),
+                holes:      holes.length ? holes : null,
+                shape:      item.shape, // TODO: drop footprint
+                radius:     item.radius/meterToPixel
             });
         }
 
@@ -189,7 +198,7 @@ var Data = (function() {
         _isStatic = true;
         renderItems = [];
         _index = {};
-        _parse(data);
+        _parse(data, null);
     };
 
     return me;
