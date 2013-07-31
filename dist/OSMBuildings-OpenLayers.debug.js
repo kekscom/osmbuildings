@@ -1071,8 +1071,8 @@ function fromRange(sVal, sMin, sMax, dMin, dMax) {
     return min(max(dMin + rel*range, dMin), dMax);
 }
 
-function xhr(_url, param, callback) {
-    var url = _url.replace(/\{ *([\w_]+) *\}/g, function(tag, key) {
+function xhr(url, param, callback) {
+    url = url.replace(/\{ *([\w_]+) *\}/g, function(tag, key) {
         return param[key] || tag;
     });
 
@@ -1794,7 +1794,7 @@ var Shadows = (function() {
             a, b, _a, _b,
             points,
             specialItems = [],
-            allFootprints = [];
+            clipping = [];
 
         _context.fillStyle = colorStr;
         _context.beginPath();
@@ -1886,7 +1886,9 @@ var Shadows = (function() {
                 }
             }
 
-            allFootprints.push(footprint);
+            if (!mh) {
+                clipping.push(footprint);
+            }
         }
 
         for (i = 0, il = specialItems.length; i < il; i++) {
@@ -1901,15 +1903,23 @@ var Shadows = (function() {
         // now draw all the footprints as negative clipping mask
         _context.globalCompositeOperation = 'destination-out';
         _context.beginPath();
-        for (i = 0, il = allFootprints.length; i < il; i++) {
-            points = allFootprints[i];
+        for (i = 0, il = clipping.length; i < il; i++) {
+            points = clipping[i];
             _context.moveTo(points[0], points[1]);
             for (j = 2, jl = points.length; j < jl; j += 2) {
                 _context.lineTo(points[j], points[j+1]);
             }
             _context.lineTo(points[0], points[1]);
-            _context.closePath();
         }
+
+        for (i = 0, il = specialItems.length; i < il; i++) {
+            item = specialItems[i];
+            if (item.shape === 'cylinder' && !item.mh) {
+                _context.moveTo(item.center.x+item.radius, item.center.y);
+                _context.arc(item.center.x, item.center.y, item.radius, 0, PI*2);
+            }
+        }
+
         _context.fillStyle = '#00ff00';
         _context.fill();
         _context.globalCompositeOperation = 'source-over';

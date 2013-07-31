@@ -15,8 +15,8 @@ With version 0.1.9a ahead, there are a few changes regarding files and API.<br>
 It's about aligning, functionality stays the same.
 
 1. Files are now named `OSMBuildings-<ENGINE>.js`- where engine is `Leaflet` or `OpenLayers` at the moment.
-2. Initialization is just `new OSMBuildings(map)` - no more addTo(...) 
-3. Loading data from external GeoJSON source is done by `loadData(<URL>)`
+2. Initialization is just `new OSMBuildings(map)` - no more addTo(...)
+3. Loading data from external GeoJSON source is done via `loadData(<URL>)`
 3. Setting GeoJSON or alike formatted data is done by `setData(<DATA>)`
 
 For details, see documentation below.
@@ -59,7 +59,7 @@ Add the buildings layer.
 new OSMBuildings(map).loadData();
 ~~~
 
-As a popular alternative, you could pass a <a href="http://www.geojson.org/geojson-spec.html">GeoJSON</a> data object.<br>
+As a popular alternative, you could pass a <a href="http://www.geojson.org/geojson-spec.html">GeoJSON</a> FeatureCollection object.<br>
 Feature types Polygon, Multipolygon and Linestring are supported.<br>
 Make sure the building coordinates are projected in <a href="http://spatialreference.org/ref/epsg/4326/">EPSG:4326</a>.<br>
 Height units m, ft, yd, mi are accepted, no given unit defaults to meters.
@@ -188,7 +188,7 @@ Methods
 </tr>
 
 <tr>
-<td>setData({GeoJSON})</td>
+<td>setData({GeoJSON FeatureCollection})</td>
 <td>Just add GeoJSON data to your map.</td>
 </tr>
 
