@@ -54,10 +54,9 @@ var readOSMXAPI = (function() {
                 continue;
             }
         }
-        if (!outer || !outer.tags) {
-            return;
+        if (outer && outer.tags) {
+            return { outer:outer, inner:inner };
         }
-        return { outer:outer, inner:inner };
     }
 
     function getFootprint(points) {
@@ -99,7 +98,7 @@ var readOSMXAPI = (function() {
 
         if (item.id) {
             res.id = item.id;
-        }
+    }
 
         if (footprint) {
             res.footprint = Import.windOuterPolygon(footprint);
