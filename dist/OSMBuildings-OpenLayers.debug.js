@@ -588,7 +588,7 @@ var readGeoJSON = function(collection) {
             footprint.push(polygon[j][lat], polygon[j][lon]);
         }
 
-        item.id = properties.id || (footprint[0] + ',' + footprint[1]);
+        item.id = properties.id || [footprint[0], footprint[1], properties.height, properties.minHeight].join(',');
         item.footprint = Import.windOuterPolygon(footprint);
 
         holes = [];
@@ -685,10 +685,9 @@ var readOSMXAPI = (function() {
                 continue;
             }
         }
-        if (!outer || !outer.tags) {
-            return;
+        if (outer && outer.tags) {
+            return { outer:outer, inner:inner };
         }
-        return { outer:outer, inner:inner };
     }
 
     function getFootprint(points) {
@@ -730,7 +729,7 @@ var readOSMXAPI = (function() {
 
         if (item.id) {
             res.id = item.id;
-        }
+    }
 
         if (footprint) {
             res.footprint = Import.windOuterPolygon(footprint);
