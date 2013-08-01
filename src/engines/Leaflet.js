@@ -23,7 +23,8 @@ proto.onAdd = function(map) {
         moveend:   this.onMoveEnd,
         zoomstart: this.onZoomStart,
         zoomend:   this.onZoomEnd,
-        resize:    this.onResize
+        resize:    this.onResize,
+        viewreset: this.onViewReset
     }, this);
 
     if (map.options.zoomAnimation) {
@@ -49,7 +50,8 @@ proto.onRemove = function() {
         moveend:   this.onMoveEnd,
         zoomstart: this.onZoomStart,
         zoomend:   this.onZoomEnd,
-        resize:    this.onResize
+        resize:    this.onResize,
+        viewreset: this.onViewReset
     }, this);
 
     if (map.options.zoomAnimation) {
@@ -97,6 +99,7 @@ proto.onZoom = function(e) {
 //
 //    this.container.style[L.DomUtil.TRANSFORM] = L.DomUtil.getTranslateString((origin.multiplyBy(-1).add(this.getOffset().multiplyBy(-1)).multiplyBy(scale).add(origin))) + ' scale(' + scale + ') ';
 //    isZooming = true;
+    this.skipViewReset = true;
 };
 
 proto.onZoomEnd = function(e) {
@@ -110,6 +113,18 @@ proto.onZoomEnd = function(e) {
 };
 
 proto.onResize = function() {};
+
+proto.onViewReset = function() {
+    if (this.skipViewReset) { // viewreset is also fired after zoom
+        this.skipViewReset = false;
+        return;
+    }
+    var off = this.getOffset();
+
+    this.offset = off;
+    Layers.setPosition(-off.x, -off.y);
+    setCamOffset({ x:0, y:0 });
+};
 
 proto.getOffset = function() {
     return L.DomUtil.getPosition(this.map._mapPane);
