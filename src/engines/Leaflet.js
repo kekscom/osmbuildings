@@ -30,7 +30,7 @@ proto.onAdd = function(map) {
         map.on('zoomanim', this.onZoom, this);
     }
 
-    map.attributionControl.addAttribution(ATTRIBUTION);
+    if (map.attributionControl) map.attributionControl.addAttribution(ATTRIBUTION);
 
     Data.update();
     renderAll(); // in case of re-adding this layer
@@ -38,7 +38,7 @@ proto.onAdd = function(map) {
 
 proto.onRemove = function() {
     var map = this.map;
-    map.attributionControl.removeAttribution(ATTRIBUTION);
+    if (map.attributionControl) map.attributionControl.removeAttribution(ATTRIBUTION);
 
     map.off({
         move:      this.onMove,
