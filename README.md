@@ -4,7 +4,7 @@ OSM Buildings is a JavaScript library for visualizing OpenStreetMaps building ge
 Everything is stabilizing now, entering beta state.
 
 
-## Running example
+## Example
 
 http://osmbuildings.org/
 
@@ -234,5 +234,52 @@ wallColor</td>
 <td>shadows</td>
 <td>Boolean</td>
 <td>Enables or disables shadow rendering, default: enabled</td>
+</tr>
+</table>
+
+
+## Data
+
+### OSM Tags used
+
+<table>
+<tr>
+<th>Result</th>
+<th>OSM Tags</th>
+</tr>
+
+<tr>
+<td><b>height</b></td>
+<td>height, building:height, levels, building:levels</td>
+</tr>
+
+<tr>
+<td><b>minHeight</b></td>
+<td>min_height, building:min_height, min_level, building:min_level</td>
+</tr>
+
+<tr>
+<td><b>wallColor</b></td>
+<td>building:color, building:colour, building:material, building:facade:material, building:cladding</td>
+</tr>
+
+<tr>
+<td><b>roofColor</b></td>
+<td>roof:color, roof:colour, building:roof:color, building:roof:colour, roof:material, building:roof:material</td>
+</tr>
+
+<tr>
+<td><b>shape</b></td>
+<td>building:shape[=cylinder,sphere]</td>
+</tr>
+
+<tr>
+<td><b>roofShape</b></td>
+<td>roof:shape[=dome]</td>
+</tr>
+
+<tr>
+<td><b>roofHeight</b></td>
+<td>roof:height</td>
 </tr>
 </table>
