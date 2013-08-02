@@ -2197,14 +2197,17 @@ proto.onAdd = function(map) {
         moveend:   this.onMoveEnd,
         zoomstart: this.onZoomStart,
         zoomend:   this.onZoomEnd,
-        resize:    this.onResize
+        resize:    this.onResize,
+        viewreset: this.onViewReset
     }, this);
 
     if (map.options.zoomAnimation) {
         map.on('zoomanim', this.onZoom, this);
     }
 
-    map.attributionControl.addAttribution(ATTRIBUTION);
+    if (map.attributionControl) {
+        map.attributionControl.addAttribution(ATTRIBUTION);
+    }
 
     Data.update();
     renderAll(); // in case of re-adding this layer
@@ -2212,14 +2215,17 @@ proto.onAdd = function(map) {
 
 proto.onRemove = function() {
     var map = this.map;
-    map.attributionControl.removeAttribution(ATTRIBUTION);
+    if (map.attributionControl) {
+        map.attributionControl.removeAttribution(ATTRIBUTION);
+    }
 
     map.off({
         move:      this.onMove,
         moveend:   this.onMoveEnd,
         zoomstart: this.onZoomStart,
         zoomend:   this.onZoomEnd,
-        resize:    this.onResize
+        resize:    this.onResize,
+        viewreset: this.onViewReset
     }, this);
 
     if (map.options.zoomAnimation) {
@@ -2230,6 +2236,7 @@ proto.onRemove = function() {
 };
 
 proto.onMove = function(e) {
+    
     var off = this.getOffset();
     setCamOffset({ x:this.offset.x-off.x, y:this.offset.y-off.y });
     render();
@@ -2240,6 +2247,7 @@ proto.onMoveEnd = function(e) {
         this.skipMoveEnd = false;
         return;
     }
+    
 
     var map = this.map,
         off = this.getOffset(),
@@ -2255,10 +2263,12 @@ proto.onMoveEnd = function(e) {
 };
 
 proto.onZoomStart = function(e) {
+    
     onZoomStart(e);
 };
 
 proto.onZoom = function(e) {
+    
 //    var map = this.map,
 //        scale = map.getZoomScale(e.zoom),
 //        offset = map._getCenterOffset(e.center).divideBy(1 - 1/scale),
@@ -2270,6 +2280,7 @@ proto.onZoom = function(e) {
 };
 
 proto.onZoomEnd = function(e) {
+    
     var map = this.map,
         off = this.getOffset(),
         po = map.getPixelOrigin();
@@ -2279,7 +2290,18 @@ proto.onZoomEnd = function(e) {
     this.skipMoveEnd = true;
 };
 
-proto.onResize = function() {};
+proto.onResize = function() {
+    
+};
+
+proto.onViewReset = function() {
+    
+    var off = this.getOffset();
+
+    this.offset = off;
+    Layers.setPosition(-off.x, -off.y);
+    setCamOffset({ x:0, y:0 });
+};
 
 proto.getOffset = function() {
     return L.DomUtil.getPosition(this.map._mapPane);
