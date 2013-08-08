@@ -32,6 +32,13 @@ var Int32Array = Int32Array || Array,
     doc = document;
 
 
+if (!console) {
+    console = {
+        log:function() {},
+        warn:function() {}
+    };
+}
+
 
 
 //****** file: Color.js ******
@@ -1135,25 +1142,22 @@ function xhr(url, param, callback) {
 var Cache = (function() {
 
     var _time = new Date(),
-        _static = '__STATIC__',
         _data = {};
 
     var me = {};
 
     me.add = function(data, key) {
-        key = key || _static;
         _data[key] = { data:data, time:Date.now() };
     };
 
     me.get = function(key) {
-        key = key || _static;
         return _data[key] && _data[key].data;
     };
 
     me.purge = function() {
         _time.setMinutes(_time.getMinutes()-5);
         for (var key in _data) {
-            if (_data[key].time < _time && key !== _static) {
+            if (_data[key].time < _time) {
                 delete _data[key];
             }
         }
@@ -1170,7 +1174,8 @@ var Data = (function() {
 
     var _url,
         _isStatic = true,
-        _index = {}; // maintain a list of cached items in order to fade in new ones
+        _staticData,
+        _presentItemsIndex = {}; // maintain a list of cached items in order to fade in new ones
 
     function _getSimpleFootprint(polygon) {
         var footprint = new Int32Array(polygon.length),
@@ -1187,37 +1192,35 @@ var Data = (function() {
         return footprint;
     }
 
-    function _closureForParse(cacheKey) {
-        return function(res) {
-            _parse(res, cacheKey);
+    function _createClosure(cacheKey) {
+        return function(data) {
+            var parsedData = _parse(data);
+            Cache.add(parsedData, cacheKey);
+            _addRenderItems(parsedData, true);
         };
     }
 
-    function _parse(data, cacheKey) {
+    function _parse(data) {
         if (!data) {
             return;
         }
-
-        var items;
-        if (data.type === 'FeatureCollection') { // GeoJSON
-            items = readGeoJSON(data.features);
-        } else if (data.osm3s) { // XAPI
-            items = readOSMXAPI(data.elements);
+        if (data.type === 'FeatureCollection') {
+            return readGeoJSON(data.features);
         }
-
-        Cache.add(items, cacheKey);
-        _addRenderItems(items, true);
+        if (data.osm3s) { // XAPI
+            return readOSMXAPI(data.elements);
+        }
     }
 
-    function _addRenderItems(data, isNew) {
-        var scaledItems = _scale(data, zoom, isNew),
+    function _addRenderItems(data, allAreNew) {
+        var scaledItems = _scale(data, zoom),
             item;
         for (var i = 0, il = scaledItems.length; i < il; i++) {
             item = scaledItems[i];
-            if (!_index[item.id]) {
-                item.scale = isNew ? 0 : 1;
+            if (!_presentItemsIndex[item.id]) {
+                item.scale = allAreNew ? 0 : 1;
                 renderItems.push(item);
-                _index[item.id] = 1;
+                _presentItemsIndex[item.id] = 1;
             }
         }
         fadeIn();
@@ -1303,34 +1306,50 @@ var Data = (function() {
 
     var me = {};
 
+    me.set = function(data) {
+        _isStatic = true;
+        renderItems = [];
+        _presentItemsIndex = {};
+        _addRenderItems(_staticData =_parse(data), true);
+    };
+
     me.load = function(url) {
         _url = url || OSM_XAPI_URL;
         _isStatic = !/(.+\{[nesw]\}){4,}/.test(_url);
+
         if (_isStatic) {
-            Cache.add(null);
-            xhr(_url, {}, _parse);
+            renderItems = [];
+            _presentItemsIndex = {};
+            xhr(_url, {}, function(data) {
+                _addRenderItems(_staticData =_parse(data), true);
+            });
+            return;
         }
+
         me.update();
     };
 
     me.update = function() {
+        renderItems = [];
+
         if (zoom < MIN_ZOOM) {
             return;
         }
 
-        renderItems = [];
-        _index = {};
-
-        var lat, lon,
-            cached, key;
-
         if (_isStatic) {
-            if ((cached = Cache.get(key))) {
-                _addRenderItems(cached);
-            }
+// on ZOOM
+            renderItems = [];
+            _addRenderItems(_staticData);
+
             return;
         }
 
+// on zoom?
+        _presentItemsIndex = {};
+
+        var lat, lon,
+            parsedData, cacheKey;
+// store bbox and chek, whether any actin is needed on move/on zoom
         var nw = pixelToGeo(originX,       originY),
             se = pixelToGeo(originX+width, originY+height),
             sizeLat = DATA_TILE_SIZE,
@@ -1345,28 +1364,21 @@ var Data = (function() {
 
         for (lat = bounds.s; lat <= bounds.n; lat += sizeLat) {
             for (lon = bounds.w; lon <= bounds.e; lon += sizeLon) {
-                key = lat + ',' + lon;
-                if ((cached = Cache.get(key))) {
-                    _addRenderItems(cached);
+                cacheKey = lat + ',' + lon;
+                if ((parsedData = Cache.get(cacheKey))) {
+                    _addRenderItems(parsedData);
                 } else {
                     xhr(_url, {
                         n: crop(lat+sizeLat),
                         e: crop(lon+sizeLon),
                         s: crop(lat),
                         w: crop(lon)
-                    }, _closureForParse(key));
+                    }, _createClosure(cacheKey));
                 }
             }
         }
 
         Cache.purge();
-    };
-
-    me.set = function(data) {
-        _isStatic = true;
-        renderItems = [];
-        _index = {};
-        _parse(data, null);
     };
 
     return me;
@@ -2236,7 +2248,7 @@ proto.onRemove = function() {
 };
 
 proto.onMove = function(e) {
-    
+    console.log('Leaflet: onMove');
     var off = this.getOffset();
     setCamOffset({ x:this.offset.x-off.x, y:this.offset.y-off.y });
     render();
@@ -2247,7 +2259,7 @@ proto.onMoveEnd = function(e) {
         this.skipMoveEnd = false;
         return;
     }
-    
+    console.log('Leaflet: onMoveEnd');
 
     var map = this.map,
         off = this.getOffset(),
@@ -2263,12 +2275,12 @@ proto.onMoveEnd = function(e) {
 };
 
 proto.onZoomStart = function(e) {
-    
+    console.log('Leaflet: onZoomStart');
     onZoomStart(e);
 };
 
 proto.onZoom = function(e) {
-    
+    console.log('Leaflet: onZoom');
 //    var map = this.map,
 //        scale = map.getZoomScale(e.zoom),
 //        offset = map._getCenterOffset(e.center).divideBy(1 - 1/scale),
@@ -2280,7 +2292,7 @@ proto.onZoom = function(e) {
 };
 
 proto.onZoomEnd = function(e) {
-    
+    console.log('Leaflet: onZoomEnd');
     var map = this.map,
         off = this.getOffset(),
         po = map.getPixelOrigin();
@@ -2291,11 +2303,11 @@ proto.onZoomEnd = function(e) {
 };
 
 proto.onResize = function() {
-    
+    console.log('Leaflet: onResize');
 };
 
 proto.onViewReset = function() {
-    
+    console.log('Leaflet: onViewReset');
     var off = this.getOffset();
 
     this.offset = off;
