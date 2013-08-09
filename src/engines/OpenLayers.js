@@ -37,7 +37,6 @@ proto.setMap = function(map) {
     this.setOrigin();
 
     Data.update();
-    renderAll();
 };
 
 proto.removeMap = function(map) {

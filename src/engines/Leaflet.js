@@ -36,7 +36,6 @@ proto.onAdd = function(map) {
     }
 
     Data.update();
-    renderAll(); // in case of re-adding this layer
 };
 
 proto.onRemove = function() {

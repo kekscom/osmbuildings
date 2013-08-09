@@ -32,13 +32,6 @@ var Int32Array = Int32Array || Array,
     doc = document;
 
 
-if (!console) {
-    console = {
-        log:function() {},
-        warn:function() {}
-    };
-}
-
 
 
 //****** file: Color.js ******
@@ -936,7 +929,7 @@ function getCenter(points) {
 }
 
 function crop(num) {
-    return (num*10000 << 0) / 10000;
+    return parseFloat(num.toFixed(5));
 }
 
 function getSquareSegmentDistance(px, py, p1x, p1y, p2x, p2y) {
@@ -1173,9 +1166,9 @@ var Cache = (function() {
 var Data = (function() {
 
     var _url,
-        _isStatic = true,
+        _isStatic,
         _staticData,
-        _presentItemsIndex = {}; // maintain a list of cached items in order to fade in new ones
+        _currentItemsIndex = {}; // maintain a list of cached items in order to avoid duplicates on tile borders
 
     function _getSimpleFootprint(polygon) {
         var footprint = new Int32Array(polygon.length),
@@ -1202,7 +1195,7 @@ var Data = (function() {
 
     function _parse(data) {
         if (!data) {
-            return;
+            return [];
         }
         if (data.type === 'FeatureCollection') {
             return readGeoJSON(data.features);
@@ -1210,6 +1203,12 @@ var Data = (function() {
         if (data.osm3s) { // XAPI
             return readOSMXAPI(data.elements);
         }
+        return [];
+    }
+
+    function _resetItems() {
+        renderItems = [];
+        _currentItemsIndex = {};
     }
 
     function _addRenderItems(data, allAreNew) {
@@ -1217,10 +1216,10 @@ var Data = (function() {
             item;
         for (var i = 0, il = scaledItems.length; i < il; i++) {
             item = scaledItems[i];
-            if (!_presentItemsIndex[item.id]) {
+            if (!_currentItemsIndex[item.id]) {
                 item.scale = allAreNew ? 0 : 1;
                 renderItems.push(item);
-                _presentItemsIndex[item.id] = 1;
+                _currentItemsIndex[item.id] = 1;
             }
         }
         fadeIn();
@@ -1308,9 +1307,8 @@ var Data = (function() {
 
     me.set = function(data) {
         _isStatic = true;
-        renderItems = [];
-        _presentItemsIndex = {};
-        _addRenderItems(_staticData =_parse(data), true);
+        _resetItems();
+        _addRenderItems(_staticData = _parse(data), true);
     };
 
     me.load = function(url) {
@@ -1318,10 +1316,9 @@ var Data = (function() {
         _isStatic = !/(.+\{[nesw]\}){4,}/.test(_url);
 
         if (_isStatic) {
-            renderItems = [];
-            _presentItemsIndex = {};
+            _resetItems();
             xhr(_url, {}, function(data) {
-                _addRenderItems(_staticData =_parse(data), true);
+                _addRenderItems(_staticData = _parse(data), true);
             });
             return;
         }
@@ -1330,27 +1327,24 @@ var Data = (function() {
     };
 
     me.update = function() {
-        renderItems = [];
+        _resetItems();
 
         if (zoom < MIN_ZOOM) {
             return;
         }
 
         if (_isStatic) {
-// on ZOOM
-            renderItems = [];
             _addRenderItems(_staticData);
-
             return;
         }
 
-// on zoom?
-        _presentItemsIndex = {};
+        if (!_url) {
+            return;
+        }
 
         var lat, lon,
-            parsedData, cacheKey;
-// store bbox and chek, whether any actin is needed on move/on zoom
-        var nw = pixelToGeo(originX,       originY),
+            parsedData, cacheKey,
+            nw = pixelToGeo(originX,       originY),
             se = pixelToGeo(originX+width, originY+height),
             sizeLat = DATA_TILE_SIZE,
             sizeLon = DATA_TILE_SIZE*2;
@@ -1364,15 +1358,17 @@ var Data = (function() {
 
         for (lat = bounds.s; lat <= bounds.n; lat += sizeLat) {
             for (lon = bounds.w; lon <= bounds.e; lon += sizeLon) {
+                lat = crop(lat);
+                lon = crop(lon);
                 cacheKey = lat + ',' + lon;
                 if ((parsedData = Cache.get(cacheKey))) {
                     _addRenderItems(parsedData);
                 } else {
                     xhr(_url, {
-                        n: crop(lat+sizeLat),
-                        e: crop(lon+sizeLon),
-                        s: crop(lat),
-                        w: crop(lon)
+                        n: lat+sizeLat,
+                        e: lon+sizeLon,
+                        s: lat,
+                        w: lon
                     }, _createClosure(cacheKey));
                 }
             }
@@ -2223,7 +2219,6 @@ proto.setMap = function(map) {
     this.setOrigin();
 
     Data.update();
-    renderAll();
 };
 
 proto.removeMap = function(map) {
