@@ -1218,12 +1218,107 @@ var Data = (function() {
             item = scaledItems[i];
             if (!_currentItemsIndex[item.id]) {
                 item.scale = allAreNew ? 0 : 1;
+                item.scale = 1; // BAL prevent animation
                 renderItems.push(item);
                 _currentItemsIndex[item.id] = 1;
             }
         }
         fadeIn();
     }
+
+    function Building(opts, cacheIdx) {
+        for (var key in opts) {
+            if (opts.hasOwnProperty(key)) {
+                this[key] = opts[key];
+            }
+        }
+
+        var cachedData = Cache.get();
+        this.cachedSelf =  cachedData && Cache.get()[cacheIdx];
+
+        var self = this;
+        this.cachedSelf.renderItem = self;
+    }
+
+    Building.prototype.setWallColor = function(colorStr) {
+        var color, wallColor;
+
+        if ((color = Color.parse(colorStr))) {
+            if (this.cachedSelf) this.cachedSelf.wallColor = colorStr;
+
+            wallColor = color.setAlpha(zoomAlpha);
+            this.altColor  = '' + wallColor.setLightness(0.8);
+            this.wallColor = '' + wallColor;
+        }
+    };
+
+    Building.prototype.setRoofColor = function(colorStr) {
+        var color;
+
+        if ((color = Color.parse(colorStr))) {
+            if (this.cachedSelf) this.cachedSelf.roofColor = colorStr;
+
+            this.roofColor = '' + color.setAlpha(zoomAlpha);
+        }
+    };
+
+    Building.prototype.setColor = function(colorStr) {
+        this.setWallColor(colorStr);
+        this.setRoofColor(colorStr);
+    };
+
+    Building.prototype.render = function() {
+        var h, _h, mh, _mh,
+            wallColor, altColor, roofColor,
+            roof, holes,
+            j, jl;
+
+        // when fading in, use a dynamic height
+        h = this.scale < 1 ? this.height*this.scale : this.height;
+        // precalculating projection height factor
+        _h = camZ / (camZ-h);
+
+        mh = 0;
+        _mh = 0;
+        if (this.minHeight) {
+            mh = this.scale < 1 ? this.minHeight*this.scale : this.minHeight;
+            _mh = camZ / (camZ-mh);
+        }
+
+        wallColor = this.wallColor || wallColorAlpha;
+        altColor  = this.altColor  || altColorAlpha;
+        roofColor = this.roofColor || roofColorAlpha;
+        context.strokeStyle = altColor;
+
+        if (this.shape === 'cylinder') {
+            roof = cylinder(
+                { x:this.center.x-originX, y:this.center.y-originY },
+                this.radius,
+                h, mh,
+                wallColor, altColor
+            );
+            if (this.roofShape === 'cylinder') {
+                roof = cylinder(
+                    { x:this.center.x-originX, y:this.center.y-originY },
+                    this.radius,
+                    h+this.roofHeight, h,
+                    roofColor
+                );
+            }
+            context.fillStyle = roofColor;
+            drawCircle(roof.c, roof.r, true);
+        } else {
+            roof = buildingPart(this.footprint, _h, _mh, wallColor, altColor);
+            holes = [];
+            if (this.holes) {
+                for (j = 0, jl = this.holes.length; j < jl; j++) {
+                    holes[j] = buildingPart(this.holes[j], _h, _mh, wallColor, altColor);
+                }
+            }
+            context.fillStyle = roofColor;
+            drawPolygon(roof, true, holes);
+        }
+    };
 
     function _scale(items, zoom) {
         var i, il, j, jl,
@@ -1283,7 +1378,7 @@ var Data = (function() {
                 continue;
             }
 
-            res.push({
+            res.push(new Building({
                 id:         item.id,
                 footprint:  footprint,
                 height:     min(height, maxHeight),
@@ -1297,7 +1392,7 @@ var Data = (function() {
                 holes:      holes.length ? holes : null,
                 shape:      item.shape, // TODO: drop footprint
                 radius:     item.radius/meterToPixel
-            });
+            }, i));
         }
 
         return res;
@@ -1384,7 +1479,7 @@ var Data = (function() {
 
 //****** file: render.js ******
 
-var renderItems = [];
+var renderItems = [], viewportItems;
 
 function fadeIn() {
     if (animTimer) {
@@ -1421,6 +1516,7 @@ function renderAll() {
 
 function render() {
     context.clearRect(0, 0, width, height);
+    viewportItems = [];
 
     // show on high zoom levels only and avoid rendering during zoom
     if (zoom < minZoom || isZooming) {
@@ -1469,51 +1565,24 @@ function render() {
             continue;
         }
 
-        // when fading in, use a dynamic height
-        h = item.scale < 1 ? item.height*item.scale : item.height;
-        // precalculating projection height factor
-        _h = camZ / (camZ-h);
+        viewportItems.push(item);
+        item.render();
+    }
+}
 
-        mh = 0;
-        _mh = 0;
-        if (item.minHeight) {
-            mh = item.scale < 1 ? item.minHeight*item.scale : item.minHeight;
-            _mh = camZ / (camZ-mh);
-        }
+function rerenderAll() {
+    Shadows.render();
+    FlatBuildings.render();
+    rerender();
+}
 
-        wallColor = item.wallColor || wallColorAlpha;
-        altColor  = item.altColor  || altColorAlpha;
-        roofColor = item.roofColor || roofColorAlpha;
-        context.strokeStyle = altColor;
+function rerender() {
+    context.clearRect(0, 0, width, height);
 
-        if (item.shape === 'cylinder') {
-            roof = cylinder(
-                { x:item.center.x-originX, y:item.center.y-originY },
-                item.radius,
-                h, mh,
-                wallColor, altColor
-            );
-            if (item.roofShape === 'cylinder') {
-                roof = cylinder(
-                    { x:item.center.x-originX, y:item.center.y-originY },
-                    item.radius,
-                    h+item.roofHeight, h,
-                    roofColor
-                );
-            }
-            context.fillStyle = roofColor;
-            drawCircle(roof.c, roof.r, true);
-        } else {
-            roof = buildingPart(footprint, _h, _mh, wallColor, altColor);
-            holes = [];
-            if (item.holes) {
-                for (j = 0, jl = item.holes.length; j < jl; j++) {
-                    holes[j] = buildingPart(item.holes[j], _h, _mh, wallColor, altColor);
-                }
-            }
-            context.fillStyle = roofColor;
-            drawPolygon(roof, true, holes);
-        }
+    var i, il;
+
+    for (i = 0, il = viewportItems.length; i < il; i++) {
+        viewportItems[i].render();
     }
 }
 
@@ -1952,6 +2021,7 @@ var FlatBuildings = (function() {
     var me = {};
 
     me.MAX_HEIGHT = 8;
+    me.USE_COLORS = false;
 
     me.setContext = function(context) {
         _context = context;
@@ -1973,7 +2043,7 @@ var FlatBuildings = (function() {
             isVisible,
             ax, ay;
 
-        _context.beginPath();
+        if (!me.USE_COLORS) _context.beginPath();
 
         for (i = 0, il = renderItems.length; i < il; i++) {
             item = renderItems[i];
@@ -1999,6 +2069,8 @@ var FlatBuildings = (function() {
                 continue;
             }
 
+            if (me.USE_COLORS) _context.beginPath();
+
             for (j = 0, jl = footprint.length-3; j < jl; j += 2) {
                 ax = footprint[j];
                 ay = footprint[j + 1];
@@ -2010,13 +2082,23 @@ var FlatBuildings = (function() {
             }
 
             _context.closePath();
+
+            if (me.USE_COLORS) {
+                _context.fillStyle   = item.roofColor || roofColorAlpha;
+                _context.strokeStyle = item.altColor || altColorAlpha;
+
+                _context.stroke();
+                _context.fill();
+            }
         }
 
-        _context.fillStyle   = roofColorAlpha;
-        _context.strokeStyle = altColorAlpha;
+        if (!me.USE_COLORS) {
+            _context.fillStyle   = roofColorAlpha;
+            _context.strokeStyle = altColorAlpha;
 
-        _context.stroke();
-        _context.fill();
+            _context.stroke();
+            _context.fill();
+        }
     };
 
     return me;
@@ -2145,6 +2227,14 @@ function setStyle(style) {
 
     if (style.shadows !== undefined) {
         Shadows.enable(style.shadows);
+    }
+
+    if (style.flatBuildingColors !== undefined) {
+        FlatBuildings.USE_COLORS = style.flatBuildingColors;
+    }
+
+    if (typeof(style.min3DRenderHeight) === 'number') {
+        FlatBuildings.MAX_HEIGHT = style.min3DRenderHeight;
     }
 
     renderAll();
@@ -2336,6 +2426,14 @@ proto.loadData = function(url) {
 proto.setData = function(data) {
     Data.set(data);
     return this;
+};
+
+proto.getCache = function() {
+    return Cache.get();
+};
+
+proto.rerender = function() {
+    rerenderAll();
 };
 
 osmb.VERSION     = VERSION;

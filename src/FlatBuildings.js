@@ -5,6 +5,7 @@ var FlatBuildings = (function() {
     var me = {};
 
     me.MAX_HEIGHT = 8;
+    me.USE_COLORS = false;
 
     me.setContext = function(context) {
         _context = context;
@@ -26,7 +27,7 @@ var FlatBuildings = (function() {
             isVisible,
             ax, ay;
 
-        _context.beginPath();
+        if (!me.USE_COLORS) _context.beginPath();
 
         for (i = 0, il = renderItems.length; i < il; i++) {
             item = renderItems[i];
@@ -52,6 +53,8 @@ var FlatBuildings = (function() {
                 continue;
             }
 
+            if (me.USE_COLORS) _context.beginPath();
+
             for (j = 0, jl = footprint.length-3; j < jl; j += 2) {
                 ax = footprint[j];
                 ay = footprint[j + 1];
@@ -63,13 +66,23 @@ var FlatBuildings = (function() {
             }
 
             _context.closePath();
+
+            if (me.USE_COLORS) {
+                _context.fillStyle   = item.roofColor || roofColorAlpha;
+                _context.strokeStyle = item.altColor || altColorAlpha;
+
+                _context.stroke();
+                _context.fill();
+            }
         }
 
-        _context.fillStyle   = roofColorAlpha;
-        _context.strokeStyle = altColorAlpha;
+        if (!me.USE_COLORS) {
+            _context.fillStyle   = roofColorAlpha;
+            _context.strokeStyle = altColorAlpha;
 
-        _context.stroke();
-        _context.fill();
+            _context.stroke();
+            _context.fill();
+        }
     };
 
     return me;
