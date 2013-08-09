@@ -53,12 +53,107 @@ var Data = (function() {
             item = scaledItems[i];
             if (!_currentItemsIndex[item.id]) {
                 item.scale = allAreNew ? 0 : 1;
+                item.scale = 1; // BAL prevent animation
                 renderItems.push(item);
                 _currentItemsIndex[item.id] = 1;
             }
         }
         fadeIn();
     }
+
+    function Building(opts, cacheIdx) {
+        for (var key in opts) {
+            if (opts.hasOwnProperty(key)) {
+                this[key] = opts[key];
+            }
+        }
+
+        var cachedData = Cache.get();
+        this.cachedSelf =  cachedData && Cache.get()[cacheIdx];
+
+        var self = this;
+        this.cachedSelf.renderItem = self;
+    }
+
+    Building.prototype.setWallColor = function(colorStr) {
+        var color, wallColor;
+
+        if ((color = Color.parse(colorStr))) {
+            if (this.cachedSelf) this.cachedSelf.wallColor = colorStr;
+
+            wallColor = color.setAlpha(zoomAlpha);
+            this.altColor  = '' + wallColor.setLightness(0.8);
+            this.wallColor = '' + wallColor;
+        }
+    };
+
+    Building.prototype.setRoofColor = function(colorStr) {
+        var color;
+
+        if ((color = Color.parse(colorStr))) {
+            if (this.cachedSelf) this.cachedSelf.roofColor = colorStr;
+
+            this.roofColor = '' + color.setAlpha(zoomAlpha);
+        }
+    };
+
+    Building.prototype.setColor = function(colorStr) {
+        this.setWallColor(colorStr);
+        this.setRoofColor(colorStr);
+    };
+
+    Building.prototype.render = function() {
+        var h, _h, mh, _mh,
+            wallColor, altColor, roofColor,
+            roof, holes,
+            j, jl;
+
+        // when fading in, use a dynamic height
+        h = this.scale < 1 ? this.height*this.scale : this.height;
+        // precalculating projection height factor
+        _h = camZ / (camZ-h);
+
+        mh = 0;
+        _mh = 0;
+        if (this.minHeight) {
+            mh = this.scale < 1 ? this.minHeight*this.scale : this.minHeight;
+            _mh = camZ / (camZ-mh);
+        }
+
+        wallColor = this.wallColor || wallColorAlpha;
+        altColor  = this.altColor  || altColorAlpha;
+        roofColor = this.roofColor || roofColorAlpha;
+        context.strokeStyle = altColor;
+
+        if (this.shape === 'cylinder') {
+            roof = cylinder(
+                { x:this.center.x-originX, y:this.center.y-originY },
+                this.radius,
+                h, mh,
+                wallColor, altColor
+            );
+            if (this.roofShape === 'cylinder') {
+                roof = cylinder(
+                    { x:this.center.x-originX, y:this.center.y-originY },
+                    this.radius,
+                    h+this.roofHeight, h,
+                    roofColor
+                );
+            }
+            context.fillStyle = roofColor;
+            drawCircle(roof.c, roof.r, true);
+        } else {
+            roof = buildingPart(this.footprint, _h, _mh, wallColor, altColor);
+            holes = [];
+            if (this.holes) {
+                for (j = 0, jl = this.holes.length; j < jl; j++) {
+                    holes[j] = buildingPart(this.holes[j], _h, _mh, wallColor, altColor);
+                }
+            }
+            context.fillStyle = roofColor;
+            drawPolygon(roof, true, holes);
+        }
+    };
 
     function _scale(items, zoom) {
         var i, il, j, jl,
@@ -118,7 +213,7 @@ var Data = (function() {
                 continue;
             }
 
-            res.push({
+            res.push(new Building({
                 id:         item.id,
                 footprint:  footprint,
                 height:     min(height, maxHeight),
@@ -132,7 +227,7 @@ var Data = (function() {
                 holes:      holes.length ? holes : null,
                 shape:      item.shape, // TODO: drop footprint
                 radius:     item.radius/meterToPixel
-            });
+            }, i));
         }
 
         return res;
