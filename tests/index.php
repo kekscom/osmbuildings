@@ -47,6 +47,10 @@
 //  map.setView([52.52179, 13.39503], 18); // Berlin Bodemuseum
 //  var osmb = new OSMBuildings(map).loadData('http://osmbuildings.cartodb.com/api/v2/sql?q=SELECT%20cartodb_id%20AS%20id,%20height,%20ST_AsText(the_geom)%20AS%20the_geom%20FROM%20buildings2%20WHERE%20the_geom%20%26%26%20ST_SetSRID(ST_MakeBox2D(ST_Point(13.395,52.515),%20ST_Point(13.41,52.5225)),%204326)&format=geojson');
 
+
+
+//    http://pluto.cartodb.com/api/v2/sql?format=geojson&q=SELECT the_geom, numfloors*3 AS height FROM mn_mappluto_13v1 WHERE the_geom %26%26 ST_SetSRID(ST_MakeBox2D(ST_Point({w},{s}), ST_Point({e},{n})), 4326) ORDER BY ycoord DESC limit 10
+
     L.control.layers({}, { Buildings: osmb }).addTo(map);
     </script>
 

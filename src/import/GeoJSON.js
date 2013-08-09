@@ -45,7 +45,7 @@ var readGeoJSON = function(collection) {
             footprint.push(polygon[j][lat], polygon[j][lon]);
         }
 
-        item.id = properties.id || (footprint[0] + ',' + footprint[1]);
+        item.id = properties.id || [footprint[0], footprint[1], properties.height, properties.minHeight].join(',');
         item.footprint = Import.windOuterPolygon(footprint);
 
         holes = [];

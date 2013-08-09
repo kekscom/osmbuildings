@@ -15,7 +15,7 @@ function getCenter(points) {
 }
 
 function crop(num) {
-    return (num*10000 << 0) / 10000;
+    return parseFloat(num.toFixed(5));
 }
 
 function getSquareSegmentDistance(px, py, p1x, p1y, p2x, p2y) {

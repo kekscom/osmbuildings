@@ -588,7 +588,7 @@ var readGeoJSON = function(collection) {
             footprint.push(polygon[j][lat], polygon[j][lon]);
         }
 
-        item.id = properties.id || (footprint[0] + ',' + footprint[1]);
+        item.id = properties.id || [footprint[0], footprint[1], properties.height, properties.minHeight].join(',');
         item.footprint = Import.windOuterPolygon(footprint);
 
         holes = [];
@@ -685,10 +685,9 @@ var readOSMXAPI = (function() {
                 continue;
             }
         }
-        if (!outer || !outer.tags) {
-            return;
+        if (outer && outer.tags) {
+            return { outer:outer, inner:inner };
         }
-        return { outer:outer, inner:inner };
     }
 
     function getFootprint(points) {
@@ -730,7 +729,7 @@ var readOSMXAPI = (function() {
 
         if (item.id) {
             res.id = item.id;
-        }
+    }
 
         if (footprint) {
             res.footprint = Import.windOuterPolygon(footprint);
@@ -930,7 +929,7 @@ function getCenter(points) {
 }
 
 function crop(num) {
-    return (num*10000 << 0) / 10000;
+    return parseFloat(num.toFixed(5));
 }
 
 function getSquareSegmentDistance(px, py, p1x, p1y, p2x, p2y) {
@@ -1071,8 +1070,8 @@ function fromRange(sVal, sMin, sMax, dMin, dMax) {
     return min(max(dMin + rel*range, dMin), dMax);
 }
 
-function xhr(_url, param, callback) {
-    var url = _url.replace(/\{ *([\w_]+) *\}/g, function(tag, key) {
+function xhr(url, param, callback) {
+    url = url.replace(/\{ *([\w_]+) *\}/g, function(tag, key) {
         return param[key] || tag;
     });
 
@@ -1136,25 +1135,22 @@ function xhr(_url, param, callback) {
 var Cache = (function() {
 
     var _time = new Date(),
-        _static = '__STATIC__',
         _data = {};
 
     var me = {};
 
     me.add = function(data, key) {
-        key = key || _static;
         _data[key] = { data:data, time:Date.now() };
     };
 
     me.get = function(key) {
-        key = key || _static;
         return _data[key] && _data[key].data;
     };
 
     me.purge = function() {
         _time.setMinutes(_time.getMinutes()-5);
         for (var key in _data) {
-            if (_data[key].time < _time && key !== _static) {
+            if (_data[key].time < _time) {
                 delete _data[key];
             }
         }
@@ -1170,8 +1166,9 @@ var Cache = (function() {
 var Data = (function() {
 
     var _url,
-        _isStatic = true,
-        _index = {}; // maintain a list of cached items in order to fade in new ones
+        _isStatic,
+        _staticData,
+        _currentItemsIndex = {}; // maintain a list of cached items in order to avoid duplicates on tile borders
 
     function _getSimpleFootprint(polygon) {
         var footprint = new Int32Array(polygon.length),
@@ -1188,37 +1185,41 @@ var Data = (function() {
         return footprint;
     }
 
-    function _closureForParse(cacheKey) {
-        return function(res) {
-            _parse(res, cacheKey);
+    function _createClosure(cacheKey) {
+        return function(data) {
+            var parsedData = _parse(data);
+            Cache.add(parsedData, cacheKey);
+            _addRenderItems(parsedData, true);
         };
     }
 
-    function _parse(data, cacheKey) {
+    function _parse(data) {
         if (!data) {
-            return;
+            return [];
         }
-
-        var items;
-        if (data.type === 'FeatureCollection') { // GeoJSON
-            items = readGeoJSON(data.features);
-        } else if (data.osm3s) { // XAPI
-            items = readOSMXAPI(data.elements);
+        if (data.type === 'FeatureCollection') {
+            return readGeoJSON(data.features);
         }
-
-        Cache.add(items, cacheKey);
-        _addRenderItems(items, true);
+        if (data.osm3s) { // XAPI
+            return readOSMXAPI(data.elements);
+        }
+        return [];
     }
 
-    function _addRenderItems(data, isNew) {
-        var scaledItems = _scale(data, zoom, isNew),
+    function _resetItems() {
+        renderItems = [];
+        _currentItemsIndex = {};
+    }
+
+    function _addRenderItems(data, allAreNew) {
+        var scaledItems = _scale(data, zoom),
             item;
         for (var i = 0, il = scaledItems.length; i < il; i++) {
             item = scaledItems[i];
-            if (!_index[item.id]) {
-                item.scale = isNew ? 0 : 1;
+            if (!_currentItemsIndex[item.id]) {
+                item.scale = allAreNew ? 0 : 1;
                 renderItems.push(item);
-                _index[item.id] = 1;
+                _currentItemsIndex[item.id] = 1;
             }
         }
         fadeIn();
@@ -1304,35 +1305,46 @@ var Data = (function() {
 
     var me = {};
 
+    me.set = function(data) {
+        _isStatic = true;
+        _resetItems();
+        _addRenderItems(_staticData = _parse(data), true);
+    };
+
     me.load = function(url) {
         _url = url || OSM_XAPI_URL;
         _isStatic = !/(.+\{[nesw]\}){4,}/.test(_url);
+
         if (_isStatic) {
-            Cache.add(null);
-            xhr(_url, {}, _parse);
+            _resetItems();
+            xhr(_url, {}, function(data) {
+                _addRenderItems(_staticData = _parse(data), true);
+            });
+            return;
         }
+
         me.update();
     };
 
     me.update = function() {
+        _resetItems();
+
         if (zoom < MIN_ZOOM) {
             return;
         }
 
-        renderItems = [];
-        _index = {};
-
-        var lat, lon,
-            cached, key;
-
         if (_isStatic) {
-            if ((cached = Cache.get(key))) {
-                _addRenderItems(cached);
-            }
+            _addRenderItems(_staticData);
             return;
         }
 
-        var nw = pixelToGeo(originX,       originY),
+        if (!_url) {
+            return;
+        }
+
+        var lat, lon,
+            parsedData, cacheKey,
+            nw = pixelToGeo(originX,       originY),
             se = pixelToGeo(originX+width, originY+height),
             sizeLat = DATA_TILE_SIZE,
             sizeLon = DATA_TILE_SIZE*2;
@@ -1346,28 +1358,23 @@ var Data = (function() {
 
         for (lat = bounds.s; lat <= bounds.n; lat += sizeLat) {
             for (lon = bounds.w; lon <= bounds.e; lon += sizeLon) {
-                key = lat + ',' + lon;
-                if ((cached = Cache.get(key))) {
-                    _addRenderItems(cached);
+                lat = crop(lat);
+                lon = crop(lon);
+                cacheKey = lat + ',' + lon;
+                if ((parsedData = Cache.get(cacheKey))) {
+                    _addRenderItems(parsedData);
                 } else {
                     xhr(_url, {
-                        n: crop(lat+sizeLat),
-                        e: crop(lon+sizeLon),
-                        s: crop(lat),
-                        w: crop(lon)
-                    }, _closureForParse(key));
+                        n: lat+sizeLat,
+                        e: lon+sizeLon,
+                        s: lat,
+                        w: lon
+                    }, _createClosure(cacheKey));
                 }
             }
         }
 
         Cache.purge();
-    };
-
-    me.set = function(data) {
-        _isStatic = true;
-        renderItems = [];
-        _index = {};
-        _parse(data, null);
     };
 
     return me;
@@ -1436,8 +1443,9 @@ function render() {
         wallColor, altColor, roofColor;
 
     // TODO: FlatBuildings are drawn separately, data has to be split
+
     renderItems.sort(function(a, b) {
-        return getDistance(b.center, sortCam)/b.height - getDistance(a.center, sortCam)/a.height;
+        return (a.minHeight-b.minHeight) || getDistance(b.center, sortCam) - getDistance(a.center, sortCam) || (b.height-a.height);
     });
 
     for (i = 0, il = renderItems.length; i < il; i++) {
@@ -1794,7 +1802,7 @@ var Shadows = (function() {
             a, b, _a, _b,
             points,
             specialItems = [],
-            allFootprints = [];
+            clipping = [];
 
         _context.fillStyle = colorStr;
         _context.beginPath();
@@ -1886,7 +1894,9 @@ var Shadows = (function() {
                 }
             }
 
-            allFootprints.push(footprint);
+            if (!mh) {
+                clipping.push(footprint);
+            }
         }
 
         for (i = 0, il = specialItems.length; i < il; i++) {
@@ -1901,15 +1911,23 @@ var Shadows = (function() {
         // now draw all the footprints as negative clipping mask
         _context.globalCompositeOperation = 'destination-out';
         _context.beginPath();
-        for (i = 0, il = allFootprints.length; i < il; i++) {
-            points = allFootprints[i];
+        for (i = 0, il = clipping.length; i < il; i++) {
+            points = clipping[i];
             _context.moveTo(points[0], points[1]);
             for (j = 2, jl = points.length; j < jl; j += 2) {
                 _context.lineTo(points[j], points[j+1]);
             }
             _context.lineTo(points[0], points[1]);
-            _context.closePath();
         }
+
+        for (i = 0, il = specialItems.length; i < il; i++) {
+            item = specialItems[i];
+            if (item.shape === 'cylinder' && !item.mh) {
+                _context.moveTo(item.center.x+item.radius, item.center.y);
+                _context.arc(item.center.x, item.center.y, item.radius, 0, PI*2);
+            }
+        }
+
         _context.fillStyle = '#00ff00';
         _context.fill();
         _context.globalCompositeOperation = 'source-over';
@@ -2188,29 +2206,34 @@ proto.onAdd = function(map) {
         moveend:   this.onMoveEnd,
         zoomstart: this.onZoomStart,
         zoomend:   this.onZoomEnd,
-        resize:    this.onResize
+        resize:    this.onResize,
+        viewreset: this.onViewReset
     }, this);
 
     if (map.options.zoomAnimation) {
         map.on('zoomanim', this.onZoom, this);
     }
 
-    map.attributionControl.addAttribution(ATTRIBUTION);
+    if (map.attributionControl) {
+        map.attributionControl.addAttribution(ATTRIBUTION);
+    }
 
     Data.update();
-    renderAll(); // in case of re-adding this layer
 };
 
 proto.onRemove = function() {
     var map = this.map;
-    map.attributionControl.removeAttribution(ATTRIBUTION);
+    if (map.attributionControl) {
+        map.attributionControl.removeAttribution(ATTRIBUTION);
+    }
 
     map.off({
         move:      this.onMove,
         moveend:   this.onMoveEnd,
         zoomstart: this.onZoomStart,
         zoomend:   this.onZoomEnd,
-        resize:    this.onResize
+        resize:    this.onResize,
+        viewreset: this.onViewReset
     }, this);
 
     if (map.options.zoomAnimation) {
@@ -2221,6 +2244,7 @@ proto.onRemove = function() {
 };
 
 proto.onMove = function(e) {
+    
     var off = this.getOffset();
     setCamOffset({ x:this.offset.x-off.x, y:this.offset.y-off.y });
     render();
@@ -2231,6 +2255,7 @@ proto.onMoveEnd = function(e) {
         this.skipMoveEnd = false;
         return;
     }
+    
 
     var map = this.map,
         off = this.getOffset(),
@@ -2246,10 +2271,12 @@ proto.onMoveEnd = function(e) {
 };
 
 proto.onZoomStart = function(e) {
+    
     onZoomStart(e);
 };
 
 proto.onZoom = function(e) {
+    
 //    var map = this.map,
 //        scale = map.getZoomScale(e.zoom),
 //        offset = map._getCenterOffset(e.center).divideBy(1 - 1/scale),
@@ -2261,6 +2288,7 @@ proto.onZoom = function(e) {
 };
 
 proto.onZoomEnd = function(e) {
+    
     var map = this.map,
         off = this.getOffset(),
         po = map.getPixelOrigin();
@@ -2270,7 +2298,18 @@ proto.onZoomEnd = function(e) {
     this.skipMoveEnd = true;
 };
 
-proto.onResize = function() {};
+proto.onResize = function() {
+    
+};
+
+proto.onViewReset = function() {
+    
+    var off = this.getOffset();
+
+    this.offset = off;
+    Layers.setPosition(-off.x, -off.y);
+    setCamOffset({ x:0, y:0 });
+};
 
 proto.getOffset = function() {
     return L.DomUtil.getPosition(this.map._mapPane);
