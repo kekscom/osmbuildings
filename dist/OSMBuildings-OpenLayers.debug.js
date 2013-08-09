@@ -1443,8 +1443,9 @@ function render() {
         wallColor, altColor, roofColor;
 
     // TODO: FlatBuildings are drawn separately, data has to be split
+
     renderItems.sort(function(a, b) {
-        return getDistance(b.center, sortCam)/b.height - getDistance(a.center, sortCam)/a.height;
+        return (a.minHeight-b.minHeight) || getDistance(b.center, sortCam) - getDistance(a.center, sortCam) || (b.height-a.height);
     });
 
     for (i = 0, il = renderItems.length; i < il; i++) {
