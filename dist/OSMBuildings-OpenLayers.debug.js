@@ -1419,7 +1419,7 @@ function renderAll() {
     render();
 }
 
-function render() {
+function renderPass() {
     context.clearRect(0, 0, width, height);
 
     // show on high zoom levels only and avoid rendering during zoom
@@ -1556,6 +1556,61 @@ function buildingPart(polygon, _h, _mh, color, altColor) {
     }
 
     return roof;
+}
+
+function render() {
+    var f = width / (window.devicePixelRatio || 1) / 30;
+
+    camX -= f;
+    renderPass();
+    var canvasData1 = context.getImageData(0, 0, width, height);
+
+    camX += 2*f;
+    renderPass();
+    var canvasData2 = context.getImageData(0, 0, width, height);
+
+    camX -= f;
+
+    var dataRed = canvasData1.data,
+        dataCyan = canvasData2.data,
+        R, G, B, A;
+
+    for (var i = 0, il = dataRed.length; i < il; i+= 4) {
+        R = i;
+        G = i + 1;
+        B = i + 2;
+        A = i + 3;
+
+        if (!dataRed[A] && !dataCyan[A]) {
+            continue;
+        }
+
+        dataRed[R] = 0.7 * (dataRed[G] || 235)  + 0.3 * (dataRed[B] || 230);
+        dataRed[G] = dataCyan[G] || defaultRoofColor.g;
+        dataRed[B] = dataCyan[B] || defaultRoofColor.b;
+        dataRed[A] = max(dataCyan[A], dataCyan[A]);
+/*
+        if (dataRed[A] && dataCyan[A]) {
+            dataRed[R] = 0.7 * dataRed[G] + 0.3 * dataRed[B];
+            dataRed[G] = dataCyan[G];
+            dataRed[B] = dataCyan[B];
+            dataRed[A] = max(dataRed[A], dataCyan[A]);
+        } else if (dataRed[A]) {
+            dataRed[R] = 0.7 * dataRed[G] + 0.3 * dataRed[B];
+            dataRed[G] = defaultRoofColor.g;
+            dataRed[B] = defaultRoofColor.b;
+            dataRed[A] = dataRed[A]; // * 0.5;
+        } else if (dataCyan[A]) {
+            dataRed[R] = 0.7 * defaultRoofColor.g + 0.3 * defaultRoofColor.b;
+            dataRed[G] = dataCyan[G];
+            dataRed[B] = dataCyan[B];
+            dataRed[A] = dataCyan[A]; // * 0.5;
+        }
+*/
+    }
+
+    context.clearRect(0, 0, width, height);
+    context.putImageData(canvasData1, 0, 0);
 }
 
 function drawPolygon(points, stroke, holes) {

@@ -200,8 +200,8 @@ function render() {
         }
 
         dataRed[R] = 0.7 * (dataRed[G] || 235)  + 0.3 * (dataRed[B] || 230);
-        dataRed[G] = dataCyan[G] || roofColor.g;
-        dataRed[B] = dataCyan[B] || roofColor.b;
+        dataRed[G] = dataCyan[G] || defaultRoofColor.g;
+        dataRed[B] = dataCyan[B] || defaultRoofColor.b;
         dataRed[A] = max(dataCyan[A], dataCyan[A]);
 /*
         if (dataRed[A] && dataCyan[A]) {
@@ -211,11 +211,11 @@ function render() {
             dataRed[A] = max(dataRed[A], dataCyan[A]);
         } else if (dataRed[A]) {
             dataRed[R] = 0.7 * dataRed[G] + 0.3 * dataRed[B];
-            dataRed[G] = roofColor.g;
-            dataRed[B] = roofColor.b;
+            dataRed[G] = defaultRoofColor.g;
+            dataRed[B] = defaultRoofColor.b;
             dataRed[A] = dataRed[A]; // * 0.5;
         } else if (dataCyan[A]) {
-            dataRed[R] = 0.7 * roofColor.g + 0.3 * roofColor.b;
+            dataRed[R] = 0.7 * defaultRoofColor.g + 0.3 * defaultRoofColor.b;
             dataRed[G] = dataCyan[G];
             dataRed[B] = dataCyan[B];
             dataRed[A] = dataCyan[A]; // * 0.5;
