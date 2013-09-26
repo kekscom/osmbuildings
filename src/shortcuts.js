@@ -8,11 +8,14 @@ var Int32Array = Int32Array || Array,
     cos = m.cos,
     tan = m.tan,
     atan = m.atan,
+    atan2 = m.atan2,
     min = m.min,
     max = m.max,
+    sqrt = m.sqrt,
     ceil = m.ceil,
     floor = m.floor,
-    doc = win.document;
+    round = m.round,
+    doc = document;
 
 /*<debug*/
 if (!win.console) {

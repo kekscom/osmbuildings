@@ -23,8 +23,8 @@ function fromRange(sVal, sMin, sMax, dMin, dMax) {
     return min(max(dMin + rel*range, dMin), dMax);
 }
 
-function xhr(_url, param, callback) {
-    var url = _url.replace(/\{ *([\w_]+) *\}/g, function(tag, key) {
+function xhr(url, param, callback) {
+    url = url.replace(/\{ *([\w_]+) *\}/g, function(tag, key) {
         return param[key] || tag;
     });
 

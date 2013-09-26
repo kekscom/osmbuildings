@@ -1,8 +1,9 @@
 var Data = (function() {
 
     var _url,
-        _isStatic = true,
-        _index = {}; // maintain a list of cached items in order to fade in new ones
+        _isStatic,
+        _staticData,
+        _currentItemsIndex = {}; // maintain a list of cached items in order to avoid duplicates on tile borders
 
     function _getSimpleFootprint(polygon) {
         var footprint = new Int32Array(polygon.length),
@@ -19,37 +20,41 @@ var Data = (function() {
         return footprint;
     }
 
-    function _closureForParse(cacheKey) {
-        return function(res) {
-            _parse(res, cacheKey);
+    function _createClosure(cacheKey) {
+        return function(data) {
+            var parsedData = _parse(data);
+            Cache.add(parsedData, cacheKey);
+            _addRenderItems(parsedData, true);
         };
     }
 
-    function _parse(data, cacheKey) {
+    function _parse(data) {
         if (!data) {
-            return;
+            return [];
         }
-
-        var items;
-        if (data.type === 'FeatureCollection') { // GeoJSON
-            items = readGeoJSON(data.features);
-        } else if (data.osm3s) { // XAPI
-            items = readOSMXAPI(data.elements);
+        if (data.type === 'FeatureCollection') {
+            return readGeoJSON(data.features);
         }
-
-        Cache.add(items, cacheKey);
-        _addRenderItems(items, true);
+        if (data.osm3s) { // XAPI
+            return readOSMXAPI(data.elements);
+        }
+        return [];
     }
 
-    function _addRenderItems(data, isNew) {
-        var scaledItems = _scale(data, zoom, isNew),
+    function _resetItems() {
+        renderItems = [];
+        _currentItemsIndex = {};
+    }
+
+    function _addRenderItems(data, allAreNew) {
+        var scaledItems = _scale(data, zoom),
             item;
         for (var i = 0, il = scaledItems.length; i < il; i++) {
             item = scaledItems[i];
-            if (!_index[item.id]) {
-                item.scale = isNew ? 0 : 1;
+            if (!_currentItemsIndex[item.id]) {
+                item.scale = allAreNew ? 0 : 1;
                 renderItems.push(item);
-                _index[item.id] = 1;
+                _currentItemsIndex[item.id] = 1;
             }
         }
         fadeIn();
@@ -121,6 +126,8 @@ var Data = (function() {
                 wallColor:  wallColor,
                 altColor:   altColor,
                 roofColor:  roofColor,
+                roofShape:  item.roofShape,
+                roofHeight: roofHeight,
                 center:     getCenter(footprint),
                 holes:      holes.length ? holes : null,
                 shape:      item.shape, // TODO: drop footprint
@@ -133,35 +140,46 @@ var Data = (function() {
 
     var me = {};
 
+    me.set = function(data) {
+        _isStatic = true;
+        _resetItems();
+        _addRenderItems(_staticData = _parse(data), true);
+    };
+
     me.load = function(url) {
         _url = url || OSM_XAPI_URL;
         _isStatic = !/(.+\{[nesw]\}){4,}/.test(_url);
+
         if (_isStatic) {
-            Cache.add(null);
-            xhr(_url, {}, _parse);
+            _resetItems();
+            xhr(_url, {}, function(data) {
+                _addRenderItems(_staticData = _parse(data), true);
+            });
+            return;
         }
+
         me.update();
     };
 
     me.update = function() {
+        _resetItems();
+
         if (zoom < MIN_ZOOM) {
             return;
         }
 
-        renderItems = [];
-        _index = {};
-
-        var lat, lon,
-            cached, key;
-
         if (_isStatic) {
-            if ((cached = Cache.get(key))) {
-                _addRenderItems(cached);
-            }
+            _addRenderItems(_staticData);
             return;
         }
 
-        var nw = pixelToGeo(originX,       originY),
+        if (!_url) {
+            return;
+        }
+
+        var lat, lon,
+            parsedData, cacheKey,
+            nw = pixelToGeo(originX,       originY),
             se = pixelToGeo(originX+width, originY+height),
             sizeLat = DATA_TILE_SIZE,
             sizeLon = DATA_TILE_SIZE*2;
@@ -175,28 +193,23 @@ var Data = (function() {
 
         for (lat = bounds.s; lat <= bounds.n; lat += sizeLat) {
             for (lon = bounds.w; lon <= bounds.e; lon += sizeLon) {
-                key = lat + ',' + lon;
-                if ((cached = Cache.get(key))) {
-                    _addRenderItems(cached);
+                lat = crop(lat);
+                lon = crop(lon);
+                cacheKey = lat + ',' + lon;
+                if ((parsedData = Cache.get(cacheKey))) {
+                    _addRenderItems(parsedData);
                 } else {
                     xhr(_url, {
-                        n: crop(lat+sizeLat),
-                        e: crop(lon+sizeLon),
-                        s: crop(lat),
-                        w: crop(lon)
-                    }, _closureForParse(key));
+                        n: lat+sizeLat,
+                        e: lon+sizeLon,
+                        s: lat,
+                        w: lon
+                    }, _createClosure(cacheKey));
                 }
             }
         }
 
         Cache.purge();
-    };
-
-    me.set = function(data) {
-        _isStatic = true;
-        renderItems = [];
-        _index = {};
-        _parse(data);
     };
 
     return me;

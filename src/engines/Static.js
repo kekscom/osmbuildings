@@ -27,8 +27,8 @@ function getZoom(bounds, size) {
 
     do {
         zoom++;
-        nePoint = this.project(ne, zoom);
-        swPoint = this.project(sw, zoom);
+        nePoint = project(ne, zoom);
+        swPoint = project(sw, zoom);
 
         boundsSize = new L.Point(
             Math.abs(nePoint.x - swPoint.x),

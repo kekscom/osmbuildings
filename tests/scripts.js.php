@@ -25,6 +25,7 @@ $srcFiles = array(
     $srcPath . "/suffix.js"
 );
 
+
 header("Content-Type: application/javascript");
 for ($i = 0; $i < count($srcFiles) ; $i++) {
     echo "\n//*** ".$srcFiles[$i]." ***\n\n";

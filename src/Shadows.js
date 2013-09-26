@@ -13,6 +13,27 @@ var Shadows = (function() {
         };
     }
 
+    function _cylinder(c, r, h, mh) {
+        var _c = _project(c.x, c.y, h),
+            a1, a2;
+
+        if (mh) {
+            c = _project(c.x, c.y, mh);
+        }
+
+        var t = getTangents(c, r, _c, r); // common tangents for ground and roof circle
+
+        // no tangents? roof overlaps everything near cam position
+        if (t) {
+            a1 = atan2(t[0].y1-c.y, t[0].x1-c.x);
+            a2 = atan2(t[1].y1-c.y, t[1].x1-c.x);
+
+            _context.moveTo(t[1].x2, t[1].y2);
+            _context.arc(_c.x, _c.y, r, a2, a1);
+            _context.arc( c.x,  c.y, r, a1, a2);
+        }
+    }
+
     var me = {};
 
     me.setContext = function(context) {
@@ -55,7 +76,7 @@ var Shadows = (function() {
 
         var i, il, j, jl,
             item,
-            f, h, g,
+            f, h, mh,
             x, y,
             footprint,
             mode,
@@ -63,8 +84,10 @@ var Shadows = (function() {
             ax, ay, bx, by,
             a, b, _a, _b,
             points,
-            allFootprints = [];
+            specialItems = [],
+            clipping = [];
 
+        _context.fillStyle = colorStr;
         _context.beginPath();
 
         for (i = 0, il = renderItems.length; i < il; i++) {
@@ -95,13 +118,25 @@ var Shadows = (function() {
             // when fading in, use a dynamic height
             h = item.scale < 1 ? item.height*item.scale : item.height;
 
-            // prepare same calculations for min_height if applicable
+            mh = 0;
             if (item.minHeight) {
-                g = item.scale < 1 ? item.minHeight*item.scale : item.minHeight;
+                mh = item.scale < 1 ? item.minHeight*item.scale : item.minHeight;
+            }
+
+            if (item.shape === 'cylinder') {
+                if (item.roofShape === 'cylinder') {
+                    h += item.roofHeight;
+                }
+                specialItems.push({
+                    shape:item.shape,
+                    center:{ x:item.center.x-originX, y:item.center.y-originY },
+                    radius:item.radius,
+                    h:h, mh:mh
+                });
+                continue;
             }
 
             mode = null;
-
             for (j = 0, jl = footprint.length-3; j < jl; j += 2) {
                 ax = footprint[j];
                 ay = footprint[j+1];
@@ -111,9 +146,9 @@ var Shadows = (function() {
                 _a = _project(ax, ay, h);
                 _b = _project(bx, by, h);
 
-                if (item.minHeight) {
-                    a = _project(ax, ay, g);
-                    b = _project(bx, by, g);
+                if (mh) {
+                    a = _project(ax, ay, mh);
+                    b = _project(bx, by, mh);
                     ax = a.x;
                     ay = a.y;
                     bx = b.x;
@@ -142,26 +177,40 @@ var Shadows = (function() {
                 }
             }
 
-            _context.closePath();
-
-            allFootprints.push(footprint);
+            if (!mh) {
+                clipping.push(footprint);
+            }
         }
 
-        _context.fillStyle = colorStr;
+        for (i = 0, il = specialItems.length; i < il; i++) {
+            item = specialItems[i];
+            if (item.shape === 'cylinder') {
+                _cylinder(item.center, item.radius, item.h, item.mh);
+            }
+        }
+
         _context.fill();
 
         // now draw all the footprints as negative clipping mask
         _context.globalCompositeOperation = 'destination-out';
         _context.beginPath();
-        for (i = 0, il = allFootprints.length; i < il; i++) {
-            points = allFootprints[i];
+        for (i = 0, il = clipping.length; i < il; i++) {
+            points = clipping[i];
             _context.moveTo(points[0], points[1]);
             for (j = 2, jl = points.length; j < jl; j += 2) {
                 _context.lineTo(points[j], points[j+1]);
             }
             _context.lineTo(points[0], points[1]);
-            _context.closePath();
         }
+
+        for (i = 0, il = specialItems.length; i < il; i++) {
+            item = specialItems[i];
+            if (item.shape === 'cylinder' && !item.mh) {
+                _context.moveTo(item.center.x+item.radius, item.center.y);
+                _context.arc(item.center.x, item.center.y, item.radius, 0, PI*2);
+            }
+        }
+
         _context.fillStyle = '#00ff00';
         _context.fill();
         _context.globalCompositeOperation = 'source-over';

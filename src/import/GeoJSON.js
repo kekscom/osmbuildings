@@ -3,7 +3,6 @@ var readGeoJSON = function(collection) {
         res = [],
         feature,
         geometry, properties, coordinates,
-        wallColor, roofColor,
         last,
         polygon, footprint, holes,
         lat = 1, lon = 0,
@@ -11,9 +10,12 @@ var readGeoJSON = function(collection) {
 
     for (i = 0, il = collection.length; i < il; i++) {
         feature = collection[i];
+
         if (feature.type !== 'Feature') {
             continue;
         }
+
+        item = {};
 
         geometry = feature.geometry;
         properties = feature.properties;
@@ -37,19 +39,14 @@ var readGeoJSON = function(collection) {
             continue;
         }
 
-        if (properties.color || properties.wallColor) {
-            wallColor = properties.color || properties.wallColor;
-        }
-
-        if (properties.roofColor) {
-            roofColor = properties.roofColor;
-        }
-
-        polygon   = coordinates[0];
+        polygon = coordinates[0];
         footprint = [];
         for (j = 0, jl = polygon.length; j < jl; j++) {
             footprint.push(polygon[j][lat], polygon[j][lon]);
         }
+
+        item.id = properties.id || [footprint[0], footprint[1], properties.height, properties.minHeight].join(',');
+        item.footprint = Import.windOuterPolygon(footprint);
 
         holes = [];
         for (j = 1, jl = coordinates.length; j < jl; j++) {
@@ -62,17 +59,24 @@ var readGeoJSON = function(collection) {
             holes[j-1] = Import.windInnerPolygon(holes[j-1]);
         }
 
-        // one item per coordinates ring (usually just one ring)
-        item = {
-            id:properties.id || (footprint[0] + ',' + footprint[1]),
-            footprint:Import.windOuterPolygon(footprint)
-        };
+        if (holes.length) {
+            item.holes = holes;
+        }
 
-        if (properties.height)    item.height    = Import.getDimension(properties.height);
-        if (properties.minHeight) item.minHeight = Import.getDimension(properties.minHeight);
-        if (wallColor)            item.wallColor = wallColor;
-        if (roofColor)            item.roofColor = roofColor;
-        if (holes.length)         item.holes     = holes;
+        item.height = Import.toMeters(properties.height) || Import.DEFAULT_HEIGHT;
+
+        if (properties.minHeight) {
+            item.minHeight = Import.toMeters(properties.minHeight);
+        }
+
+        if (properties.color || properties.wallColor) {
+            item.wallColor = properties.color || properties.wallColor;
+        }
+
+        if (properties.roofColor) {
+            item.roofColor = properties.roofColor;
+        }
+
         res.push(item);
     }
 
