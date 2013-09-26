@@ -4,21 +4,21 @@
     <title>OSM Buildings - Leaflet</title>
     <meta http-equiv="content-type" content="text/html; charset=utf-8">
 	<style>
-	body {
-		margin: 0;
-		padding: 0;
-		font-family: Arial, Helvetica, sans-serif;
-	}
-	#map {
-		width: 700px;
-		height: 400px;
-		margin: 0 auto !important;
-		border: 1px solid #ccc;
-	}
-	</style>
+    html, body {
+        border: 0;
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+    }
+    #map {
+        height: 100%;
+    }
+    </style>
     <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.5.1/leaflet.css">
     <script src="http://cdn.leafletjs.com/leaflet-0.5.1/leaflet.js"></script>
-    <script src="../dist/L.BuildingsLayer.js"></script>
+    <script src="../dist/OSMBuildings-Leaflet.js"></script>
 </head>
 
 <body>
@@ -32,7 +32,7 @@
         { attribution: 'Map tiles &copy; <a href="http://mapbox.com">MapBox</a>', maxZoom: 17 }
     ).addTo(map);
 
-    var osmb = new L.BuildingsLayer({ url: '../server/?w={w}&n={n}&e={e}&s={s}&z={z}' }).addTo(map);
+    var osmb = new OSMBuildingsr(map).loadData();
     L.control.layers({}, { Buildings: osmb }).addTo(map);
     </script>
 </body>

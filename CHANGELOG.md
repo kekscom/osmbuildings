@@ -1,5 +1,19 @@
 # Changelog
 
+## 2013-07-31 (v0.1.9a Release Candidate)
+
+- multipolygon support added
+- backend removed, now using web services with GeoJSON or OSM Overpass XAPI
+- data is subdivieded into tiles
+- data tiles are cached
+- fix for chained method calls
+- fix for flat buildings from rendering tall buildings too
+- min zoom level decreased to 15
+- center() fixed
+- fix for setStyle() removing shadows
+- material color mapping added
+
+
 ## v0.1.8a @ 2013-03-10
 
 - on layer removal from map, OSM Buildings is not destroyed anymore

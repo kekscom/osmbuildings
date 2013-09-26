@@ -4,7 +4,7 @@ var builder = require('./builder/builder.js');
 var config  = require('./config.js');
 
 var options = {};
-process.argv.splice(2).forEach(function (item) {
+process.argv.splice(2).forEach(function(item) {
     var pairs = item.split('=')
     options[ pairs[0].replace(/^--/, '') ] = pairs.length > 1 ? pairs[1] : true;
 });
@@ -17,12 +17,12 @@ var Tasks = {
 
     timer: null,
 
-    start: function (item) {
+    start: function(item) {
         clearTimeout(this.timer);
         this.items[item] = (this.items[item] || 0) + 1;
     },
 
-    end: function (item) {
+    end: function(item) {
         this.items[item] = (this.items[item] || 1) - 1;
         if (this.items[item] === 0) {
             delete this.items[item];
@@ -33,7 +33,7 @@ var Tasks = {
         }
     },
 
-    isEmpty: function () {
+    isEmpty: function() {
         clearTimeout(this.timer);
 
         for (var item in this.items) {
@@ -44,70 +44,68 @@ var Tasks = {
         return true;
     },
 
-    onEmpty: function () {}
+    onEmpty: function() {}
 };
 
 //*****************************************************************************
 
 function start() {
     console.clear();
-    console.log(new Date().toISOString().replace(/T/, ' ').substring(0, 16));
     if (options.debug) {
         console.log('*** DEBUG MODE ***')
     }
 
-    var js = buildCore();
+    var srcFile,
+        index = -1,
+        filePattern = '';
 
-    for (var engine in config.engines) {
-        buildEngine(engine, js);
-    }
-}
-
-function buildCore() {
-    console.log('* building core *');
-
-    var js;
-    js = config.COPYRIGHT + builder.combine(config.srcFiles);
-    js = builder.setVars(js, { version: config.VERSION }, options.debug);
-
-    if (!options.debug) {
-        if (!builder.jshint(js, options.debug)) {
-            abort();
+    for (var i = 0, il = config.srcFiles.length; i < il; i++) {
+        srcFile = config.srcFiles[i];
+        if (~srcFile.indexOf('{engine}')) {
+            index = i;
+            filePattern = srcFile;
+            break;
         }
     }
 
-    return js;
-}
+    var engine,
+        js;
 
-function buildEngine(engine, js) {
-    Tasks.start(engine);
-    console.log('* building engine ' + engine + ' *');
+    for (var i = 0, il = config.engines.length; i < il; i++) {
+        engine = config.engines[i];
+        Tasks.start(engine);
 
-    var configEngine = config.engines[engine];
+        config.srcFiles[index] = filePattern.replace(/{engine}/, engine);
 
-    js += builder.combine([configEngine.srcFile]);
+        js = config.COPYRIGHT + builder.combine(config.srcFiles, engine);
+        js = builder.setVars(js, { version: config.VERSION }, options.debug);
 
-    builder.write(js, configEngine.dstFile + '-debug.js');
+        if (!options.debug && !builder.jshint(js, config.jshint, options.debug)) {
+            abort();
+        }
 
-    if (options.debug) {
-        // mock minified file by using debug version
-        builder.write(js, configEngine.dstFile + '.js');
-        finish(engine);
-        return;
-    }
+        builder.write(js, config.dstFiles.debug.replace('{engine}', engine));
 
-    if (!builder.jshint(js, options.debug)) {
-        abort();
-    }
-
-    builder.minify(js, function (err, jsMin) {
-        builder.write(jsMin, configEngine.dstFile + '.js');
-
-        builder.gzip(jsMin, function (err, jsGZip) {
-            console.log('gzipped size: ' + (jsGZip.length / 1024).toFixed(2) + 'k');
+        if (options.debug) {
+            // mock minified file by using debug version
+            builder.write(js, config.dstFiles.minified.replace('{engine}', engine));
+            builder.write('', config.dstFiles.gzipped.replace('{engine}', engine));
             finish(engine);
-        });
-    });
+        } else {
+            builder.minify(js, config.closure, (function(engine) {
+                return function(err, jsMin) {
+                    builder.write(jsMin, config.dstFiles.minified.replace('{engine}', engine));
+                    builder.gzip(jsMin, (function(engine) {
+                        return function(err, jsGZip) {
+                            console.log(engine + ' gzipped: ' + (jsGZip.length / 1024).toFixed(2) + 'k');
+                            builder.write(jsGZip, config.dstFiles.gzipped.replace('{engine}', engine));
+                            finish(engine);
+                        };
+                    })(engine));
+                };
+            })(engine));
+        }
+    }
 }
 
 function abort() {
@@ -116,13 +114,13 @@ function abort() {
 }
 
 function finish(component) {
-    console.log(component + ' done');
     Tasks.end(component);
 }
 
 //*****************************************************************************
 
-Tasks.onEmpty = function () {
+Tasks.onEmpty = function() {
+	console.log('done');
     process.exit();
 };
 

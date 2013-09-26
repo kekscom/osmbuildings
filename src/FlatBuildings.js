@@ -1,21 +1,20 @@
-var FlatBuildings = {
+var FlatBuildings = (function() {
 
-    context: null,
-    maxHeight: 8,
+    var _context;
 
-    init: function (context) {
-        this.context = context;
-    },
+    var me = {};
 
-    render: function () {
-        var context = this.context;
+    me.MAX_HEIGHT = 8;
 
-        context.clearRect(0, 0, width, height);
+    me.setContext = function(context) {
+        _context = context;
+    };
 
-        // data needed for rendering
-        if (!meta || !data ||
-            // show on high zoom levels only and avoid rendering during zoom
-            zoom < minZoom || isZooming) {
+    me.render = function() {
+        _context.clearRect(0, 0, width, height);
+
+        // show on high zoom levels only and avoid rendering during zoom
+        if (zoom < minZoom || isZooming) {
             return;
         }
 
@@ -23,24 +22,25 @@ var FlatBuildings = {
             item,
             f,
             x, y,
-            offX = originX - meta.x,
-            offY = originY - meta.y,
             footprint,
             isVisible,
-            ax, ay
-        ;
+            ax, ay;
 
-        context.beginPath();
+        _context.beginPath();
 
-        for (i = 0, il = data.length; i < il; i++) {
-            item = data[i];
+        for (i = 0, il = renderItems.length; i < il; i++) {
+            item = renderItems[i];
+
+            if (item.height+item.roofHeight > me.MAX_HEIGHT) {
+                continue;
+            }
 
             isVisible = false;
-            f = item[FOOTPRINT];
+            f = item.footprint;
             footprint = [];
-            for (j = 0, jl = f.length - 1; j < jl; j += 2) {
-                footprint[j]     = x = (f[j]     - offX);
-                footprint[j + 1] = y = (f[j + 1] - offY);
+            for (j = 0, jl = f.length-1; j < jl; j += 2) {
+                footprint[j]   = x = f[j]  -originX;
+                footprint[j+1] = y = f[j+1]-originY;
 
                 // checking footprint is sufficient for visibility
                 if (!isVisible) {
@@ -52,27 +52,26 @@ var FlatBuildings = {
                 continue;
             }
 
-            for (j = 0, jl = footprint.length - 3; j < jl; j += 2) {
+            for (j = 0, jl = footprint.length-3; j < jl; j += 2) {
                 ax = footprint[j];
                 ay = footprint[j + 1];
                 if (!j) {
-                    context.moveTo(ax, ay);
+                    _context.moveTo(ax, ay);
                 } else {
-                    context.lineTo(ax, ay);
+                    _context.lineTo(ax, ay);
                 }
             }
 
-            context.closePath();
+            _context.closePath();
         }
 
-        context.fillStyle   = roofColorAlpha;
-        context.strokeStyle = altColorAlpha;
+        _context.fillStyle   = roofColorAlpha;
+        _context.strokeStyle = altColorAlpha;
 
-        context.stroke();
-        context.fill();
-    },
+        _context.stroke();
+        _context.fill();
+    };
 
-    getMaxHeight: function () {
-        return this.maxHeight;
-    }
-};
+    return me;
+
+}());

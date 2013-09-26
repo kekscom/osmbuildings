@@ -15,38 +15,37 @@ exports.srcFiles = [
     srcPath + '/shortcuts.js',
     srcPath + '/lib/Color.js',
     srcPath + '/lib/SunPosition.js',
+    srcPath + '/Import.js',
+    srcPath + '/import/GeoJSON.js',
+    srcPath + '/import/OSMXAPI.js',
     srcPath + '/constants.js',
     srcPath + '/geometry.js',
-        srcPath + '/prefix.class.js',
-        srcPath + '/variables.js',
-        srcPath + '/functions.js',
-        srcPath + '/Layers.js',
-        srcPath + '/data.js',
-        srcPath + '/properties.js',
-        srcPath + '/events.js',
-        srcPath + '/render.js',
-        srcPath + '/Shadows.js',
-        srcPath + '/FlatBuildings.js',
-        srcPath + '/public.js',
-        srcPath + '/suffix.class.js',
+    srcPath + '/variables.js',
+    srcPath + '/functions.js',
+    srcPath + '/Cache.js',
+    srcPath + '/Data.js',
+    srcPath + '/render.js',
+    srcPath + '/Shadows.js',
+    srcPath + '/FlatBuildings.js',
+    srcPath + '/Layers.js',
+    srcPath + '/properties.js',
+    srcPath + '/events.js',
+    srcPath + '/engines/{engine}.js',
     srcPath + '/suffix.js'
 ];
 
-exports.engines = {
-    Leaflet: {
-        srcFile: srcPath + '/engines/Leaflet.js',
-        dstFile: dstPath + '/L.BuildingsLayer'
-    },
-    OpenLayers: {
-        srcFile: srcPath + '/engines/OpenLayers.js',
-        dstFile: dstPath + '/OpenLayers.Layer.Buildings'
-    }
+exports.dstFiles = {
+    debug:    dstPath + '/OSMBuildings-{engine}.debug.js',
+    minified: dstPath + '/OSMBuildings-{engine}.js',
+    gzipped:  dstPath + '/OSMBuildings-{engine}.js.gz'
 };
+
+exports.engines = ['Leaflet', 'OpenLayers'];
 
 exports.jshint = {
 	"browser": true,
 	"node": true,
-	"predef": ["OSMBuildings", "L", "OpenLayers", "google"],
+	"predef": ["XDomainRequest", "L", "OpenLayers", "google"],
 //    "unused": true,
 
 	"debug": false,
@@ -60,7 +59,7 @@ exports.jshint = {
 	"laxbreak": false,
 	"bitwise": false,
 	"boss": false,
-	"curly": true,
+	"curly": false,
 	"eqnull": false,
 	"evil": false,
 	"expr": false,
