@@ -7,7 +7,7 @@ var FlatBuildings = (function() {
     me.MAX_HEIGHT = 8;
 
     me.setContext = function(context) {
-        _context = context;
+      _context = context;
     };
 
     me.render = function() {
@@ -23,8 +23,7 @@ var FlatBuildings = (function() {
             f,
             x, y,
             footprint,
-            isVisible,
-            ax, ay;
+            isVisible;
 
         _context.beginPath();
 
@@ -32,34 +31,29 @@ var FlatBuildings = (function() {
             item = renderItems[i];
 
             if (item.height+item.roofHeight > me.MAX_HEIGHT) {
-                continue;
+              continue;
             }
 
             isVisible = false;
             f = item.footprint;
             footprint = [];
             for (j = 0, jl = f.length-1; j < jl; j += 2) {
-                footprint[j]   = x = f[j]  -originX;
-                footprint[j+1] = y = f[j+1]-originY;
+              footprint[j]   = x = f[j]  -originX;
+              footprint[j+1] = y = f[j+1]-originY;
 
-                // checking footprint is sufficient for visibility
-                if (!isVisible) {
-                    isVisible = (x > 0 && x < width && y > 0 && y < height);
-                }
+              // checking footprint is sufficient for visibility
+              if (!isVisible) {
+                isVisible = (x > 0 && x < width && y > 0 && y < height);
+              }
             }
 
             if (!isVisible) {
-                continue;
+              continue;
             }
 
-            for (j = 0, jl = footprint.length-3; j < jl; j += 2) {
-                ax = footprint[j];
-                ay = footprint[j + 1];
-                if (!j) {
-                    _context.moveTo(ax, ay);
-                } else {
-                    _context.lineTo(ax, ay);
-                }
+            _context.moveTo(footprint[0], footprint[1]);
+            for (j = 2, jl = footprint.length-3; j < jl; j += 2) {
+              _context.lineTo(footprint[j], footprint[j+1]);
             }
 
             _context.closePath();
