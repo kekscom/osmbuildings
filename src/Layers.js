@@ -19,7 +19,7 @@ var Layers = (function() {
         _items.push(canvas);
         _container.appendChild(canvas);
 
-        return Sketch(context);
+        return context;
     }
 
     var _container = doc.createElement('DIV');
