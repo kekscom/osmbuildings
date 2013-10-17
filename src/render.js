@@ -163,7 +163,7 @@ function buildingPart(polygon, _h, _mh, color, altColor) {
                 a.x, a.y,
                 _a.x, _a.y,
                 _b.x, _b.y
-            ]);
+            ], true);
         }
         roof[i]   = _a.x;
         roof[i+1] = _a.y;
@@ -200,7 +200,7 @@ function drawPolygon(points, stroke, holes) {
     if (stroke) {
         context.stroke();
     }
-    context.fill();
+//    context.fill();
 }
 
 function drawCircle(c, r, stroke) {
@@ -209,7 +209,7 @@ function drawCircle(c, r, stroke) {
     if (stroke) {
         context.stroke();
     }
-    context.fill();
+//    context.fill();
 }
 
 function project(x, y, m) {
