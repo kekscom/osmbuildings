@@ -28,10 +28,10 @@ function xhr(url, param, callback) {
         return param[key] || tag;
     });
 
-    var req = 'XDomainRequest' in window ? new XDomainRequest() : new XMLHttpRequest();
+    var req = 'XDomainRequest' in win ? new XDomainRequest() : new XMLHttpRequest();
 
     function changeState(state) {
-        if ('XDomainRequest' in window && state !== req.readyState) {
+        if ('XDomainRequest' in win && state !== req.readyState) {
             req.readyState = state;
             if (req.onreadystatechange) {
                 req.onreadystatechange();

@@ -14,24 +14,31 @@ var OSMBuildings = (function() {
 
 // object access shortcuts
 var Int32Array = Int32Array || Array,
-    Uint8Array = Uint8Array || Array,
-    m = Math,
-    exp = m.exp,
-    log = m.log,
-    sin = m.sin,
-    cos = m.cos,
-    tan = m.tan,
-    atan = m.atan,
-    atan2 = m.atan2,
-    min = m.min,
-    max = m.max,
-    sqrt = m.sqrt,
-    ceil = m.ceil,
-    floor = m.floor,
-    round = m.round,
-    doc = document;
+  Uint8Array = Uint8Array || Array,
+  m = Math,
+  exp = m.exp,
+  log = m.log,
+  sin = m.sin,
+  cos = m.cos,
+  tan = m.tan,
+  atan = m.atan,
+  atan2 = m.atan2,
+  min = m.min,
+  max = m.max,
+  sqrt = m.sqrt,
+  ceil = m.ceil,
+  floor = m.floor,
+  round = m.round,
+  rand = m.random,
+  win = window,
+  doc = document;
 
-
+if (!window.console) {
+  window.console = {
+    log:function() {},
+    warn:function() {}
+  };
+}
 
 
 //****** file: Color.js ******
@@ -1075,10 +1082,10 @@ function xhr(url, param, callback) {
         return param[key] || tag;
     });
 
-    var req = 'XDomainRequest' in window ? new XDomainRequest() : new XMLHttpRequest();
+    var req = 'XDomainRequest' in win ? new XDomainRequest() : new XMLHttpRequest();
 
     function changeState(state) {
-        if ('XDomainRequest' in window && state !== req.readyState) {
+        if ('XDomainRequest' in win && state !== req.readyState) {
             req.readyState = state;
             if (req.onreadystatechange) {
                 req.onreadystatechange();
@@ -1549,7 +1556,7 @@ function buildingPart(polygon, _h, _mh, color, altColor) {
                 a.x, a.y,
                 _a.x, _a.y,
                 _b.x, _b.y
-            ]);
+            ], true);
         }
         roof[i]   = _a.x;
         roof[i+1] = _a.y;
@@ -1586,7 +1593,7 @@ function drawPolygon(points, stroke, holes) {
     if (stroke) {
         context.stroke();
     }
-    context.fill();
+//    context.fill();
 }
 
 function drawCircle(c, r, stroke) {
@@ -1595,7 +1602,7 @@ function drawCircle(c, r, stroke) {
     if (stroke) {
         context.stroke();
     }
-    context.fill();
+//    context.fill();
 }
 
 function project(x, y, m) {
@@ -1954,7 +1961,7 @@ var FlatBuildings = (function() {
     me.MAX_HEIGHT = 8;
 
     me.setContext = function(context) {
-        _context = context;
+      _context = context;
     };
 
     me.render = function() {
@@ -1970,8 +1977,7 @@ var FlatBuildings = (function() {
             f,
             x, y,
             footprint,
-            isVisible,
-            ax, ay;
+            isVisible;
 
         _context.beginPath();
 
@@ -1979,34 +1985,29 @@ var FlatBuildings = (function() {
             item = renderItems[i];
 
             if (item.height+item.roofHeight > me.MAX_HEIGHT) {
-                continue;
+              continue;
             }
 
             isVisible = false;
             f = item.footprint;
             footprint = [];
             for (j = 0, jl = f.length-1; j < jl; j += 2) {
-                footprint[j]   = x = f[j]  -originX;
-                footprint[j+1] = y = f[j+1]-originY;
+              footprint[j]   = x = f[j]  -originX;
+              footprint[j+1] = y = f[j+1]-originY;
 
-                // checking footprint is sufficient for visibility
-                if (!isVisible) {
-                    isVisible = (x > 0 && x < width && y > 0 && y < height);
-                }
+              // checking footprint is sufficient for visibility
+              if (!isVisible) {
+                isVisible = (x > 0 && x < width && y > 0 && y < height);
+              }
             }
 
             if (!isVisible) {
-                continue;
+              continue;
             }
 
-            for (j = 0, jl = footprint.length-3; j < jl; j += 2) {
-                ax = footprint[j];
-                ay = footprint[j + 1];
-                if (!j) {
-                    _context.moveTo(ax, ay);
-                } else {
-                    _context.lineTo(ax, ay);
-                }
+            _context.moveTo(footprint[0], footprint[1]);
+            for (j = 2, jl = footprint.length-3; j < jl; j += 2) {
+              _context.lineTo(footprint[j], footprint[j+1]);
             }
 
             _context.closePath();
@@ -2024,69 +2025,256 @@ var FlatBuildings = (function() {
 }());
 
 
+//****** file: Sketch.js ******
+
+var Sketch = (function() {
+
+  // http://mrale.ph/blog/2012/11/25/shaky-diagramming.html
+  function shakyLine(context, x0, y0, x1, y1) {
+    var dx = x1-x0,
+      dy = y1-y0,
+      l = sqrt(dx * dx + dy * dy),
+
+    // Now we need to pick two random points that are placed
+    // on different sides of the line that passes through
+    // P1 and P2 and not very far from it if length of
+    // P1P2 is small.
+      k = sqrt(l),
+      k1 = 0.20,
+      k2 = 0.65,
+      l3 = 0.30,
+      l4 = 0.60,
+
+      dxlk = dx/l * k,
+      dylk = dy/l * k,
+
+    // Point P3: pick a random point on the line between P0 and P1,
+    // then shift it by vector l3l(dy,-dx) which is a line's normal.
+      x3 = x0 + dx*k1 + dylk * l3,
+      y3 = y0 + dy*k1 - dxlk * l3,
+
+    // Point P3: pick a random point on the line between P0 and P1,
+    // then shift it by vector l4l(-dy,dx) which also is a line's normal
+    // but points into opposite direction from the one we used for P3.
+      x4 = x0 + dx*k2 - dylk * l4,
+      y4 = y0 + dy*k2 + dxlk * l4;
+
+    // Draw a bezier curve through points P0, P3, P4, P1.
+    // Selection of P3 and P4 makes line "jerk" a little
+    // between them but otherwise it will be mostly straight thus
+    // creating illusion of being hand drawn.
+    context.bezierCurveTo(x3, y3, x4, y4, x1, y1);
+    shakyLine2(context, x1, y1, x0, y0);
+    context.bezierCurveTo(x3, y3, x4, y4, x1, y1);
+  }
+
+
+  function shakyLine2(context, x0, y0, x1, y1) {
+    var dx = x1-x0,
+      dy = y1-y0,
+      l = sqrt(dx * dx + dy * dy),
+
+    // Now we need to pick two random points that are placed
+    // on different sides of the line that passes through
+    // P1 and P2 and not very far from it if length of
+    // P1P2 is small.
+      k = sqrt(l),
+      k1 = 0.20,
+      k2 = 0.85,
+      l3 = 0.60,
+      l4 = 1.00,
+
+      dxlk = dx/l * k,
+      dylk = dy/l * k,
+
+    // Point P3: pick a random point on the line between P0 and P1,
+    // then shift it by vector l3l(dy,-dx) which is a line's normal.
+      x3 = x0 + dx*k1 + dylk * l3,
+      y3 = y0 + dy*k1 - dxlk * l3,
+
+    // Point P3: pick a random point on the line between P0 and P1,
+    // then shift it by vector l4l(-dy,dx) which also is a line's normal
+    // but points into opposite direction from the one we used for P3.
+      x4 = x0 + dx*k2 - dylk * l4,
+      y4 = y0 + dy*k2 + dxlk * l4;
+
+    // Draw a bezier curve through points P0, P3, P4, P1.
+    // Selection of P3 and P4 makes line "jerk" a little
+    // between them but otherwise it will be mostly straight thus
+    // creating illusion of being hand drawn.
+    context.bezierCurveTo(x3, y3, x4, y4, x1, y1);
+  }
+
+
+  function shakyArc(context, cx, cy, r, start, end) {
+    var x0 = cx + cos(start) * r,
+      y0 = cy + sin(start) * r,
+      x1 = cx + cos(end) * r,
+      y1 = cy + sin(end) * r;
+
+    shakyLine(context, x0, y0, x1, y1);
+    return;
+
+/***
+    var dx = x1-x0;
+    var dy = y1-y0;
+    var l = sqrt(dx * dx + dy * dy);
+
+    // Now we need to pick two random points that are placed
+    // on different sides of the line that passes through
+    // P1 and P2 and not very far from it if length of
+    // P1P2 is small.
+
+    var k  = sqrt(l);// 1.5;
+    var k1 = rand();
+    var k2 = rand();
+    var l3 = rand() * k * 2;
+    var l4 = rand() * k * 2;
+
+    // Point P3: pick a random point on the line between P0 and P1,
+    // then shift it by vector l3l(dy,-dx) which is a line's normal.
+    var x3 = x0 + dx * k1 + dy/l * l3;
+    var y3 = y0 + dy * k1 - dx/l * l3;
+
+    // Point P3: pick a random point on the line between P0 and P1,
+    // then shift it by vector l4l(-dy,dx) which also is a line's normal
+    // but points into opposite direction from the one we used for P3.
+    var x4 = x0 + dx * k2 + dy/l * l4;
+    var y4 = y0 + dy * k2 - dx/l * l4;
+
+    var x4 = x0 + dx * k1 + dy/l * l3;
+    var y4 = y0 + dy * k1 - dx/l * l3;
+
+    // Draw a bezier curve through points P0, P3, P4, P1.
+    // Selection of P3 and P4 makes line "jerk" a little
+    // between them but otherwise it will be mostly straight thus
+    // creating illusion of being hand drawn.
+    context.bezierCurveTo(x3, y3, x4, y4, x1, y1);
+***/
+  }
+
+
+
+
+  var me = {};
+
+  me.enable = function(context) {
+    var _xPos0 = 0, _yPos0 = 0,
+      _xPos = 0, _yPos = 0,
+      _moveTo    = context.moveTo,
+      _beginPath = context.beginPath,
+      _closePath = context.closePath;
+
+    context.moveTo = function(x, y) {
+      _xPos = _xPos0 = x;
+      _yPos = _yPos0 = y;
+      _moveTo.call(context, x, y);
+    };
+
+    context.lineTo = function(x, y) {
+      shakyLine(context, _xPos, _yPos, _xPos = x, _yPos = y);
+    };
+
+    context.beginPath = function() {
+      _xPos0 = _xPos;
+      _yPos0 = _yPos;
+      _beginPath.call(context);
+    };
+
+    context.closePath = function() {
+      shakyLine(context, _xPos, _yPos, _xPos0, _yPos0);
+      _closePath.call(context);
+    };
+
+    context.arc = function(cx, cy, r, start, end, reverse) {
+      var seg = PI/4;
+      if (reverse) {
+        while (end-start > seg) {
+          shakyArc(context, cx, cy, r, end, end-seg);
+          end-=seg;
+        }
+        shakyArc(context, cx, cy, r, end, start);
+        return;
+      }
+
+      while (end-start > seg) {
+        shakyArc(context, cx, cy, r, start, start+seg);
+        start+=seg;
+      }
+      shakyArc(context, cx, cy, r, start, end);
+    };
+
+    return context;
+  };
+
+  return me;
+
+}());
+
+
 //****** file: Layers.js ******
 
 var Layers = (function() {
 
-    function _createItem() {
-        var canvas = doc.createElement('CANVAS');
-        canvas.style.webkitTransform = 'translate3d(0,0,0)'; // turn on hw acceleration
-        canvas.style.imageRendering  = 'optimizeSpeed';
-        canvas.style.position = 'absolute';
-        canvas.style.left = 0;
-        canvas.style.top  = 0;
+  function _createItem() {
+    var canvas = doc.createElement('CANVAS');
+    canvas.style.webkitTransform = 'translate3d(0,0,0)'; // turn on hw acceleration
+    canvas.style.imageRendering  = 'optimizeSpeed';
+    canvas.style.position = 'absolute';
+    canvas.style.left = 0;
+    canvas.style.top  = 0;
 
-        var context = canvas.getContext('2d');
-        context.lineCap   = 'round';
-        context.lineJoin  = 'round';
-        context.lineWidth = 1;
+    var context = canvas.getContext('2d');
+    context.lineCap   = 'round';
+    context.lineJoin  = 'round';
+    context.lineWidth = 1;
 
-        context.mozImageSmoothingEnabled    = false;
-        context.webkitImageSmoothingEnabled = false;
+    context.mozImageSmoothingEnabled    = false;
+    context.webkitImageSmoothingEnabled = false;
 
-        _items.push(canvas);
-        _container.appendChild(canvas);
+    _items.push(canvas);
+    _container.appendChild(canvas);
 
-        return context;
+    return Sketch.enable(context);
+  }
+
+  var _container = doc.createElement('DIV');
+  _container.style.pointerEvents = 'none';
+  _container.style.position = 'absolute';
+  _container.style.left = 0;
+  _container.style.top  = 0;
+
+  var _items = [];
+
+  // TODO: improve this to _createItem(Layer) => layer.setContext(context)
+  Shadows.setContext(      _createItem());
+  FlatBuildings.setContext(_createItem());
+  context = _createItem(); // default (global) render context
+
+  var me = {};
+
+  me.appendTo = function(parentNode) {
+    parentNode.appendChild(_container);
+  };
+
+  me.remove = function() {
+    _container.parentNode.removeChild(_container);
+  };
+
+  me.setSize = function(w, h) {
+    for (var i = 0, il = _items.length; i < il; i++) {
+      _items[i].width  = w;
+      _items[i].height = h;
     }
+  };
 
-    var _container = doc.createElement('DIV');
-    _container.style.pointerEvents = 'none';
-    _container.style.position = 'absolute';
-    _container.style.left = 0;
-    _container.style.top  = 0;
+  // usually called after move: container jumps by move delta, cam is reset
+  me.setPosition = function(x, y) {
+    _container.style.left = x + 'px';
+    _container.style.top  = y + 'px';
+  };
 
-    var _items = [];
-
-    // TODO: improve this to _createItem(Layer) => layer.setContext(context)
-    Shadows.setContext(      _createItem());
-    FlatBuildings.setContext(_createItem());
-    context = _createItem(); // default (global) render context
-
-    var me = {};
-
-    me.appendTo = function(parentNode) {
-        parentNode.appendChild(_container);
-    };
-
-    me.remove = function() {
-        _container.parentNode.removeChild(_container);
-    };
-
-    me.setSize = function(w, h) {
-        for (var i = 0, il = _items.length; i < il; i++) {
-            _items[i].width  = w;
-            _items[i].height = h;
-        }
-    };
-
-    // usually called after move: container jumps by move delta, cam is reset
-    me.setPosition = function(x, y) {
-        _container.style.left = x + 'px';
-        _container.style.top  = y + 'px';
-    };
-
-    return me;
+  return me;
 
 }());
 

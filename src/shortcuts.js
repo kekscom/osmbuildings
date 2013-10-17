@@ -16,10 +16,11 @@ var Int32Array = Int32Array || Array,
   floor = m.floor,
   round = m.round,
   rand = m.random,
+  win = window,
   doc = document;
 
-if (!console) {
-  console = {
+if (!window.console) {
+  window.console = {
     log:function() {},
     warn:function() {}
   };

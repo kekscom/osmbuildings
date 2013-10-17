@@ -78,18 +78,15 @@ var Sketch = (function() {
 
 
   function shakyArc(context, cx, cy, r, start, end) {
-    var x0 = cx + cos(start) * r;
-    var y0 = cy + sin(start) * r;
+    var x0 = cx + cos(start) * r,
+      y0 = cy + sin(start) * r,
+      x1 = cx + cos(end) * r,
+      y1 = cy + sin(end) * r;
 
-    var x1 = cx + cos(end) * r;
-    var y1 = cy + sin(end) * r;
+    shakyLine(context, x0, y0, x1, y1);
+    return;
 
-
-  shakyLine(context, x0, y0, x1, y1);
-  return;
-
-  // console.log(start*RAD, x0, y0, end*RAD, x1, y1)
-
+/***
     var dx = x1-x0;
     var dy = y1-y0;
     var l = sqrt(dx * dx + dy * dy);
@@ -116,15 +113,15 @@ var Sketch = (function() {
     var x4 = x0 + dx * k2 + dy/l * l4;
     var y4 = y0 + dy * k2 - dx/l * l4;
 
-  var x4 = x0 + dx * k1 + dy/l * l3;
-  var y4 = y0 + dy * k1 - dx/l * l3;
-
+    var x4 = x0 + dx * k1 + dy/l * l3;
+    var y4 = y0 + dy * k1 - dx/l * l3;
 
     // Draw a bezier curve through points P0, P3, P4, P1.
     // Selection of P3 and P4 makes line "jerk" a little
     // between them but otherwise it will be mostly straight thus
     // creating illusion of being hand drawn.
     context.bezierCurveTo(x3, y3, x4, y4, x1, y1);
+***/
   }
 
 
@@ -143,22 +140,22 @@ var Sketch = (function() {
       _xPos = _xPos0 = x;
       _yPos = _yPos0 = y;
       _moveTo.call(context, x, y);
-    }
+    };
 
     context.lineTo = function(x, y) {
       shakyLine(context, _xPos, _yPos, _xPos = x, _yPos = y);
-    }
+    };
 
     context.beginPath = function() {
       _xPos0 = _xPos;
       _yPos0 = _yPos;
       _beginPath.call(context);
-    }
+    };
 
     context.closePath = function() {
       shakyLine(context, _xPos, _yPos, _xPos0, _yPos0);
       _closePath.call(context);
-    }
+    };
 
     context.arc = function(cx, cy, r, start, end, reverse) {
       var seg = PI/4;
@@ -176,7 +173,7 @@ var Sketch = (function() {
         start+=seg;
       }
       shakyArc(context, cx, cy, r, start, end);
-    }
+    };
 
     return context;
   };
