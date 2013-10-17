@@ -8,7 +8,7 @@ exports.COPYRIGHT = '/**\n' +
                     ' * @osmbuildings, http://osmbuildings.org\n' +
                     ' */\n';
 
-exports.VERSION = '0.1.8a';
+exports.VERSION = '0.1.9a';
 
 exports.srcFiles = [
     srcPath + '/prefix.js',

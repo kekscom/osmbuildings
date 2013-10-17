@@ -11,7 +11,7 @@ http://osmbuildings.org/
 
 ## Deprecation notice!
 
-With version 0.1.9a ahead, there are a few changes regarding files and API.<br>
+By version 0.1.9a, there are a few important changes regarding files and API.<br>
 It's about aligning, functionality stays the same.
 
 1. Files are now named `OSMBuildings-<ENGINE>.js`- where engine is `Leaflet` or `OpenLayers` at the moment.
@@ -24,7 +24,7 @@ For details, see documentation below.
 
 ## Files
 
-Release version 0.1.8a https://github.com/kekscom/osmbuildings/tree/v0.1.8a<br>
+Release version 0.1.9a https://github.com/kekscom/osmbuildings/tree/v0.1.9a<br>
 Latest development version https://github.com/kekscom/osmbuildings
 
 For further information visit http://osmbuildings.org, follow [@osmbuildings](https://twitter.com/osmbuildings) on Twitter or report issues here on Github.
