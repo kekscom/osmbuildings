@@ -16,8 +16,8 @@
         height: 100%;
     }
     </style>
-    <link rel="stylesheet" href="leaflet-0.5.1/leaflet.css">
-    <script src="leaflet-0.5.1/leaflet-src.js"></script>
+    <link rel="stylesheet" href="leaflet-0.6.4/leaflet.css">
+    <script src="leaflet-0.6.4/leaflet-src.js"></script>
 	<script src="scripts.js.php?engine=Leaflet"></script>
 </head>
 

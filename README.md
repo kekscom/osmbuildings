@@ -38,8 +38,8 @@ Link Leaflet and OSM Buildings files in your HTML head section.
 
 ~~~ html
 <head>
-  <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.5.1/leaflet.css">
-  <script src="http://cdn.leafletjs.com/leaflet-0.5.1/leaflet.js"></script>
+  <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.6.4/leaflet.css">
+  <script src="http://cdn.leafletjs.com/leaflet-0.6.4/leaflet.js"></script>
   <script src="OSMBuildings-Leaflet.js"></script>
 </head>
 ~~~

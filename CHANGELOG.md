@@ -20,6 +20,7 @@
 - minHeight for GeoJSON enabled
 - height units for GeoJSON enabled
 - very simple fix for building occlusion
+- successful tests with LeafletJS 0.6.4
 
 
 ## 0.1.8a @ 2013-03-10
