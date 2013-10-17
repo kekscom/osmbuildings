@@ -15,10 +15,11 @@ var Int32Array = Int32Array || Array,
   ceil = m.ceil,
   floor = m.floor,
   round = m.round,
+  win = window,
   doc = document;
 
-if (!console) {
-  console = {
+if (!win.console) {
+  win.console = {
     log:function() {},
     warn:function() {}
   };
