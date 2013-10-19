@@ -13,7 +13,7 @@
 - material color mapping added
 - HSLA color support added
 - support for W3C named colors added
-- CORS-XHR supprot for MSIE added
+- CORS-XHR support for MSIE added
 - cylindric object rendering added
 - API is now documented in GitHub README
 - map engine adapters simplified
