@@ -30,6 +30,7 @@
 //  var map = new L.Map('map').setView([52.50557, 13.33451], 17); // Berlin Ku'Damm
 //  var map = new L.Map('map').setView([52.52079, 13.40882], 16); // Berlin Fernsehturm
 //  var map = new L.Map('map').setView([37.78923, -122.40597], 16); // SF
+//  var map = new L.Map('map').setView([48.86083, 2.33565], 18); // Louvre, Paris
 
     new L.TileLayer('http://otile1.mqcdn.com/tiles/1.0.0/map/{z}/{x}/{y}.jpg', { maxZoom: 18 }).addTo(map);
 //  new L.TileLayer('http://{s}.tiles.mapbox.com/v3/osmbuildings.map-c8zdox7m/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(map);
