@@ -5,22 +5,103 @@ var Data = (function() {
     _staticData,
     _currentItemsIndex = {}; // maintain a list of cached items in order to avoid duplicates on tile borders
 
-  function _crop(num) {
+  function _cropDecimals(num) {
     return parseFloat(num.toFixed(5));
   }
 
-  function _getSimpleFootprint(polygon) {
-    var footprint = new Int32Array(polygon.length),
+  function _getSquareSegmentDistance(px, py, p1x, p1y, p2x, p2y) {
+    var dx = p2x-p1x, dy = p2y-p1y,
+      t;
+    if (dx !== 0 || dy !== 0) {
+      t = ((px-p1x) * dx + (py-p1y) * dy) / (dx*dx + dy*dy);
+      if (t > 1) {
+        p1x = p2x;
+        p1y = p2y;
+      } else if (t > 0) {
+        p1x += dx*t;
+        p1y += dy*t;
+      }
+    }
+    dx = px-p1x;
+    dy = py-p1y;
+    return dx*dx + dy*dy;
+  }
+
+  function _simplifyPolygon(buffer) {
+    var sqTolerance = 2,
+      len = buffer.length/2,
+      markers = new Uint8Array(len),
+
+      first = 0, last = len-1,
+
+      i,
+      maxSqDist,
+      sqDist,
+      index,
+      firstStack = [], lastStack  = [],
+      newBuffer  = [];
+
+    markers[first] = markers[last] = 1;
+
+    while (last) {
+      maxSqDist = 0;
+      for (i = first+1; i < last; i++) {
+        sqDist = _getSquareSegmentDistance(
+          buffer[i    *2], buffer[i    *2 + 1],
+          buffer[first*2], buffer[first*2 + 1],
+          buffer[last *2], buffer[last *2 + 1]
+        );
+        if (sqDist > maxSqDist) {
+          index = i;
+          maxSqDist = sqDist;
+        }
+      }
+
+      if (maxSqDist > sqTolerance) {
+        markers[index] = 1;
+
+        firstStack.push(first);
+        lastStack.push(index);
+
+        firstStack.push(index);
+        lastStack.push(last);
+      }
+
+      first = firstStack.pop();
+      last = lastStack.pop();
+    }
+
+    for (i = 0; i < len; i++) {
+      if (markers[i]) {
+        newBuffer.push(buffer[i*2], buffer[i*2 + 1]);
+      }
+    }
+
+    return newBuffer;
+  }
+
+  function _getCenter(buffer) {
+    var len, x = 0, y = 0;
+    for (var i = 0, il = buffer.length-3; i < il; i += 2) {
+      x += buffer[i];
+      y += buffer[i+1];
+    }
+    len = (buffer.length-2) / 2;
+    return { x:x/len <<0, y:y/len <<0 };
+  }
+
+  function _getPixelFootprint(buffer) {
+    var footprint = new Int32Array(buffer.length),
       px;
 
-    for (var i = 0, il = polygon.length-1; i < il; i+=2) {
-      px = geoToPixel(polygon[i], polygon[i+1]);
+    for (var i = 0, il = buffer.length-1; i < il; i+=2) {
+      px = geoToPixel(buffer[i], buffer[i+1]);
       footprint[i]   = px.x;
       footprint[i+1] = px.y;
     }
 
-    footprint = simplify(footprint);
-    if (footprint.length < 8) { // 3 points + end==start (*2)
+    footprint = _simplifyPolygon(footprint);
+    if (footprint.length < 8) { // 3 points & end==start (*2)
       return;
     }
 
@@ -89,14 +170,14 @@ var Data = (function() {
         continue;
       }
 
-      if (!(footprint = _getSimpleFootprint(item.footprint))) {
+      if (!(footprint = _getPixelFootprint(item.footprint))) {
         continue;
       }
 
       holes = [];
       if (item.holes) {
         for (j = 0, jl = item.holes.length; j < jl; j++) {
-          if ((innerFootprint = _getSimpleFootprint(item.holes[j]))) {
+          if ((innerFootprint = _getPixelFootprint(item.holes[j]))) {
             holes.push(innerFootprint);
           }
         }
@@ -107,15 +188,15 @@ var Data = (function() {
       if (item.wallColor) {
         if ((color = Color.parse(item.wallColor))) {
           wallColor = color.setAlpha(zoomAlpha);
-          altColor  = '' + wallColor.setLightness(0.8);
-          wallColor = '' + wallColor;
+          altColor  = ''+ wallColor.setLightness(0.8);
+          wallColor = ''+ wallColor;
         }
       }
 
       roofColor = null;
       if (item.roofColor) {
         if ((color = Color.parse(item.roofColor))) {
-          roofColor = '' + color.setAlpha(zoomAlpha);
+          roofColor = ''+ color.setAlpha(zoomAlpha);
         }
       }
 
@@ -136,7 +217,7 @@ var Data = (function() {
         roofColor:  roofColor,
         roofShape:  item.roofShape,
         roofHeight: roofHeight,
-        center:     getCenter(footprint),
+        center:     _getCenter(footprint),
         holes:      holes.length ? holes : null,
         shape:      item.shape, // TODO: drop footprint
         radius:     item.radius/meterToPixel
@@ -187,7 +268,7 @@ var Data = (function() {
 
     var lat, lon,
       parsedData, cacheKey,
-      nw = pixelToGeo(originX,     originY),
+      nw = pixelToGeo(originX,       originY),
       se = pixelToGeo(originX+width, originY+height),
       sizeLat = DATA_TILE_SIZE,
       sizeLon = DATA_TILE_SIZE*2;
@@ -201,16 +282,16 @@ var Data = (function() {
 
     for (lat = bounds.s; lat <= bounds.n; lat += sizeLat) {
       for (lon = bounds.w; lon <= bounds.e; lon += sizeLon) {
-        lat = _crop(lat);
-        lon = _crop(lon);
+        lat = _cropDecimals(lat);
+        lon = _cropDecimals(lon);
 
-        cacheKey = lat + ',' + lon;
+        cacheKey = lat +','+ lon;
         if ((parsedData = Cache.get(cacheKey))) {
           _addRenderItems(parsedData);
         } else {
           xhr(_url, {
-            n: _crop(lat+sizeLat),
-            e: _crop(lon+sizeLon),
+            n: _cropDecimals(lat+sizeLat),
+            e: _cropDecimals(lon+sizeLon),
             s: lat,
             w: lon
           }, _createClosure(cacheKey));
