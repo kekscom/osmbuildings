@@ -4,7 +4,7 @@ var dstPath = '../dist';
 
 exports.COPYRIGHT = '/**\n' +
                     ' * Copyright (C) 2013 OSM Buildings, Jan Marsch\n' +
-                    ' * A leightweight JavaScript library for visualizing 3D building geometry on interactive maps.\n' +
+                    ' * A leightweight JavaScript library for visualizing building geometry on interactive maps.\n' +
                     ' * @osmbuildings, http://osmbuildings.org\n' +
                     ' */\n';
 
@@ -28,9 +28,9 @@ exports.srcFiles = [
     srcPath + '/Shadows.js',
     srcPath + '/FlatBuildings.js',
     srcPath + '/Layers.js',
-    srcPath + '/properties.js',
-    srcPath + '/events.js',
+    srcPath + '/adapter.js',
     srcPath + '/engines/{engine}.js',
+    srcPath + '/public.js',
     srcPath + '/suffix.js'
 ];
 

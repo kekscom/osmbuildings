@@ -19,9 +19,9 @@ $srcFiles = array(
     $srcPath . "/Shadows.js",
     $srcPath . "/FlatBuildings.js",
     $srcPath . "/Layers.js",
-    $srcPath . "/properties.js",
-    $srcPath . "/events.js",
+    $srcPath . "/adapter.js",
     $srcPath . "/engines/".$_GET["engine"].".js",
+    $srcPath . "/public.js",
     $srcPath . "/suffix.js"
 );
 
