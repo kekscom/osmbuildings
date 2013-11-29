@@ -26,6 +26,7 @@ exports.srcFiles = [
     srcPath + '/Data.js',
     srcPath + '/render.js',
     srcPath + '/Shadows.js',
+    srcPath + '/Ambient.js',
     srcPath + '/FlatBuildings.js',
     srcPath + '/Layers.js',
     srcPath + '/properties.js',
@@ -40,7 +41,7 @@ exports.dstFiles = {
   gzipped:  dstPath + '/OSMBuildings-{engine}.js.gz'
 };
 
-exports.engines = ['Leaflet', 'OpenLayers', 'Here'];
+exports.engines = ['Leaflet', 'OpenLayers'];
 
 exports.jshint = {
 	"browser": true,

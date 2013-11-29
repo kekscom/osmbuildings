@@ -32,6 +32,7 @@ var Layers = (function() {
 
     // TODO: improve this to _createItem(Layer) => layer.setContext(context)
     Shadows.setContext(      _createItem());
+    Ambient.setContext(      _createItem());
     FlatBuildings.setContext(_createItem());
     context = _createItem(); // default (global) render context
 

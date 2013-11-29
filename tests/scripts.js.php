@@ -17,6 +17,7 @@ $srcFiles = array(
     $srcPath . "/Data.js",
     $srcPath . "/render.js",
     $srcPath . "/Shadows.js",
+    $srcPath . "/Ambient.js",
     $srcPath . "/FlatBuildings.js",
     $srcPath . "/Layers.js",
     $srcPath . "/properties.js",

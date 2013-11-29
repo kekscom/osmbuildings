@@ -5,6 +5,8 @@ function fadeIn() {
         return;
     }
 
+    Ambient.render();
+
     animTimer = setInterval(function() {
         var item, needed = false;
         for (var i = 0, il = renderItems.length; i < il; i++) {
@@ -18,7 +20,9 @@ function fadeIn() {
             }
         }
 
-        renderAll();
+        Shadows.render();
+        FlatBuildings.render();
+        render();
 
         if (!needed) {
             clearInterval(animTimer);
@@ -29,6 +33,7 @@ function fadeIn() {
 
 function renderAll() {
     Shadows.render();
+    Ambient.render();
     FlatBuildings.render();
     render();
 }
