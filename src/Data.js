@@ -107,15 +107,15 @@ var Data = (function() {
       if (item.wallColor) {
         if ((color = Color.parse(item.wallColor))) {
           wallColor = color.setAlpha(zoomAlpha);
-          altColor  = '' + wallColor.setLightness(0.8);
-          wallColor = '' + wallColor;
+          altColor  = ''+ wallColor.setLightness(0.8);
+          wallColor = ''+ wallColor;
         }
       }
 
       roofColor = null;
       if (item.roofColor) {
         if ((color = Color.parse(item.roofColor))) {
-          roofColor = '' + color.setAlpha(zoomAlpha);
+          roofColor = ''+ color.setAlpha(zoomAlpha);
         }
       }
 
@@ -204,7 +204,7 @@ var Data = (function() {
         lat = _crop(lat);
         lon = _crop(lon);
 
-        cacheKey = lat + ',' + lon;
+        cacheKey = lat +','+ lon;
         if ((parsedData = Cache.get(cacheKey))) {
           _addRenderItems(parsedData);
         } else {
