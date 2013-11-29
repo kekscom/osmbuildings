@@ -1,4 +1,4 @@
-<img src="http://osmbuildings.org/logo.png?new"/>
+<img src="http://osmbuildings.org/logo.png"/>
 
 OSM Buildings is a JavaScript library for visualizing OpenStreetMaps building geometry on interactive maps.<br>
 Everything is stabilizing now, entering beta state.
@@ -38,8 +38,8 @@ Link Leaflet and OSM Buildings files in your HTML head section.
 
 ~~~ html
 <head>
-  <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.6.4/leaflet.css">
-  <script src="http://cdn.leafletjs.com/leaflet-0.6.4/leaflet.js"></script>
+  <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7/leaflet.css">
+  <script src="http://cdn.leafletjs.com/leaflet-0.7/leaflet.js"></script>
   <script src="OSMBuildings-Leaflet.js"></script>
 </head>
 ~~~

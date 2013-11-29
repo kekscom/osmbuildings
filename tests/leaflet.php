@@ -17,7 +17,7 @@ html, body {
 }
 </style>
 <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7/leaflet.css">
-<script src="http://cdn.leafletjs.com/leaflet-0.7/leaflet.js"></script>
+<script src="http://cdn.leafletjs.com/leaflet-0.7/leaflet-src.js"></script>
 <script src="../dist/OSMBuildings-Leaflet.js"></script>
 </head>
 

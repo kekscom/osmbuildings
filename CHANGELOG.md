@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.0b development version
+
+- successful tests with LeafletJS 0.7
+
+
 ## 0.1.9a @ 2013-10-17
 
 - multipolygon support added
