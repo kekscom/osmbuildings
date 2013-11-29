@@ -35,18 +35,18 @@ exports.srcFiles = [
 ];
 
 exports.dstFiles = {
-    debug:    dstPath + '/OSMBuildings-{engine}.debug.js',
-    minified: dstPath + '/OSMBuildings-{engine}.js',
-    gzipped:  dstPath + '/OSMBuildings-{engine}.js.gz'
+  debug:    dstPath + '/OSMBuildings-{engine}.debug.js',
+  minified: dstPath + '/OSMBuildings-{engine}.js',
+  gzipped:  dstPath + '/OSMBuildings-{engine}.js.gz'
 };
 
-exports.engines = ['Leaflet', 'OpenLayers'];
+exports.engines = ['Leaflet', 'OpenLayers', 'Here'];
 
 exports.jshint = {
 	"browser": true,
 	"node": true,
 	"predef": ["XDomainRequest", "L", "OpenLayers", "google"],
-//    "unused": true,
+//"unused": true,
 
 	"debug": false,
 	"devel": false,
@@ -83,14 +83,14 @@ exports.jshint = {
 	"onevar": false,
 	"plusplus": false,
 	"sub": false,
-//	"indent": 4,
+//"indent": 4,
 
 	"eqeqeq": true,
-//	"trailing": true,
-//	"white": false,
+//"trailing": true,
+//"white": false,
 	"smarttabs": true
 };
 
 exports.closure = {
-    compilation_level: 'SIMPLE_OPTIMIZATIONS'	// WHITESPACE_ONLY, ADVANCED_OPTIMIZATIONS, SIMPLE_OPTIMIZATIONS
+  compilation_level: 'SIMPLE_OPTIMIZATIONS'	// WHITESPACE_ONLY, ADVANCED_OPTIMIZATIONS, SIMPLE_OPTIMIZATIONS
 };
