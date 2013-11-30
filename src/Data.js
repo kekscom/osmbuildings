@@ -158,6 +158,7 @@ var Data = (function() {
       roofColor, roofHeight,
       holes, innerFootprint,
       zoomDelta = maxZoom-zoom,
+      // TODO: move this to onZoom
       meterToPixel = 156412 / Math.pow(2, zoom) / 1.5; // http://wiki.openstreetmap.org/wiki/Zoom_levels, TODO: without factor 1.5, numbers don't match (lat/lon: Berlin)
 
     for (i = 0, il = items.length; i < il; i++) {
