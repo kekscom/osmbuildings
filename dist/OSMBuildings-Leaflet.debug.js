@@ -930,6 +930,54 @@ function getDistance(p1, p2) {
   return dx*dx + dy*dy;
 }
 
+// http://en.wikibooks.org/wiki/Algorithm_Implementation/Geometry/Tangents_between_two_circles
+function getTangents(c1, r1, c2, r2) {
+  var dx = c1.x-c2.x,
+    dy = c1.y-c2.y,
+    dr = r1-r2,
+    sqdist = (dx*dx) + (dy*dy);
+
+  if (sqdist <= dr*dr) {
+    return;
+  }
+
+  var dist = sqrt(sqdist),
+    vx = -dx/dist,
+    vy = -dy/dist,
+    c  =  dr/dist,
+    res = [],
+    h, nx, ny;
+
+  // Let A, B be the centers, and C, D be points at which the tangent
+  // touches first and second circle, and n be the normal vector to it.
+  //
+  // We have the system:
+  //   n * n = 1    (n is a unit vector)
+  //   C = A + r1 * n
+  //   D = B + r2 * n
+  //   n * CD = 0   (common orthogonality)
+  //
+  // n * CD = n * (AB + r2*n - r1*n) = AB*n - (r1 -/+ r2) = 0,  <=>
+  // AB * n = (r1 -/+ r2), <=>
+  // v * n = (r1 -/+ r2) / d,  where v = AB/|AB| = AB/d
+  // This is a linear equation in unknown vector n.
+  // Now we're just intersecting a line with a circle: v*n=c, n*n=1
+
+  h = sqrt(max(0, 1 - c*c));
+  for (var sign = 1; sign >= -1; sign -= 2) {
+    nx = vx*c - sign*h*vy;
+    ny = vy*c + sign*h*vx;
+    res.push({
+      x1: c1.x + r1*nx <<0,
+      y1: c1.y + r1*ny <<0,
+      x2: c2.x + r2*nx <<0,
+      y2: c2.y + r2*ny <<0
+    });
+  }
+
+  return res;
+}
+
 
 //****** file: variables.js ******
 
@@ -940,8 +988,6 @@ var width = 0, height = 0,
     zoom, size,
 
     activeRequest,
-
-    context,
 
     defaultWallColor = new Color(200, 190, 180),
     defaultAltColor  = defaultWallColor.setLightness(0.8),
@@ -1216,19 +1262,20 @@ var Data = (function() {
   }
 
   function _resetItems() {
-    renderItems = [];
+    Buildings.data = [];
     _currentItemsIndex = {};
   }
 
   function _addRenderItems(data, allAreNew) {
     var scaledItems = _scale(data, zoom),
-      item;
+      item,
+      buildingsData = Buildings.data;
 
     for (var i = 0, il = scaledItems.length; i < il; i++) {
       item = scaledItems[i];
       if (!_currentItemsIndex[item.id]) {
         item.scale = allAreNew ? 0 : 1;
-        renderItems.push(item);
+        buildingsData.push(item);
         _currentItemsIndex[item.id] = 1;
       }
     }
@@ -1289,7 +1336,7 @@ var Data = (function() {
 
       roofHeight = item.roofHeight >>zoomDelta;
 
-      // TODO: move buildings without height to FlatBuildings
+      // TODO: move buildings without height to Simplified
       if (height <= minHeight && roofHeight <= 0) {
         continue;
       }
@@ -1396,335 +1443,252 @@ var Data = (function() {
 }());
 
 
-//****** file: render.js ******
+//****** file: Buildings.js ******
 
-var renderItems = [];
+var Buildings = (function() {
 
-function fadeIn() {
-    if (animTimer) {
-        return;
-    }
+  var _context;
 
-    animTimer = setInterval(function() {
-        var item, needed = false;
-        for (var i = 0, il = renderItems.length; i < il; i++) {
-            item = renderItems[i];
-            if (item.scale < 1) {
-                item.scale += 0.5*0.2; // amount*easing
-                if (item.scale > 1) {
-                    item.scale = 1;
-                }
-                needed = true;
-            }
-        }
+  function _project(x, y, m) {
+    return {
+      x: (x-camX) * m + camX <<0,
+      y: (y-camY) * m + camY <<0
+    };
+  }
 
-        renderAll();
-
-        if (!needed) {
-            clearInterval(animTimer);
-            animTimer = null;
-        }
-    }, 33);
-}
-
-function renderAll() {
-    Shadows.render();
-    FlatBuildings.render();
-    render();
-}
-
-function render() {
-    context.clearRect(0, 0, width, height);
-
-    // show on high zoom levels only and avoid rendering during zoom
-    if (zoom < minZoom || isZooming) {
-        return;
-    }
-
-    var i, il, j, jl,
-        item,
-        h, _h, mh, _mh,
-        flatMaxHeight = FlatBuildings.MAX_HEIGHT,
-        sortCam = { x:camX+originX, y:camY+originY },
-        vp = {
-            minX: originX,
-            maxX: originX+width,
-            minY: originY,
-            maxY: originY+height
-        },
-        footprint, roof, holes,
-        isVisible,
-        wallColor, altColor, roofColor;
-
-    // TODO: FlatBuildings are drawn separately, data has to be split
-
-    renderItems.sort(function(a, b) {
-        return (a.minHeight-b.minHeight) || getDistance(b.center, sortCam) - getDistance(a.center, sortCam) || (b.height-a.height);
-    });
-
-    for (i = 0, il = renderItems.length; i < il; i++) {
-        item = renderItems[i];
-
-        if (item.height+item.roofHeight <= flatMaxHeight) {
-            continue;
-        }
-
-        isVisible = false;
-        footprint = item.footprint;
-        for (j = 0, jl = footprint.length - 1; j < jl; j += 2) {
-            // checking footprint is sufficient for visibility
-            // TODO: pre-filter by data tile position
-            if (!isVisible) {
-                isVisible = (footprint[j] > vp.minX && footprint[j] < vp.maxX && footprint[j+1] > vp.minY && footprint[j+1] < vp.maxY);
-            }
-        }
-
-        if (!isVisible) {
-            continue;
-        }
-
-        // when fading in, use a dynamic height
-        h = item.scale < 1 ? item.height*item.scale : item.height;
-        // precalculating projection height factor
-        _h = camZ / (camZ-h);
-
-        mh = 0;
-        _mh = 0;
-        if (item.minHeight) {
-            mh = item.scale < 1 ? item.minHeight*item.scale : item.minHeight;
-            _mh = camZ / (camZ-mh);
-        }
-
-        wallColor = item.wallColor || wallColorAlpha;
-        altColor  = item.altColor  || altColorAlpha;
-        roofColor = item.roofColor || roofColorAlpha;
-        context.strokeStyle = altColor;
-
-        if (item.shape === 'cylinder') {
-            roof = cylinder(
-                { x:item.center.x-originX, y:item.center.y-originY },
-                item.radius,
-                h, mh,
-                wallColor, altColor
-            );
-            if (item.roofShape === 'cylinder') {
-                roof = cylinder(
-                    { x:item.center.x-originX, y:item.center.y-originY },
-                    item.radius,
-                    h+item.roofHeight, h,
-                    roofColor
-                );
-            }
-            context.fillStyle = roofColor;
-            drawCircle(roof.c, roof.r, true);
-        } else {
-            roof = buildingPart(footprint, _h, _mh, wallColor, altColor);
-            holes = [];
-            if (item.holes) {
-                for (j = 0, jl = item.holes.length; j < jl; j++) {
-                    holes[j] = buildingPart(item.holes[j], _h, _mh, wallColor, altColor);
-                }
-            }
-            context.fillStyle = roofColor;
-            drawPolygon(roof, true, holes);
-        }
-    }
-}
-
-function buildingPart(polygon, _h, _mh, color, altColor) {
+  function _drawSolid(polygon, _h, _mh, color, altColor) {
     var a = { x:0, y:0 }, b = { x:0, y:0 },
-        _a, _b,
-        roof = [];
+      _a, _b,
+      roof = [];
     for (var i = 0, il = polygon.length-3; i < il; i += 2) {
-        a.x = polygon[i]  -originX;
-        a.y = polygon[i+1]-originY;
-        b.x = polygon[i+2]-originX;
-        b.y = polygon[i+3]-originY;
+      a.x = polygon[i]  -originX;
+      a.y = polygon[i+1]-originY;
+      b.x = polygon[i+2]-originX;
+      b.y = polygon[i+3]-originY;
 
-        // project 3d to 2d on extruded footprint
-        _a = project(a.x, a.y, _h);
-        _b = project(b.x, b.y, _h);
+      // project 3d to 2d on extruded footprint
+      _a = _project(a.x, a.y, _h);
+      _b = _project(b.x, b.y, _h);
 
-        if (_mh) {
-            a = project(a.x, a.y, _mh);
-            b = project(b.x, b.y, _mh);
+      if (_mh) {
+        a = _project(a.x, a.y, _mh);
+        b = _project(b.x, b.y, _mh);
+      }
+
+      // backface culling check
+      if ((b.x-a.x) * (_a.y-a.y) > (_a.x-a.x) * (b.y-a.y)) {
+        // depending on direction, set wall shading
+        if ((a.x < b.x && a.y < b.y) || (a.x > b.x && a.y > b.y)) {
+          _context.fillStyle = altColor;
+        } else {
+          _context.fillStyle = color;
         }
-
-        // backface culling check
-        if ((b.x-a.x) * (_a.y-a.y) > (_a.x-a.x) * (b.y-a.y)) {
-            // depending on direction, set wall shading
-            if ((a.x < b.x && a.y < b.y) || (a.x > b.x && a.y > b.y)) {
-                context.fillStyle = altColor;
-            } else {
-                context.fillStyle = color;
-            }
-            drawPolygon([
-                b.x, b.y,
-                a.x, a.y,
-                _a.x, _a.y,
-                _b.x, _b.y
-            ]);
-        }
-        roof[i]   = _a.x;
-        roof[i+1] = _a.y;
+        _drawFace([
+          b.x, b.y,
+          a.x, a.y,
+          _a.x, _a.y,
+          _b.x, _b.y
+        ]);
+      }
+      roof[i]   = _a.x;
+      roof[i+1] = _a.y;
     }
 
     return roof;
-}
+  }
 
-function drawPolygon(points, stroke, holes) {
+  function _drawFace(points, stroke, holes) {
     if (!points.length) {
-        return;
+      return;
     }
 
     var i, il, j, jl;
 
-    context.beginPath();
+    _context.beginPath();
 
-    context.moveTo(points[0], points[1]);
+    _context.moveTo(points[0], points[1]);
     for (i = 2, il = points.length; i < il; i += 2) {
-        context.lineTo(points[i], points[i+1]);
+      _context.lineTo(points[i], points[i+1]);
     }
 
     if (holes) {
-        for (i = 0, il = holes.length; i < il; i++) {
-            points = holes[i];
-            context.moveTo(points[0], points[1]);
-            for (j = 2, jl = points.length; j < jl; j += 2) {
-                context.lineTo(points[j], points[j+1]);
-            }
+      for (i = 0, il = holes.length; i < il; i++) {
+        points = holes[i];
+        _context.moveTo(points[0], points[1]);
+        for (j = 2, jl = points.length; j < jl; j += 2) {
+          _context.lineTo(points[j], points[j+1]);
         }
+      }
     }
 
-    context.closePath();
+    _context.closePath();
     if (stroke) {
-        context.stroke();
+      _context.stroke();
     }
-    context.fill();
-}
+    _context.fill();
+  }
 
-function drawCircle(c, r, stroke) {
-    context.beginPath();
-    context.arc(c.x, c.y, r, 0, PI*2);
+  function _drawCircle(c, r, stroke) {
+    _context.beginPath();
+    _context.arc(c.x, c.y, r, 0, PI*2);
     if (stroke) {
-        context.stroke();
+      _context.stroke();
     }
-    context.fill();
-}
+    _context.fill();
+  }
 
-function project(x, y, m) {
-    return {
-        x: (x-camX) * m + camX <<0,
-        y: (y-camY) * m + camY <<0
-    };
-}
-
-function debugMarker(p, color, size) {
-    context.fillStyle = color || '#ffcc00';
-    context.beginPath();
-    context.arc(p.x, p.y, size || 3, 0, PI*2, true);
-    context.closePath();
-    context.fill();
-}
-
-function debugLine(a, b, color) {
-    context.strokeStyle = color || '#ff0000';
-    context.beginPath();
-    context.moveTo(a.x, a.y);
-    context.lineTo(b.x, b.y);
-    context.closePath();
-    context.stroke();
-}
-
-function cylinder(c, r, h, minHeight, color, altColor) {
+  function _drawCylinder(c, r, h, minHeight, color, altColor) {
     var _h = camZ / (camZ-h),
-        _c = project(c.x, c.y, _h),
-        _r = r*_h,
-        a1, a2, col;
+      _c = _project(c.x, c.y, _h),
+      _r = r*_h,
+      a1, a2, col;
 
     if (minHeight) {
-        var _mh = camZ / (camZ-minHeight);
-        c = project(c.x, c.y, _mh);
-        r = r*_mh;
+      var _mh = camZ / (camZ-minHeight);
+      c = _project(c.x, c.y, _mh);
+      r = r*_mh;
     }
 
     var t = getTangents(c, r, _c, _r); // common tangents for ground and roof circle
 
     // no tangents? roof overlaps everything near cam position
     if (t) {
-        a1 = atan2(t[0].y1-c.y, t[0].x1-c.x);
-        a2 = atan2(t[1].y1-c.y, t[1].x1-c.x);
+      a1 = atan2(t[0].y1-c.y, t[0].x1-c.x);
+      a2 = atan2(t[1].y1-c.y, t[1].x1-c.x);
 
-        if (!altColor) {
-            col = Color.parse(color);
-            altColor = '' + col.setLightness(0.8);
-        }
+      if (!altColor) {
+        col = Color.parse(color);
+        altColor = '' + col.setLightness(0.8);
+      }
 
-        context.fillStyle = color;
-        context.beginPath();
-        context.arc(_c.x, _c.y, _r, HALF_PI, a1, true);
-        context.arc(c.x, c.y, r, a1, HALF_PI);
-        context.closePath();
-        context.fill();
+      _context.fillStyle = color;
+      _context.beginPath();
+      _context.arc(_c.x, _c.y, _r, HALF_PI, a1, true);
+      _context.arc(c.x, c.y, r, a1, HALF_PI);
+      _context.closePath();
+      _context.fill();
 
-        context.fillStyle = altColor;
-        context.beginPath();
-        context.arc(_c.x, _c.y, _r, a2, HALF_PI, true);
-        context.arc(c.x, c.y, r, HALF_PI, a2);
-        context.closePath();
-        context.fill();
+      _context.fillStyle = altColor;
+      _context.beginPath();
+      _context.arc(_c.x, _c.y, _r, a2, HALF_PI, true);
+      _context.arc(c.x, c.y, r, HALF_PI, a2);
+      _context.closePath();
+      _context.fill();
     }
 
     return { c:_c, r:_r };
-}
+  }
 
-// http://en.wikibooks.org/wiki/Algorithm_Implementation/Geometry/Tangents_between_two_circles
-function getTangents(c1, r1, c2, r2) {
-    var dx = c1.x-c2.x,
-        dy = c1.y-c2.y,
-        dr = r1-r2,
-        sqdist = (dx*dx) + (dy*dy);
+  var me = {};
 
-    if (sqdist <= dr*dr) {
-        return;
+  me.setContext = function(context) {
+    _context = context;
+  };
+
+  me.data = [];
+
+  me.render = function() {
+    _context.clearRect(0, 0, width, height);
+
+    // show on high zoom levels only and avoid rendering during zoom
+    if (zoom < minZoom || isZooming) {
+      return;
     }
 
-    var dist = sqrt(sqdist),
-        vx = -dx/dist,
-        vy = -dy/dist,
-        c  =  dr/dist,
-        res = [],
-        h, nx, ny;
+    var i, il, j, jl,
+      item,
+      h, _h, mh, _mh,
+      flatMaxHeight = Simplified.MAX_HEIGHT,
+      sortCam = { x:camX+originX, y:camY+originY },
+      vp = {
+        minX: originX,
+        maxX: originX+width,
+        minY: originY,
+        maxY: originY+height
+      },
+      footprint, roof, holes,
+      isVisible,
+      wallColor, altColor, roofColor,
+      buildingsData = me.data;
 
-    // Let A, B be the centers, and C, D be points at which the tangent
-    // touches first and second circle, and n be the normal vector to it.
-    //
-    // We have the system:
-    //   n * n = 1      (n is a unit vector)
-    //   C = A + r1 * n
-    //   D = B + r2 * n
-    //   n * CD = 0     (common orthogonality)
-    //
-    // n * CD = n * (AB + r2*n - r1*n) = AB*n - (r1 -/+ r2) = 0,  <=>
-    // AB * n = (r1 -/+ r2), <=>
-    // v * n = (r1 -/+ r2) / d,  where v = AB/|AB| = AB/d
-    // This is a linear equation in unknown vector n.
-    // Now we're just intersecting a line with a circle: v*n=c, n*n=1
+    // TODO: Simplified are drawn separately, data has to be split
 
-    h = sqrt(max(0, 1 - c*c));
-    for (var sign = 1; sign >= -1; sign -= 2) {
-        nx = vx*c - sign*h*vy;
-        ny = vy*c + sign*h*vx;
-        res.push({
-            x1: c1.x + r1*nx <<0,
-            y1: c1.y + r1*ny <<0,
-            x2: c2.x + r2*nx <<0,
-            y2: c2.y + r2*ny <<0
-        });
+    buildingsData.sort(function(a, b) {
+      return (a.minHeight-b.minHeight) || getDistance(b.center, sortCam) - getDistance(a.center, sortCam) || (b.height-a.height);
+    });
+
+    for (i = 0, il = buildingsData.length; i < il; i++) {
+      item = buildingsData[i];
+
+      if (item.height+item.roofHeight <= flatMaxHeight) {
+        continue;
+      }
+
+      isVisible = false;
+      footprint = item.footprint;
+      for (j = 0, jl = footprint.length - 1; j < jl; j += 2) {
+        // checking footprint is sufficient for visibility
+        // TODO: pre-filter by data tile position
+        if (!isVisible) {
+          isVisible = (footprint[j] > vp.minX && footprint[j] < vp.maxX && footprint[j+1] > vp.minY && footprint[j+1] < vp.maxY);
+        }
+      }
+
+      if (!isVisible) {
+        continue;
+      }
+
+      // when fading in, use a dynamic height
+      h = item.scale < 1 ? item.height*item.scale : item.height;
+      // precalculating projection height factor
+      _h = camZ / (camZ-h);
+
+      mh = 0;
+      _mh = 0;
+      if (item.minHeight) {
+        mh = item.scale < 1 ? item.minHeight*item.scale : item.minHeight;
+        _mh = camZ / (camZ-mh);
+      }
+
+      wallColor = item.wallColor || wallColorAlpha;
+      altColor  = item.altColor  || altColorAlpha;
+      roofColor = item.roofColor || roofColorAlpha;
+      _context.strokeStyle = altColor;
+
+      if (item.shape === 'cylinder') {
+        roof = _drawCylinder(
+          { x:item.center.x-originX, y:item.center.y-originY },
+          item.radius,
+          h, mh,
+          wallColor, altColor
+        );
+        if (item.roofShape === 'cylinder') {
+          roof = _drawCylinder(
+            { x:item.center.x-originX, y:item.center.y-originY },
+            item.radius,
+            h+item.roofHeight, h,
+            roofColor
+          );
+        }
+        _context.fillStyle = roofColor;
+        _drawCircle(roof.c, roof.r, true);
+      } else {
+        roof = _drawSolid(footprint, _h, _mh, wallColor, altColor);
+        holes = [];
+        if (item.holes) {
+          for (j = 0, jl = item.holes.length; j < jl; j++) {
+            holes[j] = _drawSolid(item.holes[j], _h, _mh, wallColor, altColor);
+          }
+        }
+        _context.fillStyle = roofColor;
+        _drawFace(roof, true, holes);
+      }
     }
+  };
 
-    return res;
-}
+  return me;
+
+}());
 
 
 //****** file: Shadows.js ******
@@ -1745,24 +1709,24 @@ var Shadows = (function() {
   }
 
   function _cylinder(c, r, h, mh) {
-      var _c = _project(c.x, c.y, h),
-          a1, a2;
+    var _c = _project(c.x, c.y, h),
+      a1, a2;
 
-      if (mh) {
-          c = _project(c.x, c.y, mh);
-      }
+    if (mh) {
+      c = _project(c.x, c.y, mh);
+    }
 
-      var t = getTangents(c, r, _c, r); // common tangents for ground and roof circle
+    var t = getTangents(c, r, _c, r); // common tangents for ground and roof circle
 
-      // no tangents? roof overlaps everything near cam position
-      if (t) {
-          a1 = atan2(t[0].y1-c.y, t[0].x1-c.x);
-          a2 = atan2(t[1].y1-c.y, t[1].x1-c.x);
+    // no tangents? roof overlaps everything near cam position
+    if (t) {
+      a1 = atan2(t[0].y1-c.y, t[0].x1-c.x);
+      a2 = atan2(t[1].y1-c.y, t[1].x1-c.x);
 
-          _context.moveTo(t[1].x2, t[1].y2);
-          _context.arc(_c.x, _c.y, r, a2, a1);
-          _context.arc( c.x,  c.y, r, a1, a2);
-      }
+      _context.moveTo(t[1].x2, t[1].y2);
+      _context.arc(_c.x, _c.y, r, a2, a1);
+      _context.arc( c.x,  c.y, r, a1, a2);
+    }
   }
 
   var me = {};
@@ -1770,7 +1734,7 @@ var Shadows = (function() {
   me.setContext = function(context) {
     _context = context;
     // TODO: fix bad Date() syntax
-    me.setDate(new Date().setHours(10)); // => render()
+    me.setDate(new Date().setHours(10)); // => Buildings.render()
   };
 
   me.enable = function(flag) {
@@ -1779,168 +1743,169 @@ var Shadows = (function() {
   };
 
   me.render = function() {
-      var center, sun, length, alpha, colorStr;
+    var center, sun, length, alpha, colorStr;
 
-      _context.clearRect(0, 0, width, height);
+    _context.clearRect(0, 0, width, height);
 
-      // show on high zoom levels only and avoid rendering during zoom
-      if (!_enabled || zoom < minZoom || isZooming) {
-          return;
+    // show on high zoom levels only and avoid rendering during zoom
+    if (!_enabled || zoom < minZoom || isZooming) {
+      return;
+    }
+
+    // TODO: at some point, calculate me just on demand
+    center = pixelToGeo(originX+halfWidth, originY+halfHeight);
+    sun = getSunPosition(_date, center.latitude, center.longitude);
+
+    if (sun.altitude <= 0) {
+      return;
+    }
+
+    length = 1 / tan(sun.altitude);
+    alpha = 0.4 / length;
+    _direction.x = cos(sun.azimuth) * length;
+    _direction.y = sin(sun.azimuth) * length;
+
+    // TODO: maybe introduce Color.setAlpha()
+    _color.a = alpha;
+    colorStr = _color + '';
+
+    var i, il, j, jl,
+      item,
+      f, h, mh,
+      x, y,
+      footprint,
+      mode,
+      isVisible,
+      ax, ay, bx, by,
+      a, b, _a, _b,
+      points,
+      specialItems = [],
+      clipping = [],
+      buildingsData = Buildings.data;
+
+    _context.fillStyle = colorStr;
+    _context.beginPath();
+
+    for (i = 0, il = buildingsData.length; i < il; i++) {
+      item = buildingsData[i];
+
+// TODO: no shadows when buildings are too flat => don't add them to Buildings.data then
+//    if (item.height <= Simplified.MAX_HEIGHT) {
+//      continue;
+//    }
+
+      isVisible = false;
+      f = item.footprint;
+      footprint = [];
+      for (j = 0, jl = f.length - 1; j < jl; j += 2) {
+        footprint[j]   = x = f[j]  -originX;
+        footprint[j+1] = y = f[j+1]-originY;
+
+        // TODO: checking footprint is sufficient for visibility - NOT VALID FOR SHADOWS!
+        if (!isVisible) {
+          isVisible = (x > 0 && x < width && y > 0 && y < height);
+        }
       }
 
-      // TODO: at some point, calculate me just on demand
-      center = pixelToGeo(originX+halfWidth, originY+halfHeight);
-      sun = getSunPosition(_date, center.latitude, center.longitude);
-
-      if (sun.altitude <= 0) {
-          return;
+      if (!isVisible) {
+        continue;
       }
 
-      length = 1 / tan(sun.altitude);
-      alpha = 0.4 / length;
-      _direction.x = cos(sun.azimuth) * length;
-      _direction.y = sin(sun.azimuth) * length;
+      // when fading in, use a dynamic height
+      h = item.scale < 1 ? item.height*item.scale : item.height;
 
-      // TODO: maybe introduce Color.setAlpha()
-      _color.a = alpha;
-      colorStr = _color + '';
-
-      var i, il, j, jl,
-        item,
-        f, h, mh,
-        x, y,
-        footprint,
-        mode,
-        isVisible,
-        ax, ay, bx, by,
-        a, b, _a, _b,
-        points,
-        specialItems = [],
-        clipping = [];
-
-      _context.fillStyle = colorStr;
-      _context.beginPath();
-
-      for (i = 0, il = renderItems.length; i < il; i++) {
-          item = renderItems[i];
-
-// TODO: no shadows when buildings are too flat => don't add them to renderItems then
-//        if (item.height <= FlatBuildings.MAX_HEIGHT) {
-//            continue;
-//        }
-
-          isVisible = false;
-          f = item.footprint;
-          footprint = [];
-          for (j = 0, jl = f.length - 1; j < jl; j += 2) {
-              footprint[j]   = x = f[j]  -originX;
-              footprint[j+1] = y = f[j+1]-originY;
-
-              // TODO: checking footprint is sufficient for visibility - NOT VALID FOR SHADOWS!
-              if (!isVisible) {
-                  isVisible = (x > 0 && x < width && y > 0 && y < height);
-              }
-          }
-
-          if (!isVisible) {
-              continue;
-          }
-
-          // when fading in, use a dynamic height
-          h = item.scale < 1 ? item.height*item.scale : item.height;
-
-          mh = 0;
-          if (item.minHeight) {
-              mh = item.scale < 1 ? item.minHeight*item.scale : item.minHeight;
-          }
-
-          if (item.shape === 'cylinder') {
-              if (item.roofShape === 'cylinder') {
-                  h += item.roofHeight;
-              }
-              specialItems.push({
-                  shape:item.shape,
-                  center:{ x:item.center.x-originX, y:item.center.y-originY },
-                  radius:item.radius,
-                  h:h, mh:mh
-              });
-              continue;
-          }
-
-          mode = null;
-          for (j = 0, jl = footprint.length-3; j < jl; j += 2) {
-              ax = footprint[j];
-              ay = footprint[j+1];
-              bx = footprint[j+2];
-              by = footprint[j+3];
-
-              _a = _project(ax, ay, h);
-              _b = _project(bx, by, h);
-
-              if (mh) {
-                  a = _project(ax, ay, mh);
-                  b = _project(bx, by, mh);
-                  ax = a.x;
-                  ay = a.y;
-                  bx = b.x;
-                  by = b.y;
-              }
-
-              // mode 0: floor edges, mode 1: roof edges
-              if ((bx-ax) * (_a.y-ay) > (_a.x-ax) * (by-ay)) {
-                  if (mode === 1) {
-                      _context.lineTo(ax, ay);
-                  }
-                  mode = 0;
-                  if (!j) {
-                      _context.moveTo(ax, ay);
-                  }
-                  _context.lineTo(bx, by);
-              } else {
-                  if (mode === 0) {
-                      _context.lineTo(_a.x, _a.y);
-                  }
-                  mode = 1;
-                  if (!j) {
-                      _context.moveTo(_a.x, _a.y);
-                  }
-                  _context.lineTo(_b.x, _b.y);
-              }
-          }
-
-          if (!mh) {
-              clipping.push(footprint);
-          }
+      mh = 0;
+      if (item.minHeight) {
+        mh = item.scale < 1 ? item.minHeight*item.scale : item.minHeight;
       }
 
-      for (i = 0, il = specialItems.length; i < il; i++) {
-          item = specialItems[i];
-          if (item.shape === 'cylinder') {
-              _cylinder(item.center, item.radius, item.h, item.mh);
-          }
+      if (item.shape === 'cylinder') {
+        if (item.roofShape === 'cylinder') {
+          h += item.roofHeight;
+        }
+        specialItems.push({
+          shape:item.shape,
+          center:{ x:item.center.x-originX, y:item.center.y-originY },
+          radius:item.radius,
+          h:h, mh:mh
+        });
+        continue;
       }
 
-      _context.fill();
+      mode = null;
+      for (j = 0, jl = footprint.length-3; j < jl; j += 2) {
+        ax = footprint[j];
+        ay = footprint[j+1];
+        bx = footprint[j+2];
+        by = footprint[j+3];
 
-      // now draw all the footprints as negative clipping mask
-      _context.globalCompositeOperation = 'destination-out';
-      _context.beginPath();
-      for (i = 0, il = clipping.length; i < il; i++) {
-          points = clipping[i];
-          _context.moveTo(points[0], points[1]);
-          for (j = 2, jl = points.length; j < jl; j += 2) {
-              _context.lineTo(points[j], points[j+1]);
+        _a = _project(ax, ay, h);
+        _b = _project(bx, by, h);
+
+        if (mh) {
+          a = _project(ax, ay, mh);
+          b = _project(bx, by, mh);
+          ax = a.x;
+          ay = a.y;
+          bx = b.x;
+          by = b.y;
+        }
+
+        // mode 0: floor edges, mode 1: roof edges
+        if ((bx-ax) * (_a.y-ay) > (_a.x-ax) * (by-ay)) {
+          if (mode === 1) {
+            _context.lineTo(ax, ay);
           }
-          _context.lineTo(points[0], points[1]);
+          mode = 0;
+          if (!j) {
+            _context.moveTo(ax, ay);
+          }
+          _context.lineTo(bx, by);
+        } else {
+          if (mode === 0) {
+            _context.lineTo(_a.x, _a.y);
+          }
+          mode = 1;
+          if (!j) {
+            _context.moveTo(_a.x, _a.y);
+          }
+          _context.lineTo(_b.x, _b.y);
+        }
       }
 
-      for (i = 0, il = specialItems.length; i < il; i++) {
-          item = specialItems[i];
-          if (item.shape === 'cylinder' && !item.mh) {
-              _context.moveTo(item.center.x+item.radius, item.center.y);
-              _context.arc(item.center.x, item.center.y, item.radius, 0, PI*2);
-          }
+      if (!mh) {
+        clipping.push(footprint);
       }
+    }
+
+    for (i = 0, il = specialItems.length; i < il; i++) {
+      item = specialItems[i];
+      if (item.shape === 'cylinder') {
+        _cylinder(item.center, item.radius, item.h, item.mh);
+      }
+    }
+
+    _context.fill();
+
+    // now draw all the footprints as negative clipping mask
+    _context.globalCompositeOperation = 'destination-out';
+    _context.beginPath();
+    for (i = 0, il = clipping.length; i < il; i++) {
+      points = clipping[i];
+      _context.moveTo(points[0], points[1]);
+      for (j = 2, jl = points.length; j < jl; j += 2) {
+        _context.lineTo(points[j], points[j+1]);
+      }
+      _context.lineTo(points[0], points[1]);
+    }
+
+    for (i = 0, il = specialItems.length; i < il; i++) {
+      item = specialItems[i];
+      if (item.shape === 'cylinder' && !item.mh) {
+        _context.moveTo(item.center.x+item.radius, item.center.y);
+        _context.arc(item.center.x, item.center.y, item.radius, 0, PI*2);
+      }
+    }
 
     _context.fillStyle = '#00ff00';
     _context.fill();
@@ -1957,146 +1922,199 @@ var Shadows = (function() {
 }());
 
 
-//****** file: FlatBuildings.js ******
+//****** file: Simplified.js ******
 
-var FlatBuildings = (function() {
+var Simplified = (function() {
 
-    var _context;
+  var _context;
 
-    var me = {};
+  var me = {};
 
-    me.MAX_HEIGHT = 8;
+  me.MAX_HEIGHT = 8;
 
-    me.setContext = function(context) {
-      _context = context;
-    };
+  me.setContext = function(context) {
+    _context = context;
+  };
 
-    me.render = function() {
-        _context.clearRect(0, 0, width, height);
+  me.render = function() {
+    _context.clearRect(0, 0, width, height);
 
-        // show on high zoom levels only and avoid rendering during zoom
-        if (zoom < minZoom || isZooming) {
-            return;
+    // show on high zoom levels only and avoid rendering during zoom
+    if (zoom < minZoom || isZooming) {
+      return;
+    }
+
+    var i, il, j, jl,
+      item,
+      f,
+      x, y,
+      footprint,
+      isVisible,
+      buildingsData = Buildings.data;
+
+    _context.beginPath();
+
+    for (i = 0, il = buildingsData.length; i < il; i++) {
+      item = buildingsData[i];
+      if (item.height+item.roofHeight > me.MAX_HEIGHT) {
+        continue;
+      }
+
+      isVisible = false;
+      f = item.footprint;
+      footprint = [];
+      for (j = 0, jl = f.length-1; j < jl; j += 2) {
+        footprint[j]   = x = f[j]  -originX;
+        footprint[j+1] = y = f[j+1]-originY;
+
+        // checking footprint is sufficient for visibility
+        if (!isVisible) {
+          isVisible = (x > 0 && x < width && y > 0 && y < height);
         }
+      }
 
-        var i, il, j, jl,
-            item,
-            f,
-            x, y,
-            footprint,
-            isVisible;
+      if (!isVisible) {
+        continue;
+      }
 
-        _context.beginPath();
+      _context.moveTo(footprint[0], footprint[1]);
+      for (j = 2, jl = footprint.length-3; j < jl; j += 2) {
+        _context.lineTo(footprint[j], footprint[j+1]);
+      }
 
-        for (i = 0, il = renderItems.length; i < il; i++) {
-            item = renderItems[i];
+      _context.closePath();
+    }
 
-            if (item.height+item.roofHeight > me.MAX_HEIGHT) {
-              continue;
-            }
+    _context.fillStyle   = roofColorAlpha;
+    _context.strokeStyle = altColorAlpha;
 
-            isVisible = false;
-            f = item.footprint;
-            footprint = [];
-            for (j = 0, jl = f.length-1; j < jl; j += 2) {
-              footprint[j]   = x = f[j]  -originX;
-              footprint[j+1] = y = f[j+1]-originY;
+    _context.stroke();
+    _context.fill();
+  };
 
-              // checking footprint is sufficient for visibility
-              if (!isVisible) {
-                isVisible = (x > 0 && x < width && y > 0 && y < height);
-              }
-            }
-
-            if (!isVisible) {
-              continue;
-            }
-
-            _context.moveTo(footprint[0], footprint[1]);
-            for (j = 2, jl = footprint.length-3; j < jl; j += 2) {
-              _context.lineTo(footprint[j], footprint[j+1]);
-            }
-
-            _context.closePath();
-        }
-
-        _context.fillStyle   = roofColorAlpha;
-        _context.strokeStyle = altColorAlpha;
-
-        _context.stroke();
-        _context.fill();
-    };
-
-    return me;
+  return me;
 
 }());
 
 
 //****** file: Layers.js ******
 
-var Layers = (function() {
+function fadeIn() {
+  if (animTimer) {
+    return;
+  }
 
-    function _createItem() {
-        var canvas = doc.createElement('CANVAS');
-        canvas.style.webkitTransform = 'translate3d(0,0,0)'; // turn on hw acceleration
-        canvas.style.imageRendering  = 'optimizeSpeed';
-        canvas.style.position = 'absolute';
-        canvas.style.left = 0;
-        canvas.style.top  = 0;
+  animTimer = setInterval(function() {
+    var buildingsData = Buildings.data,
+      item,
+      isNeeded = false;
 
-        var context = canvas.getContext('2d');
-        context.lineCap   = 'round';
-        context.lineJoin  = 'round';
-        context.lineWidth = 1;
-
-        context.mozImageSmoothingEnabled    = false;
-        context.webkitImageSmoothingEnabled = false;
-
-        _items.push(canvas);
-        _container.appendChild(canvas);
-
-        return context;
+    for (var i = 0, il = buildingsData.length; i < il; i++) {
+      item = buildingsData[i];
+      if (item.scale < 1) {
+        item.scale += 0.5*0.2; // amount*easing
+        if (item.scale > 1) {
+          item.scale = 1;
+        }
+        isNeeded = true;
+      }
     }
 
-    var _container = doc.createElement('DIV');
-    _container.style.pointerEvents = 'none';
-    _container.style.position = 'absolute';
-    _container.style.left = 0;
-    _container.style.top  = 0;
+    renderAll();
 
-    var _items = [];
+    if (!isNeeded) {
+      clearInterval(animTimer);
+      animTimer = null;
+    }
+  }, 33);
+}
 
-    // TODO: improve this to _createItem(Layer) => layer.setContext(context)
-    Shadows.setContext(      _createItem());
-    FlatBuildings.setContext(_createItem());
-    context = _createItem(); // default (global) render context
+function renderAll() {
+  Shadows.render();
+  Simplified.render();
+  Buildings.render();
+}
 
-    var me = {};
+var Layers = (function() {
 
-    me.appendTo = function(parentNode) {
-        parentNode.appendChild(_container);
-    };
+  function _createItem() {
+    var canvas = doc.createElement('CANVAS');
+    canvas.style.webkitTransform = 'translate3d(0,0,0)'; // turn on hw acceleration
+    canvas.style.imageRendering  = 'optimizeSpeed';
+    canvas.style.position = 'absolute';
+    canvas.style.left = 0;
+    canvas.style.top  = 0;
 
-    me.remove = function() {
-        _container.parentNode.removeChild(_container);
-    };
+    var context = canvas.getContext('2d');
+    context.lineCap   = 'round';
+    context.lineJoin  = 'round';
+    context.lineWidth = 1;
 
-    me.setSize = function(w, h) {
-        for (var i = 0, il = _items.length; i < il; i++) {
-            _items[i].width  = w;
-            _items[i].height = h;
-        }
-    };
+    context.mozImageSmoothingEnabled    = false;
+    context.webkitImageSmoothingEnabled = false;
 
-    // usually called after move: container jumps by move delta, cam is reset
-    me.setPosition = function(x, y) {
-        _container.style.left = x + 'px';
-        _container.style.top  = y + 'px';
-    };
+    _items.push(canvas);
+    _container.appendChild(canvas);
 
-    return me;
+    return context;
+  }
+
+  var _container = doc.createElement('DIV');
+  _container.style.pointerEvents = 'none';
+  _container.style.position = 'absolute';
+  _container.style.left = 0;
+  _container.style.top  = 0;
+
+  var _items = [];
+
+  // TODO: improve this to _createItem(Layer) => layer.setContext(context)
+  Shadows.setContext(   _createItem());
+  Simplified.setContext(_createItem());
+  Buildings.setContext( _createItem());
+
+  var me = {};
+
+  me.appendTo = function(parentNode) {
+    parentNode.appendChild(_container);
+  };
+
+  me.remove = function() {
+    _container.parentNode.removeChild(_container);
+  };
+
+  me.setSize = function(w, h) {
+    for (var i = 0, il = _items.length; i < il; i++) {
+      _items[i].width  = w;
+      _items[i].height = h;
+    }
+  };
+
+  // usually called after move: container jumps by move delta, cam is reset
+  me.setPosition = function(x, y) {
+    _container.style.left = x +'px';
+    _container.style.top  = y +'px';
+  };
+
+  return me;
 
 }());
+
+//function debugMarker(p, color, size) {
+//  context.fillStyle = color || '#ffcc00';
+//  context.beginPath();
+//  context.arc(p.x, p.y, size || 3, 0, PI*2, true);
+//  context.closePath();
+//  context.fill();
+//}
+//
+//function debugLine(a, b, color) {
+//  context.strokeStyle = color || '#ff0000';
+//  context.beginPath();
+//  context.moveTo(a.x, a.y);
+//  context.lineTo(b.x, b.y);
+//  context.closePath();
+//  context.stroke();
+//}
 
 
 //****** file: adapter.js ******
@@ -2226,7 +2244,7 @@ proto.onRemove = function() {
 proto.onMove = function(e) {
     var off = this.getOffset();
     setCamOffset({ x:this.offset.x-off.x, y:this.offset.y-off.y });
-    render();
+    Buildings.render();
 };
 
 proto.onMoveEnd = function(e) {

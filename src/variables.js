@@ -6,8 +6,6 @@ var width = 0, height = 0,
 
     activeRequest,
 
-    context,
-
     defaultWallColor = new Color(200, 190, 180),
     defaultAltColor  = defaultWallColor.setLightness(0.8),
     defaultRoofColor = defaultWallColor.setLightness(1.2),

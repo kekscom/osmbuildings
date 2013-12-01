@@ -130,19 +130,20 @@ var Data = (function() {
   }
 
   function _resetItems() {
-    renderItems = [];
+    Buildings.data = [];
     _currentItemsIndex = {};
   }
 
   function _addRenderItems(data, allAreNew) {
     var scaledItems = _scale(data, zoom),
-      item;
+      item,
+      buildingsData = Buildings.data;
 
     for (var i = 0, il = scaledItems.length; i < il; i++) {
       item = scaledItems[i];
       if (!_currentItemsIndex[item.id]) {
         item.scale = allAreNew ? 0 : 1;
-        renderItems.push(item);
+        buildingsData.push(item);
         _currentItemsIndex[item.id] = 1;
       }
     }
@@ -203,7 +204,7 @@ var Data = (function() {
 
       roofHeight = item.roofHeight >>zoomDelta;
 
-      // TODO: move buildings without height to FlatBuildings
+      // TODO: move buildings without height to Simplified
       if (height <= minHeight && roofHeight <= 0) {
         continue;
       }

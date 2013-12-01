@@ -11,33 +11,33 @@ exports.COPYRIGHT = '/**\n' +
 exports.VERSION = '0.1.9a';
 
 exports.srcFiles = [
-    srcPath + '/prefix.js',
-    srcPath + '/shortcuts.js',
-    srcPath + '/lib/Color.js',
-    srcPath + '/lib/SunPosition.js',
-    srcPath + '/Import.js',
-    srcPath + '/import/GeoJSON.js',
-    srcPath + '/import/OSMXAPI.js',
-    srcPath + '/constants.js',
-    srcPath + '/geometry.js',
-    srcPath + '/variables.js',
-    srcPath + '/functions.js',
-    srcPath + '/Cache.js',
-    srcPath + '/Data.js',
-    srcPath + '/render.js',
-    srcPath + '/Shadows.js',
-    srcPath + '/FlatBuildings.js',
-    srcPath + '/Layers.js',
-    srcPath + '/adapter.js',
-    srcPath + '/engines/{engine}.js',
-    srcPath + '/public.js',
-    srcPath + '/suffix.js'
+  srcPath + '/prefix.js',
+  srcPath + '/shortcuts.js',
+  srcPath + '/lib/Color.js',
+  srcPath + '/lib/SunPosition.js',
+  srcPath + '/Import.js',
+  srcPath + '/import/GeoJSON.js',
+  srcPath + '/import/OSMXAPI.js',
+  srcPath + '/constants.js',
+  srcPath + '/geometry.js',
+  srcPath + '/variables.js',
+  srcPath + '/functions.js',
+  srcPath + '/Cache.js',
+  srcPath + '/Data.js',
+  srcPath + '/layers/Buildings.js',
+  srcPath + '/layers/Shadows.js',
+  srcPath + '/layers/Simplified.js',
+  srcPath + '/Layers.js',
+  srcPath + '/adapter.js',
+  srcPath + '/engines/{engine}.js',
+  srcPath + '/public.js',
+  srcPath + '/suffix.js'
 ];
 
 exports.dstFiles = {
-    debug:    dstPath + '/OSMBuildings-{engine}.debug.js',
-    minified: dstPath + '/OSMBuildings-{engine}.js',
-    gzipped:  dstPath + '/OSMBuildings-{engine}.js.gz'
+  debug:    dstPath + '/OSMBuildings-{engine}.debug.js',
+  minified: dstPath + '/OSMBuildings-{engine}.js',
+  gzipped:  dstPath + '/OSMBuildings-{engine}.js.gz'
 };
 
 exports.engines = ['Leaflet', 'OpenLayers'];
@@ -92,5 +92,5 @@ exports.jshint = {
 };
 
 exports.closure = {
-    compilation_level: 'SIMPLE_OPTIMIZATIONS'	// WHITESPACE_ONLY, ADVANCED_OPTIMIZATIONS, SIMPLE_OPTIMIZATIONS
+  compilation_level: 'SIMPLE_OPTIMIZATIONS'	// WHITESPACE_ONLY, ADVANCED_OPTIMIZATIONS, SIMPLE_OPTIMIZATIONS
 };
