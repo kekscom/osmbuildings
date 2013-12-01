@@ -121,10 +121,10 @@ var Data = (function() {
       return [];
     }
     if (data.type === 'FeatureCollection') {
-      return readGeoJSON(data.features);
+      return readGeoJSON(data.features, me.each);
     }
     if (data.osm3s) { // XAPI
-      return readOSMXAPI(data.elements);
+      return readOSMXAPI(data.elements, me.each);
     }
     return [];
   }
@@ -302,6 +302,8 @@ var Data = (function() {
 
     Cache.purge();
   };
+
+  me.each = function() {};
 
   return me;
 

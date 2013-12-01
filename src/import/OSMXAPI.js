@@ -42,15 +42,15 @@ var readOSMXAPI = (function() {
         var m, outer, inner = [];
         for (var i = 0, il = members.length; i < il; i++) {
             m = members[i];
-            if (m.type !== 'way' || !ways[m.ref]) {
+            if (m.type !== 'way' || !_ways[m.ref]) {
                 continue;
             }
             if (!m.role || m.role === 'outer') {
-                outer = ways[m.ref];
+                outer = _ways[m.ref];
                 continue;
             }
             if (m.role === 'inner' || m.role === 'enclave') {
-                inner.push(ways[m.ref]);
+                inner.push(_ways[m.ref]);
                 continue;
             }
         }
@@ -66,7 +66,7 @@ var readOSMXAPI = (function() {
 
         var footprint = [], p;
         for (var i = 0, il = points.length; i < il; i++) {
-            p = nodes[ points[i] ];
+            p = _nodes[ points[i] ];
             footprint.push(p[0], p[1]);
         }
 
@@ -96,9 +96,11 @@ var readOSMXAPI = (function() {
         var res = {},
             tags = item.tags;
 
+        _callback(tags);
+
         if (item.id) {
             res.id = item.id;
-    }
+        }
 
         if (footprint) {
             res.footprint = Import.windOuterPolygon(footprint);
@@ -188,7 +190,7 @@ var readOSMXAPI = (function() {
     }
 
     function processNode(node) {
-        nodes[node.id] = [node.lat, node.lon];
+        _nodes[node.id] = [node.lat, node.lon];
     }
 
     function processWay(way) {
@@ -196,14 +198,14 @@ var readOSMXAPI = (function() {
             var item, footprint;
             if ((footprint = getFootprint(way.nodes))) {
                 item = filterItem(way, footprint);
-                res.push(item);
+                _res.push(item);
             }
             return;
         }
 
         var tags = way.tags;
         if (!tags || (!tags.highway && !tags.railway && !tags.landuse)) { // TODO: add more filters
-            ways[way.id] = way;
+            _ways[way.id] = way;
         }
     }
 
@@ -228,18 +230,19 @@ var readOSMXAPI = (function() {
                     if (holes.length) {
                         item.holes = holes;
                     }
-                    res.push(mergeItems(item, relItem));
+                    _res.push(mergeItems(item, relItem));
                 }
             }
         }
     }
 
-    var nodes, ways, res;
+    var _nodes, _ways, _res, _callback;
 
-    return function(data) {
-        nodes = {};
-        ways = {};
-        res = [];
+    return function(data, callback) {
+        _nodes = {};
+        _ways = {};
+        _res = [];
+        _callback = callback;
 
         var item;
         for (var i = 0, il = data.length; i < il; i++) {
@@ -251,6 +254,6 @@ var readOSMXAPI = (function() {
             }
         }
 
-        return res;
+        return _res;
     };
 })();

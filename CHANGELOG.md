@@ -3,6 +3,7 @@
 ## 0.2.0b development version
 
 - successful tests with LeafletJS 0.7
+- callback for each feature added - change objects as they are read
 
 
 ## 0.1.9a @ 2013-10-17

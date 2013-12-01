@@ -1,4 +1,4 @@
-var readGeoJSON = function(collection) {
+var readGeoJSON = function(collection, callback) {
     var i, il, j, jl, k, kl,
         res = [],
         feature,
@@ -38,6 +38,8 @@ var readGeoJSON = function(collection) {
         if (!coordinates) {
             continue;
         }
+
+        callback(properties);
 
         polygon = coordinates[0];
         footprint = [];

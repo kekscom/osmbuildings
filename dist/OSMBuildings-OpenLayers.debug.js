@@ -1,13 +1,12 @@
 /**
  * Copyright (C) 2013 OSM Buildings, Jan Marsch
- * A leightweight JavaScript library for visualizing 3D building geometry on interactive maps.
+ * A leightweight JavaScript library for visualizing building geometry on interactive maps.
  * @osmbuildings, http://osmbuildings.org
  */
 //****** file: prefix.js ******
 
 var OSMBuildings = (function() {
-
-    'use strict';
+  'use strict';
 
 
 //****** file: shortcuts.js ******
@@ -547,7 +546,7 @@ var Import = (function() {
 
 //****** file: GeoJSON.js ******
 
-var readGeoJSON = function(collection) {
+var readGeoJSON = function(collection, callback) {
     var i, il, j, jl, k, kl,
         res = [],
         feature,
@@ -587,6 +586,8 @@ var readGeoJSON = function(collection) {
         if (!coordinates) {
             continue;
         }
+
+        callback(properties);
 
         polygon = coordinates[0];
         footprint = [];
@@ -679,15 +680,15 @@ var readOSMXAPI = (function() {
         var m, outer, inner = [];
         for (var i = 0, il = members.length; i < il; i++) {
             m = members[i];
-            if (m.type !== 'way' || !ways[m.ref]) {
+            if (m.type !== 'way' || !_ways[m.ref]) {
                 continue;
             }
             if (!m.role || m.role === 'outer') {
-                outer = ways[m.ref];
+                outer = _ways[m.ref];
                 continue;
             }
             if (m.role === 'inner' || m.role === 'enclave') {
-                inner.push(ways[m.ref]);
+                inner.push(_ways[m.ref]);
                 continue;
             }
         }
@@ -703,7 +704,7 @@ var readOSMXAPI = (function() {
 
         var footprint = [], p;
         for (var i = 0, il = points.length; i < il; i++) {
-            p = nodes[ points[i] ];
+            p = _nodes[ points[i] ];
             footprint.push(p[0], p[1]);
         }
 
@@ -733,9 +734,11 @@ var readOSMXAPI = (function() {
         var res = {},
             tags = item.tags;
 
+        _callback(tags);
+
         if (item.id) {
             res.id = item.id;
-    }
+        }
 
         if (footprint) {
             res.footprint = Import.windOuterPolygon(footprint);
@@ -825,7 +828,7 @@ var readOSMXAPI = (function() {
     }
 
     function processNode(node) {
-        nodes[node.id] = [node.lat, node.lon];
+        _nodes[node.id] = [node.lat, node.lon];
     }
 
     function processWay(way) {
@@ -833,14 +836,14 @@ var readOSMXAPI = (function() {
             var item, footprint;
             if ((footprint = getFootprint(way.nodes))) {
                 item = filterItem(way, footprint);
-                res.push(item);
+                _res.push(item);
             }
             return;
         }
 
         var tags = way.tags;
         if (!tags || (!tags.highway && !tags.railway && !tags.landuse)) { // TODO: add more filters
-            ways[way.id] = way;
+            _ways[way.id] = way;
         }
     }
 
@@ -865,18 +868,19 @@ var readOSMXAPI = (function() {
                     if (holes.length) {
                         item.holes = holes;
                     }
-                    res.push(mergeItems(item, relItem));
+                    _res.push(mergeItems(item, relItem));
                 }
             }
         }
     }
 
-    var nodes, ways, res;
+    var _nodes, _ways, _res, _callback;
 
-    return function(data) {
-        nodes = {};
-        ways = {};
-        res = [];
+    return function(data, callback) {
+        _nodes = {};
+        _ways = {};
+        _res = [];
+        _callback = callback;
 
         var item;
         for (var i = 0, il = data.length; i < il; i++) {
@@ -888,7 +892,7 @@ var readOSMXAPI = (function() {
             }
         }
 
-        return res;
+        return _res;
     };
 })();
 
@@ -922,93 +926,6 @@ function getDistance(p1, p2) {
   var dx = p1.x-p2.x,
     dy = p1.y-p2.y;
   return dx*dx + dy*dy;
-}
-
-function getCenter(points) {
-  var len, x = 0, y = 0;
-  for (var i = 0, il = points.length-3; i < il; i += 2) {
-    x += points[i];
-    y += points[i+1];
-  }
-  len = (points.length-2) / 2;
-  return { x:x/len <<0, y:y/len <<0 };
-}
-
-function getSquareSegmentDistance(px, py, p1x, p1y, p2x, p2y) {
-    var dx = p2x-p1x,
-        dy = p2y-p1y,
-        t;
-    if (dx !== 0 || dy !== 0) {
-        t = ((px-p1x) * dx + (py-p1y) * dy) / (dx*dx + dy*dy);
-        if (t > 1) {
-            p1x = p2x;
-            p1y = p2y;
-        } else if (t > 0) {
-            p1x += dx*t;
-            p1y += dy*t;
-        }
-    }
-    dx = px-p1x;
-    dy = py-p1y;
-    return dx*dx + dy*dy;
-}
-
-function simplify(points) {
-    var sqTolerance = 2,
-        len = points.length/2,
-        markers = new Uint8Array(len),
-
-        first = 0,
-        last  = len - 1,
-
-        i,
-        maxSqDist,
-        sqDist,
-        index,
-
-        firstStack = [],
-        lastStack  = [],
-
-        newPoints  = [];
-
-    markers[first] = markers[last] = 1;
-
-    while (last) {
-        maxSqDist = 0;
-
-        for (i = first + 1; i < last; i++) {
-            sqDist = getSquareSegmentDistance(
-                points[i    *2], points[i    *2 + 1],
-                points[first*2], points[first*2 + 1],
-                points[last *2], points[last *2 + 1]
-            );
-            if (sqDist > maxSqDist) {
-                index = i;
-                maxSqDist = sqDist;
-            }
-        }
-
-        if (maxSqDist > sqTolerance) {
-            markers[index] = 1;
-
-            firstStack.push(first);
-            lastStack.push(index);
-
-            firstStack.push(index);
-            lastStack.push(last);
-        }
-
-        first = firstStack.pop();
-        last = lastStack.pop();
-    }
-
-    for (i = 0; i < len; i++) {
-        if (markers[i]) {
-            newPoints.push(points[i*2], points[i*2 + 1]);
-        }
-    }
-
-    return newPoints;
 }
 
 
@@ -1136,29 +1053,29 @@ function xhr(url, param, callback) {
 
 var Cache = (function() {
 
-    var _time = new Date(),
-        _data = {};
+  var _time = new Date(),
+    _data = {};
 
-    var me = {};
+  var me = {};
 
-    me.add = function(data, key) {
-        _data[key] = { data:data, time:Date.now() };
-    };
+  me.add = function(data, key) {
+    _data[key] = { data:data, time:Date.now() };
+  };
 
-    me.get = function(key) {
-        return _data[key] && _data[key].data;
-    };
+  me.get = function(key) {
+    return _data[key] && _data[key].data;
+  };
 
-    me.purge = function() {
-        _time.setMinutes(_time.getMinutes()-5);
-        for (var key in _data) {
-            if (_data[key].time < _time) {
-                delete _data[key];
-            }
-        }
-    };
+  me.purge = function() {
+    _time.setMinutes(_time.getMinutes()-5);
+    for (var key in _data) {
+      if (_data[key].time < _time) {
+        delete _data[key];
+      }
+    }
+  };
 
-    return me;
+  return me;
 
 }());
 
@@ -1172,22 +1089,103 @@ var Data = (function() {
     _staticData,
     _currentItemsIndex = {}; // maintain a list of cached items in order to avoid duplicates on tile borders
 
-  function _crop(num) {
+  function _cropDecimals(num) {
     return parseFloat(num.toFixed(5));
   }
 
-  function _getSimpleFootprint(polygon) {
-    var footprint = new Int32Array(polygon.length),
+  function _getSquareSegmentDistance(px, py, p1x, p1y, p2x, p2y) {
+    var dx = p2x-p1x, dy = p2y-p1y,
+      t;
+    if (dx !== 0 || dy !== 0) {
+      t = ((px-p1x) * dx + (py-p1y) * dy) / (dx*dx + dy*dy);
+      if (t > 1) {
+        p1x = p2x;
+        p1y = p2y;
+      } else if (t > 0) {
+        p1x += dx*t;
+        p1y += dy*t;
+      }
+    }
+    dx = px-p1x;
+    dy = py-p1y;
+    return dx*dx + dy*dy;
+  }
+
+  function _simplifyPolygon(buffer) {
+    var sqTolerance = 2,
+      len = buffer.length/2,
+      markers = new Uint8Array(len),
+
+      first = 0, last = len-1,
+
+      i,
+      maxSqDist,
+      sqDist,
+      index,
+      firstStack = [], lastStack  = [],
+      newBuffer  = [];
+
+    markers[first] = markers[last] = 1;
+
+    while (last) {
+      maxSqDist = 0;
+      for (i = first+1; i < last; i++) {
+        sqDist = _getSquareSegmentDistance(
+          buffer[i    *2], buffer[i    *2 + 1],
+          buffer[first*2], buffer[first*2 + 1],
+          buffer[last *2], buffer[last *2 + 1]
+        );
+        if (sqDist > maxSqDist) {
+          index = i;
+          maxSqDist = sqDist;
+        }
+      }
+
+      if (maxSqDist > sqTolerance) {
+        markers[index] = 1;
+
+        firstStack.push(first);
+        lastStack.push(index);
+
+        firstStack.push(index);
+        lastStack.push(last);
+      }
+
+      first = firstStack.pop();
+      last = lastStack.pop();
+    }
+
+    for (i = 0; i < len; i++) {
+      if (markers[i]) {
+        newBuffer.push(buffer[i*2], buffer[i*2 + 1]);
+      }
+    }
+
+    return newBuffer;
+  }
+
+  function _getCenter(buffer) {
+    var len, x = 0, y = 0;
+    for (var i = 0, il = buffer.length-3; i < il; i += 2) {
+      x += buffer[i];
+      y += buffer[i+1];
+    }
+    len = (buffer.length-2) / 2;
+    return { x:x/len <<0, y:y/len <<0 };
+  }
+
+  function _getPixelFootprint(buffer) {
+    var footprint = new Int32Array(buffer.length),
       px;
 
-    for (var i = 0, il = polygon.length-1; i < il; i+=2) {
-      px = geoToPixel(polygon[i], polygon[i+1]);
+    for (var i = 0, il = buffer.length-1; i < il; i+=2) {
+      px = geoToPixel(buffer[i], buffer[i+1]);
       footprint[i]   = px.x;
       footprint[i+1] = px.y;
     }
 
-    footprint = simplify(footprint);
-    if (footprint.length < 8) { // 3 points + end==start (*2)
+    footprint = _simplifyPolygon(footprint);
+    if (footprint.length < 8) { // 3 points & end==start (*2)
       return;
     }
 
@@ -1207,10 +1205,10 @@ var Data = (function() {
       return [];
     }
     if (data.type === 'FeatureCollection') {
-      return readGeoJSON(data.features);
+      return readGeoJSON(data.features, me.each);
     }
     if (data.osm3s) { // XAPI
-      return readOSMXAPI(data.elements);
+      return readOSMXAPI(data.elements, me.each);
     }
     return [];
   }
@@ -1244,6 +1242,7 @@ var Data = (function() {
       roofColor, roofHeight,
       holes, innerFootprint,
       zoomDelta = maxZoom-zoom,
+      // TODO: move this to onZoom
       meterToPixel = 156412 / Math.pow(2, zoom) / 1.5; // http://wiki.openstreetmap.org/wiki/Zoom_levels, TODO: without factor 1.5, numbers don't match (lat/lon: Berlin)
 
     for (i = 0, il = items.length; i < il; i++) {
@@ -1256,14 +1255,14 @@ var Data = (function() {
         continue;
       }
 
-      if (!(footprint = _getSimpleFootprint(item.footprint))) {
+      if (!(footprint = _getPixelFootprint(item.footprint))) {
         continue;
       }
 
       holes = [];
       if (item.holes) {
         for (j = 0, jl = item.holes.length; j < jl; j++) {
-          if ((innerFootprint = _getSimpleFootprint(item.holes[j]))) {
+          if ((innerFootprint = _getPixelFootprint(item.holes[j]))) {
             holes.push(innerFootprint);
           }
         }
@@ -1274,15 +1273,15 @@ var Data = (function() {
       if (item.wallColor) {
         if ((color = Color.parse(item.wallColor))) {
           wallColor = color.setAlpha(zoomAlpha);
-          altColor  = '' + wallColor.setLightness(0.8);
-          wallColor = '' + wallColor;
+          altColor  = ''+ wallColor.setLightness(0.8);
+          wallColor = ''+ wallColor;
         }
       }
 
       roofColor = null;
       if (item.roofColor) {
         if ((color = Color.parse(item.roofColor))) {
-          roofColor = '' + color.setAlpha(zoomAlpha);
+          roofColor = ''+ color.setAlpha(zoomAlpha);
         }
       }
 
@@ -1303,7 +1302,7 @@ var Data = (function() {
         roofColor:  roofColor,
         roofShape:  item.roofShape,
         roofHeight: roofHeight,
-        center:     getCenter(footprint),
+        center:     _getCenter(footprint),
         holes:      holes.length ? holes : null,
         shape:      item.shape, // TODO: drop footprint
         radius:     item.radius/meterToPixel
@@ -1354,7 +1353,7 @@ var Data = (function() {
 
     var lat, lon,
       parsedData, cacheKey,
-      nw = pixelToGeo(originX,     originY),
+      nw = pixelToGeo(originX,       originY),
       se = pixelToGeo(originX+width, originY+height),
       sizeLat = DATA_TILE_SIZE,
       sizeLon = DATA_TILE_SIZE*2;
@@ -1368,16 +1367,16 @@ var Data = (function() {
 
     for (lat = bounds.s; lat <= bounds.n; lat += sizeLat) {
       for (lon = bounds.w; lon <= bounds.e; lon += sizeLon) {
-        lat = _crop(lat);
-        lon = _crop(lon);
+        lat = _cropDecimals(lat);
+        lon = _cropDecimals(lon);
 
-        cacheKey = lat + ',' + lon;
+        cacheKey = lat +','+ lon;
         if ((parsedData = Cache.get(cacheKey))) {
           _addRenderItems(parsedData);
         } else {
           xhr(_url, {
-            n: _crop(lat+sizeLat),
-            e: _crop(lon+sizeLon),
+            n: _cropDecimals(lat+sizeLat),
+            e: _cropDecimals(lon+sizeLon),
             s: lat,
             w: lon
           }, _createClosure(cacheKey));
@@ -1387,6 +1386,8 @@ var Data = (function() {
 
     Cache.purge();
   };
+
+  me.each = function() {};
 
   return me;
 
@@ -1728,228 +1729,228 @@ function getTangents(c1, r1, c2, r2) {
 
 var Shadows = (function() {
 
-    var _context;
-    var _enabled = true;
-    var _color = new Color(0, 0, 0);
-    var _date = null;
-    var _direction = { x:0, y:0 };
+  var _context;
+  var _enabled = true;
+  var _color = new Color(0, 0, 0);
+  var _date = null;
+  var _direction = { x:0, y:0 };
 
-    function _project(x, y, h) {
-        return {
-            x: x + _direction.x*h,
-            y: y + _direction.y*h
-        };
-    }
-
-    function _cylinder(c, r, h, mh) {
-        var _c = _project(c.x, c.y, h),
-            a1, a2;
-
-        if (mh) {
-            c = _project(c.x, c.y, mh);
-        }
-
-        var t = getTangents(c, r, _c, r); // common tangents for ground and roof circle
-
-        // no tangents? roof overlaps everything near cam position
-        if (t) {
-            a1 = atan2(t[0].y1-c.y, t[0].x1-c.x);
-            a2 = atan2(t[1].y1-c.y, t[1].x1-c.x);
-
-            _context.moveTo(t[1].x2, t[1].y2);
-            _context.arc(_c.x, _c.y, r, a2, a1);
-            _context.arc( c.x,  c.y, r, a1, a2);
-        }
-    }
-
-    var me = {};
-
-    me.setContext = function(context) {
-        _context = context;
-        // TODO: fix bad Date() syntax
-        me.setDate(new Date().setHours(10)); // => render()
+  function _project(x, y, h) {
+    return {
+      x: x + _direction.x*h,
+      y: y + _direction.y*h
     };
+  }
 
-    me.enable = function(flag) {
-        _enabled = !!flag;
-        // should call me.render() but it is usually set by setStyle() and there a renderAll() is called
-    };
+  function _cylinder(c, r, h, mh) {
+      var _c = _project(c.x, c.y, h),
+          a1, a2;
 
-    me.render = function() {
-        var center, sun, length, alpha, colorStr;
+      if (mh) {
+          c = _project(c.x, c.y, mh);
+      }
 
-        _context.clearRect(0, 0, width, height);
+      var t = getTangents(c, r, _c, r); // common tangents for ground and roof circle
 
-        // show on high zoom levels only and avoid rendering during zoom
-        if (!_enabled || zoom < minZoom || isZooming) {
-            return;
-        }
+      // no tangents? roof overlaps everything near cam position
+      if (t) {
+          a1 = atan2(t[0].y1-c.y, t[0].x1-c.x);
+          a2 = atan2(t[1].y1-c.y, t[1].x1-c.x);
 
-        // TODO: at some point, calculate me just on demand
-        center = pixelToGeo(originX+halfWidth, originY+halfHeight);
-        sun = getSunPosition(_date, center.latitude, center.longitude);
+          _context.moveTo(t[1].x2, t[1].y2);
+          _context.arc(_c.x, _c.y, r, a2, a1);
+          _context.arc( c.x,  c.y, r, a1, a2);
+      }
+  }
 
-        if (sun.altitude <= 0) {
-            return;
-        }
+  var me = {};
 
-        length = 1 / tan(sun.altitude);
-        alpha = 0.4 / length;
-        _direction.x = cos(sun.azimuth) * length;
-        _direction.y = sin(sun.azimuth) * length;
+  me.setContext = function(context) {
+    _context = context;
+    // TODO: fix bad Date() syntax
+    me.setDate(new Date().setHours(10)); // => render()
+  };
 
-        // TODO: maybe introduce Color.setAlpha()
-        _color.a = alpha;
-        colorStr = _color + '';
+  me.enable = function(flag) {
+    _enabled = !!flag;
+    // should call me.render() but it is usually set by setStyle() and there a renderAll() is called
+  };
 
-        var i, il, j, jl,
-            item,
-            f, h, mh,
-            x, y,
-            footprint,
-            mode,
-            isVisible,
-            ax, ay, bx, by,
-            a, b, _a, _b,
-            points,
-            specialItems = [],
-            clipping = [];
+  me.render = function() {
+      var center, sun, length, alpha, colorStr;
 
-        _context.fillStyle = colorStr;
-        _context.beginPath();
+      _context.clearRect(0, 0, width, height);
 
-        for (i = 0, il = renderItems.length; i < il; i++) {
-            item = renderItems[i];
+      // show on high zoom levels only and avoid rendering during zoom
+      if (!_enabled || zoom < minZoom || isZooming) {
+          return;
+      }
+
+      // TODO: at some point, calculate me just on demand
+      center = pixelToGeo(originX+halfWidth, originY+halfHeight);
+      sun = getSunPosition(_date, center.latitude, center.longitude);
+
+      if (sun.altitude <= 0) {
+          return;
+      }
+
+      length = 1 / tan(sun.altitude);
+      alpha = 0.4 / length;
+      _direction.x = cos(sun.azimuth) * length;
+      _direction.y = sin(sun.azimuth) * length;
+
+      // TODO: maybe introduce Color.setAlpha()
+      _color.a = alpha;
+      colorStr = _color + '';
+
+      var i, il, j, jl,
+        item,
+        f, h, mh,
+        x, y,
+        footprint,
+        mode,
+        isVisible,
+        ax, ay, bx, by,
+        a, b, _a, _b,
+        points,
+        specialItems = [],
+        clipping = [];
+
+      _context.fillStyle = colorStr;
+      _context.beginPath();
+
+      for (i = 0, il = renderItems.length; i < il; i++) {
+          item = renderItems[i];
 
 // TODO: no shadows when buildings are too flat => don't add them to renderItems then
 //        if (item.height <= FlatBuildings.MAX_HEIGHT) {
 //            continue;
 //        }
 
-            isVisible = false;
-            f = item.footprint;
-            footprint = [];
-            for (j = 0, jl = f.length - 1; j < jl; j += 2) {
-                footprint[j]   = x = f[j]  -originX;
-                footprint[j+1] = y = f[j+1]-originY;
+          isVisible = false;
+          f = item.footprint;
+          footprint = [];
+          for (j = 0, jl = f.length - 1; j < jl; j += 2) {
+              footprint[j]   = x = f[j]  -originX;
+              footprint[j+1] = y = f[j+1]-originY;
 
-                // TODO: checking footprint is sufficient for visibility - NOT VALID FOR SHADOWS!
-                if (!isVisible) {
-                    isVisible = (x > 0 && x < width && y > 0 && y < height);
-                }
-            }
+              // TODO: checking footprint is sufficient for visibility - NOT VALID FOR SHADOWS!
+              if (!isVisible) {
+                  isVisible = (x > 0 && x < width && y > 0 && y < height);
+              }
+          }
 
-            if (!isVisible) {
-                continue;
-            }
+          if (!isVisible) {
+              continue;
+          }
 
-            // when fading in, use a dynamic height
-            h = item.scale < 1 ? item.height*item.scale : item.height;
+          // when fading in, use a dynamic height
+          h = item.scale < 1 ? item.height*item.scale : item.height;
 
-            mh = 0;
-            if (item.minHeight) {
-                mh = item.scale < 1 ? item.minHeight*item.scale : item.minHeight;
-            }
+          mh = 0;
+          if (item.minHeight) {
+              mh = item.scale < 1 ? item.minHeight*item.scale : item.minHeight;
+          }
 
-            if (item.shape === 'cylinder') {
-                if (item.roofShape === 'cylinder') {
-                    h += item.roofHeight;
-                }
-                specialItems.push({
-                    shape:item.shape,
-                    center:{ x:item.center.x-originX, y:item.center.y-originY },
-                    radius:item.radius,
-                    h:h, mh:mh
-                });
-                continue;
-            }
+          if (item.shape === 'cylinder') {
+              if (item.roofShape === 'cylinder') {
+                  h += item.roofHeight;
+              }
+              specialItems.push({
+                  shape:item.shape,
+                  center:{ x:item.center.x-originX, y:item.center.y-originY },
+                  radius:item.radius,
+                  h:h, mh:mh
+              });
+              continue;
+          }
 
-            mode = null;
-            for (j = 0, jl = footprint.length-3; j < jl; j += 2) {
-                ax = footprint[j];
-                ay = footprint[j+1];
-                bx = footprint[j+2];
-                by = footprint[j+3];
+          mode = null;
+          for (j = 0, jl = footprint.length-3; j < jl; j += 2) {
+              ax = footprint[j];
+              ay = footprint[j+1];
+              bx = footprint[j+2];
+              by = footprint[j+3];
 
-                _a = _project(ax, ay, h);
-                _b = _project(bx, by, h);
+              _a = _project(ax, ay, h);
+              _b = _project(bx, by, h);
 
-                if (mh) {
-                    a = _project(ax, ay, mh);
-                    b = _project(bx, by, mh);
-                    ax = a.x;
-                    ay = a.y;
-                    bx = b.x;
-                    by = b.y;
-                }
+              if (mh) {
+                  a = _project(ax, ay, mh);
+                  b = _project(bx, by, mh);
+                  ax = a.x;
+                  ay = a.y;
+                  bx = b.x;
+                  by = b.y;
+              }
 
-                // mode 0: floor edges, mode 1: roof edges
-                if ((bx-ax) * (_a.y-ay) > (_a.x-ax) * (by-ay)) {
-                    if (mode === 1) {
-                        _context.lineTo(ax, ay);
-                    }
-                    mode = 0;
-                    if (!j) {
-                        _context.moveTo(ax, ay);
-                    }
-                    _context.lineTo(bx, by);
-                } else {
-                    if (mode === 0) {
-                        _context.lineTo(_a.x, _a.y);
-                    }
-                    mode = 1;
-                    if (!j) {
-                        _context.moveTo(_a.x, _a.y);
-                    }
-                    _context.lineTo(_b.x, _b.y);
-                }
-            }
+              // mode 0: floor edges, mode 1: roof edges
+              if ((bx-ax) * (_a.y-ay) > (_a.x-ax) * (by-ay)) {
+                  if (mode === 1) {
+                      _context.lineTo(ax, ay);
+                  }
+                  mode = 0;
+                  if (!j) {
+                      _context.moveTo(ax, ay);
+                  }
+                  _context.lineTo(bx, by);
+              } else {
+                  if (mode === 0) {
+                      _context.lineTo(_a.x, _a.y);
+                  }
+                  mode = 1;
+                  if (!j) {
+                      _context.moveTo(_a.x, _a.y);
+                  }
+                  _context.lineTo(_b.x, _b.y);
+              }
+          }
 
-            if (!mh) {
-                clipping.push(footprint);
-            }
-        }
+          if (!mh) {
+              clipping.push(footprint);
+          }
+      }
 
-        for (i = 0, il = specialItems.length; i < il; i++) {
-            item = specialItems[i];
-            if (item.shape === 'cylinder') {
-                _cylinder(item.center, item.radius, item.h, item.mh);
-            }
-        }
+      for (i = 0, il = specialItems.length; i < il; i++) {
+          item = specialItems[i];
+          if (item.shape === 'cylinder') {
+              _cylinder(item.center, item.radius, item.h, item.mh);
+          }
+      }
 
-        _context.fill();
+      _context.fill();
 
-        // now draw all the footprints as negative clipping mask
-        _context.globalCompositeOperation = 'destination-out';
-        _context.beginPath();
-        for (i = 0, il = clipping.length; i < il; i++) {
-            points = clipping[i];
-            _context.moveTo(points[0], points[1]);
-            for (j = 2, jl = points.length; j < jl; j += 2) {
-                _context.lineTo(points[j], points[j+1]);
-            }
-            _context.lineTo(points[0], points[1]);
-        }
+      // now draw all the footprints as negative clipping mask
+      _context.globalCompositeOperation = 'destination-out';
+      _context.beginPath();
+      for (i = 0, il = clipping.length; i < il; i++) {
+          points = clipping[i];
+          _context.moveTo(points[0], points[1]);
+          for (j = 2, jl = points.length; j < jl; j += 2) {
+              _context.lineTo(points[j], points[j+1]);
+          }
+          _context.lineTo(points[0], points[1]);
+      }
 
-        for (i = 0, il = specialItems.length; i < il; i++) {
-            item = specialItems[i];
-            if (item.shape === 'cylinder' && !item.mh) {
-                _context.moveTo(item.center.x+item.radius, item.center.y);
-                _context.arc(item.center.x, item.center.y, item.radius, 0, PI*2);
-            }
-        }
+      for (i = 0, il = specialItems.length; i < il; i++) {
+          item = specialItems[i];
+          if (item.shape === 'cylinder' && !item.mh) {
+              _context.moveTo(item.center.x+item.radius, item.center.y);
+              _context.arc(item.center.x, item.center.y, item.radius, 0, PI*2);
+          }
+      }
 
-        _context.fillStyle = '#00ff00';
-        _context.fill();
-        _context.globalCompositeOperation = 'source-over';
-    };
+    _context.fillStyle = '#00ff00';
+    _context.fill();
+    _context.globalCompositeOperation = 'source-over';
+  };
 
-    me.setDate = function(date) {
-        _date = date;
-        me.render();
-    };
+  me.setDate = function(date) {
+    _date = date;
+    me.render();
+  };
 
-    return me;
+  return me;
 
 }());
 
@@ -2096,91 +2097,63 @@ var Layers = (function() {
 }());
 
 
-//****** file: properties.js ******
+//****** file: adapter.js ******
 
 function setOrigin(origin) {
-    originX = origin.x;
-    originY = origin.y;
+  originX = origin.x;
+  originY = origin.y;
 }
 
 function setCamOffset(offset) {
-    camX = halfWidth + offset.x;
-    camY = height    + offset.y;
+  camX = halfWidth + offset.x;
+  camY = height    + offset.y;
 }
 
 function setSize(size) {
-    width  = size.w;
-    height = size.h;
-    halfWidth  = width /2 <<0;
-    halfHeight = height/2 <<0;
-    camX = halfWidth;
-    camY = height;
-    Layers.setSize(width, height);
-    maxHeight = camZ-50;
+  width  = size.w;
+  height = size.h;
+  halfWidth  = width /2 <<0;
+  halfHeight = height/2 <<0;
+  camX = halfWidth;
+  camY = height;
+  Layers.setSize(width, height);
+  maxHeight = camZ-50;
 }
 
 function setZoom(z) {
-    zoom = z;
-    size = MAP_TILE_SIZE <<zoom;
+  zoom = z;
+  size = MAP_TILE_SIZE <<zoom;
 
-    zoomAlpha = 1 - fromRange(zoom, minZoom, maxZoom, 0, 0.3);
+  zoomAlpha = 1 - fromRange(zoom, minZoom, maxZoom, 0, 0.3);
 
-    wallColorAlpha = defaultWallColor.setAlpha(zoomAlpha) + '';
-    altColorAlpha  = defaultAltColor.setAlpha( zoomAlpha) + '';
-    roofColorAlpha = defaultRoofColor.setAlpha(zoomAlpha) + '';
+  wallColorAlpha = defaultWallColor.setAlpha(zoomAlpha) + '';
+  altColorAlpha  = defaultAltColor.setAlpha( zoomAlpha) + '';
+  roofColorAlpha = defaultRoofColor.setAlpha(zoomAlpha) + '';
 }
-
-function setStyle(style) {
-    style = style || {};
-    if (style.color || style.wallColor) {
-        defaultWallColor = Color.parse(style.color || style.wallColor);
-        wallColorAlpha = defaultWallColor.setAlpha(zoomAlpha) + '';
-
-        defaultAltColor = defaultWallColor.setLightness(0.8);
-        altColorAlpha = defaultAltColor.setAlpha(zoomAlpha) + '';
-
-        defaultRoofColor = defaultWallColor.setLightness(1.2);
-        roofColorAlpha = defaultRoofColor.setAlpha(zoomAlpha) + '';
-    }
-
-    if (style.roofColor) {
-        defaultRoofColor = Color.parse(style.roofColor);
-        roofColorAlpha = defaultRoofColor.setAlpha(zoomAlpha) + '';
-    }
-
-    if (style.shadows !== undefined) {
-        Shadows.enable(style.shadows);
-    }
-
-    renderAll();
-}
-
-
-//****** file: events.js ******
 
 function onResize(e) {
-    setSize(e.width, e.height);
-    renderAll();
-    Data.update();
+  setSize(e.width, e.height);
+  renderAll();
+  Data.update();
 }
 
 function onMoveEnd(e) {
-    renderAll();
-    Data.update(); // => fadeIn() => renderAll()
+  renderAll();
+  Data.update(); // => fadeIn() => renderAll()
 }
 
 function onZoomStart() {
-    isZooming = true;
-    // effectively clears because of isZooming flag
-    // TODO: introduce explicit clear()
-    renderAll();
+  isZooming = true;
+  // effectively clears because of isZooming flag
+  // TODO: introduce explicit clear()
+  renderAll();
 }
 
 function onZoomEnd(e) {
-    isZooming = false;
-    setZoom(e.zoom);
-    Data.update(); // => fadeIn()
-    renderAll();
+  isZooming = false;
+  setZoom(e.zoom);
+  Data.update(); // => fadeIn()
+  renderAll();
 }
 
 
@@ -2275,33 +2248,64 @@ proto.moveByPx = function(dx, dy) {
 };
 
 
-//****** file: suffix.js ******
+//****** file: public.js ******
 
 proto.setStyle = function(style) {
-    setStyle(style);
-    return this;
+  style = style || {};
+  if (style.color || style.wallColor) {
+    defaultWallColor = Color.parse(style.color || style.wallColor);
+    wallColorAlpha   = ''+ defaultWallColor.setAlpha(zoomAlpha);
+
+    defaultAltColor  = defaultWallColor.setLightness(0.8);
+    altColorAlpha    = ''+ defaultAltColor.setAlpha(zoomAlpha);
+
+    defaultRoofColor = defaultWallColor.setLightness(1.2);
+    roofColorAlpha   = ''+ defaultRoofColor.setAlpha(zoomAlpha);
+  }
+
+  if (style.roofColor) {
+    defaultRoofColor = Color.parse(style.roofColor);
+    roofColorAlpha   = ''+ defaultRoofColor.setAlpha(zoomAlpha);
+  }
+
+  if (style.shadows !== undefined) {
+    Shadows.enable(style.shadows);
+  }
+
+  renderAll();
+
+  return this;
 };
 
 proto.setDate = function(date) {
-    Shadows.setDate(date);
-    return this;
+  Shadows.setDate(date);
+  return this;
 };
 
 proto.loadData = function(url) {
-    Data.load(url);
-    return this;
+  Data.load(url);
+  return this;
 };
 
 proto.setData = function(data) {
-    Data.set(data);
-    return this;
+  Data.set(data);
+  return this;
+};
+
+proto.each = function(handler, scope) {
+  Data.each = function(feature) {
+    handler.call(scope, feature);
+  };
+  return this;
 };
 
 osmb.VERSION     = VERSION;
 osmb.ATTRIBUTION = ATTRIBUTION;
 
-return osmb;
 
+//****** file: suffix.js ******
+
+  return osmb;
 }());
 
 

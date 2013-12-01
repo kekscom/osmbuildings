@@ -188,6 +188,11 @@ Methods
 </tr>
 
 <tr>
+<td>each({Function})</td>
+<td>A callback method to override each features properties on read.</td>
+</tr>
+
+<tr>
 <td>setData({GeoJSON FeatureCollection})</td>
 <td>Just add GeoJSON data to your map.</td>
 </tr>
