@@ -183,7 +183,7 @@ var readOSMXAPI = (function() {
                 res.height = max(0, res.height-res.roofHeight);
             }
         }
-console.log(res)
+
         return res;
     }
 
