@@ -189,7 +189,7 @@ Methods
 
 <tr>
 <td>each({Function})</td>
-<td>A callback method to override each features properties on read.</td>
+<td>A callback method to override each feature's properties on read. Return false in order to skip a feature.</td>
 </tr>
 
 <tr>

@@ -39,7 +39,9 @@ var readGeoJSON = function(collection, callback) {
             continue;
         }
 
-        callback(properties);
+        if (callback(feature) === false) {
+          continue;
+        }
 
         polygon = coordinates[0];
         footprint = [];

@@ -96,8 +96,6 @@ var readOSMXAPI = (function() {
         var res = {},
             tags = item.tags;
 
-        _callback(tags);
-
         if (item.id) {
             res.id = item.id;
         }
@@ -185,7 +183,7 @@ var readOSMXAPI = (function() {
                 res.height = max(0, res.height-res.roofHeight);
             }
         }
-
+console.log(res)
         return res;
     }
 
@@ -196,7 +194,7 @@ var readOSMXAPI = (function() {
     function processWay(way) {
         if (isBuilding(way)) {
             var item, footprint;
-            if ((footprint = getFootprint(way.nodes))) {
+            if ((footprint = getFootprint(way.nodes)) && _callback(way) !== false) {
                 item = filterItem(way, footprint);
                 _res.push(item);
             }
@@ -213,14 +211,16 @@ var readOSMXAPI = (function() {
         var relationWays, outerWay, holes = [],
             item, relItem, outerFootprint, innerFootprint;
 
-        if (!isBuilding(relation) || (relation.tags.type !== 'multipolygon' && relation.tags.type !== 'building')) {
+        if (!isBuilding(relation) ||
+          (relation.tags.type !== 'multipolygon' && relation.tags.type !== 'building') ||
+          _callback(relation) === false) {
             return;
         }
 
         if ((relationWays = getRelationWays(relation.members))) {
             relItem = filterItem(relation);
             if ((outerWay = relationWays.outer)) {
-                if ((outerFootprint = getFootprint(outerWay.nodes))) {
+                if ((outerFootprint = getFootprint(outerWay.nodes)) && _callback(outerWay) !== false) {
                     item = filterItem(outerWay, outerFootprint);
                     for (var i = 0, il = relationWays.inner.length; i < il; i++) {
                         if ((innerFootprint = getFootprint(relationWays.inner[i].nodes))) {

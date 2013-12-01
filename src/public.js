@@ -42,7 +42,7 @@ proto.setData = function(data) {
 
 proto.each = function(handler, scope) {
   Data.each = function(feature) {
-    handler.call(scope, feature);
+    return handler.call(scope, feature);
   };
   return this;
 };
