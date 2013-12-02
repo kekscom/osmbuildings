@@ -1,96 +1,12 @@
-var Data = (function() {
+var Data = {
 
-  var _url,
-    _isStatic,
-    _staticData,
-    _currentItemsIndex = {}; // maintain a list of cached items in order to avoid duplicates on tile borders
+  currentItemsIndex: {}, // maintain a list of cached items in order to avoid duplicates on tile borders
 
-  function _cropDecimals(num) {
+  cropDecimals: function(num) {
     return parseFloat(num.toFixed(5));
-  }
+  },
 
-  function _getSquareSegmentDistance(px, py, p1x, p1y, p2x, p2y) {
-    var dx = p2x-p1x, dy = p2y-p1y,
-      t;
-    if (dx !== 0 || dy !== 0) {
-      t = ((px-p1x) * dx + (py-p1y) * dy) / (dx*dx + dy*dy);
-      if (t > 1) {
-        p1x = p2x;
-        p1y = p2y;
-      } else if (t > 0) {
-        p1x += dx*t;
-        p1y += dy*t;
-      }
-    }
-    dx = px-p1x;
-    dy = py-p1y;
-    return dx*dx + dy*dy;
-  }
-
-  function _simplifyPolygon(buffer) {
-    var sqTolerance = 2,
-      len = buffer.length/2,
-      markers = new Uint8Array(len),
-
-      first = 0, last = len-1,
-
-      i,
-      maxSqDist,
-      sqDist,
-      index,
-      firstStack = [], lastStack  = [],
-      newBuffer  = [];
-
-    markers[first] = markers[last] = 1;
-
-    while (last) {
-      maxSqDist = 0;
-      for (i = first+1; i < last; i++) {
-        sqDist = _getSquareSegmentDistance(
-          buffer[i    *2], buffer[i    *2 + 1],
-          buffer[first*2], buffer[first*2 + 1],
-          buffer[last *2], buffer[last *2 + 1]
-        );
-        if (sqDist > maxSqDist) {
-          index = i;
-          maxSqDist = sqDist;
-        }
-      }
-
-      if (maxSqDist > sqTolerance) {
-        markers[index] = 1;
-
-        firstStack.push(first);
-        lastStack.push(index);
-
-        firstStack.push(index);
-        lastStack.push(last);
-      }
-
-      first = firstStack.pop();
-      last = lastStack.pop();
-    }
-
-    for (i = 0; i < len; i++) {
-      if (markers[i]) {
-        newBuffer.push(buffer[i*2], buffer[i*2 + 1]);
-      }
-    }
-
-    return newBuffer;
-  }
-
-  function _getCenter(buffer) {
-    var len, x = 0, y = 0;
-    for (var i = 0, il = buffer.length-3; i < il; i += 2) {
-      x += buffer[i];
-      y += buffer[i+1];
-    }
-    len = (buffer.length-2) / 2;
-    return { x:x/len <<0, y:y/len <<0 };
-  }
-
-  function _getPixelFootprint(buffer) {
+  getPixelFootprint: function(buffer) {
     var footprint = new Int32Array(buffer.length),
       px;
 
@@ -100,57 +16,58 @@ var Data = (function() {
       footprint[i+1] = px.y;
     }
 
-    footprint = _simplifyPolygon(footprint);
+    footprint = simplifyPolygon(footprint);
     if (footprint.length < 8) { // 3 points & end==start (*2)
       return;
     }
 
     return footprint;
-  }
+  },
 
-  function _createClosure(cacheKey) {
+  createClosure: function(cacheKey) {
+    var self = this;
     return function(data) {
-      var parsedData = _parse(data);
+      var parsedData = self.parse(data);
       Cache.add(parsedData, cacheKey);
-      _addRenderItems(parsedData, true);
+      self.addRenderItems(parsedData, true);
     };
-  }
+  },
 
-  function _parse(data) {
+  parse: function(data) {
     if (!data) {
       return [];
     }
     if (data.type === 'FeatureCollection') {
-      return readGeoJSON(data.features, me.each);
+      return readGeoJSON(data.features, this.each);
     }
     if (data.osm3s) { // XAPI
-      return readOSMXAPI(data.elements, me.each);
+      return readOSMXAPI(data.elements, this.each);
     }
     return [];
-  }
+  },
 
-  function _resetItems() {
+  resetItems: function() {
     Buildings.data = [];
-    _currentItemsIndex = {};
-  }
+    this.currentItemsIndex = {};
+  },
 
-  function _addRenderItems(data, allAreNew) {
-    var scaledItems = _scale(data, zoom),
+  addRenderItems: function(data, allAreNew) {
+    var scaledItems = this.scale(data, zoom),
       item,
       buildingsData = Buildings.data;
 
     for (var i = 0, il = scaledItems.length; i < il; i++) {
       item = scaledItems[i];
-      if (!_currentItemsIndex[item.id]) {
+      if (!this.currentItemsIndex[item.id]) {
         item.scale = allAreNew ? 0 : 1;
         buildingsData.push(item);
-        _currentItemsIndex[item.id] = 1;
+        this.currentItemsIndex[item.id] = 1;
       }
     }
     fadeIn();
-  }
+  },
 
-  function _scale(items, zoom) {
+  scale: function(items, zoom) {
     var i, il, j, jl,
       res = [],
       item,
@@ -172,14 +89,14 @@ var Data = (function() {
         continue;
       }
 
-      if (!(footprint = _getPixelFootprint(item.footprint))) {
+      if (!(footprint = this.getPixelFootprint(item.footprint))) {
         continue;
       }
 
       holes = [];
       if (item.holes) {
         for (j = 0, jl = item.holes.length; j < jl; j++) {
-          if ((innerFootprint = _getPixelFootprint(item.holes[j]))) {
+          if ((innerFootprint = this.getPixelFootprint(item.holes[j]))) {
             holes.push(innerFootprint);
           }
         }
@@ -219,7 +136,7 @@ var Data = (function() {
         roofColor:  roofColor,
         roofShape:  item.roofShape,
         roofHeight: roofHeight,
-        center:     _getCenter(footprint),
+        center:     getCenter(footprint),
         holes:      holes.length ? holes : null,
         shape:      item.shape, // TODO: drop footprint
         radius:     item.radius/meterToPixel
@@ -227,44 +144,42 @@ var Data = (function() {
     }
 
     return res;
-  }
+  },
 
-  var me = {};
+  set: function(data) {
+    this.isStatic = true;
+    this.resetItems();
+    this.addRenderItems(this.staticData = this.parse(data), true);
+  },
 
-  me.set = function(data) {
-    _isStatic = true;
-    _resetItems();
-    _addRenderItems(_staticData = _parse(data), true);
-  };
+  load: function(url) {
+    this.url = url || OSM_XAPI_URL;
+    this.isStatic = !/(.+\{[nesw]\}){4,}/.test(this.url);
 
-  me.load = function(url) {
-    _url = url || OSM_XAPI_URL;
-    _isStatic = !/(.+\{[nesw]\}){4,}/.test(_url);
-
-    if (_isStatic) {
-      _resetItems();
-      xhr(_url, {}, function(data) {
-        _addRenderItems(_staticData = _parse(data), true);
+    if (this.isStatic) {
+      this.resetItems();
+      xhr(this.url, {}, function(data) {
+        this.addRenderItems(this.staticData = this.parse(data), true);
       });
       return;
     }
 
-    me.update();
-  };
+    this.update();
+  },
 
-  me.update = function() {
-    _resetItems();
+  update: function() {
+    this.resetItems();
 
     if (zoom < MIN_ZOOM) {
       return;
     }
 
-    if (_isStatic) {
-      _addRenderItems(_staticData);
+    if (this.isStatic) {
+      this.addRenderItems(this.staticData);
       return;
     }
 
-    if (!_url) {
+    if (!this.url) {
       return;
     }
 
@@ -284,28 +199,26 @@ var Data = (function() {
 
     for (lat = bounds.s; lat <= bounds.n; lat += sizeLat) {
       for (lon = bounds.w; lon <= bounds.e; lon += sizeLon) {
-        lat = _cropDecimals(lat);
-        lon = _cropDecimals(lon);
+        lat = this.cropDecimals(lat);
+        lon = this.cropDecimals(lon);
 
         cacheKey = lat +','+ lon;
         if ((parsedData = Cache.get(cacheKey))) {
-          _addRenderItems(parsedData);
+          this.addRenderItems(parsedData);
         } else {
-          xhr(_url, {
-            n: _cropDecimals(lat+sizeLat),
-            e: _cropDecimals(lon+sizeLon),
+          xhr(this.url, {
+            n: this.cropDecimals(lat+sizeLat),
+            e: this.cropDecimals(lon+sizeLon),
             s: lat,
             w: lon
-          }, _createClosure(cacheKey));
+          }, this.createClosure(cacheKey));
         }
       }
     }
 
     Cache.purge();
-  };
+  },
 
-  me.each = function() {};
+  each: function() {}
 
-  return me;
-
-}());
+};

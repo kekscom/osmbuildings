@@ -43,8 +43,8 @@ function onMoveEnd(e) {
 
 function onZoomStart() {
   isZooming = true;
-  // effectively clears because of isZooming flag
-  // TODO: introduce explicit clear()
+// effectively clears because of isZooming flag
+// TODO: introduce explicit clear()
   renderAll();
 }
 

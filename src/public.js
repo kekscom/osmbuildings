@@ -17,7 +17,7 @@ proto.setStyle = function(style) {
   }
 
   if (style.shadows !== undefined) {
-    Shadows.enable(style.shadows);
+    Shadows.enabled = !!style.shadows;
   }
 
   renderAll();
@@ -26,7 +26,8 @@ proto.setStyle = function(style) {
 };
 
 proto.setDate = function(date) {
-  Shadows.setDate(date);
+  Shadows.date = date;
+  Shadows.render();
   return this;
 };
 

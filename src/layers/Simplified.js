@@ -1,17 +1,11 @@
-var Simplified = (function() {
+var Simplified = {
 
-  var _context;
+  context: null,
 
-  var me = {};
+  MAX_HEIGHT: 8,
 
-  me.MAX_HEIGHT = 8;
-
-  me.setContext = function(context) {
-    _context = context;
-  };
-
-  me.render = function() {
-    _context.clearRect(0, 0, width, height);
+  render: function() {
+    this.context.clearRect(0, 0, width, height);
 
     // show on high zoom levels only and avoid rendering during zoom
     if (zoom < minZoom || isZooming) {
@@ -26,11 +20,11 @@ var Simplified = (function() {
       isVisible,
       buildingsData = Buildings.data;
 
-    _context.beginPath();
+    this.context.beginPath();
 
     for (i = 0, il = buildingsData.length; i < il; i++) {
       item = buildingsData[i];
-      if (item.height+item.roofHeight > me.MAX_HEIGHT) {
+      if (item.height+item.roofHeight > this.MAX_HEIGHT) {
         continue;
       }
 
@@ -51,21 +45,18 @@ var Simplified = (function() {
         continue;
       }
 
-      _context.moveTo(footprint[0], footprint[1]);
+      this.context.moveTo(footprint[0], footprint[1]);
       for (j = 2, jl = footprint.length-3; j < jl; j += 2) {
-        _context.lineTo(footprint[j], footprint[j+1]);
+        this.context.lineTo(footprint[j], footprint[j+1]);
       }
 
-      _context.closePath();
+      this.context.closePath();
     }
 
-    _context.fillStyle   = roofColorAlpha;
-    _context.strokeStyle = altColorAlpha;
+    this.context.fillStyle   = roofColorAlpha;
+    this.context.strokeStyle = altColorAlpha;
 
-    _context.stroke();
-    _context.fill();
-  };
-
-  return me;
-
-}());
+    this.context.stroke();
+    this.context.fill();
+  }
+};
