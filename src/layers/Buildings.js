@@ -1,7 +1,5 @@
 var Buildings = {
 
-  context: null,
-
   project: function(x, y, m) {
     return {
       x: (x-camX) * m + camX <<0,
@@ -132,8 +130,6 @@ var Buildings = {
     return { c:_c, r:_r };
   },
 
-  data: [],
-
   render: function() {
     this.context.clearRect(0, 0, width, height);
 
@@ -155,16 +151,17 @@ var Buildings = {
       },
       footprint, roof, holes,
       isVisible,
-      wallColor, altColor, roofColor;
+      wallColor, altColor, roofColor,
+      dataItems = Data.items;
 
     // TODO: Simplified are drawn separately, data has to be split
 
-    this.data.sort(function(a, b) {
+    dataItems.sort(function(a, b) {
       return (a.minHeight-b.minHeight) || getDistance(b.center, sortCam) - getDistance(a.center, sortCam) || (b.height-a.height);
     });
 
-    for (i = 0, il = this.data.length; i < il; i++) {
-      item = this.data[i];
+    for (i = 0, il = dataItems.length; i < il; i++) {
+      item = dataItems[i];
 
       if (item.height+item.roofHeight <= flatMaxHeight) {
         continue;

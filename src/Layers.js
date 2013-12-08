@@ -5,16 +5,14 @@ function fadeIn() {
   }
 
   animTimer = setInterval(function() {
-    var buildingsData = Buildings.data,
-      item,
+    var dataItems = Data.items,
       isNeeded = false;
 
-    for (var i = 0, il = buildingsData.length; i < il; i++) {
-      item = buildingsData[i];
-      if (item.scale < 1) {
-        item.scale += 0.5*0.2; // amount*easing
-        if (item.scale > 1) {
-          item.scale = 1;
+    for (var i = 0, il = dataItems.length; i < il; i++) {
+      if (dataItems[i].scale < 1) {
+        dataItems[i].scale += 0.5*0.2; // amount*easing
+        if (dataItems[i].scale > 1) {
+          dataItems[i].scale = 1;
         }
         isNeeded = true;
       }

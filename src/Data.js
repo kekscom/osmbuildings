@@ -2,6 +2,8 @@ var Data = {
 
   currentItemsIndex: {}, // maintain a list of cached items in order to avoid duplicates on tile borders
 
+  items: [],
+
   cropDecimals: function(num) {
     return parseFloat(num.toFixed(5));
   },
@@ -47,21 +49,19 @@ var Data = {
   },
 
   resetItems: function() {
-    Buildings.data = [];
+    this.items = [];
     this.currentItemsIndex = {};
   },
 
   addRenderItems: function(data, allAreNew) {
     var scaledItems = this.scale(data, zoom),
-      item,
-      buildingsData = Buildings.data;
+      item;
 
     for (var i = 0, il = scaledItems.length; i < il; i++) {
-      item = scaledItems[i];
-      if (!this.currentItemsIndex[item.id]) {
-        item.scale = allAreNew ? 0 : 1;
-        buildingsData.push(item);
-        this.currentItemsIndex[item.id] = 1;
+      if (!this.currentItemsIndex[scaledItems[i].id]) {
+        scaledItems[i].scale = allAreNew ? 0 : 1;
+        this.items.push(scaledItems[i]);
+        this.currentItemsIndex[scaledItems[i].id] = 1;
       }
     }
     fadeIn();

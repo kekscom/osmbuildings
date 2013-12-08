@@ -1,6 +1,5 @@
 var Shadows = {
 
-  context: null,
   enabled: true,
   color: new Color(0, 0, 0),
   date: new Date(),
@@ -73,15 +72,15 @@ var Shadows = {
       points,
       specialItems = [],
       clipping = [],
-      buildingsData = Buildings.data;
+      dataItems = Data.items;
 
     this.context.fillStyle = colorStr;
     this.context.beginPath();
 
-    for (i = 0, il = buildingsData.length; i < il; i++) {
-      item = buildingsData[i];
+    for (i = 0, il = dataItems.length; i < il; i++) {
+      item = dataItems[i];
 
-// TODO: no shadows when buildings are too flat => don't add them to Buildings.data then
+// TODO: no shadows when buildings are too flat => don't add them to this dataItems then
 //    if (item.height <= Simplified.MAX_HEIGHT) {
 //      continue;
 //    }

@@ -1,7 +1,5 @@
 var Simplified = {
 
-  context: null,
-
   MAX_HEIGHT: 8,
 
   render: function() {
@@ -18,12 +16,12 @@ var Simplified = {
       x, y,
       footprint,
       isVisible,
-      buildingsData = Buildings.data;
+      dataItems = Data.items;
 
     this.context.beginPath();
 
-    for (i = 0, il = buildingsData.length; i < il; i++) {
-      item = buildingsData[i];
+    for (i = 0, il = dataItems.length; i < il; i++) {
+      item = dataItems[i];
       if (item.height+item.roofHeight > this.MAX_HEIGHT) {
         continue;
       }
