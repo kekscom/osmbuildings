@@ -1172,6 +1172,14 @@ function xhr(url, param, callback) {
   return req;
 }
 
+//function extend(dst, src) {
+//  for (var p in src) {
+//    if (src.hasOwnProperty(p)) {
+//      dst[p] = src[p];
+//    }
+//  }
+//}
+
 
 //****** file: Cache.js ******
 
@@ -1204,6 +1212,8 @@ var Cache = {
 var Data = {
 
   currentItemsIndex: {}, // maintain a list of cached items in order to avoid duplicates on tile borders
+
+  items: [],
 
   cropDecimals: function(num) {
     return parseFloat(num.toFixed(5));
@@ -1250,21 +1260,19 @@ var Data = {
   },
 
   resetItems: function() {
-    Buildings.data = [];
+    this.items = [];
     this.currentItemsIndex = {};
   },
 
   addRenderItems: function(data, allAreNew) {
     var scaledItems = this.scale(data, zoom),
-      item,
-      buildingsData = Buildings.data;
+      item;
 
     for (var i = 0, il = scaledItems.length; i < il; i++) {
-      item = scaledItems[i];
-      if (!this.currentItemsIndex[item.id]) {
-        item.scale = allAreNew ? 0 : 1;
-        buildingsData.push(item);
-        this.currentItemsIndex[item.id] = 1;
+      if (!this.currentItemsIndex[scaledItems[i].id]) {
+        scaledItems[i].scale = allAreNew ? 0 : 1;
+        this.items.push(scaledItems[i]);
+        this.currentItemsIndex[scaledItems[i].id] = 1;
       }
     }
     fadeIn();
@@ -1431,8 +1439,6 @@ var Data = {
 
 var Buildings = {
 
-  context: null,
-
   project: function(x, y, m) {
     return {
       x: (x-camX) * m + camX <<0,
@@ -1563,8 +1569,6 @@ var Buildings = {
     return { c:_c, r:_r };
   },
 
-  data: [],
-
   render: function() {
     this.context.clearRect(0, 0, width, height);
 
@@ -1586,16 +1590,17 @@ var Buildings = {
       },
       footprint, roof, holes,
       isVisible,
-      wallColor, altColor, roofColor;
+      wallColor, altColor, roofColor,
+      dataItems = Data.items;
 
     // TODO: Simplified are drawn separately, data has to be split
 
-    this.data.sort(function(a, b) {
+    dataItems.sort(function(a, b) {
       return (a.minHeight-b.minHeight) || getDistance(b.center, sortCam) - getDistance(a.center, sortCam) || (b.height-a.height);
     });
 
-    for (i = 0, il = this.data.length; i < il; i++) {
-      item = this.data[i];
+    for (i = 0, il = dataItems.length; i < il; i++) {
+      item = dataItems[i];
 
       if (item.height+item.roofHeight <= flatMaxHeight) {
         continue;
@@ -1669,7 +1674,6 @@ var Buildings = {
 
 var Shadows = {
 
-  context: null,
   enabled: true,
   color: new Color(0, 0, 0),
   date: new Date(),
@@ -1742,15 +1746,15 @@ var Shadows = {
       points,
       specialItems = [],
       clipping = [],
-      buildingsData = Buildings.data;
+      dataItems = Data.items;
 
     this.context.fillStyle = colorStr;
     this.context.beginPath();
 
-    for (i = 0, il = buildingsData.length; i < il; i++) {
-      item = buildingsData[i];
+    for (i = 0, il = dataItems.length; i < il; i++) {
+      item = dataItems[i];
 
-// TODO: no shadows when buildings are too flat => don't add them to Buildings.data then
+// TODO: no shadows when buildings are too flat => don't add them to this dataItems then
 //    if (item.height <= Simplified.MAX_HEIGHT) {
 //      continue;
 //    }
@@ -1879,8 +1883,6 @@ var Shadows = {
 
 var Simplified = {
 
-  context: null,
-
   MAX_HEIGHT: 8,
 
   render: function() {
@@ -1897,12 +1899,12 @@ var Simplified = {
       x, y,
       footprint,
       isVisible,
-      buildingsData = Buildings.data;
+      dataItems = Data.items;
 
     this.context.beginPath();
 
-    for (i = 0, il = buildingsData.length; i < il; i++) {
-      item = buildingsData[i];
+    for (i = 0, il = dataItems.length; i < il; i++) {
+      item = dataItems[i];
       if (item.height+item.roofHeight > this.MAX_HEIGHT) {
         continue;
       }
@@ -1950,34 +1952,26 @@ function fadeIn() {
   }
 
   animTimer = setInterval(function() {
-    var buildingsData = Buildings.data,
-      item,
+    var dataItems = Data.items,
       isNeeded = false;
 
-    for (var i = 0, il = buildingsData.length; i < il; i++) {
-      item = buildingsData[i];
-      if (item.scale < 1) {
-        item.scale += 0.5*0.2; // amount*easing
-        if (item.scale > 1) {
-          item.scale = 1;
+    for (var i = 0, il = dataItems.length; i < il; i++) {
+      if (dataItems[i].scale < 1) {
+        dataItems[i].scale += 0.5*0.2; // amount*easing
+        if (dataItems[i].scale > 1) {
+          dataItems[i].scale = 1;
         }
         isNeeded = true;
       }
     }
 
-    renderAll();
+    Layers.render();
 
     if (!isNeeded) {
       clearInterval(animTimer);
       animTimer = null;
     }
   }, 33);
-}
-
-function renderAll() {
-  Shadows.render();
-  Simplified.render();
-  Buildings.render();
 }
 
 var Layers = {
@@ -1995,6 +1989,12 @@ var Layers = {
     Shadows.context    = this.createContext();
     Simplified.context = this.createContext();
     Buildings.context  = this.createContext();
+  },
+
+  render: function() {
+    Shadows.render();
+    Simplified.render();
+    Buildings.render();
   },
 
   createContext: function() {
@@ -2097,27 +2097,27 @@ function setZoom(z) {
 
 function onResize(e) {
   setSize(e.width, e.height);
-  renderAll();
+  Layers.render();
   Data.update();
 }
 
 function onMoveEnd(e) {
-  renderAll();
-  Data.update(); // => fadeIn() => renderAll()
+  Layers.render();
+  Data.update(); // => fadeIn() => Layers.render()
 }
 
 function onZoomStart() {
   isZooming = true;
 // effectively clears because of isZooming flag
 // TODO: introduce explicit clear()
-  renderAll();
+  Layers.render();
 }
 
 function onZoomEnd(e) {
   isZooming = false;
   setZoom(e.zoom);
   Data.update(); // => fadeIn()
-  renderAll();
+  Layers.render();
 }
 
 
@@ -2274,7 +2274,7 @@ proto.setStyle = function(style) {
     Shadows.enabled = !!style.shadows;
   }
 
-  renderAll();
+  Layers.render();
 
   return this;
 };

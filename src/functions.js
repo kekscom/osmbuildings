@@ -81,3 +81,11 @@ function xhr(url, param, callback) {
 
   return req;
 }
+
+//function extend(dst, src) {
+//  for (var p in src) {
+//    if (src.hasOwnProperty(p)) {
+//      dst[p] = src[p];
+//    }
+//  }
+//}

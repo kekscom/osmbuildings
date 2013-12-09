@@ -32,25 +32,25 @@ function setZoom(z) {
 
 function onResize(e) {
   setSize(e.width, e.height);
-  renderAll();
+  Layers.render();
   Data.update();
 }
 
 function onMoveEnd(e) {
-  renderAll();
-  Data.update(); // => fadeIn() => renderAll()
+  Layers.render();
+  Data.update(); // => fadeIn() => Layers.render()
 }
 
 function onZoomStart() {
   isZooming = true;
 // effectively clears because of isZooming flag
 // TODO: introduce explicit clear()
-  renderAll();
+  Layers.render();
 }
 
 function onZoomEnd(e) {
   isZooming = false;
   setZoom(e.zoom);
   Data.update(); // => fadeIn()
-  renderAll();
+  Layers.render();
 }

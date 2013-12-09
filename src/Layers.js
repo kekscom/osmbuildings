@@ -18,19 +18,13 @@ function fadeIn() {
       }
     }
 
-    renderAll();
+    Layers.render();
 
     if (!isNeeded) {
       clearInterval(animTimer);
       animTimer = null;
     }
   }, 33);
-}
-
-function renderAll() {
-  Shadows.render();
-  Simplified.render();
-  Buildings.render();
 }
 
 var Layers = {
@@ -48,6 +42,12 @@ var Layers = {
     Shadows.context    = this.createContext();
     Simplified.context = this.createContext();
     Buildings.context  = this.createContext();
+  },
+
+  render: function() {
+    Shadows.render();
+    Simplified.render();
+    Buildings.render();
   },
 
   createContext: function() {
