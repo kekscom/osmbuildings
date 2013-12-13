@@ -54,9 +54,7 @@ var Data = {
   },
 
   addRenderItems: function(data, allAreNew) {
-    var scaledItems = this.scale(data, zoom),
-      item;
-
+    var scaledItems = this.scale(data, zoom);
     for (var i = 0, il = scaledItems.length; i < il; i++) {
       if (!this.currentItemsIndex[scaledItems[i].id]) {
         scaledItems[i].scale = allAreNew ? 0 : 1;
@@ -126,6 +124,11 @@ var Data = {
         continue;
       }
 
+//var poly = new PolyDefault();
+//for (var n = 0, nl = footprint.length-3; n < nl; n+=2) {
+//  poly.addPoint(new Point(footprint[n], footprint[n+1]));
+//}
+
       res.push({
         id:         item.id,
         footprint:  footprint,
@@ -142,6 +145,64 @@ var Data = {
         radius:     item.radius/meterToPixel
       });
     }
+
+//var res2 = [];
+//var diff;
+//
+//var hit = false;
+//for (var i = 0, il = res.length; i < il; i++) {
+//  if (res[i] === null) continue;
+//  if (res[i].height > 8) {
+//    res2.push(res[i]);
+//    res[i] = null;
+//    continue;
+//  }
+//  for (var j = 0, jl = res.length; j < jl; j++) {
+//    if (res[j] === null) continue;
+//    if (j === i) continue;
+//
+//    diff = res[i].poly.union(res[j].poly);
+//
+//    if (diff.getNumInnerPoly() === 1) {
+//      res[i].poly = diff;
+//      res[j] = null;
+//      hit = true;
+//    }
+//  }
+//}
+//
+//return res2;
+
+//var getPolygonVertices = function(poly) {
+//	var vertices=[];
+//	var numPoints = poly.getNumPoints();
+//	var i;
+//
+//	for(i=0;i<numPoints;i++) {
+//		vertices.push([poly.getX(i) , poly.getY(i)]);
+//	}
+//	return vertices;
+//}
+
+//var num = polygon.getNumInnerPoly();
+//var poly = polygon.getInnerPoly(i);
+
+
+/*
+function search(e) {
+    tree.search([e.clientX, e.clientY, e.clientX + 1, e.clientY + 1]);
+}
+
+function remove() {
+    data.sort(tree.compareMinX);
+    for (var i = 0; i < 10000; i++) {
+        tree.remove(data[i]);
+    }
+    data.splice(0, 10000);
+    draw();
+}
+*/
+
 
     return res;
   },

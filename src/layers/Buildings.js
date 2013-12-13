@@ -154,7 +154,7 @@ var Buildings = {
       wallColor, altColor, roofColor,
       dataItems = Data.items;
 
-    // TODO: Simplified are drawn separately, data has to be split
+    // TODO: Simplified are drawn separately, data could be split
 
     dataItems.sort(function(a, b) {
       return (a.minHeight-b.minHeight) || getDistance(b.center, sortCam) - getDistance(a.center, sortCam) || (b.height-a.height);
@@ -169,6 +169,7 @@ var Buildings = {
 
       isVisible = false;
       footprint = item.footprint;
+
       for (j = 0, jl = footprint.length - 1; j < jl; j += 2) {
         // checking footprint is sufficient for visibility
         // TODO: pre-filter by data tile position
