@@ -33,7 +33,7 @@
 //  var map = new L.Map('map').setView([48.86083, 2.33565], 18); // Louvre, Paris
 
 //  new L.TileLayer('http://otile1.mqcdn.com/tiles/1.0.0/map/{z}/{x}/{y}.jpg', { maxZoom: 18 }).addTo(map);
-//  new L.TileLayer('http://{s}.tiles.mapbox.com/v3/osmbuildings.map-c8zdox7m/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(map);
+//  new L.TileLayer('http://{s}.tiles.mapbox.com/v3/osmbuildings.gm744p3p/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(map);
 
 
     var map = new L.Map('map').setView([11.24435, 125.00327], 17); // Philippines
