@@ -75,14 +75,15 @@ function simplifyPolygon(buffer) {
   return newBuffer;
 }
 
-function getCenter(buffer) {
-  var len, x = 0, y = 0;
-  for (var i = 0, il = buffer.length-3; i < il; i += 2) {
-    x += buffer[i];
-    y += buffer[i+1];
+function getCenter(poly) {
+  var minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+  for (var i = 0, il = poly.length-3; i < il; i += 2) {
+    minX = min(minX, poly[i]);
+    maxX = max(maxX, poly[i]);
+    minY = min(minY, poly[i+1]);
+    maxY = max(maxY, poly[i+1]);
   }
-  len = (buffer.length-2) / 2;
-  return { x:x/len <<0, y:y/len <<0 };
+  return { x:minX+(maxX-minX)/2 <<0, y:minY+(maxY-minY)/2 <<0 };
 }
 
 // http://en.wikibooks.org/wiki/Algorithm_Implementation/Geometry/Tangents_between_two_circles
