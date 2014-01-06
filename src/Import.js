@@ -37,14 +37,6 @@ var Import = {
       return revPoints;
     },
 
-    windOuterPolygon: function(points) {
-      return this.makeWinding(points, this.clockwise);
-    },
-
-    windInnerPolygon: function(points) {
-      return this.makeWinding(points, this.counterClockwise);
-    },
-
     toMeters: function(str) {
       str = '' + str;
       var value = parseFloat(str);

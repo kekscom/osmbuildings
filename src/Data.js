@@ -119,7 +119,6 @@ var Data = {
 
       roofHeight = item.roofHeight >>zoomDelta;
 
-      // TODO: move buildings without height to Simplified
       if (height <= minHeight && roofHeight <= 0) {
         continue;
       }
