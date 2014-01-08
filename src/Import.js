@@ -1,6 +1,5 @@
 var Import = {
 
-    DEFAULT_HEIGHT: 5,
     YARD_TO_METER: 0.9144,
     FOOT_TO_METER: 0.3048,
     INCH_TO_METER: 0.0254,

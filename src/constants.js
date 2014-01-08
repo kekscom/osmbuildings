@@ -13,6 +13,7 @@ var VERSION      = /*<version=*/'0.1.9a'/*>*/,
   DATA_TILE_SIZE = 0.0075, // data tile size in geo coordinates, smaller: less data to load but more requests
 
   MIN_ZOOM = 15,
+  DEFAULT_HEIGHT = 5,
 
   LAT = 'latitude', LON = 'longitude',
 

@@ -52,7 +52,9 @@ var readOSMXAPI = (function() {
         continue;
       }
     }
-    if (outer && outer.tags) {
+
+//  if (outer && outer.tags) {
+    if (outer) { // allows tags to be attached to relation - instead of outer way
       return { outer:outer, inner:inner };
     }
   }
@@ -92,7 +94,7 @@ var readOSMXAPI = (function() {
 
   function filterItem(item, footprint) {
     var res = {},
-      tags = item.tags;
+      tags = item.tags || {};
 
     if (item.id) {
       res.id = item.id;
@@ -170,7 +172,7 @@ var readOSMXAPI = (function() {
       res.roofColor = tags['building:roof:colour'];
     }
 
-    res.height = res.height || Import.DEFAULT_HEIGHT;
+    res.height = res.height || DEFAULT_HEIGHT;
 
     if (tags['roof:shape'] === 'dome' || tags['building:shape'] === 'cylinder' || tags['building:shape'] === 'sphere') {
       res.shape = 'cylinder';
@@ -208,7 +210,6 @@ var readOSMXAPI = (function() {
   function processRelation(relation) {
     var relationWays, outerWay, holes = [],
       item, relItem, outerFootprint, innerFootprint;
-
     if (!isBuilding(relation) ||
       (relation.tags.type !== 'multipolygon' && relation.tags.type !== 'building') ||
       _callback(relation) === false) {

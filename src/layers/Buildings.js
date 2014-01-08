@@ -141,7 +141,6 @@ var Buildings = {
     var i, il, j, jl,
       item,
       h, _h, mh, _mh,
-      flatMaxHeight = Simplified.MAX_HEIGHT,
       sortCam = { x:camX+originX, y:camY+originY },
       vp = {
         minX: originX,
@@ -154,8 +153,6 @@ var Buildings = {
       wallColor, altColor, roofColor,
       dataItems = Data.items;
 
-    // TODO: Simplified are drawn separately, data could be split
-
     dataItems.sort(function(a, b) {
       return (a.minHeight-b.minHeight) || getDistance(b.center, sortCam) - getDistance(a.center, sortCam) || (b.height-a.height);
     });
@@ -163,7 +160,7 @@ var Buildings = {
     for (i = 0, il = dataItems.length; i < il; i++) {
       item = dataItems[i];
 
-      if (item.height+item.roofHeight <= flatMaxHeight) {
+      if (Simplified.isSimple(item)) {
         continue;
       }
 

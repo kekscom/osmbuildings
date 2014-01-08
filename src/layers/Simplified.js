@@ -1,6 +1,8 @@
 var Simplified = {
 
-  MAX_HEIGHT: 8,
+  isSimple: function(item) {
+    return item.height+item.roofHeight <= DEFAULT_HEIGHT && !item.wallColor && !item.roofColor;
+  },
 
   render: function() {
     this.context.clearRect(0, 0, width, height);
@@ -22,7 +24,7 @@ var Simplified = {
 
     for (i = 0, il = dataItems.length; i < il; i++) {
       item = dataItems[i];
-      if (item.height+item.roofHeight > this.MAX_HEIGHT) {
+      if (!this.isSimple(item)) {
         continue;
       }
 
