@@ -36,7 +36,7 @@ var Shadows = {
   render: function() {
     var center, sun, length, alpha, colorStr;
 
-    this.context.clearRect(0, 0, width, height);
+    this.context.clearRect(0, 0, WIDTH, HEIGHT);
 
     // show on high zoom levels only and avoid rendering during zoom
     if (!this.enabled || zoom < minZoom || isZooming) {
@@ -44,7 +44,7 @@ var Shadows = {
     }
 
     // TODO: at some point, calculate this just on demand
-    center = pixelToGeo(originX+halfWidth, originY+halfHeight);
+    center = pixelToGeo(originX+HALF_WIDTH, originY+HALF_HEIGHT);
     sun = getSunPosition(this.date, center.latitude, center.longitude);
 
     if (sun.altitude <= 0) {
@@ -94,7 +94,7 @@ var Shadows = {
 
         // TODO: checking footprint is sufficient for visibility - NOT VALID FOR SHADOWS!
         if (!isVisible) {
-          isVisible = (x > 0 && x < width && y > 0 && y < height);
+          isVisible = (x > 0 && x < WIDTH && y > 0 && y < HEIGHT);
         }
       }
 

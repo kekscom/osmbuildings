@@ -463,7 +463,8 @@ var Import = {
         minLat = min(minLat, points[i]);
         maxLat = max(maxLat, points[i]);
       }
-      return round((maxLat-minLat) / RAD * 6378137 / 2); // 6378137 = Earth radius
+
+      return (maxLat-minLat) / RAD * 6378137 / 2 <<0; // 6378137 = Earth radius
     },
 
     materialColors: {
@@ -1046,8 +1047,9 @@ function getTangents(c1, r1, c2, r2) {
 //****** file: variables.js ******
 
 // private variables, specific to an instance
-var width = 0, height = 0,
-  halfWidth = 0, halfHeight = 0,
+var
+  WIDTH = 0, HEIGHT = 0, // though this looks like a constant it's needed for distinguishing from local vars
+  HALF_WIDTH = 0, HALF_HEIGHT = 0,
   originX = 0, originY = 0,
   zoom, size,
 
@@ -1274,7 +1276,8 @@ var Data = {
       holes, innerFootprint,
       zoomDelta = maxZoom-zoom,
       // TODO: move this to onZoom
-      meterToPixel = 156412 / Math.pow(2, zoom) / 1.5; // http://wiki.openstreetmap.org/wiki/Zoom_levels, TODO: without factor 1.5, numbers don't match (lat/lon: Berlin)
+      centerGeo = pixelToGeo(originX+HALF_WIDTH, originY+HALF_HEIGHT),
+      metersPerPixel = -40075040 * cos(centerGeo.latitude) / Math.pow(2, zoom+8); // see http://wiki.openstreetmap.org/wiki/Zoom_levels
 
     for (i = 0, il = items.length; i < il; i++) {
       item = items[i];
@@ -1335,7 +1338,7 @@ var Data = {
         center:     getCenter(footprint),
         holes:      holes.length ? holes : null,
         shape:      item.shape, // TODO: drop footprint
-        radius:     item.radius/meterToPixel
+        radius:     item.radius/metersPerPixel
       });
     }
 
@@ -1382,7 +1385,7 @@ var Data = {
     var lat, lon,
       parsedData, cacheKey,
       nw = pixelToGeo(originX,       originY),
-      se = pixelToGeo(originX+width, originY+height),
+      se = pixelToGeo(originX+WIDTH, originY+HEIGHT),
       sizeLat = DATA_TILE_SIZE,
       sizeLon = DATA_TILE_SIZE*2;
 
@@ -1555,7 +1558,7 @@ var Buildings = {
   },
 
   render: function() {
-    this.context.clearRect(0, 0, width, height);
+    this.context.clearRect(0, 0, WIDTH, HEIGHT);
 
     // show on high zoom levels only and avoid rendering during zoom
     if (zoom < minZoom || isZooming) {
@@ -1568,9 +1571,9 @@ var Buildings = {
       sortCam = { x:camX+originX, y:camY+originY },
       vp = {
         minX: originX,
-        maxX: originX+width,
+        maxX: originX+WIDTH,
         minY: originY,
-        maxY: originY+height
+        maxY: originY+HEIGHT
       },
       footprint, roof, holes,
       isVisible,
@@ -1693,7 +1696,7 @@ var Shadows = {
   render: function() {
     var center, sun, length, alpha, colorStr;
 
-    this.context.clearRect(0, 0, width, height);
+    this.context.clearRect(0, 0, WIDTH, HEIGHT);
 
     // show on high zoom levels only and avoid rendering during zoom
     if (!this.enabled || zoom < minZoom || isZooming) {
@@ -1701,7 +1704,7 @@ var Shadows = {
     }
 
     // TODO: at some point, calculate this just on demand
-    center = pixelToGeo(originX+halfWidth, originY+halfHeight);
+    center = pixelToGeo(originX+HALF_WIDTH, originY+HALF_HEIGHT);
     sun = getSunPosition(this.date, center.latitude, center.longitude);
 
     if (sun.altitude <= 0) {
@@ -1751,7 +1754,7 @@ var Shadows = {
 
         // TODO: checking footprint is sufficient for visibility - NOT VALID FOR SHADOWS!
         if (!isVisible) {
-          isVisible = (x > 0 && x < width && y > 0 && y < height);
+          isVisible = (x > 0 && x < WIDTH && y > 0 && y < HEIGHT);
         }
       }
 
@@ -1871,7 +1874,7 @@ var Simplified = {
   },
 
   render: function() {
-    this.context.clearRect(0, 0, width, height);
+    this.context.clearRect(0, 0, WIDTH, HEIGHT);
 
     // show on high zoom levels only and avoid rendering during zoom
     if (zoom < minZoom || isZooming) {
@@ -1903,7 +1906,7 @@ var Simplified = {
 
         // checking footprint is sufficient for visibility
         if (!isVisible) {
-          isVisible = (x > 0 && x < width && y > 0 && y < height);
+          isVisible = (x > 0 && x < WIDTH && y > 0 && y < HEIGHT);
         }
       }
 
@@ -2012,10 +2015,10 @@ var Layers = {
     this.container.parentNode.removeChild(this.container);
   },
 
-  setSize: function(w, h) {
+  setSize: function(width, height) {
     for (var i = 0, il = this.items.length; i < il; i++) {
-      this.items[i].width  = w;
-      this.items[i].height = h;
+      this.items[i].width  = width;
+      this.items[i].height = height;
     }
   },
 
@@ -2054,18 +2057,18 @@ function setOrigin(origin) {
 }
 
 function setCamOffset(offset) {
-  camX = halfWidth + offset.x;
-  camY = height    + offset.y;
+  camX = HALF_WIDTH+offset.x;
+  camY = HEIGHT   +offset.y;
 }
 
 function setSize(size) {
-  width  = size.w;
-  height = size.h;
-  halfWidth  = width /2 <<0;
-  halfHeight = height/2 <<0;
-  camX = halfWidth;
-  camY = height;
-  Layers.setSize(width, height);
+  WIDTH  = size.w;
+  HEIGHT = size.h;
+  HALF_WIDTH  = WIDTH /2 <<0;
+  HALF_HEIGHT = HEIGHT/2 <<0;
+  camX = HALF_WIDTH;
+  camY = HEIGHT;
+  Layers.setSize(WIDTH, HEIGHT);
   maxHeight = camZ-50;
 }
 

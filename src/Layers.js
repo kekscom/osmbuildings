@@ -80,10 +80,10 @@ var Layers = {
     this.container.parentNode.removeChild(this.container);
   },
 
-  setSize: function(w, h) {
+  setSize: function(width, height) {
     for (var i = 0, il = this.items.length; i < il; i++) {
-      this.items[i].width  = w;
-      this.items[i].height = h;
+      this.items[i].width  = width;
+      this.items[i].height = height;
     }
   },
 

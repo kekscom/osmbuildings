@@ -131,7 +131,7 @@ var Buildings = {
   },
 
   render: function() {
-    this.context.clearRect(0, 0, width, height);
+    this.context.clearRect(0, 0, WIDTH, HEIGHT);
 
     // show on high zoom levels only and avoid rendering during zoom
     if (zoom < minZoom || isZooming) {
@@ -144,9 +144,9 @@ var Buildings = {
       sortCam = { x:camX+originX, y:camY+originY },
       vp = {
         minX: originX,
-        maxX: originX+width,
+        maxX: originX+WIDTH,
         minY: originY,
-        maxY: originY+height
+        maxY: originY+HEIGHT
       },
       footprint, roof, holes,
       isVisible,

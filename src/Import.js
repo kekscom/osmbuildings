@@ -65,7 +65,8 @@ var Import = {
         minLat = min(minLat, points[i]);
         maxLat = max(maxLat, points[i]);
       }
-      return round((maxLat-minLat) / RAD * 6378137 / 2); // 6378137 = Earth radius
+
+      return (maxLat-minLat) / RAD * 6378137 / 2 <<0; // 6378137 = Earth radius
     },
 
     materialColors: {

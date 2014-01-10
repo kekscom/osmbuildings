@@ -5,7 +5,7 @@ var Simplified = {
   },
 
   render: function() {
-    this.context.clearRect(0, 0, width, height);
+    this.context.clearRect(0, 0, WIDTH, HEIGHT);
 
     // show on high zoom levels only and avoid rendering during zoom
     if (zoom < minZoom || isZooming) {
@@ -37,7 +37,7 @@ var Simplified = {
 
         // checking footprint is sufficient for visibility
         if (!isVisible) {
-          isVisible = (x > 0 && x < width && y > 0 && y < height);
+          isVisible = (x > 0 && x < WIDTH && y > 0 && y < HEIGHT);
         }
       }
 

@@ -1,6 +1,7 @@
 // private variables, specific to an instance
-var width = 0, height = 0,
-  halfWidth = 0, halfHeight = 0,
+var
+  WIDTH = 0, HEIGHT = 0, // though this looks like a constant it's needed for distinguishing from local vars
+  HALF_WIDTH = 0, HALF_HEIGHT = 0,
   originX = 0, originY = 0,
   zoom, size,
 

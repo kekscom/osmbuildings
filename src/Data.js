@@ -75,7 +75,8 @@ var Data = {
       holes, innerFootprint,
       zoomDelta = maxZoom-zoom,
       // TODO: move this to onZoom
-      meterToPixel = 156412 / Math.pow(2, zoom) / 1.5; // http://wiki.openstreetmap.org/wiki/Zoom_levels, TODO: without factor 1.5, numbers don't match (lat/lon: Berlin)
+      centerGeo = pixelToGeo(originX+HALF_WIDTH, originY+HALF_HEIGHT),
+      metersPerPixel = -40075040 * cos(centerGeo.latitude) / Math.pow(2, zoom+8); // see http://wiki.openstreetmap.org/wiki/Zoom_levels
 
     for (i = 0, il = items.length; i < il; i++) {
       item = items[i];
@@ -136,7 +137,7 @@ var Data = {
         center:     getCenter(footprint),
         holes:      holes.length ? holes : null,
         shape:      item.shape, // TODO: drop footprint
-        radius:     item.radius/meterToPixel
+        radius:     item.radius/metersPerPixel
       });
     }
 
@@ -183,7 +184,7 @@ var Data = {
     var lat, lon,
       parsedData, cacheKey,
       nw = pixelToGeo(originX,       originY),
-      se = pixelToGeo(originX+width, originY+height),
+      se = pixelToGeo(originX+WIDTH, originY+HEIGHT),
       sizeLat = DATA_TILE_SIZE,
       sizeLon = DATA_TILE_SIZE*2;
 
