@@ -94,6 +94,7 @@ var Data = {
 
       holes = [];
       if (item.holes) {
+        // TODO: simplify
         for (j = 0, jl = item.holes.length; j < jl; j++) {
           if ((innerFootprint = this.getPixelFootprint(item.holes[j]))) {
             holes.push(innerFootprint);

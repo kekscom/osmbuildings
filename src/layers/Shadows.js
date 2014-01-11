@@ -13,7 +13,8 @@ var Shadows = {
   },
 
   cylinder: function(c, r, h, mh) {
-    var _c = this.project(c.x, c.y, h),
+    var
+      _c = this.project(c.x, c.y, h),
       a1, a2;
 
     if (mh) {
@@ -59,6 +60,10 @@ var Shadows = {
     // TODO: maybe introduce Color.setAlpha()
     this.color.a = alpha;
     colorStr = this.color + '';
+
+this.context.canvas.style.opacity = alpha;
+colorStr = '#666666';
+this.context.shadowColor = '#000000';
 
     var i, il, j, jl,
       item,
@@ -167,6 +172,21 @@ var Shadows = {
       if (!mh) {
         clipping.push(footprint);
       }
+
+if (item.holes) {
+  for (j = 0, jl = item.holes.length; j < jl; j++) {
+    var points = item.holes[j];
+
+    var hole = [points[0]-originX, points[1]-originY];
+    this.context.moveTo(hole[0], hole[1]);
+    for (var k = 2, kl = points.length; k < kl; k += 2) {
+      this.context.lineTo(points[k]-originX, points[k+1]-originY);
+      hole.push(points[k]-originX, points[k+1]-originY);
+    }
+    clipping.push(hole);
+  }
+}
+
     }
 
     for (i = 0, il = specialItems.length; i < il; i++) {
@@ -176,7 +196,12 @@ var Shadows = {
       }
     }
 
+this.context.shadowBlur  = 25;
+
+    this.context.closePath();
     this.context.fill();
+
+this.context.shadowBlur  = null;
 
     // now draw all the footprints as negative clipping mask
     this.context.globalCompositeOperation = 'destination-out';
