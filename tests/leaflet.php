@@ -17,7 +17,7 @@ html, body {
 }
 </style>
 <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7/leaflet.css">
-<script src="http://cdn.leafletjs.com/leaflet-0.7/leaflet.js"></script>
+<script src="http://cdn.leafletjs.com/leaflet-0.7/leaflet-src.js"></script>
 <script src="../dist/OSMBuildings-Leaflet.js"></script>
 </head>
 
@@ -28,7 +28,7 @@ html, body {
 var map = new L.Map('map').setView([52.50440, 13.33522], 17);
 
 new L.TileLayer(
-  'http://{s}.tiles.mapbox.com/v3/osmbuildings.map-c8zdox7m/{z}/{x}/{y}.png',
+  'http://{s}.tiles.mapbox.com/v3/osmbuildings.gm744p3p/{z}/{x}/{y}.png',
   { attribution: 'Map tiles &copy; <a href="http://mapbox.com">MapBox</a>', maxZoom: 17 }
 ).addTo(map);
 

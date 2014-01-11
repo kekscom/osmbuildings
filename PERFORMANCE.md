@@ -75,3 +75,6 @@ degrade instantly, increase slowly (tage average score of a few passes)
 - NO_SHADING
 - NO_FLAT
 - NO_SHADOWS
+
+
+http://jsperf.com/osmb-hidden-canvas4

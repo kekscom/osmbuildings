@@ -38,8 +38,8 @@ Link Leaflet and OSM Buildings files in your HTML head section.
 
 ~~~ html
 <head>
-  <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.6.4/leaflet.css">
-  <script src="http://cdn.leafletjs.com/leaflet-0.6.4/leaflet.js"></script>
+  <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7/leaflet.css">
+  <script src="http://cdn.leafletjs.com/leaflet-0.7/leaflet.js"></script>
   <script src="OSMBuildings-Leaflet.js"></script>
 </head>
 ~~~
@@ -185,6 +185,11 @@ Methods
 <tr>
 <td>setDate(new Date(2013, 15, 1, 10, 30)))</td>
 <td>Set date / time for shadow projection.</td>
+</tr>
+
+<tr>
+<td>each({Function})</td>
+<td>A callback method to override each feature's properties on read. Return false in order to skip a feature.</td>
 </tr>
 
 <tr>

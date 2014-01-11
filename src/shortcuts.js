@@ -1,5 +1,6 @@
 // object access shortcuts
-var Int32Array = Int32Array || Array,
+var
+  Int32Array = Int32Array || Array,
   Uint8Array = Uint8Array || Array,
   m = Math,
   exp = m.exp,

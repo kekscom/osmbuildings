@@ -4,35 +4,35 @@ var dstPath = '../dist';
 
 exports.COPYRIGHT = '/**\n' +
                     ' * Copyright (C) 2013 OSM Buildings, Jan Marsch\n' +
-                    ' * A leightweight JavaScript library for visualizing 3D building geometry on interactive maps.\n' +
+                    ' * A leightweight JavaScript library for visualizing building geometry on interactive maps.\n' +
                     ' * @osmbuildings, http://osmbuildings.org\n' +
                     ' */\n';
 
 exports.VERSION = '0.1.9a';
 
 exports.srcFiles = [
-    srcPath + '/prefix.js',
-    srcPath + '/shortcuts.js',
-    srcPath + '/lib/Color.js',
-    srcPath + '/lib/SunPosition.js',
-    srcPath + '/Import.js',
-    srcPath + '/import/GeoJSON.js',
-    srcPath + '/import/OSMXAPI.js',
-    srcPath + '/constants.js',
-    srcPath + '/geometry.js',
-    srcPath + '/variables.js',
-    srcPath + '/functions.js',
-    srcPath + '/Cache.js',
-    srcPath + '/Data.js',
-    srcPath + '/render.js',
-    srcPath + '/Shadows.js',
-    srcPath + '/Ambient.js',
-    srcPath + '/FlatBuildings.js',
-    srcPath + '/Layers.js',
-    srcPath + '/properties.js',
-    srcPath + '/events.js',
-    srcPath + '/engines/{engine}.js',
-    srcPath + '/suffix.js'
+  srcPath + '/prefix.js',
+  srcPath + '/shortcuts.js',
+  srcPath + '/lib/Color.js',
+  srcPath + '/lib/SunPosition.js',
+  srcPath + '/Import.js',
+  srcPath + '/import/GeoJSON.js',
+  srcPath + '/import/OSMXAPI.js',
+  srcPath + '/constants.js',
+  srcPath + '/geometry.js',
+  srcPath + '/variables.js',
+  srcPath + '/functions.js',
+  srcPath + '/Cache.js',
+  srcPath + '/Data.js',
+  srcPath + '/layers/Buildings.js',
+  srcPath + '/layers/Shadows.js',
+  srcPath + '/layers/Ambient.js',
+  srcPath + '/layers/Simplified.js',
+  srcPath + '/Layers.js',
+  srcPath + '/adapter.js',
+  srcPath + '/engines/{engine}.js',
+  srcPath + '/public.js',
+  srcPath + '/suffix.js'
 ];
 
 exports.dstFiles = {

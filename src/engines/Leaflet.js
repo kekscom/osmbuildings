@@ -63,7 +63,7 @@ proto.onRemove = function() {
 proto.onMove = function(e) {
     var off = this.getOffset();
     setCamOffset({ x:this.offset.x-off.x, y:this.offset.y-off.y });
-    render();
+    Buildings.render();
 };
 
 proto.onMoveEnd = function(e) {

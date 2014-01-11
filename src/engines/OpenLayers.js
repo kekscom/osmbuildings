@@ -82,6 +82,6 @@ proto.moveByPx = function(dx, dy) {
     this.offset.y += dy;
     var res = parent.moveByPx.call(this, dx, dy);
     setCamOffset(this.offset);
-    render();
+    Buildings.render();
     return res;
 };
