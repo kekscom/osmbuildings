@@ -40,14 +40,12 @@ var Layers = {
 
     // TODO: improve this to createContext(Layer) => layer.setContext(context)
     Shadows.context    = this.createContext();
-    Ambient.context    = this.createContext();
     Simplified.context = this.createContext();
     Buildings.context  = this.createContext();
   },
 
   render: function() {
     Shadows.render();
-    Ambient.render();
     Simplified.render();
     Buildings.render();
   },

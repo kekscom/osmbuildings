@@ -35,7 +35,7 @@ html, body {
   new L.TileLayer('http://otile1.mqcdn.com/tiles/1.0.0/map/{z}/{x}/{y}.jpg', { maxZoom: 18 }).addTo(map);
 //new L.TileLayer('http://{s}.tiles.mapbox.com/v3/osmbuildings.gm744p3p/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(map);
 
-  var osmb = new OSMBuildings(map).setDate(new Date('2013-12-12 10:30')).loadData();
+  var osmb = new OSMBuildings(map).setDate(new Date(2013, 2, 15, 10, 30)).loadData();
 //INSERT INTO buildings (the_geom, height) SELECT the_geom, CAST(REPLACE(height, 'm', '') AS int) FROM map_polygon WHERE building IS NOT NULL;
 //var osmb = new OSMBuildings(map).loadData('http://osmbuildings.cartodb.com/api/v2/sql?q=' + ('SELECT cartodb_id AS id, height, ST_AsText(the_geom) AS the_geom FROM buildings2 WHERE the_geom %26%26 ST_SetSRID(ST_MakeBox2D(ST_Point({w},{s}), ST_Point({e},{n})), 4326)') + '&format=geojson');
 
