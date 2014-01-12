@@ -61,9 +61,9 @@ var Shadows = {
     this.color.a = alpha;
     colorStr = this.color + '';
 
-this.context.canvas.style.opacity = alpha;
+    this.context.canvas.style.opacity = alpha;
 colorStr = '#666666';
-this.context.shadowColor = '#000000';
+    this.context.shadowColor = '#000000';
 
     var i, il, j, jl,
       item,
@@ -169,24 +169,23 @@ this.context.shadowColor = '#000000';
         }
       }
 
-      if (!mh) {
+      if (!mh) { // if object is hovered, there is no need to clip the footprint
         clipping.push(footprint);
       }
 
-if (item.holes) {
-  for (j = 0, jl = item.holes.length; j < jl; j++) {
-    var points = item.holes[j];
-
-    var hole = [points[0]-originX, points[1]-originY];
-    this.context.moveTo(hole[0], hole[1]);
-    for (var k = 2, kl = points.length; k < kl; k += 2) {
-      this.context.lineTo(points[k]-originX, points[k+1]-originY);
-      hole.push(points[k]-originX, points[k+1]-originY);
-    }
-    clipping.push(hole);
-  }
-}
-
+      if (item.holes) {
+        var k, kl
+        for (j = 0, jl = item.holes.length; j < jl; j++) {
+          points = item.holes[j]
+          this.context.moveTo(points[0]-originX, points[1]-originY);
+          for (k = 2, kl = points.length; k < kl; k += 2) {
+            this.context.lineTo(points[k]-originX, points[k+1]-originY);
+          }
+          if (!mh) { // if object is hovered, there is no need to clip a hole
+            clipping.push(points);
+          }
+        }
+      }
     }
 
     for (i = 0, il = specialItems.length; i < il; i++) {
@@ -196,12 +195,11 @@ if (item.holes) {
       }
     }
 
-this.context.shadowBlur  = 25;
-
     this.context.closePath();
-    this.context.fill();
 
-this.context.shadowBlur  = null;
+    this.context.shadowBlur = 25;
+    this.context.fill();
+    this.context.shadowBlur = null;
 
     // now draw all the footprints as negative clipping mask
     this.context.globalCompositeOperation = 'destination-out';
