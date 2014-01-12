@@ -40,7 +40,7 @@ html, body {
 <body>
 <div id="map"></div>
 <div id="controls">
-  <input id="date" type="range" min="1" max="365" step="1"><label for="date"></label>
+  <input id="date" type="range" min="1" max="12" step="1"><label for="date"></label>
   <input id="time" type="range" min="0" max="23" step="1"><label for="time"></label>
 </div>
 <script>
@@ -48,18 +48,18 @@ var map = new L.Map('map').setView([52.52179, 13.39503], 18); // Berlin Bodemuse
 
 new L.TileLayer('http://{s}.tiles.mapbox.com/v3/osmbuildings.gm744p3p/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
 
-var osmb = new OSMBuildings(map).setDate(new Date(2013, 2, 15, 10, 30)).loadData();
-
+var osmb = new OSMBuildings(map).setDate(new Date(2014, 1, 15, 10, 30)).loadData();
 
 function changeDate() {
   var
     Y = now.getFullYear(),
     M = now.getMonth(),
-    D = now.getDate(),
+    D = 15,
     h = now.getHours(),
     m = 0;
+
   timeRangeLabel.innerText = pad(h) + ':' + pad(m);
-  dateRangeLabel.innerText = Y + '-' + pad(M+1) + '-' + pad(D);
+  dateRangeLabel.innerText = Y + '-' + pad(M+1);
   osmb.setDate(new Date(Y, M, D, h, m));
 }
 
@@ -78,7 +78,7 @@ changeDate();
 
 // init with day of year
 var Jan1 = new Date(now.getFullYear(), 0, 1);
-dateRange.value = Math.ceil((now-Jan1)/86400000);
+dateRange.value = now.getMonth()+1;
 
 timeRange.value = now.getHours();
 
@@ -89,8 +89,7 @@ timeRange.addEventListener('change', function() {
 }, false);
 
 dateRange.addEventListener('change', function() {
-  now.setMonth(0);
-  now.setDate(this.value);
+  now.setMonth(this.value-1);
   changeDate();
 }, false);
 </script>
