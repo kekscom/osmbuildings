@@ -37,7 +37,7 @@ map.setCenter(
   ),
   17
 );
-new OSMBuildings(map).loadData().setDate(new Date(2013, 2, 15, 10, 30));
+new OSMBuildings(map).loadData().setDate(new Date(2014, 2, 15, 10, 30));
 </script>
 </body>
 </html>

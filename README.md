@@ -183,7 +183,7 @@ Methods
 </tr>
 
 <tr>
-<td>setDate(new Date(2013, 15, 1, 10, 30)))</td>
+<td>setDate(new Date(2014, 15, 1, 10, 30)))</td>
 <td>Set date / time for shadow projection.</td>
 </tr>
 

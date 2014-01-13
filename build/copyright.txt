@@ -1,5 +1,0 @@
-/**
- * Copyright (C) 2013 OSM Buildings, Jan Marsch
- * A leightweight JavaScript library for visualizing 3D building geometry on interactive maps.
- * <@osmbuildings> http://osmbuildings.org
- */
