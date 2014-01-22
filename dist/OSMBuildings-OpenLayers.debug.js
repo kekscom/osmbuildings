@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2013 OSM Buildings, Jan Marsch
+ * Copyright (C) 2014 OSM Buildings, Jan Marsch
  * A leightweight JavaScript library for visualizing building geometry on interactive maps.
  * @osmbuildings, http://osmbuildings.org
  */
@@ -12,7 +12,8 @@ var OSMBuildings = (function() {
 //****** file: shortcuts.js ******
 
 // object access shortcuts
-var Int32Array = Int32Array || Array,
+var
+  Int32Array = Int32Array || Array,
   Uint8Array = Uint8Array || Array,
   m = Math,
   exp = m.exp,
@@ -1065,7 +1066,7 @@ var
 
   fadeFactor = 1,
   animTimer,
-  zoomAlpha = 1,
+  ZOOM_ALPHA = 1,
 
   minZoom = MIN_ZOOM,
   maxZoom = 20,
@@ -1295,6 +1296,7 @@ var Data = {
 
       holes = [];
       if (item.holes) {
+        // TODO: simplify
         for (j = 0, jl = item.holes.length; j < jl; j++) {
           if ((innerFootprint = this.getPixelFootprint(item.holes[j]))) {
             holes.push(innerFootprint);
@@ -1306,7 +1308,7 @@ var Data = {
       altColor  = null;
       if (item.wallColor) {
         if ((color = Color.parse(item.wallColor))) {
-          wallColor = color.setAlpha(zoomAlpha);
+          wallColor = color.setAlpha(ZOOM_ALPHA);
           altColor  = ''+ wallColor.setLightness(0.8);
           wallColor = ''+ wallColor;
         }
@@ -1315,7 +1317,7 @@ var Data = {
       roofColor = null;
       if (item.roofColor) {
         if ((color = Color.parse(item.roofColor))) {
-          roofColor = ''+ color.setAlpha(zoomAlpha);
+          roofColor = ''+ color.setAlpha(ZOOM_ALPHA);
         }
       }
 
@@ -1661,7 +1663,9 @@ var Buildings = {
 var Shadows = {
 
   enabled: true,
-  color: new Color(0, 0, 0),
+  color: '#666666',
+  blurColor: '#000000',
+  blurSize: 15,
   date: new Date(),
   direction: { x:0, y:0 },
 
@@ -1673,7 +1677,8 @@ var Shadows = {
   },
 
   cylinder: function(c, r, h, mh) {
-    var _c = this.project(c.x, c.y, h),
+    var
+      _c = this.project(c.x, c.y, h),
       a1, a2;
 
     if (mh) {
@@ -1694,7 +1699,7 @@ var Shadows = {
   },
 
   render: function() {
-    var center, sun, length, alpha, colorStr;
+    var center, sun, length, alpha;
 
     this.context.clearRect(0, 0, WIDTH, HEIGHT);
 
@@ -1712,15 +1717,11 @@ var Shadows = {
     }
 
     length = 1 / tan(sun.altitude);
-    alpha = 0.4 / length;
+    alpha = 0.45 / length;
     this.direction.x = cos(sun.azimuth) * length;
     this.direction.y = sin(sun.azimuth) * length;
 
-    // TODO: maybe introduce Color.setAlpha()
-    this.color.a = alpha;
-    colorStr = this.color + '';
-
-    var i, il, j, jl,
+    var i, il, j, jl, k, kl,
       item,
       f, h, mh,
       x, y,
@@ -1729,12 +1730,15 @@ var Shadows = {
       isVisible,
       ax, ay, bx, by,
       a, b, _a, _b,
-      points,
+      points, locPoints,
       specialItems = [],
       clipping = [],
       dataItems = Data.items;
 
-    this.context.fillStyle = colorStr;
+    this.context.canvas.style.opacity = alpha / (ZOOM_ALPHA * 2);
+    this.context.shadowColor = this.blurColor;
+    this.context.shadowBlur = this.blurSize * (ZOOM_ALPHA / 2);
+    this.context.fillStyle = this.color;
     this.context.beginPath();
 
     for (i = 0, il = dataItems.length; i < il; i++) {
@@ -1824,8 +1828,24 @@ var Shadows = {
         }
       }
 
-      if (!mh) {
+      if (!mh) { // if object is hovered, there is no need to clip the footprint
         clipping.push(footprint);
+      }
+
+      if (item.holes) {
+        for (j = 0, jl = item.holes.length; j < jl; j++) {
+          points = item.holes[j];
+          locPoints = [points[0]-originX, points[1]-originY];
+          this.context.moveTo(locPoints[0], locPoints[1]);
+          for (k = 2, kl = points.length; k < kl; k += 2) {
+            locPoints[k]   = points[k]-originX;
+            locPoints[k+1] = points[k+1]-originY;
+            this.context.lineTo(locPoints[k], locPoints[k+1]);
+          }
+          if (!mh) { // if object is hovered, there is no need to clip a hole
+            clipping.push(locPoints);
+          }
+        }
       }
     }
 
@@ -1836,11 +1856,15 @@ var Shadows = {
       }
     }
 
+    this.context.closePath();
     this.context.fill();
+
+    this.context.shadowBlur = null;
 
     // now draw all the footprints as negative clipping mask
     this.context.globalCompositeOperation = 'destination-out';
     this.context.beginPath();
+
     for (i = 0, il = clipping.length; i < il; i++) {
       points = clipping[i];
       this.context.moveTo(points[0], points[1]);
@@ -1856,133 +1880,6 @@ var Shadows = {
         this.context.moveTo(item.center.x+item.radius, item.center.y);
         this.context.arc(item.center.x, item.center.y, item.radius, 0, PI*2);
       }
-    }
-
-    this.context.fillStyle = '#00ff00';
-    this.context.fill();
-    this.context.globalCompositeOperation = 'source-over';
-  }
-};
-
-
-//****** file: Ambient.js ******
-
-var Ambient = {
-
-    enabled: true,
-    blurSize: 20,
-
-    render: function() {
-      this.context.clearRect(0, 0, WIDTH, HEIGHT);
-
-    // show on high zoom levels only and avoid rendering during zoom
-    if (!this.enabled || zoom < minZoom || isZooming) {
-      return;
-    }
-
-    var
-      i, il, j, jl,
-      item,
-      f,
-      x, y,
-      footprint,
-      isVisible,
-      bbox = { minX:-this.blurSize, minY:-this.blurSize, maxX:WIDTH+this.blurSize, maxY:HEIGHT+this.blurSize };
-
-    this.context.shadowColor = '#000000';
-    this.context.strokeStyle = '#999999';
-    this.context.shadowBlur  = this.blurSize;
-
-    this.context.beginPath();
-
-    for (i = 0, il = Data.items.length; i < il; i++) {
-      item = Data.items[i];
-//    if (Simplified.isSimple(item)) {
-//      continue;
-//    }
-
-      isVisible = false;
-      f = item.footprint;
-      footprint = [];
-      for (j = 0, jl = f.length - 1; j < jl; j += 2) {
-        footprint[j]   = x = f[j]  -originX;
-        footprint[j+1] = y = f[j+1]-originY;
-
-        // TODO: checking footprint is sufficient for visibility - add blur size as grace area!!!
-        if (!isVisible) {
-          isVisible = (x > bbox.minX && x < bbox.maxX && y > bbox.minY && y < bbox.maxY);
-        }
-      }
-
-      if (!isVisible) {
-        continue;
-      }
-
-      if (item.minHeight) {
-        continue;
-      }
-
-      if (item.shape === 'cylinder') {
-//      center:{ x:item.center.x-originX, y:item.center.y-originY },
-//      this.context.moveTo(item.center.x+item.radius, item.center.y);
-//      this.context.arc(item.center.x, item.center.y, item.radius, 0, PI*2);
-        continue;
-      }
-
-      this.context.moveTo(footprint[0], footprint[1]);
-      for (j = 2, jl = footprint.length; j < jl; j += 2) {
-        this.context.lineTo(footprint[j], footprint[j+1]);
-      }
-      this.context.lineTo(footprint[0], footprint[1]);
-    }
-
-    this.context.stroke();
-
-    this.context.shadowBlur = null;
-
-    this.context.globalCompositeOperation = 'destination-out';
-    this.context.beginPath();
-
-    for (i = 0, il = Data.items.length; i < il; i++) {
-      item = Data.items[i];
-
-//    if (Simplified.isSimple(item)) {
-//      continue;
-//    }
-
-      isVisible = false;
-      f = item.footprint;
-      footprint = [];
-      for (j = 0, jl = f.length - 1; j < jl; j += 2) {
-        footprint[j]   = x = f[j]  -originX;
-        footprint[j+1] = y = f[j+1]-originY;
-
-        // TODO: checking footprint is sufficient for visibility - add blur size as grace area!!!
-        if (!isVisible) {
-          isVisible = (x > bbox.minX && x < bbox.maxX && y > bbox.minY && y < bbox.maxY);
-        }
-      }
-
-      if (!isVisible) {
-          continue;
-      }
-
-      if (item.minHeight) {
-        continue;
-      }
-
-      if (item.shape === 'cylinder') {
-//      center:{ x:item.center.x-originX, y:item.center.y-originY },
-//      this.context.moveTo(item.center.x+item.radius, item.center.y);
-//      this.context.arc(item.center.x, item.center.y, item.radius, 0, PI*2);
-        continue;
-      }
-
-      this.context.moveTo(footprint[0], footprint[1]);
-      for (j = 2, jl = footprint.length; j < jl; j += 2) {
-        this.context.lineTo(footprint[j], footprint[j+1]);
-      }
-      this.context.lineTo(footprint[0], footprint[1]);
     }
 
     this.context.fillStyle = '#00ff00';
@@ -2102,7 +1999,6 @@ var Layers = {
 
     // TODO: improve this to createContext(Layer) => layer.setContext(context)
     Shadows.context    = this.createContext();
-    Ambient.context    = this.createContext();
     Simplified.context = this.createContext();
     Buildings.context  = this.createContext();
   },
@@ -2204,11 +2100,11 @@ function setZoom(z) {
   zoom = z;
   size = MAP_TILE_SIZE <<zoom;
 
-  zoomAlpha = 1 - fromRange(zoom, minZoom, maxZoom, 0, 0.3);
+  ZOOM_ALPHA = 1 - fromRange(zoom, minZoom, maxZoom, 0, 0.3);
 
-  wallColorAlpha = defaultWallColor.setAlpha(zoomAlpha) + '';
-  altColorAlpha  = defaultAltColor.setAlpha( zoomAlpha) + '';
-  roofColorAlpha = defaultRoofColor.setAlpha(zoomAlpha) + '';
+  wallColorAlpha = defaultWallColor.setAlpha(ZOOM_ALPHA) + '';
+  altColorAlpha  = defaultAltColor.setAlpha( ZOOM_ALPHA) + '';
+  roofColorAlpha = defaultRoofColor.setAlpha(ZOOM_ALPHA) + '';
 }
 
 function onResize(e) {
@@ -2334,18 +2230,18 @@ proto.setStyle = function(style) {
   style = style || {};
   if (style.color || style.wallColor) {
     defaultWallColor = Color.parse(style.color || style.wallColor);
-    wallColorAlpha   = ''+ defaultWallColor.setAlpha(zoomAlpha);
+    wallColorAlpha   = ''+ defaultWallColor.setAlpha(ZOOM_ALPHA);
 
     defaultAltColor  = defaultWallColor.setLightness(0.8);
-    altColorAlpha    = ''+ defaultAltColor.setAlpha(zoomAlpha);
+    altColorAlpha    = ''+ defaultAltColor.setAlpha(ZOOM_ALPHA);
 
     defaultRoofColor = defaultWallColor.setLightness(1.2);
-    roofColorAlpha   = ''+ defaultRoofColor.setAlpha(zoomAlpha);
+    roofColorAlpha   = ''+ defaultRoofColor.setAlpha(ZOOM_ALPHA);
   }
 
   if (style.roofColor) {
     defaultRoofColor = Color.parse(style.roofColor);
-    roofColorAlpha   = ''+ defaultRoofColor.setAlpha(zoomAlpha);
+    roofColorAlpha   = ''+ defaultRoofColor.setAlpha(ZOOM_ALPHA);
   }
 
   if (style.shadows !== undefined) {
