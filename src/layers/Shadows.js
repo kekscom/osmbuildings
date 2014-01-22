@@ -73,9 +73,9 @@ var Shadows = {
       clipping = [],
       dataItems = Data.items;
 
-    this.context.canvas.style.opacity = alpha;
+    this.context.canvas.style.opacity = alpha / (ZOOM_ALPHA * 2);
     this.context.shadowColor = this.blurColor;
-    this.context.shadowBlur = this.blurSize;
+    this.context.shadowBlur = this.blurSize * (ZOOM_ALPHA / 2);
     this.context.fillStyle = this.color;
     this.context.beginPath();
 

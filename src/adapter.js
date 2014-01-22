@@ -23,11 +23,11 @@ function setZoom(z) {
   zoom = z;
   size = MAP_TILE_SIZE <<zoom;
 
-  zoomAlpha = 1 - fromRange(zoom, minZoom, maxZoom, 0, 0.3);
+  ZOOM_ALPHA = 1 - fromRange(zoom, minZoom, maxZoom, 0, 0.3);
 
-  wallColorAlpha = defaultWallColor.setAlpha(zoomAlpha) + '';
-  altColorAlpha  = defaultAltColor.setAlpha( zoomAlpha) + '';
-  roofColorAlpha = defaultRoofColor.setAlpha(zoomAlpha) + '';
+  wallColorAlpha = defaultWallColor.setAlpha(ZOOM_ALPHA) + '';
+  altColorAlpha  = defaultAltColor.setAlpha( ZOOM_ALPHA) + '';
+  roofColorAlpha = defaultRoofColor.setAlpha(ZOOM_ALPHA) + '';
 }
 
 function onResize(e) {

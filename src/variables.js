@@ -17,7 +17,7 @@ var
 
   fadeFactor = 1,
   animTimer,
-  zoomAlpha = 1,
+  ZOOM_ALPHA = 1,
 
   minZoom = MIN_ZOOM,
   maxZoom = 20,

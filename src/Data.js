@@ -106,7 +106,7 @@ var Data = {
       altColor  = null;
       if (item.wallColor) {
         if ((color = Color.parse(item.wallColor))) {
-          wallColor = color.setAlpha(zoomAlpha);
+          wallColor = color.setAlpha(ZOOM_ALPHA);
           altColor  = ''+ wallColor.setLightness(0.8);
           wallColor = ''+ wallColor;
         }
@@ -115,7 +115,7 @@ var Data = {
       roofColor = null;
       if (item.roofColor) {
         if ((color = Color.parse(item.roofColor))) {
-          roofColor = ''+ color.setAlpha(zoomAlpha);
+          roofColor = ''+ color.setAlpha(ZOOM_ALPHA);
         }
       }
 
