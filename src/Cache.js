@@ -1,27 +1,22 @@
-var Cache = (function() {
+var Cache = {
 
-    var _time = new Date();
-    var _data = {};
+  time: new Date(),
+  data: {},
 
-    var me = {};
+  add: function(data, key) {
+    this.data[key] = { data:data, time:Date.now() };
+  },
 
-    me.add = function(key, data) {
-        _data[key] = { data:data, time:Date.now() };
-    };
+  get: function(key) {
+    return this.data[key] && this.data[key].data;
+  },
 
-    me.get = function(key) {
-        return _data[key] && _data[key].data;
-    };
-
-    me.purge = function() {
-        _time.setMinutes(_time.getMinutes()-5);
-        for (var key in _data) {
-            if (_data[key].time < _time) {
-                delete _data[key];
-            }
-        }
-    };
-
-    return me;
-
-}());
+  purge: function() {
+    this.time.setMinutes(this.time.getMinutes()-5);
+    for (var key in this.data) {
+      if (this.data[key].time < this.time) {
+        delete this.data[key];
+      }
+    }
+  }
+};
