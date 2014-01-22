@@ -105,17 +105,17 @@ var Data = {
       wallColor = null;
       altColor  = null;
       if (item.wallColor) {
-        if ((color = Color.parse(item.wallColor))) {
-          wallColor = color.setAlpha(ZOOM_ALPHA);
-          altColor  = ''+ wallColor.setLightness(0.8);
+        if ((color = parseColor(item.wallColor))) {
+          wallColor = color.alpha(ZOOM_ALPHA);
+          altColor  = ''+ wallColor.lightness(0.8);
           wallColor = ''+ wallColor;
         }
       }
 
       roofColor = null;
       if (item.roofColor) {
-        if ((color = Color.parse(item.roofColor))) {
-          roofColor = ''+ color.setAlpha(ZOOM_ALPHA);
+        if ((color = parseColor(item.roofColor))) {
+          roofColor = ''+ color.alpha(ZOOM_ALPHA);
         }
       }
 

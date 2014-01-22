@@ -108,8 +108,8 @@ var Buildings = {
       a2 = atan2(t[1].y1-c.y, t[1].x1-c.x);
 
       if (!altColor) {
-        col = Color.parse(color);
-        altColor = '' + col.setLightness(0.8);
+        col = parseColor(color);
+        altColor = ''+ col.lightness(0.8);
       }
 
       this.context.fillStyle = color;

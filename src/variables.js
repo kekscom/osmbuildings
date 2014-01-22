@@ -7,13 +7,13 @@ var
 
   activeRequest,
 
-  defaultWallColor = new Color(200, 190, 180),
-  defaultAltColor  = defaultWallColor.setLightness(0.8),
-  defaultRoofColor = defaultWallColor.setLightness(1.2),
+  defaultWallColor = parseColor('rgba(200, 190, 180)'),
+  defaultAltColor  = defaultWallColor.lightness(0.8),
+  defaultRoofColor = defaultWallColor.lightness(1.2),
 
-  wallColorAlpha = defaultWallColor + '',
-  altColorAlpha  = defaultAltColor + '',
-  roofColorAlpha = defaultRoofColor + '',
+  wallColorAlpha = ''+ defaultWallColor,
+  altColorAlpha  = ''+ defaultAltColor,
+  roofColorAlpha = ''+ defaultRoofColor,
 
   fadeFactor = 1,
   animTimer,

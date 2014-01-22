@@ -25,9 +25,9 @@ function setZoom(z) {
 
   ZOOM_ALPHA = 1 - fromRange(zoom, minZoom, maxZoom, 0, 0.3);
 
-  wallColorAlpha = defaultWallColor.setAlpha(ZOOM_ALPHA) + '';
-  altColorAlpha  = defaultAltColor.setAlpha( ZOOM_ALPHA) + '';
-  roofColorAlpha = defaultRoofColor.setAlpha(ZOOM_ALPHA) + '';
+  wallColorAlpha = defaultWallColor.alpha(ZOOM_ALPHA) + '';
+  altColorAlpha  = defaultAltColor.alpha( ZOOM_ALPHA) + '';
+  roofColorAlpha = defaultRoofColor.alpha(ZOOM_ALPHA) + '';
 }
 
 function onResize(e) {
