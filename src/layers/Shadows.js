@@ -1,7 +1,9 @@
 var Shadows = {
 
   enabled: true,
-  color: new Color(0, 0, 0),
+  color: '#666666',
+  blurColor: '#000000',
+  blurSize: 15,
   date: new Date(),
   direction: { x:0, y:0 },
 
@@ -35,7 +37,7 @@ var Shadows = {
   },
 
   render: function() {
-    var center, sun, length, alpha, colorStr;
+    var center, sun, length, alpha;
 
     this.context.clearRect(0, 0, WIDTH, HEIGHT);
 
@@ -53,19 +55,11 @@ var Shadows = {
     }
 
     length = 1 / tan(sun.altitude);
-    alpha = 0.4 / length;
+    alpha = 0.45 / length;
     this.direction.x = cos(sun.azimuth) * length;
     this.direction.y = sin(sun.azimuth) * length;
 
-    // TODO: maybe introduce Color.setAlpha()
-    this.color.a = alpha;
-    colorStr = this.color + '';
-
-    this.context.canvas.style.opacity = alpha;
-colorStr = '#666666';
-    this.context.shadowColor = '#000000';
-
-    var i, il, j, jl,
+    var i, il, j, jl, k, kl,
       item,
       f, h, mh,
       x, y,
@@ -74,12 +68,15 @@ colorStr = '#666666';
       isVisible,
       ax, ay, bx, by,
       a, b, _a, _b,
-      points,
+      points, locPoints,
       specialItems = [],
       clipping = [],
       dataItems = Data.items;
 
-    this.context.fillStyle = colorStr;
+    this.context.canvas.style.opacity = alpha;
+    this.context.shadowColor = this.blurColor;
+    this.context.shadowBlur = this.blurSize;
+    this.context.fillStyle = this.color;
     this.context.beginPath();
 
     for (i = 0, il = dataItems.length; i < il; i++) {
@@ -174,15 +171,17 @@ colorStr = '#666666';
       }
 
       if (item.holes) {
-        var k, kl
         for (j = 0, jl = item.holes.length; j < jl; j++) {
-          points = item.holes[j]
-          this.context.moveTo(points[0]-originX, points[1]-originY);
+          points = item.holes[j];
+          locPoints = [points[0]-originX, points[1]-originY];
+          this.context.moveTo(locPoints[0], locPoints[1]);
           for (k = 2, kl = points.length; k < kl; k += 2) {
-            this.context.lineTo(points[k]-originX, points[k+1]-originY);
+            locPoints[k]   = points[k]-originX;
+            locPoints[k+1] = points[k+1]-originY;
+            this.context.lineTo(locPoints[k], locPoints[k+1]);
           }
           if (!mh) { // if object is hovered, there is no need to clip a hole
-            clipping.push(points);
+            clipping.push(locPoints);
           }
         }
       }
@@ -196,14 +195,14 @@ colorStr = '#666666';
     }
 
     this.context.closePath();
-
-    this.context.shadowBlur = 25;
     this.context.fill();
+
     this.context.shadowBlur = null;
 
     // now draw all the footprints as negative clipping mask
     this.context.globalCompositeOperation = 'destination-out';
     this.context.beginPath();
+
     for (i = 0, il = clipping.length; i < il; i++) {
       points = clipping[i];
       this.context.moveTo(points[0], points[1]);
