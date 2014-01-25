@@ -1,3 +1,3 @@
-(exports || window).OSMBuildings = (function(win) {
+var OSMBuildings = (function() {
 
     'use strict';
