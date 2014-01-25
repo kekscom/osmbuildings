@@ -61,10 +61,9 @@ proto.onRemove = function() {
 };
 
 proto.onMove = function(e) {
-    /*<debug*/console.log('Leaflet: onMove');/*>*/
     var off = this.getOffset();
     setCamOffset({ x:this.offset.x-off.x, y:this.offset.y-off.y });
-    render();
+    Buildings.render();
 };
 
 proto.onMoveEnd = function(e) {
@@ -72,8 +71,6 @@ proto.onMoveEnd = function(e) {
         this.skipMoveEnd = false;
         return;
     }
-    /*<debug*/console.log('Leaflet: onMoveEnd');/*>*/
-
     var map = this.map,
         off = this.getOffset(),
         po = map.getPixelOrigin();
@@ -88,12 +85,10 @@ proto.onMoveEnd = function(e) {
 };
 
 proto.onZoomStart = function(e) {
-    /*<debug*/console.log('Leaflet: onZoomStart');/*>*/
     onZoomStart(e);
 };
 
 proto.onZoom = function(e) {
-    /*<debug*/console.log('Leaflet: onZoom');/*>*/
 //    var map = this.map,
 //        scale = map.getZoomScale(e.zoom),
 //        offset = map._getCenterOffset(e.center).divideBy(1 - 1/scale),
@@ -105,7 +100,6 @@ proto.onZoom = function(e) {
 };
 
 proto.onZoomEnd = function(e) {
-    /*<debug*/console.log('Leaflet: onZoomEnd');/*>*/
     var map = this.map,
         off = this.getOffset(),
         po = map.getPixelOrigin();
@@ -116,11 +110,9 @@ proto.onZoomEnd = function(e) {
 };
 
 proto.onResize = function() {
-    /*<debug*/console.log('Leaflet: onResize');/*>*/
 };
 
 proto.onViewReset = function() {
-    /*<debug*/console.log('Leaflet: onViewReset');/*>*/
     var off = this.getOffset();
 
     this.offset = off;
