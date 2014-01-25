@@ -1,95 +1,92 @@
 exports.create = function() {
 
-  var _svg = '',
-    _tagName, _attributes, _coordinates;
+  var
+    ns = 'http://www.w3.org/2000/svg',
+    style = {},
+    doc = document.createElement('SVG'),
+    el,
+    coordinates = [];
 
-  function _addPathToSvg() {
-    if (!_tagName) {
-      return;
-    }
-    if (_attributes.fill === 'none' && _attributes.stroke === 'none') {
-      return;
-    }
-    _svg += '<' + _tagName;
-    for (var p in _attributes) {
-      _svg += ' ' + p + '="' + _attributes[p] + '"';
-    }
-    _svg += ' ' + d + '="' + _coordinates.join(' ') + '"';
-    _svg += '/>\n';
-  }
-    
+  doc.setAttributeNS(ns, 'xmlns', 'http://www.w3.org/2000/svg');
+  doc.setAttributeNS(ns, 'version', 1.1);
+
   var canvas = {
     style: {}
   };
 
-  canvas.getContext = function(contextType) {
-    if (contextType === '2d') {
+  canvas.getContext = function(type) {
+    if (type === '2d') {
       return context;
     }
   };
 
-  canvas.toDataURL = function(mimeType) {
-    if (mimeType === 'image/svg') {
-      var res = '';
-      res += '<?xml version="1.0" standalone="no"?>\n';
-      res += '<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">\n';
-      res += '<svg width="' + (canvas.width || 1) + '" height="' + (canvas.width || 1) + '" version="1.1" xmlns="http://www.w3.org/2000/svg">\n';
-      res += _svg;
-      res += '</svg>';
-    
-//    viewBox= [min.x, min.y, width, height].join(' ')
-      
-      return res;
-    }
+  canvas.toDataURL = function() {
+//  res += '<?xml version="1.0" standalone="no"?>\n';
+//  res += '<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">\n';
+//  viewBox= [min.x, min.y, width, height].join(' ')
+    doc.setAttributeNS(ns, 'width', (canvas.width || 1));
+    doc.setAttributeNS(ns, 'height', (canvas.height || 1));
+    return doc.toString();
   };
 
-  var context = {
-//    globalCompositeOperation = 'source-over'
-  };
-  
+  var context = {};
+
   context.arc = function(x, y, r, start, end, clockwise) {};
 
   context.clearRect = function() {
-    _svg = '';
+    while (doc.removeChild(doc.firstChild));
   };
 
   context.beginPath = function() {
-    _addPathToSvg();
-
-    _tagName + 'path';
-    _attributes = { fill:'none', stroke:'none' };
-    _coordinates = [];
+    doc.appendchild(el = document.createElementNS(ns, 'path'));
+    coordinates = [];
   };
 
   context.closePath = function() {
-    _coordinates.push('z');
-  };
-
-  context.fill = function() {
-    delete _attributes.fill;
-		context.fillStyle && (_attributes['fill']          = context.fillStyle);
-//  context.fillStyle && (_attributes['fill-opacity']  = context.fillStyle);
-  };
-
-  context.stroke = function() {
-    delete _attributes.stroke;
-    context.lineCap     && (_attributes['stroke-linecap']  = context.lineCap);
-    context.lineJoin    && (_attributes['stroke-linejoin'] = context.lineJoin);
-		context.strokeStyle && (_attributes['stroke']          = context.strokeStyle);
-//  context.strokeStyle && (_attributes['stroke-opacity']  = context.strokeStyle);
-		context.lineWidth   && (_attributes['stroke-width']    = context.lineWidth);
-//  _attributes += ('stroke-dasharray'] = options.dashArray;
-  };
-  
-  context.lineTo = function(x, y) {
-		_path.setAttribute('L', x, y);
+    coordinates.push('z');
+    el.setAttributeNS(ns, 'd', coordinates.join(' '));
   };
 
   context.moveTo = function(x, y) {
-    _coordinates.push('M', x, y);
+    coordinates.push('M', x, y);
   };
-  
+
+  context.lineTo = function(x, y) {
+		coordinates.push('L', x, y);
+  };
+
+  context.stroke = function() {
+    context.lineCap     && el.setAttributeNS(ns, 'stroke-linecap',  context.lineCap);
+    context.lineJoin    && el.setAttributeNS(ns, 'stroke-linejoin', context.lineJoin);
+    context.strokeStyle && el.setAttributeNS(ns, 'stroke',          context.strokeStyle);
+    context.lineWidth   && el.setAttributeNS(ns, 'stroke-width',    context.lineWidth);
+//  context.strokeStyle && (style['stroke-opacity']  = context.strokeStyle);
+//  style += ('stroke-dasharray'] = options.dashArray;
+  };
+
+  context.fill = function() {
+		context.fillStyle && el.setAttributeNS(ns, 'fill', context.fillStyle);
+//  context.fillStyle && el.setAttributeNS(ns, 'fill-opacity', context.fillStyle);
+  };
+
   context.drawImage = function(img, x, y) {};
-  
+
+  context.arc = function() {};
+  context.bezierCurveTo = function() {};
+  context.clearRect = function() {};
+  context.getImageData = function() {};
+  context.putImageData = function() {};
+
+  context.fillStyle = null;
+  context.globalCompositeOperation = null;
+  context.lineCap = null;
+  context.lineJoin = null;
+  context.lineWidth = null;
+  context.mozImageSmoothingEnabled = null;
+  context.shadowBlur = null;
+  context.shadowColor = null;
+  context.strokeStyle = null;
+  context.webkitImageSmoothingEnabled = null;
+
   return canvas;
 };
