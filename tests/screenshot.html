@@ -29,7 +29,6 @@ html, body {
   var map = new L.Map('map').setView([52.52179, 13.39503], 18); // Berlin Bodemuseum
   new L.TileLayer('http://otile1.mqcdn.com/tiles/1.0.0/map/{z}/{x}/{y}.jpg', { maxZoom: 19 }).addTo(map);
   var osmb = new OSMBuildings(map).setDate(new Date(2014, 2, 15, 10, 30)).loadData();
-  console.log(osmb.screenshot(1));
   </script>
 </body>
 </html>
