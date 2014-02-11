@@ -1,5 +1,4 @@
 function fadeIn() {
-
   if (animTimer) {
     return;
   }
@@ -88,14 +87,33 @@ var Layers = {
   },
 
   screenshot: function() {
-    var canvas = doc.createElement('CANVAS');
+    var
+      canvas = doc.createElement('CANVAS'),
+      context = canvas.getContext('2d'),
+      i, il,
+      item;
+
     canvas.width  = WIDTH;
     canvas.height = HEIGHT;
-    var context = canvas.getContext('2d');
+
+    // end fade in
+    clearInterval(animTimer);
+    animTimer = null;
+
+    var dataItems = Data.items;
+    for (i = 0, il = dataItems.length; i < il; i++) {
+      dataItems[i].scale = 1;
+    }
 
     this.render();
-    for (var i = 0, il = this.items.length; i < il; i++) {
-      context.drawImage(this.items[i], 0, 0);
+
+    for (i = 0, il = this.items.length; i < il; i++) {
+      item = this.items[i];
+      if (item.style.opacity !== '') {
+        context.globalAlpha = parseFloat(item.style.opacity);
+      }
+      context.drawImage(item, 0, 0);
+      context.globalAlpha = 1;
     }
 
     return canvas.toDataURL('image/png');
