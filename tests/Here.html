@@ -16,8 +16,7 @@ html, body {
   height: 100%;
 }
 </style>
-<link rel="stylesheet" href="CSS">
-<script src="http://api.maps.nokia.com/2.2.3/jsl.js"></script>
+<script src="http://js.api.here.com/se/2.5.3/jsl.js"></script>
 <script src="../dist/OSMBuildings-Here.js"></script>
 </head>
 
@@ -27,13 +26,13 @@ html, body {
 <script>
 nokia.Settings.set("appId", "_peU-uCkp-j8ovkzFGNU");
 nokia.Settings.set("authenticationToken", "gBoUkAMoxoqIWfxWA5DuMQ");
-var map = new nokia.maps.map.Display(document.getElementById('map'), {
-  components: [
-    new nokia.maps.map.component.Behavior(),
-    new nokia.maps.map.component.ZoomBar()
-  ],
+
+var map = new nokia.maps.map.Display(document.querySelector('#map'), {
+  center: [52.50440, 13.33522],
   zoomLevel: 17,
-  center: [52.50440, 13.33522]
+  components: [
+    new nokia.maps.map.component.Behavior()
+  ]
 });
 
 var osmb = new OSMBuildings(map).loadData();
