@@ -1,7 +1,8 @@
 // private variables, specific to an instance
 var
   WIDTH = 0, HEIGHT = 0, // though this looks like a constant it's needed for distinguishing from local vars
-  HALF_WIDTH = 0, HALF_HEIGHT = 0,
+  CENTER_X = 0, CENTER_Y = 0,
+  MARGIN = 200,
   originX = 0, originY = 0,
   zoom, size,
 

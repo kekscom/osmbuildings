@@ -40,12 +40,12 @@ exports.dstFiles = {
   gzipped:  dstPath + '/OSMBuildings-{engine}.js.gz'
 };
 
-exports.engines = ['Leaflet', 'OpenLayers', 'Here'];
+exports.engines = ['Leaflet', 'OpenLayers'];
 
 exports.jshint = {
 	"browser": true,
 	"node": true,
-	"predef": ["XDomainRequest", "L", "OpenLayers", "google", "nokia"],
+	"predef": ["XDomainRequest", "L", "OpenLayers", "google"],
 //"unused": true,
 
 	"debug": false,

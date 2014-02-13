@@ -1,20 +1,22 @@
 function setOrigin(origin) {
-  originX = origin.x;
-  originY = origin.y;
+  originX = origin.x-MARGIN;
+  originY = origin.y-MARGIN;
 }
 
 function setCamOffset(offset) {
-  camX = HALF_WIDTH+offset.x;
-  camY = HEIGHT   +offset.y;
+  camX = CENTER_X + offset.x;
+  camY = HEIGHT - MARGIN + offset.y;
 }
 
 function setSize(size) {
-  WIDTH  = size.w;
-  HEIGHT = size.h;
-  HALF_WIDTH  = WIDTH /2 <<0;
-  HALF_HEIGHT = HEIGHT/2 <<0;
-  camX = HALF_WIDTH;
-  camY = HEIGHT;
+  WIDTH  = size.w + 2*MARGIN;
+  HEIGHT = size.h + 2*MARGIN;
+  CENTER_X = WIDTH /2 <<0;
+  CENTER_Y = HEIGHT/2 <<0;
+
+  camX = CENTER_X;
+  camY = HEIGHT-MARGIN;
+
   Layers.setSize(WIDTH, HEIGHT);
   maxHeight = camZ-50;
 }

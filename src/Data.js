@@ -75,7 +75,7 @@ var Data = {
       holes, innerFootprint,
       zoomDelta = maxZoom-zoom,
       // TODO: move this to onZoom
-      centerGeo = pixelToGeo(originX+HALF_WIDTH, originY+HALF_HEIGHT),
+      centerGeo = pixelToGeo(originX+CENTER_X, originY+CENTER_Y),
       metersPerPixel = -40075040 * cos(centerGeo.latitude) / Math.pow(2, zoom+8); // see http://wiki.openstreetmap.org/wiki/Zoom_levels
 
     for (i = 0, il = items.length; i < il; i++) {

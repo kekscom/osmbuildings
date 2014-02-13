@@ -47,7 +47,7 @@ var Shadows = {
     }
 
     // TODO: at some point, calculate this just on demand
-    center = pixelToGeo(originX+HALF_WIDTH, originY+HALF_HEIGHT);
+    center = pixelToGeo(originX+CENTER_X, originY+CENTER_Y);
     sun = getSunPosition(this.date, center.latitude, center.longitude);
 
     if (sun.altitude <= 0) {

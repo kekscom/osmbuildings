@@ -1039,7 +1039,8 @@ function getTangents(c1, r1, c2, r2) {
 // private variables, specific to an instance
 var
   WIDTH = 0, HEIGHT = 0, // though this looks like a constant it's needed for distinguishing from local vars
-  HALF_WIDTH = 0, HALF_HEIGHT = 0,
+  CENTER_X = 0, CENTER_Y = 0,
+  MARGIN = 200,
   originX = 0, originY = 0,
   zoom, size,
 
@@ -1258,7 +1259,7 @@ var Data = {
       holes, innerFootprint,
       zoomDelta = maxZoom-zoom,
       // TODO: move this to onZoom
-      centerGeo = pixelToGeo(originX+HALF_WIDTH, originY+HALF_HEIGHT),
+      centerGeo = pixelToGeo(originX+CENTER_X, originY+CENTER_Y),
       metersPerPixel = -40075040 * cos(centerGeo.latitude) / Math.pow(2, zoom+8); // see http://wiki.openstreetmap.org/wiki/Zoom_levels
 
     for (i = 0, il = items.length; i < il; i++) {
@@ -1690,7 +1691,7 @@ var Shadows = {
     }
 
     // TODO: at some point, calculate this just on demand
-    center = pixelToGeo(originX+HALF_WIDTH, originY+HALF_HEIGHT);
+    center = pixelToGeo(originX+CENTER_X, originY+CENTER_Y);
     sun = getSunPosition(this.date, center.latitude, center.longitude);
 
     if (sun.altitude <= 0) {
@@ -2061,8 +2062,8 @@ var Layers = {
 
   // usually called after move: container jumps by move delta, cam is reset
   setPosition: function(x, y) {
-    this.container.style.left = x +'px';
-    this.container.style.top  = y +'px';
+    this.container.style.left = (x-MARGIN)  +'px';
+    this.container.style.top  = (y-MARGIN) +'px';
   }
 };
 
@@ -2089,22 +2090,24 @@ Layers.init();
 //****** file: adapter.js ******
 
 function setOrigin(origin) {
-  originX = origin.x;
-  originY = origin.y;
+  originX = origin.x-MARGIN;
+  originY = origin.y-MARGIN;
 }
 
 function setCamOffset(offset) {
-  camX = HALF_WIDTH+offset.x;
-  camY = HEIGHT   +offset.y;
+  camX = CENTER_X + offset.x;
+  camY = HEIGHT - MARGIN + offset.y;
 }
 
 function setSize(size) {
-  WIDTH  = size.w;
-  HEIGHT = size.h;
-  HALF_WIDTH  = WIDTH /2 <<0;
-  HALF_HEIGHT = HEIGHT/2 <<0;
-  camX = HALF_WIDTH;
-  camY = HEIGHT;
+  WIDTH  = size.w + 2*MARGIN;
+  HEIGHT = size.h + 2*MARGIN;
+  CENTER_X = WIDTH /2 <<0;
+  CENTER_Y = HEIGHT/2 <<0;
+
+  camX = CENTER_X;
+  camY = HEIGHT-MARGIN;
+
   Layers.setSize(WIDTH, HEIGHT);
   maxHeight = camZ-50;
 }

@@ -121,8 +121,8 @@ var Layers = {
 
   // usually called after move: container jumps by move delta, cam is reset
   setPosition: function(x, y) {
-    this.container.style.left = x +'px';
-    this.container.style.top  = y +'px';
+    this.container.style.left = (x-MARGIN)  +'px';
+    this.container.style.top  = (y-MARGIN) +'px';
   }
 };
 
