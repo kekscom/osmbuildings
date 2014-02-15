@@ -3,9 +3,13 @@ A loose but growing outline what's next steps for OSM Buildings.
 # 0.2.0b
 
 - separate rendering layer for flat buildings
-- split data handling per layer
+- new adapters, i.e. for ArcGIS, Google Maps, Here
+- first beta version, keeping API stable
+- one or two new roof shapes
+
+# past 0.2.0b
+
 - handle render modes as plugins
-- closer integration with existing map adapters, new adapters for ArcGIS, Google Maps and HERE
-- roof color by building type
+- split data handling per layer
 - support for new data sources
-- first beta version, keeping API stable from now on
+- roof color by building type
