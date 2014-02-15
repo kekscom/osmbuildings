@@ -93,8 +93,8 @@ var Layers = {
       i, il,
       item;
 
-    canvas.width  = WIDTH;
-    canvas.height = HEIGHT;
+    canvas.width  = WIDTH  - 2*MARGIN;
+    canvas.height = HEIGHT - 2*MARGIN;
 
     // end fade in
     clearInterval(animTimer);
@@ -112,7 +112,7 @@ var Layers = {
       if (item.style.opacity !== '') {
         context.globalAlpha = parseFloat(item.style.opacity);
       }
-      context.drawImage(item, 0, 0);
+      context.drawImage(item, -MARGIN, -MARGIN);
       context.globalAlpha = 1;
     }
 
