@@ -204,6 +204,11 @@ Methods
 As an alternative, pass an URL to <a href="http://cartodb.com/">CartoDB</a> or any other GeoJSON service. See below.
 </td>
 </tr>
+
+<tr>
+<td>screenshot({Boolean})</td>
+<td>Creates a screenshot of all visible OSM Buildings content and returns it as data URL. Parameter indicates, whether browser should display the image directly.</td>
+</tr>
 </table>
 
 CartoDB URL example
