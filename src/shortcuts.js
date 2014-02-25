@@ -1,5 +1,6 @@
 // object access shortcuts
-var Int32Array = Int32Array || Array,
+var
+  Int32Array = Int32Array || Array,
   Uint8Array = Uint8Array || Array,
   m = Math,
   exp = m.exp,
@@ -19,9 +20,6 @@ var Int32Array = Int32Array || Array,
   win = window,
   doc = document;
 
-if (!window.console) {
-  window.console = {
-    log:function() {},
-    warn:function() {}
-  };
+if (!win.console) {
+  win.console = {};
 }
