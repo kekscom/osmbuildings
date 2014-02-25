@@ -11,37 +11,25 @@ var Sketch = (function() {
     // on different sides of the line that passes through
     // P1 and P2 and not very far from it if length of
     // P1P2 is small.
-      k = sqrt(l),
-//    k1 = rand();
-//    k2 = rand();
-//    l3 = rand() * k * 2;
-//    l4 = rand() * k * 2;
-      k1 = 0.20,
-      k2 = 0.65,
-      l3 = 0.30,
-      l4 = 0.60,
+      k = rand(),
+      o = rand() * sqrt(l) * 1.5,
 
-//    dxl = dx/l,
-//    dyl = dy/l,
-      dxlk = dx/l * k,
-      dylk = dy/l * k,
+      x0dxk = x0 + dx*k,
+      y0dyk = y0 + dy*k,
+
+      dxlo = dx/l*o,
+      dylo = dy/l*o,
 
     // Point P3: pick a random point on the line between P0 and P1,
     // then shift it by vector l3l(dy,-dx) which is a line's normal.
-//    x3 = x0 + dx * k1 + dyl*l3;
-//    y3 = y0 + dy * k1 - dxl*l3;
-      x3 = x0 + dx*k1 + dylk*l3,
-      y3 = y0 + dy*k1 - dxlk*l3,
+      x3 = x0dxk + dylo,
+      y3 = y0dyk - dxlo,
 
     // Point P3: pick a random point on the line between P0 and P1,
     // then shift it by vector l4l(-dy,dx) which also is a line's normal
     // but points into opposite direction from the one we used for P3.
-//    x4 = x0 + dx*k2 + dyl*l4;
-//    y4 = y0 + dy*k2 - dxl*l4;
-//    x4 = x0 + dx*k1 + dyl*l3;
-//    y4 = y0 + dy*k1 - dxl*l3;
-      x4 = x0 + dx*k2 - dylk*l4,
-      y4 = y0 + dy*k2 + dxlk*l4;
+      x4 = x0dxk - dylo,
+      y4 = y0dyk + dxlo;
 
     // Draw a bezier curve through points P0, P3, P4, P1.
     // Selection of P3 and P4 makes line "jerk" a little
