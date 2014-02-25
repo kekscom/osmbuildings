@@ -38,7 +38,6 @@ var Layers = {
     this.container.style.top  = 0;
 
     // TODO: improve this to createContext(Layer) => layer.setContext(context)
-//  Sketch.enable(context);
     Shadows.context    = this.createContext();
     Simplified.context = this.createContext();
     Buildings.context  = this.createContext();
@@ -68,6 +67,8 @@ var Layers = {
 
     this.items.push(canvas);
     this.container.appendChild(canvas);
+
+    Sketch.enable(context);
 
     return context;
   },
