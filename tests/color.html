@@ -26,7 +26,7 @@ html, body {
 
 <script>
   var map = new L.Map('map').setView([52.23207, 21.00084], 17); // Warschau
-  new L.TileLayer('http://otile1.mqcdn.com/tiles/1.0.0/map/{z}/{x}/{y}.jpg', { maxZoom: 19 }).addTo(map);
+  new L.TileLayer('http://otile1.mqcdn.com/tiles/1.0.0/map/{z}/{x}/{y}.jpg', { maxNativeZoom: 19, maxZoom: 21 }).addTo(map);
   var osmb = new OSMBuildings(map).setDate(new Date(2014, 2, 15, 10, 30)).loadData();
   </script>
 </body>
