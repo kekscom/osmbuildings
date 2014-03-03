@@ -1040,7 +1040,6 @@ function getTangents(c1, r1, c2, r2) {
 var
   WIDTH = 0, HEIGHT = 0, // though this looks like a constant it's needed for distinguishing from local vars
   CENTER_X = 0, CENTER_Y = 0,
-  MARGIN = 200,
   originX = 0, originY = 0,
   zoom, size,
 
@@ -2034,8 +2033,8 @@ var Layers = {
       i, il,
       item;
 
-    canvas.width  = WIDTH  - 2*MARGIN;
-    canvas.height = HEIGHT - 2*MARGIN;
+    canvas.width  = WIDTH;
+    canvas.height = HEIGHT;
 
     // end fade in
     clearInterval(animTimer);
@@ -2053,7 +2052,7 @@ var Layers = {
       if (item.style.opacity !== '') {
         context.globalAlpha = parseFloat(item.style.opacity);
       }
-      context.drawImage(item, -MARGIN, -MARGIN);
+      context.drawImage(item, 0, 0);
       context.globalAlpha = 1;
     }
 
@@ -2062,8 +2061,8 @@ var Layers = {
 
   // usually called after move: container jumps by move delta, cam is reset
   setPosition: function(x, y) {
-    this.container.style.left = (x-MARGIN)  +'px';
-    this.container.style.top  = (y-MARGIN) +'px';
+    this.container.style.left = x +'px';
+    this.container.style.top  = y +'px';
   }
 };
 
@@ -2090,23 +2089,23 @@ Layers.init();
 //****** file: adapter.js ******
 
 function setOrigin(origin) {
-  originX = origin.x-MARGIN;
-  originY = origin.y-MARGIN;
+  originX = origin.x;
+  originY = origin.y;
 }
 
 function setCamOffset(offset) {
   camX = CENTER_X + offset.x;
-  camY = HEIGHT - MARGIN + offset.y;
+  camY = HEIGHT + offset.y;
 }
 
 function setSize(size) {
-  WIDTH  = size.w + 2*MARGIN;
-  HEIGHT = size.h + 2*MARGIN;
+  WIDTH  = size.w;
+  HEIGHT = size.h;
   CENTER_X = WIDTH /2 <<0;
   CENTER_Y = HEIGHT/2 <<0;
 
   camX = CENTER_X;
-  camY = HEIGHT-MARGIN;
+  camY = HEIGHT;
 
   Layers.setSize(WIDTH, HEIGHT);
   maxHeight = camZ-50;

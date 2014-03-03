@@ -93,8 +93,8 @@ var Layers = {
       i, il,
       item;
 
-    canvas.width  = WIDTH  - 2*MARGIN;
-    canvas.height = HEIGHT - 2*MARGIN;
+    canvas.width  = WIDTH;
+    canvas.height = HEIGHT;
 
     // end fade in
     clearInterval(animTimer);
@@ -112,7 +112,7 @@ var Layers = {
       if (item.style.opacity !== '') {
         context.globalAlpha = parseFloat(item.style.opacity);
       }
-      context.drawImage(item, -MARGIN, -MARGIN);
+      context.drawImage(item, 0, 0);
       context.globalAlpha = 1;
     }
 
@@ -121,8 +121,8 @@ var Layers = {
 
   // usually called after move: container jumps by move delta, cam is reset
   setPosition: function(x, y) {
-    this.container.style.left = (x-MARGIN)  +'px';
-    this.container.style.top  = (y-MARGIN) +'px';
+    this.container.style.left = x +'px';
+    this.container.style.top  = y +'px';
   }
 };
 
