@@ -30,6 +30,7 @@ var
   ceil = m.ceil,
   floor = m.floor,
   round = m.round,
+  pow = m.pow,
   win = window,
   doc = document;
 
@@ -871,9 +872,8 @@ var readOSMXAPI = (function() {
 })();
 
 
-//****** file: constants.js ******
+//****** file: variables.js ******
 
-// constants, shared to all instances
 var VERSION      = '0.1.9a',
   ATTRIBUTION  = '&copy; <a href="http://osmbuildings.org">OSM Buildings</a>',
   OSM_XAPI_URL = 'http://overpass-api.de/api/interpreter?data=[out:json];(way[%22building%22]({s},{w},{n},{e});node(w);way[%22building:part%22=%22yes%22]({s},{w},{n},{e});node(w);relation[%22building%22]({s},{w},{n},{e});way(r);node(w););out;',
@@ -888,11 +888,38 @@ var VERSION      = '0.1.9a',
   DATA_TILE_SIZE = 0.0075, // data tile size in geo coordinates, smaller: less data to load but more requests
 
   MIN_ZOOM = 15,
-  DEFAULT_HEIGHT = 5,
 
   LAT = 'latitude', LON = 'longitude',
 
-  TRUE = true, FALSE = false;
+  TRUE = true, FALSE = false,
+
+  WIDTH = 0, HEIGHT = 0,
+  CENTER_X = 0, CENTER_Y = 0,
+  ORIGIN_X = 0, ORIGIN_Y = 0,
+  ZOOM, size,
+
+  activeRequest,
+
+  defaultWallColor = parseColor('rgba(200, 190, 180)'),
+  defaultAltColor  = defaultWallColor.lightness(0.8),
+  defaultRoofColor = defaultWallColor.lightness(1.2),
+
+  wallColorAlpha = ''+ defaultWallColor,
+  altColorAlpha  = ''+ defaultAltColor,
+  roofColorAlpha = ''+ defaultRoofColor,
+
+  fadeFactor = 1,
+  animTimer,
+
+  METERS_PER_PIXEL = 1,
+  ZOOM_FACTOR = 1,
+
+  MAX_HEIGHT,
+  DEFAULT_HEIGHT = 5,
+
+  camX, camY, camZ = 450,
+
+  isZooming;
 
 
 //****** file: geometry.js ******
@@ -1032,38 +1059,6 @@ function getTangents(c1, r1, c2, r2) {
 
   return res;
 }
-
-
-//****** file: variables.js ******
-
-// private variables, specific to an instance
-var
-  WIDTH = 0, HEIGHT = 0, // though this looks like a constant it's needed for distinguishing from local vars
-  CENTER_X = 0, CENTER_Y = 0,
-  originX = 0, originY = 0,
-  zoom, size,
-
-  activeRequest,
-
-  defaultWallColor = parseColor('rgba(200, 190, 180)'),
-  defaultAltColor  = defaultWallColor.lightness(0.8),
-  defaultRoofColor = defaultWallColor.lightness(1.2),
-
-  wallColorAlpha = ''+ defaultWallColor,
-  altColorAlpha  = ''+ defaultAltColor,
-  roofColorAlpha = ''+ defaultRoofColor,
-
-  fadeFactor = 1,
-  animTimer,
-  ZOOM_ALPHA = 1,
-
-  minZoom = MIN_ZOOM,
-  maxZoom = 20,
-  maxHeight,
-
-  camX, camY, camZ = 450,
-
-  isZooming;
 
 
 //****** file: functions.js ******
@@ -1237,7 +1232,7 @@ var Data = {
   },
 
   addRenderItems: function(data, allAreNew) {
-    var scaledItems = this.scale(data, zoom);
+    var scaledItems = this.scale(data);
     for (var i = 0, il = scaledItems.length; i < il; i++) {
       if (!this.currentItemsIndex[scaledItems[i].id]) {
         scaledItems[i].scale = allAreNew ? 0 : 1;
@@ -1248,7 +1243,7 @@ var Data = {
     fadeIn();
   },
 
-  scale: function(items, zoom) {
+  scale: function(items) {
     var i, il, j, jl,
       res = [],
       item,
@@ -1256,18 +1251,15 @@ var Data = {
       color, wallColor, altColor,
       roofColor, roofHeight,
       holes, innerFootprint,
-      zoomDelta = maxZoom-zoom,
-      // TODO: move this to onZoom
-      centerGeo = pixelToGeo(originX+CENTER_X, originY+CENTER_Y),
-      metersPerPixel = -40075040 * cos(centerGeo.latitude) / Math.pow(2, zoom+8); // see http://wiki.openstreetmap.org/wiki/Zoom_levels
+      zoomScale = METERS_PER_PIXEL * 3;
 
     for (i = 0, il = items.length; i < il; i++) {
       item = items[i];
 
-      height = item.height >>zoomDelta;
+      height = item.height / zoomScale;
 
-      minHeight = item.minHeight >>zoomDelta;
-      if (minHeight > maxHeight) {
+      minHeight = isNaN(item.minHeight) ? 0 : item.minHeight / zoomScale;
+      if (minHeight > MAX_HEIGHT) {
         continue;
       }
 
@@ -1289,7 +1281,7 @@ var Data = {
       altColor  = null;
       if (item.wallColor) {
         if ((color = parseColor(item.wallColor))) {
-          wallColor = color.alpha(ZOOM_ALPHA);
+          wallColor = color.alpha(ZOOM_FACTOR);
           altColor  = ''+ wallColor.lightness(0.8);
           wallColor = ''+ wallColor;
         }
@@ -1298,11 +1290,11 @@ var Data = {
       roofColor = null;
       if (item.roofColor) {
         if ((color = parseColor(item.roofColor))) {
-          roofColor = ''+ color.alpha(ZOOM_ALPHA);
+          roofColor = ''+ color.alpha(ZOOM_FACTOR);
         }
       }
 
-      roofHeight = item.roofHeight >>zoomDelta;
+      roofHeight = item.roofHeight / zoomScale;
 
       if (height <= minHeight && roofHeight <= 0) {
         continue;
@@ -1311,7 +1303,7 @@ var Data = {
       res.push({
         id:         item.id,
         footprint:  footprint,
-        height:     min(height, maxHeight),
+        height:     min(height, MAX_HEIGHT),
         minHeight:  minHeight,
         wallColor:  wallColor,
         altColor:   altColor,
@@ -1321,7 +1313,7 @@ var Data = {
         center:     getCenter(footprint),
         holes:      holes.length ? holes : null,
         shape:      item.shape, // TODO: drop footprint
-        radius:     item.radius/metersPerPixel
+        radius:     item.radius/METERS_PER_PIXEL
       });
     }
 
@@ -1352,7 +1344,7 @@ var Data = {
   update: function() {
     this.resetItems();
 
-    if (zoom < MIN_ZOOM) {
+    if (ZOOM < MIN_ZOOM) {
       return;
     }
 
@@ -1367,8 +1359,8 @@ var Data = {
 
     var lat, lon,
       parsedData, cacheKey,
-      nw = pixelToGeo(originX,       originY),
-      se = pixelToGeo(originX+WIDTH, originY+HEIGHT),
+      nw = pixelToGeo(ORIGIN_X,       ORIGIN_Y),
+      se = pixelToGeo(ORIGIN_X+WIDTH, ORIGIN_Y+HEIGHT),
       sizeLat = DATA_TILE_SIZE,
       sizeLon = DATA_TILE_SIZE*2;
 
@@ -1422,10 +1414,10 @@ var Buildings = {
       _a, _b,
       roof = [];
     for (var i = 0, il = polygon.length-3; i < il; i += 2) {
-      a.x = polygon[i]  -originX;
-      a.y = polygon[i+1]-originY;
-      b.x = polygon[i+2]-originX;
-      b.y = polygon[i+3]-originY;
+      a.x = polygon[i]  -ORIGIN_X;
+      a.y = polygon[i+1]-ORIGIN_Y;
+      b.x = polygon[i+2]-ORIGIN_X;
+      b.y = polygon[i+3]-ORIGIN_Y;
 
       // project 3d to 2d on extruded footprint
       _a = this.project(a.x, a.y, _h);
@@ -1544,19 +1536,19 @@ var Buildings = {
     this.context.clearRect(0, 0, WIDTH, HEIGHT);
 
     // show on high zoom levels only and avoid rendering during zoom
-    if (zoom < minZoom || isZooming) {
+    if (ZOOM < MIN_ZOOM || isZooming) {
       return;
     }
 
     var i, il, j, jl,
       item,
       h, _h, mh, _mh,
-      sortCam = { x:camX+originX, y:camY+originY },
+      sortCam = { x:camX+ORIGIN_X, y:camY+ORIGIN_Y },
       vp = {
-        minX: originX,
-        maxX: originX+WIDTH,
-        minY: originY,
-        maxY: originY+HEIGHT
+        minX: ORIGIN_X,
+        maxX: ORIGIN_X+WIDTH,
+        minY: ORIGIN_Y,
+        maxY: ORIGIN_Y+HEIGHT
       },
       footprint, roof, holes,
       isVisible,
@@ -1569,10 +1561,6 @@ var Buildings = {
 
     for (i = 0, il = dataItems.length; i < il; i++) {
       item = dataItems[i];
-
-      if (Simplified.isSimple(item)) {
-        continue;
-      }
 
       isVisible = false;
       footprint = item.footprint;
@@ -1608,14 +1596,14 @@ var Buildings = {
 
       if (item.shape === 'cylinder') {
         roof = this.drawCylinder(
-          { x:item.center.x-originX, y:item.center.y-originY },
+          { x:item.center.x-ORIGIN_X, y:item.center.y-ORIGIN_Y },
           item.radius,
           h, mh,
           wallColor, altColor
         );
         if (item.roofShape === 'cylinder') {
           roof = this.drawCylinder(
-            { x:item.center.x-originX, y:item.center.y-originY },
+            { x:item.center.x-ORIGIN_X, y:item.center.y-ORIGIN_Y },
             item.radius,
             h+item.roofHeight, h,
             roofColor
@@ -1685,12 +1673,12 @@ var Shadows = {
     this.context.clearRect(0, 0, WIDTH, HEIGHT);
 
     // show on high zoom levels only and avoid rendering during zoom
-    if (!this.enabled || zoom < minZoom || isZooming) {
+    if (!this.enabled || ZOOM < MIN_ZOOM || isZooming) {
       return;
     }
 
     // TODO: at some point, calculate this just on demand
-    center = pixelToGeo(originX+CENTER_X, originY+CENTER_Y);
+    center = pixelToGeo(ORIGIN_X+CENTER_X, ORIGIN_Y+CENTER_Y);
     sun = getSunPosition(this.date, center.latitude, center.longitude);
 
     if (sun.altitude <= 0) {
@@ -1716,26 +1704,21 @@ var Shadows = {
       clipping = [],
       dataItems = Data.items;
 
-    this.context.canvas.style.opacity = alpha / (ZOOM_ALPHA * 2);
+    this.context.canvas.style.opacity = alpha / (ZOOM_FACTOR * 2);
     this.context.shadowColor = this.blurColor;
-    this.context.shadowBlur = this.blurSize * (ZOOM_ALPHA / 2);
+    this.context.shadowBlur = this.blurSize * (ZOOM_FACTOR / 2);
     this.context.fillStyle = this.color;
     this.context.beginPath();
 
     for (i = 0, il = dataItems.length; i < il; i++) {
       item = dataItems[i];
 
-// TODO: no shadows when buildings are too flat => don't add them to this dataItems then
-//    if (item.height <= Simplified.MAX_HEIGHT) {
-//      continue;
-//    }
-
       isVisible = false;
       f = item.footprint;
       footprint = [];
       for (j = 0, jl = f.length - 1; j < jl; j += 2) {
-        footprint[j]   = x = f[j]  -originX;
-        footprint[j+1] = y = f[j+1]-originY;
+        footprint[j]   = x = f[j]  -ORIGIN_X;
+        footprint[j+1] = y = f[j+1]-ORIGIN_Y;
 
         // TODO: checking footprint is sufficient for visibility - NOT VALID FOR SHADOWS!
         if (!isVisible) {
@@ -1761,7 +1744,7 @@ var Shadows = {
         }
         specialItems.push({
           shape:item.shape,
-          center:{ x:item.center.x-originX, y:item.center.y-originY },
+          center:{ x:item.center.x-ORIGIN_X, y:item.center.y-ORIGIN_Y },
           radius:item.radius,
           h:h, mh:mh
         });
@@ -1816,11 +1799,11 @@ var Shadows = {
       if (item.holes) {
         for (j = 0, jl = item.holes.length; j < jl; j++) {
           points = item.holes[j];
-          locPoints = [points[0]-originX, points[1]-originY];
+          locPoints = [points[0]-ORIGIN_X, points[1]-ORIGIN_Y];
           this.context.moveTo(locPoints[0], locPoints[1]);
           for (k = 2, kl = points.length; k < kl; k += 2) {
-            locPoints[k]   = points[k]-originX;
-            locPoints[k+1] = points[k+1]-originY;
+            locPoints[k]   = points[k]-ORIGIN_X;
+            locPoints[k+1] = points[k+1]-ORIGIN_Y;
             this.context.lineTo(locPoints[k], locPoints[k+1]);
           }
           if (!mh) { // if object is hovered, there is no need to clip a hole
@@ -1870,72 +1853,6 @@ var Shadows = {
 };
 
 
-//****** file: Simplified.js ******
-
-var Simplified = {
-
-  isSimple: function(item) {
-    return item.height+item.roofHeight <= DEFAULT_HEIGHT && !item.wallColor && !item.roofColor && !item.holes;
-  },
-
-  render: function() {
-    this.context.clearRect(0, 0, WIDTH, HEIGHT);
-
-    // show on high zoom levels only and avoid rendering during zoom
-    if (zoom < minZoom || isZooming) {
-      return;
-    }
-
-    var i, il, j, jl,
-      item,
-      f,
-      x, y,
-      footprint,
-      isVisible,
-      dataItems = Data.items;
-
-    this.context.beginPath();
-
-    for (i = 0, il = dataItems.length; i < il; i++) {
-      item = dataItems[i];
-      if (!this.isSimple(item)) {
-        continue;
-      }
-
-      isVisible = false;
-      f = item.footprint;
-      footprint = [];
-      for (j = 0, jl = f.length-1; j < jl; j += 2) {
-        footprint[j]   = x = f[j]  -originX;
-        footprint[j+1] = y = f[j+1]-originY;
-
-        // checking footprint is sufficient for visibility
-        if (!isVisible) {
-          isVisible = (x > 0 && x < WIDTH && y > 0 && y < HEIGHT);
-        }
-      }
-
-      if (!isVisible) {
-        continue;
-      }
-
-      this.context.moveTo(footprint[0], footprint[1]);
-      for (j = 2, jl = footprint.length-3; j < jl; j += 2) {
-        this.context.lineTo(footprint[j], footprint[j+1]);
-      }
-
-      this.context.closePath();
-    }
-
-    this.context.fillStyle   = roofColorAlpha;
-    this.context.strokeStyle = altColorAlpha;
-
-    this.context.stroke();
-    this.context.fill();
-  }
-};
-
-
 //****** file: Layers.js ******
 
 function fadeIn() {
@@ -1978,14 +1895,12 @@ var Layers = {
     this.container.style.top  = 0;
 
     // TODO: improve this to createContext(Layer) => layer.setContext(context)
-    Shadows.context    = this.createContext();
-    Simplified.context = this.createContext();
-    Buildings.context  = this.createContext();
+    Shadows.context   = this.createContext();
+    Buildings.context = this.createContext();
   },
 
   render: function() {
     Shadows.render();
-    Simplified.render();
     Buildings.render();
   },
 
@@ -2089,8 +2004,8 @@ Layers.init();
 //****** file: adapter.js ******
 
 function setOrigin(origin) {
-  originX = origin.x;
-  originY = origin.y;
+  ORIGIN_X = origin.x;
+  ORIGIN_Y = origin.y;
 }
 
 function setCamOffset(offset) {
@@ -2108,18 +2023,22 @@ function setSize(size) {
   camY = HEIGHT;
 
   Layers.setSize(WIDTH, HEIGHT);
-  maxHeight = camZ-50;
+  MAX_HEIGHT = camZ-50;
 }
 
 function setZoom(z) {
-  zoom = z;
-  size = MAP_TILE_SIZE <<zoom;
+  ZOOM = z;
+  size = MAP_TILE_SIZE <<ZOOM;
 
-  ZOOM_ALPHA = 1 - fromRange(zoom, minZoom, maxZoom, 0, 0.3);
+  var center = pixelToGeo(ORIGIN_X+CENTER_X, ORIGIN_Y+CENTER_Y);
+  // see http://wiki.openstreetmap.org/wiki/Zoom_levels
+  METERS_PER_PIXEL = -40075040 * cos(center.latitude) / pow(2, ZOOM+8);
 
-  wallColorAlpha = defaultWallColor.alpha(ZOOM_ALPHA) + '';
-  altColorAlpha  = defaultAltColor.alpha( ZOOM_ALPHA) + '';
-  roofColorAlpha = defaultRoofColor.alpha(ZOOM_ALPHA) + '';
+  ZOOM_FACTOR = pow(0.9, ZOOM-MIN_ZOOM);
+
+  wallColorAlpha = defaultWallColor.alpha(ZOOM_FACTOR) + '';
+  altColorAlpha  = defaultAltColor.alpha( ZOOM_FACTOR) + '';
+  roofColorAlpha = defaultRoofColor.alpha(ZOOM_FACTOR) + '';
 }
 
 function onResize(e) {
@@ -2155,9 +2074,9 @@ function onZoomEnd(e) {
 var parent = OpenLayers.Layer.prototype;
 
 var osmb = function(map) {
-    this.offset = { x:0, y:0 }; // cumulative cam offset during moveBy
+  this.offset = { x:0, y:0 }; // cumulative cam offset during moveBy
 
-    parent.initialize.call(this, this.name, { projection:'EPSG:900913' });
+  parent.initialize.call(this, this.name, { projection:'EPSG:900913' });
 	map.addLayer(this);
 };
 
@@ -2169,73 +2088,74 @@ proto.isBaseLayer   = false;
 proto.alwaysInRange = true;
 
 proto.setOrigin = function() {
-    var map = this.map,
-        origin = map.getLonLatFromPixel(new OpenLayers.Pixel(0, 0)),
-        res = map.resolution,
-        ext = this.maxExtent,
-        x = (origin.lon - ext.left) / res <<0,
-        y = (ext.top - origin.lat)  / res <<0;
-    setOrigin({ x:x, y:y });
+  var map = this.map,
+    origin = map.getLonLatFromPixel(new OpenLayers.Pixel(0, 0)),
+    res = map.resolution,
+    ext = this.maxExtent,
+    x = (origin.lon - ext.left) / res <<0,
+    y = (ext.top - origin.lat)  / res <<0;
+  setOrigin({ x:x, y:y });
 };
 
 proto.setMap = function(map) {
-    if (!this.map) {
-        parent.setMap.call(this, map);
-    }
-    Layers.appendTo(this.div);
-    maxZoom = map.baseLayer.numZoomLevels;
-    setSize(map.size);
-    setZoom(map.zoom);
-    this.setOrigin();
+  if (!this.map) {
+    parent.setMap.call(this, map);
+  }
+  Layers.appendTo(this.div);
+  setSize(map.size);
+  setZoom(map.zoom);
+  this.setOrigin();
 
-    Data.update();
+  Data.update();
 };
 
 proto.removeMap = function(map) {
-    Layers.remove();
-    parent.removeMap.call(this, map);
-    this.map = null;
+  Layers.remove();
+  parent.removeMap.call(this, map);
+  this.map = null;
 };
 
 proto.onMapResize = function() {
-    var map = this.map;
-    parent.onMapResize.call(this);
-    onResize({ width:map.size.w, height:map.size.h });
+  var map = this.map;
+  parent.onMapResize.call(this);
+  onResize({ width:map.size.w, height:map.size.h });
 };
 
 proto.moveTo = function(bounds, zoomChanged, isDragging) {
-    var map = this.map,
-        res = parent.moveTo.call(this, bounds, zoomChanged, isDragging);
+  var
+    map = this.map,
+    res = parent.moveTo.call(this, bounds, zoomChanged, isDragging);
 
-    if (!isDragging) {
-        var offsetLeft = parseInt(map.layerContainerDiv.style.left, 10),
-            offsetTop  = parseInt(map.layerContainerDiv.style.top,  10);
+  if (!isDragging) {
+    var
+      offsetLeft = parseInt(map.layerContainerDiv.style.left, 10),
+      offsetTop  = parseInt(map.layerContainerDiv.style.top,  10);
 
-        this.div.style.left = -offsetLeft + 'px';
-        this.div.style.top  = -offsetTop  + 'px';
-    }
+    this.div.style.left = -offsetLeft + 'px';
+    this.div.style.top  = -offsetTop  + 'px';
+  }
 
-    this.setOrigin();
-    this.offset.x = 0;
-    this.offset.y = 0;
-    setCamOffset(this.offset);
+  this.setOrigin();
+  this.offset.x = 0;
+  this.offset.y = 0;
+  setCamOffset(this.offset);
 
-    if (zoomChanged) {
-        onZoomEnd({ zoom:map.zoom });
-    } else {
-        onMoveEnd();
-    }
+  if (zoomChanged) {
+    onZoomEnd({ zoom:map.zoom });
+  } else {
+    onMoveEnd();
+  }
 
-    return res;
+  return res;
 };
 
 proto.moveByPx = function(dx, dy) {
-    this.offset.x += dx;
-    this.offset.y += dy;
-    var res = parent.moveByPx.call(this, dx, dy);
-    setCamOffset(this.offset);
-    Buildings.render();
-    return res;
+  this.offset.x += dx;
+  this.offset.y += dy;
+  var res = parent.moveByPx.call(this, dx, dy);
+  setCamOffset(this.offset);
+  Buildings.render();
+  return res;
 };
 
 
@@ -2246,18 +2166,18 @@ proto.setStyle = function(style) {
   var color;
   if ((color = style.color || style.wallColor)) {
     defaultWallColor = parseColor(color);
-    wallColorAlpha   = ''+ defaultWallColor.alpha(ZOOM_ALPHA);
+    wallColorAlpha   = ''+ defaultWallColor.alpha(ZOOM_FACTOR);
 
     defaultAltColor  = defaultWallColor.lightness(0.8);
-    altColorAlpha    = ''+ defaultAltColor.alpha(ZOOM_ALPHA);
+    altColorAlpha    = ''+ defaultAltColor.alpha(ZOOM_FACTOR);
 
     defaultRoofColor = defaultWallColor.lightness(1.2);
-    roofColorAlpha   = ''+ defaultRoofColor.alpha(ZOOM_ALPHA);
+    roofColorAlpha   = ''+ defaultRoofColor.alpha(ZOOM_FACTOR);
   }
 
   if (style.roofColor) {
     defaultRoofColor = parseColor(style.roofColor);
-    roofColorAlpha   = ''+ defaultRoofColor.alpha(ZOOM_ALPHA);
+    roofColorAlpha   = ''+ defaultRoofColor.alpha(ZOOM_FACTOR);
   }
 
   if (style.shadows !== undefined) {

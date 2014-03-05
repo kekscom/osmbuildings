@@ -38,14 +38,12 @@ var Layers = {
     this.container.style.top  = 0;
 
     // TODO: improve this to createContext(Layer) => layer.setContext(context)
-    Shadows.context    = this.createContext();
-    Simplified.context = this.createContext();
-    Buildings.context  = this.createContext();
+    Shadows.context   = this.createContext();
+    Buildings.context = this.createContext();
   },
 
   render: function() {
     Shadows.render();
-    Simplified.render();
     Buildings.render();
   },
 

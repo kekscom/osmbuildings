@@ -1,6 +1,6 @@
 function setOrigin(origin) {
-  originX = origin.x;
-  originY = origin.y;
+  ORIGIN_X = origin.x;
+  ORIGIN_Y = origin.y;
 }
 
 function setCamOffset(offset) {
@@ -18,18 +18,22 @@ function setSize(size) {
   camY = HEIGHT;
 
   Layers.setSize(WIDTH, HEIGHT);
-  maxHeight = camZ-50;
+  MAX_HEIGHT = camZ-50;
 }
 
 function setZoom(z) {
-  zoom = z;
-  size = MAP_TILE_SIZE <<zoom;
+  ZOOM = z;
+  size = MAP_TILE_SIZE <<ZOOM;
 
-  ZOOM_ALPHA = 1 - fromRange(zoom, minZoom, maxZoom, 0, 0.3);
+  var center = pixelToGeo(ORIGIN_X+CENTER_X, ORIGIN_Y+CENTER_Y);
+  // see http://wiki.openstreetmap.org/wiki/Zoom_levels
+  METERS_PER_PIXEL = -40075040 * cos(center.latitude) / pow(2, ZOOM+8);
 
-  wallColorAlpha = defaultWallColor.alpha(ZOOM_ALPHA) + '';
-  altColorAlpha  = defaultAltColor.alpha( ZOOM_ALPHA) + '';
-  roofColorAlpha = defaultRoofColor.alpha(ZOOM_ALPHA) + '';
+  ZOOM_FACTOR = pow(0.9, ZOOM-MIN_ZOOM);
+
+  wallColorAlpha = defaultWallColor.alpha(ZOOM_FACTOR) + '';
+  altColorAlpha  = defaultAltColor.alpha( ZOOM_FACTOR) + '';
+  roofColorAlpha = defaultRoofColor.alpha(ZOOM_FACTOR) + '';
 }
 
 function onResize(e) {

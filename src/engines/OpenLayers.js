@@ -31,7 +31,6 @@ proto.setMap = function(map) {
     parent.setMap.call(this, map);
   }
   Layers.appendTo(this.div);
-  maxZoom = map.baseLayer.numZoomLevels;
   setSize(map.size);
   setZoom(map.zoom);
   this.setOrigin();
