@@ -54,7 +54,7 @@ var Data = {
   },
 
   addRenderItems: function(data, allAreNew) {
-    var scaledItems = this.scale(data, zoom);
+    var scaledItems = this.scale(data);
     for (var i = 0, il = scaledItems.length; i < il; i++) {
       if (!this.currentItemsIndex[scaledItems[i].id]) {
         scaledItems[i].scale = allAreNew ? 0 : 1;
@@ -65,7 +65,7 @@ var Data = {
     fadeIn();
   },
 
-  scale: function(items, zoom) {
+  scale: function(items) {
     var i, il, j, jl,
       res = [],
       item,
@@ -73,18 +73,15 @@ var Data = {
       color, wallColor, altColor,
       roofColor, roofHeight,
       holes, innerFootprint,
-      zoomDelta = maxZoom-zoom,
-      // TODO: move this to onZoom
-      centerGeo = pixelToGeo(originX+CENTER_X, originY+CENTER_Y),
-      metersPerPixel = -40075040 * cos(centerGeo.latitude) / Math.pow(2, zoom+8); // see http://wiki.openstreetmap.org/wiki/Zoom_levels
+      zoomScale = METERS_PER_PIXEL * 3;
 
     for (i = 0, il = items.length; i < il; i++) {
       item = items[i];
 
-      height = item.height >>zoomDelta;
+      height = item.height / zoomScale;
 
-      minHeight = item.minHeight >>zoomDelta;
-      if (minHeight > maxHeight) {
+      minHeight = isNaN(item.minHeight) ? 0 : item.minHeight / zoomScale;
+      if (minHeight > MAX_HEIGHT) {
         continue;
       }
 
@@ -106,7 +103,7 @@ var Data = {
       altColor  = null;
       if (item.wallColor) {
         if ((color = parseColor(item.wallColor))) {
-          wallColor = color.alpha(ZOOM_ALPHA);
+          wallColor = color.alpha(ZOOM_FACTOR);
           altColor  = ''+ wallColor.lightness(0.8);
           wallColor = ''+ wallColor;
         }
@@ -115,11 +112,11 @@ var Data = {
       roofColor = null;
       if (item.roofColor) {
         if ((color = parseColor(item.roofColor))) {
-          roofColor = ''+ color.alpha(ZOOM_ALPHA);
+          roofColor = ''+ color.alpha(ZOOM_FACTOR);
         }
       }
 
-      roofHeight = item.roofHeight >>zoomDelta;
+      roofHeight = item.roofHeight / zoomScale;
 
       if (height <= minHeight && roofHeight <= 0) {
         continue;
@@ -128,7 +125,7 @@ var Data = {
       res.push({
         id:         item.id,
         footprint:  footprint,
-        height:     min(height, maxHeight),
+        height:     min(height, MAX_HEIGHT),
         minHeight:  minHeight,
         wallColor:  wallColor,
         altColor:   altColor,
@@ -138,7 +135,7 @@ var Data = {
         center:     getCenter(footprint),
         holes:      holes.length ? holes : null,
         shape:      item.shape, // TODO: drop footprint
-        radius:     item.radius/metersPerPixel
+        radius:     item.radius/METERS_PER_PIXEL
       });
     }
 
@@ -169,7 +166,7 @@ var Data = {
   update: function() {
     this.resetItems();
 
-    if (zoom < MIN_ZOOM) {
+    if (ZOOM < MIN_ZOOM) {
       return;
     }
 
@@ -184,8 +181,8 @@ var Data = {
 
     var lat, lon,
       parsedData, cacheKey,
-      nw = pixelToGeo(originX,       originY),
-      se = pixelToGeo(originX+WIDTH, originY+HEIGHT),
+      nw = pixelToGeo(ORIGIN_X,       ORIGIN_Y),
+      se = pixelToGeo(ORIGIN_X+WIDTH, ORIGIN_Y+HEIGHT),
       sizeLat = DATA_TILE_SIZE,
       sizeLon = DATA_TILE_SIZE*2;
 

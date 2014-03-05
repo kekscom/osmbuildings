@@ -51,7 +51,8 @@ var Sketch = (function() {
   var me = {};
 
   me.enable = function(context) {
-    var _xPos0 = 0, _yPos0 = 0,
+    var
+      _xPos0 = 0, _yPos0 = 0,
       _xPos = 0, _yPos = 0,
       _moveTo    = context.moveTo,
       _beginPath = context.beginPath,
@@ -68,7 +69,7 @@ var Sketch = (function() {
     };
 
     context.beginPath = function() {
-      context.lineWidth = 2*Math.random();
+      context.lineWidth = 2*Math.random() / (2*ZOOM_FACTOR);
       _xPos0 = _xPos;
       _yPos0 = _yPos;
       _beginPath.call(context);
@@ -80,7 +81,7 @@ var Sketch = (function() {
     };
 
     context.arc = function(cx, cy, r, start, end, reverse) {
-      var seg = PI/4;
+      var seg = PI/2;
       if (reverse) {
         while (end-start > seg) {
           shakyArc(context, cx, cy, r, end, end-seg);

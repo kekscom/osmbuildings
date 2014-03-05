@@ -12,10 +12,10 @@ var Buildings = {
       _a, _b,
       roof = [];
     for (var i = 0, il = polygon.length-3; i < il; i += 2) {
-      a.x = polygon[i]  -originX;
-      a.y = polygon[i+1]-originY;
-      b.x = polygon[i+2]-originX;
-      b.y = polygon[i+3]-originY;
+      a.x = polygon[i]  -ORIGIN_X;
+      a.y = polygon[i+1]-ORIGIN_Y;
+      b.x = polygon[i+2]-ORIGIN_X;
+      b.y = polygon[i+3]-ORIGIN_Y;
 
       // project 3d to 2d on extruded footprint
       _a = this.project(a.x, a.y, _h);
@@ -92,7 +92,7 @@ var Buildings = {
     var _h = camZ / (camZ-h),
       _c = this.project(c.x, c.y, _h),
       _r = r*_h,
-      a1, a2, col;
+      col;
 
     if (minHeight) {
       var _mh = camZ / (camZ-minHeight);
@@ -104,49 +104,60 @@ var Buildings = {
 
     // no tangents? roof overlaps everything near cam position
     if (t) {
-      a1 = atan2(t[0].y1-c.y, t[0].x1-c.x);
-      a2 = atan2(t[1].y1-c.y, t[1].x1-c.x);
-
       if (!altColor) {
         col = parseColor(color);
         altColor = ''+ col.lightness(0.8);
       }
 
       this.context.fillStyle = color;
-      this.context.beginPath();
-      this.context.arc(_c.x, _c.y, _r, HALF_PI, a1, true);
-      this.context.arc(c.x, c.y, r, a1, HALF_PI);
-      this.context.closePath();
-      this.context.fill();
+
+      this.drawFace([
+        t[0].x2, t[0].y2,
+        t[0].x1, t[0].y1,
+        c.x, c.y+r,
+        _c.x, _c.y+_r
+      ], true);
 
       this.context.fillStyle = altColor;
-      this.context.beginPath();
-      this.context.arc(_c.x, _c.y, _r, a2, HALF_PI, true);
-      this.context.arc(c.x, c.y, r, HALF_PI, a2);
-      this.context.closePath();
-      this.context.fill();
+
+      this.drawFace([
+        t[1].x2, t[1].y2,
+        t[1].x1, t[1].y1,
+        c.x, c.y+r,
+        _c.x, _c.y+_r
+      ], true);
+
+      this.context.fillStyle = altColor;
+
+      this.drawFace([
+        t[0].x2, t[0].y2,
+        _c.x, _c.y+_r,
+        t[1].x2, t[1].y2,
+        _c.x, _c.y-_r
+      ], true);
     }
 
     return { c:_c, r:_r };
   },
 
+
   render: function() {
     this.context.clearRect(0, 0, WIDTH, HEIGHT);
 
     // show on high zoom levels only and avoid rendering during zoom
-    if (zoom < minZoom || isZooming) {
+    if (ZOOM < MIN_ZOOM || isZooming) {
       return;
     }
 
     var i, il, j, jl,
       item,
       h, _h, mh, _mh,
-      sortCam = { x:camX+originX, y:camY+originY },
+      sortCam = { x:camX+ORIGIN_X, y:camY+ORIGIN_Y },
       vp = {
-        minX: originX,
-        maxX: originX+WIDTH,
-        minY: originY,
-        maxY: originY+HEIGHT
+        minX: ORIGIN_X,
+        maxX: ORIGIN_X+WIDTH,
+        minY: ORIGIN_Y,
+        maxY: ORIGIN_Y+HEIGHT
       },
       footprint, roof, holes,
       isVisible,
@@ -159,10 +170,6 @@ var Buildings = {
 
     for (i = 0, il = dataItems.length; i < il; i++) {
       item = dataItems[i];
-
-      if (Simplified.isSimple(item)) {
-        continue;
-      }
 
       isVisible = false;
       footprint = item.footprint;
@@ -198,21 +205,21 @@ var Buildings = {
 
       if (item.shape === 'cylinder') {
         roof = this.drawCylinder(
-          { x:item.center.x-originX, y:item.center.y-originY },
+          { x:item.center.x-ORIGIN_X, y:item.center.y-ORIGIN_Y },
           item.radius,
           h, mh,
           wallColor, altColor
         );
         if (item.roofShape === 'cylinder') {
           roof = this.drawCylinder(
-            { x:item.center.x-originX, y:item.center.y-originY },
+            { x:item.center.x-ORIGIN_X, y:item.center.y-ORIGIN_Y },
             item.radius,
             h+item.roofHeight, h,
             roofColor
           );
         }
-        this.context.fillStyle = roofColor;
-        this.drawCircle(roof.c, roof.r, true);
+//        this.context.fillStyle = roofColor;
+//        this.drawCircle(roof.c, roof.r, true);
       } else {
         roof = this.drawSolid(footprint, _h, _mh, wallColor, altColor);
         holes = [];

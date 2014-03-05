@@ -42,12 +42,12 @@ var Shadows = {
     this.context.clearRect(0, 0, WIDTH, HEIGHT);
 
     // show on high zoom levels only and avoid rendering during zoom
-    if (!this.enabled || zoom < minZoom || isZooming) {
+    if (!this.enabled || ZOOM < MIN_ZOOM || isZooming) {
       return;
     }
 
     // TODO: at some point, calculate this just on demand
-    center = pixelToGeo(originX+CENTER_X, originY+CENTER_Y);
+    center = pixelToGeo(ORIGIN_X+CENTER_X, ORIGIN_Y+CENTER_Y);
     sun = getSunPosition(this.date, center.latitude, center.longitude);
 
     if (sun.altitude <= 0) {
@@ -73,26 +73,21 @@ var Shadows = {
       clipping = [],
       dataItems = Data.items;
 
-    this.context.canvas.style.opacity = alpha / (ZOOM_ALPHA * 2);
+    this.context.canvas.style.opacity = alpha / (ZOOM_FACTOR * 2);
     this.context.shadowColor = this.blurColor;
-    this.context.shadowBlur = this.blurSize * (ZOOM_ALPHA / 2);
+    this.context.shadowBlur = this.blurSize * (ZOOM_FACTOR / 2);
     this.context.fillStyle = this.color;
     this.context.beginPath();
 
     for (i = 0, il = dataItems.length; i < il; i++) {
       item = dataItems[i];
 
-// TODO: no shadows when buildings are too flat => don't add them to this dataItems then
-//    if (item.height <= Simplified.MAX_HEIGHT) {
-//      continue;
-//    }
-
       isVisible = false;
       f = item.footprint;
       footprint = [];
       for (j = 0, jl = f.length - 1; j < jl; j += 2) {
-        footprint[j]   = x = f[j]  -originX;
-        footprint[j+1] = y = f[j+1]-originY;
+        footprint[j]   = x = f[j]  -ORIGIN_X;
+        footprint[j+1] = y = f[j+1]-ORIGIN_Y;
 
         // TODO: checking footprint is sufficient for visibility - NOT VALID FOR SHADOWS!
         if (!isVisible) {
@@ -118,7 +113,7 @@ var Shadows = {
         }
         specialItems.push({
           shape:item.shape,
-          center:{ x:item.center.x-originX, y:item.center.y-originY },
+          center:{ x:item.center.x-ORIGIN_X, y:item.center.y-ORIGIN_Y },
           radius:item.radius,
           h:h, mh:mh
         });
@@ -173,11 +168,11 @@ var Shadows = {
       if (item.holes) {
         for (j = 0, jl = item.holes.length; j < jl; j++) {
           points = item.holes[j];
-          locPoints = [points[0]-originX, points[1]-originY];
+          locPoints = [points[0]-ORIGIN_X, points[1]-ORIGIN_Y];
           this.context.moveTo(locPoints[0], locPoints[1]);
           for (k = 2, kl = points.length; k < kl; k += 2) {
-            locPoints[k]   = points[k]-originX;
-            locPoints[k+1] = points[k+1]-originY;
+            locPoints[k]   = points[k]-ORIGIN_X;
+            locPoints[k+1] = points[k+1]-ORIGIN_Y;
             this.context.lineTo(locPoints[k], locPoints[k+1]);
           }
           if (!mh) { // if object is hovered, there is no need to clip a hole

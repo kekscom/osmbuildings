@@ -13,12 +13,8 @@ var OSMBuildings = (function() {
 //****** file: shortcuts.js ******
 
 // object access shortcuts
-<<<<<<< HEAD
-var Int32Array = Int32Array || Array,
-=======
 var
   Int32Array = Int32Array || Array,
->>>>>>> master
   Uint8Array = Uint8Array || Array,
   m = Math,
   exp = m.exp,
@@ -34,23 +30,13 @@ var
   ceil = m.ceil,
   floor = m.floor,
   round = m.round,
-<<<<<<< HEAD
   rand = m.random,
-  win = window,
-  doc = document;
-
-if (!window.console) {
-  window.console = {
-    log:function() {},
-    warn:function() {}
-  };
-=======
+  pow = m.pow,
   win = window,
   doc = document;
 
 if (!win.console) {
   win.console = {};
->>>>>>> master
 }
 
 
@@ -887,9 +873,8 @@ var readOSMXAPI = (function() {
 })();
 
 
-//****** file: constants.js ******
+//****** file: variables.js ******
 
-// constants, shared to all instances
 var VERSION      = '0.1.9a',
   ATTRIBUTION  = '&copy; <a href="http://osmbuildings.org">OSM Buildings</a>',
   OSM_XAPI_URL = 'http://overpass-api.de/api/interpreter?data=[out:json];(way[%22building%22]({s},{w},{n},{e});node(w);way[%22building:part%22=%22yes%22]({s},{w},{n},{e});node(w);relation[%22building%22]({s},{w},{n},{e});way(r);node(w););out;',
@@ -904,11 +889,38 @@ var VERSION      = '0.1.9a',
   DATA_TILE_SIZE = 0.0075, // data tile size in geo coordinates, smaller: less data to load but more requests
 
   MIN_ZOOM = 15,
-  DEFAULT_HEIGHT = 5,
 
   LAT = 'latitude', LON = 'longitude',
 
-  TRUE = true, FALSE = false;
+  TRUE = true, FALSE = false,
+
+  WIDTH = 0, HEIGHT = 0,
+  CENTER_X = 0, CENTER_Y = 0,
+  ORIGIN_X = 0, ORIGIN_Y = 0,
+  ZOOM, size,
+
+  activeRequest,
+
+  defaultWallColor = parseColor('rgba(200, 190, 180)'),
+  defaultAltColor  = defaultWallColor.lightness(0.8),
+  defaultRoofColor = defaultWallColor.lightness(1.2),
+
+  wallColorAlpha = ''+ defaultWallColor,
+  altColorAlpha  = ''+ defaultAltColor,
+  roofColorAlpha = ''+ defaultRoofColor,
+
+  fadeFactor = 1,
+  animTimer,
+
+  METERS_PER_PIXEL = 1,
+  ZOOM_FACTOR = 1,
+
+  MAX_HEIGHT,
+  DEFAULT_HEIGHT = 5,
+
+  camX, camY, camZ = 450,
+
+  isZooming;
 
 
 //****** file: geometry.js ******
@@ -1050,39 +1062,6 @@ function getTangents(c1, r1, c2, r2) {
 }
 
 
-//****** file: variables.js ******
-
-// private variables, specific to an instance
-var
-  WIDTH = 0, HEIGHT = 0, // though this looks like a constant it's needed for distinguishing from local vars
-  CENTER_X = 0, CENTER_Y = 0,
-  MARGIN = 200,
-  originX = 0, originY = 0,
-  zoom, size,
-
-  activeRequest,
-
-  defaultWallColor = parseColor('rgba(200, 190, 180)'),
-  defaultAltColor  = defaultWallColor.lightness(0.8),
-  defaultRoofColor = defaultWallColor.lightness(1.2),
-
-  wallColorAlpha = ''+ defaultWallColor,
-  altColorAlpha  = ''+ defaultAltColor,
-  roofColorAlpha = ''+ defaultRoofColor,
-
-  fadeFactor = 1,
-  animTimer,
-  ZOOM_ALPHA = 1,
-
-  minZoom = MIN_ZOOM,
-  maxZoom = 20,
-  maxHeight,
-
-  camX, camY, camZ = 450,
-
-  isZooming;
-
-
 //****** file: functions.js ******
 
 function pixelToGeo(x, y) {
@@ -1111,21 +1090,6 @@ function fromRange(sVal, sMin, sMax, dMin, dMax) {
 }
 
 function xhr(url, param, callback) {
-<<<<<<< HEAD
-    url = url.replace(/\{ *([\w_]+) *\}/g, function(tag, key) {
-        return param[key] || tag;
-    });
-
-    var req = 'XDomainRequest' in win ? new XDomainRequest() : new XMLHttpRequest();
-
-    function changeState(state) {
-        if ('XDomainRequest' in win && state !== req.readyState) {
-            req.readyState = state;
-            if (req.onreadystatechange) {
-                req.onreadystatechange();
-            }
-        }
-=======
   url = url.replace(/\{ *([\w_]+) *\}/g, function(tag, key) {
     return param[key] || tag;
   });
@@ -1138,7 +1102,6 @@ function xhr(url, param, callback) {
       if (req.onreadystatechange) {
         req.onreadystatechange();
       }
->>>>>>> master
     }
   }
 
@@ -1270,7 +1233,7 @@ var Data = {
   },
 
   addRenderItems: function(data, allAreNew) {
-    var scaledItems = this.scale(data, zoom);
+    var scaledItems = this.scale(data);
     for (var i = 0, il = scaledItems.length; i < il; i++) {
       if (!this.currentItemsIndex[scaledItems[i].id]) {
         scaledItems[i].scale = allAreNew ? 0 : 1;
@@ -1281,7 +1244,7 @@ var Data = {
     fadeIn();
   },
 
-  scale: function(items, zoom) {
+  scale: function(items) {
     var i, il, j, jl,
       res = [],
       item,
@@ -1289,18 +1252,15 @@ var Data = {
       color, wallColor, altColor,
       roofColor, roofHeight,
       holes, innerFootprint,
-      zoomDelta = maxZoom-zoom,
-      // TODO: move this to onZoom
-      centerGeo = pixelToGeo(originX+CENTER_X, originY+CENTER_Y),
-      metersPerPixel = -40075040 * cos(centerGeo.latitude) / Math.pow(2, zoom+8); // see http://wiki.openstreetmap.org/wiki/Zoom_levels
+      zoomScale = METERS_PER_PIXEL * 3;
 
     for (i = 0, il = items.length; i < il; i++) {
       item = items[i];
 
-      height = item.height >>zoomDelta;
+      height = item.height / zoomScale;
 
-      minHeight = item.minHeight >>zoomDelta;
-      if (minHeight > maxHeight) {
+      minHeight = isNaN(item.minHeight) ? 0 : item.minHeight / zoomScale;
+      if (minHeight > MAX_HEIGHT) {
         continue;
       }
 
@@ -1322,7 +1282,7 @@ var Data = {
       altColor  = null;
       if (item.wallColor) {
         if ((color = parseColor(item.wallColor))) {
-          wallColor = color.alpha(ZOOM_ALPHA);
+          wallColor = color.alpha(ZOOM_FACTOR);
           altColor  = ''+ wallColor.lightness(0.8);
           wallColor = ''+ wallColor;
         }
@@ -1331,11 +1291,11 @@ var Data = {
       roofColor = null;
       if (item.roofColor) {
         if ((color = parseColor(item.roofColor))) {
-          roofColor = ''+ color.alpha(ZOOM_ALPHA);
+          roofColor = ''+ color.alpha(ZOOM_FACTOR);
         }
       }
 
-      roofHeight = item.roofHeight >>zoomDelta;
+      roofHeight = item.roofHeight / zoomScale;
 
       if (height <= minHeight && roofHeight <= 0) {
         continue;
@@ -1344,7 +1304,7 @@ var Data = {
       res.push({
         id:         item.id,
         footprint:  footprint,
-        height:     min(height, maxHeight),
+        height:     min(height, MAX_HEIGHT),
         minHeight:  minHeight,
         wallColor:  wallColor,
         altColor:   altColor,
@@ -1354,7 +1314,7 @@ var Data = {
         center:     getCenter(footprint),
         holes:      holes.length ? holes : null,
         shape:      item.shape, // TODO: drop footprint
-        radius:     item.radius/metersPerPixel
+        radius:     item.radius/METERS_PER_PIXEL
       });
     }
 
@@ -1385,7 +1345,7 @@ var Data = {
   update: function() {
     this.resetItems();
 
-    if (zoom < MIN_ZOOM) {
+    if (ZOOM < MIN_ZOOM) {
       return;
     }
 
@@ -1400,8 +1360,8 @@ var Data = {
 
     var lat, lon,
       parsedData, cacheKey,
-      nw = pixelToGeo(originX,       originY),
-      se = pixelToGeo(originX+WIDTH, originY+HEIGHT),
+      nw = pixelToGeo(ORIGIN_X,       ORIGIN_Y),
+      se = pixelToGeo(ORIGIN_X+WIDTH, ORIGIN_Y+HEIGHT),
       sizeLat = DATA_TILE_SIZE,
       sizeLon = DATA_TILE_SIZE*2;
 
@@ -1455,43 +1415,10 @@ var Buildings = {
       _a, _b,
       roof = [];
     for (var i = 0, il = polygon.length-3; i < il; i += 2) {
-<<<<<<< HEAD
-        a.x = polygon[i]  -originX;
-        a.y = polygon[i+1]-originY;
-        b.x = polygon[i+2]-originX;
-        b.y = polygon[i+3]-originY;
-
-        // project 3d to 2d on extruded footprint
-        _a = project(a.x, a.y, _h);
-        _b = project(b.x, b.y, _h);
-
-        if (_mh) {
-            a = project(a.x, a.y, _mh);
-            b = project(b.x, b.y, _mh);
-        }
-
-        // backface culling check
-        if ((b.x-a.x) * (_a.y-a.y) > (_a.x-a.x) * (b.y-a.y)) {
-            // depending on direction, set wall shading
-            if ((a.x < b.x && a.y < b.y) || (a.x > b.x && a.y > b.y)) {
-                context.fillStyle = altColor;
-            } else {
-                context.fillStyle = color;
-            }
-            drawPolygon([
-                b.x, b.y,
-                a.x, a.y,
-                _a.x, _a.y,
-                _b.x, _b.y
-            ], true);
-        }
-        roof[i]   = _a.x;
-        roof[i+1] = _a.y;
-=======
-      a.x = polygon[i]  -originX;
-      a.y = polygon[i+1]-originY;
-      b.x = polygon[i+2]-originX;
-      b.y = polygon[i+3]-originY;
+      a.x = polygon[i]  -ORIGIN_X;
+      a.y = polygon[i+1]-ORIGIN_Y;
+      b.x = polygon[i+2]-ORIGIN_X;
+      b.y = polygon[i+3]-ORIGIN_Y;
 
       // project 3d to 2d on extruded footprint
       _a = this.project(a.x, a.y, _h);
@@ -1515,11 +1442,10 @@ var Buildings = {
           a.x, a.y,
           _a.x, _a.y,
           _b.x, _b.y
-        ]);
+        ], true);
       }
       roof[i]   = _a.x;
       roof[i+1] = _a.y;
->>>>>>> master
     }
 
     return roof;
@@ -1550,16 +1476,11 @@ var Buildings = {
     }
 
     this.context.closePath();
+    this.context.fill();
     if (stroke) {
       this.context.stroke();
     }
-<<<<<<< HEAD
-//    context.fill();
-}
-=======
-    this.context.fill();
   },
->>>>>>> master
 
   drawCircle: function(c, r, stroke) {
     this.context.beginPath();
@@ -1567,26 +1488,14 @@ var Buildings = {
     if (stroke) {
       this.context.stroke();
     }
-<<<<<<< HEAD
-//    context.fill();
-}
-
-function project(x, y, m) {
-    return {
-        x: (x-camX) * m + camX <<0,
-        y: (y-camY) * m + camY <<0
-    };
-}
-=======
     this.context.fill();
   },
->>>>>>> master
 
   drawCylinder: function(c, r, h, minHeight, color, altColor) {
     var _h = camZ / (camZ-h),
       _c = this.project(c.x, c.y, _h),
       _r = r*_h,
-      a1, a2, col;
+      col;
 
     if (minHeight) {
       var _mh = camZ / (camZ-minHeight);
@@ -1598,49 +1507,60 @@ function project(x, y, m) {
 
     // no tangents? roof overlaps everything near cam position
     if (t) {
-      a1 = atan2(t[0].y1-c.y, t[0].x1-c.x);
-      a2 = atan2(t[1].y1-c.y, t[1].x1-c.x);
-
       if (!altColor) {
         col = parseColor(color);
         altColor = ''+ col.lightness(0.8);
       }
 
       this.context.fillStyle = color;
-      this.context.beginPath();
-      this.context.arc(_c.x, _c.y, _r, HALF_PI, a1, true);
-      this.context.arc(c.x, c.y, r, a1, HALF_PI);
-      this.context.closePath();
-      this.context.fill();
+
+      this.drawFace([
+        t[0].x2, t[0].y2,
+        t[0].x1, t[0].y1,
+        c.x, c.y+r,
+        _c.x, _c.y+_r
+      ], true);
 
       this.context.fillStyle = altColor;
-      this.context.beginPath();
-      this.context.arc(_c.x, _c.y, _r, a2, HALF_PI, true);
-      this.context.arc(c.x, c.y, r, HALF_PI, a2);
-      this.context.closePath();
-      this.context.fill();
+
+      this.drawFace([
+        t[1].x2, t[1].y2,
+        t[1].x1, t[1].y1,
+        c.x, c.y+r,
+        _c.x, _c.y+_r
+      ], true);
+
+      this.context.fillStyle = altColor;
+
+      this.drawFace([
+        t[0].x2, t[0].y2,
+        _c.x, _c.y+_r,
+        t[1].x2, t[1].y2,
+        _c.x, _c.y-_r
+      ], true);
     }
 
     return { c:_c, r:_r };
   },
 
+
   render: function() {
     this.context.clearRect(0, 0, WIDTH, HEIGHT);
 
     // show on high zoom levels only and avoid rendering during zoom
-    if (zoom < minZoom || isZooming) {
+    if (ZOOM < MIN_ZOOM || isZooming) {
       return;
     }
 
     var i, il, j, jl,
       item,
       h, _h, mh, _mh,
-      sortCam = { x:camX+originX, y:camY+originY },
+      sortCam = { x:camX+ORIGIN_X, y:camY+ORIGIN_Y },
       vp = {
-        minX: originX,
-        maxX: originX+WIDTH,
-        minY: originY,
-        maxY: originY+HEIGHT
+        minX: ORIGIN_X,
+        maxX: ORIGIN_X+WIDTH,
+        minY: ORIGIN_Y,
+        maxY: ORIGIN_Y+HEIGHT
       },
       footprint, roof, holes,
       isVisible,
@@ -1653,10 +1573,6 @@ function project(x, y, m) {
 
     for (i = 0, il = dataItems.length; i < il; i++) {
       item = dataItems[i];
-
-      if (Simplified.isSimple(item)) {
-        continue;
-      }
 
       isVisible = false;
       footprint = item.footprint;
@@ -1688,25 +1604,25 @@ function project(x, y, m) {
       wallColor = item.wallColor || wallColorAlpha;
       altColor  = item.altColor  || altColorAlpha;
       roofColor = item.roofColor || roofColorAlpha;
-      this.context.strokeStyle = altColor;
+      this.context.strokeStyle = '#000000'; //altColor;
 
       if (item.shape === 'cylinder') {
         roof = this.drawCylinder(
-          { x:item.center.x-originX, y:item.center.y-originY },
+          { x:item.center.x-ORIGIN_X, y:item.center.y-ORIGIN_Y },
           item.radius,
           h, mh,
           wallColor, altColor
         );
         if (item.roofShape === 'cylinder') {
           roof = this.drawCylinder(
-            { x:item.center.x-originX, y:item.center.y-originY },
+            { x:item.center.x-ORIGIN_X, y:item.center.y-ORIGIN_Y },
             item.radius,
             h+item.roofHeight, h,
             roofColor
           );
         }
-        this.context.fillStyle = roofColor;
-        this.drawCircle(roof.c, roof.r, true);
+//        this.context.fillStyle = roofColor;
+//        this.drawCircle(roof.c, roof.r, true);
       } else {
         roof = this.drawSolid(footprint, _h, _mh, wallColor, altColor);
         holes = [];
@@ -1769,12 +1685,12 @@ var Shadows = {
     this.context.clearRect(0, 0, WIDTH, HEIGHT);
 
     // show on high zoom levels only and avoid rendering during zoom
-    if (!this.enabled || zoom < minZoom || isZooming) {
+    if (!this.enabled || ZOOM < MIN_ZOOM || isZooming) {
       return;
     }
 
     // TODO: at some point, calculate this just on demand
-    center = pixelToGeo(originX+CENTER_X, originY+CENTER_Y);
+    center = pixelToGeo(ORIGIN_X+CENTER_X, ORIGIN_Y+CENTER_Y);
     sun = getSunPosition(this.date, center.latitude, center.longitude);
 
     if (sun.altitude <= 0) {
@@ -1800,26 +1716,21 @@ var Shadows = {
       clipping = [],
       dataItems = Data.items;
 
-    this.context.canvas.style.opacity = alpha / (ZOOM_ALPHA * 2);
+    this.context.canvas.style.opacity = alpha / (ZOOM_FACTOR * 2);
     this.context.shadowColor = this.blurColor;
-    this.context.shadowBlur = this.blurSize * (ZOOM_ALPHA / 2);
+    this.context.shadowBlur = this.blurSize * (ZOOM_FACTOR / 2);
     this.context.fillStyle = this.color;
     this.context.beginPath();
 
     for (i = 0, il = dataItems.length; i < il; i++) {
       item = dataItems[i];
 
-// TODO: no shadows when buildings are too flat => don't add them to this dataItems then
-//    if (item.height <= Simplified.MAX_HEIGHT) {
-//      continue;
-//    }
-
       isVisible = false;
       f = item.footprint;
       footprint = [];
       for (j = 0, jl = f.length - 1; j < jl; j += 2) {
-        footprint[j]   = x = f[j]  -originX;
-        footprint[j+1] = y = f[j+1]-originY;
+        footprint[j]   = x = f[j]  -ORIGIN_X;
+        footprint[j+1] = y = f[j+1]-ORIGIN_Y;
 
         // TODO: checking footprint is sufficient for visibility - NOT VALID FOR SHADOWS!
         if (!isVisible) {
@@ -1845,7 +1756,7 @@ var Shadows = {
         }
         specialItems.push({
           shape:item.shape,
-          center:{ x:item.center.x-originX, y:item.center.y-originY },
+          center:{ x:item.center.x-ORIGIN_X, y:item.center.y-ORIGIN_Y },
           radius:item.radius,
           h:h, mh:mh
         });
@@ -1900,11 +1811,11 @@ var Shadows = {
       if (item.holes) {
         for (j = 0, jl = item.holes.length; j < jl; j++) {
           points = item.holes[j];
-          locPoints = [points[0]-originX, points[1]-originY];
+          locPoints = [points[0]-ORIGIN_X, points[1]-ORIGIN_Y];
           this.context.moveTo(locPoints[0], locPoints[1]);
           for (k = 2, kl = points.length; k < kl; k += 2) {
-            locPoints[k]   = points[k]-originX;
-            locPoints[k+1] = points[k+1]-originY;
+            locPoints[k]   = points[k]-ORIGIN_X;
+            locPoints[k+1] = points[k+1]-ORIGIN_Y;
             this.context.lineTo(locPoints[k], locPoints[k+1]);
           }
           if (!mh) { // if object is hovered, there is no need to clip a hole
@@ -1947,216 +1858,47 @@ var Shadows = {
       }
     }
 
-<<<<<<< HEAD
-    me.setContext = function(context) {
-      _context = context;
-    };
-=======
     this.context.fillStyle = '#00ff00';
     this.context.fill();
     this.context.globalCompositeOperation = 'source-over';
   }
 };
->>>>>>> master
 
 
-//****** file: Simplified.js ******
-
-<<<<<<< HEAD
-        var i, il, j, jl,
-            item,
-            f,
-            x, y,
-            footprint,
-            isVisible;
-=======
-var Simplified = {
->>>>>>> master
-
-  isSimple: function(item) {
-    return item.height+item.roofHeight <= DEFAULT_HEIGHT && !item.wallColor && !item.roofColor && !item.holes;
-  },
-
-  render: function() {
-    this.context.clearRect(0, 0, WIDTH, HEIGHT);
-
-<<<<<<< HEAD
-            if (item.height+item.roofHeight > me.MAX_HEIGHT) {
-              continue;
-            }
-
-            isVisible = false;
-            f = item.footprint;
-            footprint = [];
-            for (j = 0, jl = f.length-1; j < jl; j += 2) {
-              footprint[j]   = x = f[j]  -originX;
-              footprint[j+1] = y = f[j+1]-originY;
-
-              // checking footprint is sufficient for visibility
-              if (!isVisible) {
-                isVisible = (x > 0 && x < width && y > 0 && y < height);
-              }
-            }
-
-            if (!isVisible) {
-              continue;
-            }
-
-            _context.moveTo(footprint[0], footprint[1]);
-            for (j = 2, jl = footprint.length-3; j < jl; j += 2) {
-              _context.lineTo(footprint[j], footprint[j+1]);
-            }
-=======
-    // show on high zoom levels only and avoid rendering during zoom
-    if (zoom < minZoom || isZooming) {
-      return;
-    }
-
-    var i, il, j, jl,
-      item,
-      f,
-      x, y,
-      footprint,
-      isVisible,
-      dataItems = Data.items;
-
-    this.context.beginPath();
-
-    for (i = 0, il = dataItems.length; i < il; i++) {
-      item = dataItems[i];
-      if (!this.isSimple(item)) {
-        continue;
-      }
-
-      isVisible = false;
-      f = item.footprint;
-      footprint = [];
-      for (j = 0, jl = f.length-1; j < jl; j += 2) {
-        footprint[j]   = x = f[j]  -originX;
-        footprint[j+1] = y = f[j+1]-originY;
-
-        // checking footprint is sufficient for visibility
-        if (!isVisible) {
-          isVisible = (x > 0 && x < WIDTH && y > 0 && y < HEIGHT);
-        }
-      }
-
-      if (!isVisible) {
-        continue;
-      }
-
-      this.context.moveTo(footprint[0], footprint[1]);
-      for (j = 2, jl = footprint.length-3; j < jl; j += 2) {
-        this.context.lineTo(footprint[j], footprint[j+1]);
-      }
->>>>>>> master
-
-      this.context.closePath();
-    }
-
-    this.context.fillStyle   = roofColorAlpha;
-    this.context.strokeStyle = altColorAlpha;
-
-    this.context.stroke();
-    this.context.fill();
-  }
-};
-
-
-//****** file: Layers.js ******
-
-function fadeIn() {
-  if (animTimer) {
-    return;
-  }
-
-  animTimer = setInterval(function() {
-    var dataItems = Data.items,
-      isNeeded = false;
-
-    for (var i = 0, il = dataItems.length; i < il; i++) {
-      if (dataItems[i].scale < 1) {
-        dataItems[i].scale += 0.5*0.2; // amount*easing
-        if (dataItems[i].scale > 1) {
-          dataItems[i].scale = 1;
-        }
-        isNeeded = true;
-      }
-    }
-
-<<<<<<< HEAD
 //****** file: Sketch.js ******
 
 var Sketch = (function() {
 
   // http://mrale.ph/blog/2012/11/25/shaky-diagramming.html
   function shakyLine(context, x0, y0, x1, y1) {
-    var dx = x1-x0,
+    var
+      dx = x1-x0,
       dy = y1-y0,
-      l = sqrt(dx * dx + dy * dy),
+      l = sqrt(dx*dx + dy*dy),
 
     // Now we need to pick two random points that are placed
     // on different sides of the line that passes through
     // P1 and P2 and not very far from it if length of
     // P1P2 is small.
-      k = sqrt(l),
-      k1 = 0.20,
-      k2 = 0.65,
-      l3 = 0.30,
-      l4 = 0.60,
+      k = rand(),
+      o = rand() * sqrt(l) * 1.5,
 
-      dxlk = dx/l * k,
-      dylk = dy/l * k,
+      x0dxk = x0 + dx*k,
+      y0dyk = y0 + dy*k,
+
+      dxlo = dx/l*o,
+      dylo = dy/l*o,
 
     // Point P3: pick a random point on the line between P0 and P1,
     // then shift it by vector l3l(dy,-dx) which is a line's normal.
-      x3 = x0 + dx*k1 + dylk * l3,
-      y3 = y0 + dy*k1 - dxlk * l3,
+      x3 = x0dxk + dylo,
+      y3 = y0dyk - dxlo,
 
     // Point P3: pick a random point on the line between P0 and P1,
     // then shift it by vector l4l(-dy,dx) which also is a line's normal
     // but points into opposite direction from the one we used for P3.
-      x4 = x0 + dx*k2 - dylk * l4,
-      y4 = y0 + dy*k2 + dxlk * l4;
-
-    // Draw a bezier curve through points P0, P3, P4, P1.
-    // Selection of P3 and P4 makes line "jerk" a little
-    // between them but otherwise it will be mostly straight thus
-    // creating illusion of being hand drawn.
-    context.bezierCurveTo(x3, y3, x4, y4, x1, y1);
-    shakyLine2(context, x1, y1, x0, y0);
-    context.bezierCurveTo(x3, y3, x4, y4, x1, y1);
-  }
-
-
-  function shakyLine2(context, x0, y0, x1, y1) {
-    var dx = x1-x0,
-      dy = y1-y0,
-      l = sqrt(dx * dx + dy * dy),
-
-    // Now we need to pick two random points that are placed
-    // on different sides of the line that passes through
-    // P1 and P2 and not very far from it if length of
-    // P1P2 is small.
-      k = sqrt(l),
-      k1 = 0.20,
-      k2 = 0.85,
-      l3 = 0.60,
-      l4 = 1.00,
-
-      dxlk = dx/l * k,
-      dylk = dy/l * k,
-
-    // Point P3: pick a random point on the line between P0 and P1,
-    // then shift it by vector l3l(dy,-dx) which is a line's normal.
-      x3 = x0 + dx*k1 + dylk * l3,
-      y3 = y0 + dy*k1 - dxlk * l3,
-
-    // Point P3: pick a random point on the line between P0 and P1,
-    // then shift it by vector l4l(-dy,dx) which also is a line's normal
-    // but points into opposite direction from the one we used for P3.
-      x4 = x0 + dx*k2 - dylk * l4,
-      y4 = y0 + dy*k2 + dxlk * l4;
+      x4 = x0dxk - dylo,
+      y4 = y0dyk + dxlo;
 
     // Draw a bezier curve through points P0, P3, P4, P1.
     // Selection of P3 and P4 makes line "jerk" a little
@@ -2164,7 +1906,6 @@ var Sketch = (function() {
     // creating illusion of being hand drawn.
     context.bezierCurveTo(x3, y3, x4, y4, x1, y1);
   }
-
 
   function shakyArc(context, cx, cy, r, start, end) {
     var x0 = cx + cos(start) * r,
@@ -2174,52 +1915,13 @@ var Sketch = (function() {
 
     shakyLine(context, x0, y0, x1, y1);
     return;
-
-/***
-    var dx = x1-x0;
-    var dy = y1-y0;
-    var l = sqrt(dx * dx + dy * dy);
-
-    // Now we need to pick two random points that are placed
-    // on different sides of the line that passes through
-    // P1 and P2 and not very far from it if length of
-    // P1P2 is small.
-
-    var k  = sqrt(l);// 1.5;
-    var k1 = rand();
-    var k2 = rand();
-    var l3 = rand() * k * 2;
-    var l4 = rand() * k * 2;
-
-    // Point P3: pick a random point on the line between P0 and P1,
-    // then shift it by vector l3l(dy,-dx) which is a line's normal.
-    var x3 = x0 + dx * k1 + dy/l * l3;
-    var y3 = y0 + dy * k1 - dx/l * l3;
-
-    // Point P3: pick a random point on the line between P0 and P1,
-    // then shift it by vector l4l(-dy,dx) which also is a line's normal
-    // but points into opposite direction from the one we used for P3.
-    var x4 = x0 + dx * k2 + dy/l * l4;
-    var y4 = y0 + dy * k2 - dx/l * l4;
-
-    var x4 = x0 + dx * k1 + dy/l * l3;
-    var y4 = y0 + dy * k1 - dx/l * l3;
-
-    // Draw a bezier curve through points P0, P3, P4, P1.
-    // Selection of P3 and P4 makes line "jerk" a little
-    // between them but otherwise it will be mostly straight thus
-    // creating illusion of being hand drawn.
-    context.bezierCurveTo(x3, y3, x4, y4, x1, y1);
-***/
   }
-
-
-
 
   var me = {};
 
   me.enable = function(context) {
-    var _xPos0 = 0, _yPos0 = 0,
+    var
+      _xPos0 = 0, _yPos0 = 0,
       _xPos = 0, _yPos = 0,
       _moveTo    = context.moveTo,
       _beginPath = context.beginPath,
@@ -2236,6 +1938,7 @@ var Sketch = (function() {
     };
 
     context.beginPath = function() {
+      context.lineWidth = 2*Math.random() / (2*ZOOM_FACTOR);
       _xPos0 = _xPos;
       _yPos0 = _yPos;
       _beginPath.call(context);
@@ -2247,7 +1950,7 @@ var Sketch = (function() {
     };
 
     context.arc = function(cx, cy, r, start, end, reverse) {
-      var seg = PI/4;
+      var seg = PI/2;
       if (reverse) {
         while (end-start > seg) {
           shakyArc(context, cx, cy, r, end, end-seg);
@@ -2273,9 +1976,27 @@ var Sketch = (function() {
 
 
 //****** file: Layers.js ******
-=======
+
+function fadeIn() {
+  if (animTimer) {
+    return;
+  }
+
+  animTimer = setInterval(function() {
+    var dataItems = Data.items,
+      isNeeded = false;
+
+    for (var i = 0, il = dataItems.length; i < il; i++) {
+      if (dataItems[i].scale < 1) {
+        dataItems[i].scale += 0.5*0.2; // amount*easing
+        if (dataItems[i].scale > 1) {
+          dataItems[i].scale = 1;
+        }
+        isNeeded = true;
+      }
+    }
+
     Layers.render();
->>>>>>> master
 
     if (!isNeeded) {
       clearInterval(animTimer);
@@ -2284,67 +2005,6 @@ var Sketch = (function() {
   }, 33);
 }
 
-<<<<<<< HEAD
-  function _createItem() {
-    var canvas = doc.createElement('CANVAS');
-    canvas.style.webkitTransform = 'translate3d(0,0,0)'; // turn on hw acceleration
-    canvas.style.imageRendering  = 'optimizeSpeed';
-    canvas.style.position = 'absolute';
-    canvas.style.left = 0;
-    canvas.style.top  = 0;
-
-    var context = canvas.getContext('2d');
-    context.lineCap   = 'round';
-    context.lineJoin  = 'round';
-    context.lineWidth = 1;
-
-    context.mozImageSmoothingEnabled    = false;
-    context.webkitImageSmoothingEnabled = false;
-
-    _items.push(canvas);
-    _container.appendChild(canvas);
-
-    return Sketch.enable(context);
-  }
-
-  var _container = doc.createElement('DIV');
-  _container.style.pointerEvents = 'none';
-  _container.style.position = 'absolute';
-  _container.style.left = 0;
-  _container.style.top  = 0;
-
-  var _items = [];
-
-  // TODO: improve this to _createItem(Layer) => layer.setContext(context)
-  Shadows.setContext(      _createItem());
-  FlatBuildings.setContext(_createItem());
-  context = _createItem(); // default (global) render context
-
-  var me = {};
-
-  me.appendTo = function(parentNode) {
-    parentNode.appendChild(_container);
-  };
-
-  me.remove = function() {
-    _container.parentNode.removeChild(_container);
-  };
-
-  me.setSize = function(w, h) {
-    for (var i = 0, il = _items.length; i < il; i++) {
-      _items[i].width  = w;
-      _items[i].height = h;
-    }
-  };
-
-  // usually called after move: container jumps by move delta, cam is reset
-  me.setPosition = function(x, y) {
-    _container.style.left = x + 'px';
-    _container.style.top  = y + 'px';
-  };
-
-  return me;
-=======
 var Layers = {
 
   container: doc.createElement('DIV'),
@@ -2357,14 +2017,12 @@ var Layers = {
     this.container.style.top  = 0;
 
     // TODO: improve this to createContext(Layer) => layer.setContext(context)
-    Shadows.context    = this.createContext();
-    Simplified.context = this.createContext();
-    Buildings.context  = this.createContext();
+    Shadows.context   = this.createContext();
+    Buildings.context = this.createContext();
   },
 
   render: function() {
     Shadows.render();
-    Simplified.render();
     Buildings.render();
   },
 
@@ -2386,6 +2044,8 @@ var Layers = {
 
     this.items.push(canvas);
     this.container.appendChild(canvas);
+
+    Sketch.enable(context);
 
     return context;
   },
@@ -2412,8 +2072,8 @@ var Layers = {
       i, il,
       item;
 
-    canvas.width  = WIDTH  - 2*MARGIN;
-    canvas.height = HEIGHT - 2*MARGIN;
+    canvas.width  = WIDTH;
+    canvas.height = HEIGHT;
 
     // end fade in
     clearInterval(animTimer);
@@ -2431,7 +2091,7 @@ var Layers = {
       if (item.style.opacity !== '') {
         context.globalAlpha = parseFloat(item.style.opacity);
       }
-      context.drawImage(item, -MARGIN, -MARGIN);
+      context.drawImage(item, 0, 0);
       context.globalAlpha = 1;
     }
 
@@ -2440,13 +2100,12 @@ var Layers = {
 
   // usually called after move: container jumps by move delta, cam is reset
   setPosition: function(x, y) {
-    this.container.style.left = (x-MARGIN)  +'px';
-    this.container.style.top  = (y-MARGIN) +'px';
+    this.container.style.left = x +'px';
+    this.container.style.top  = y +'px';
   }
 };
 
 Layers.init();
->>>>>>> master
 
 //function debugMarker(p, color, size) {
 //  context.fillStyle = color || '#ffcc00';
@@ -2469,37 +2128,41 @@ Layers.init();
 //****** file: adapter.js ******
 
 function setOrigin(origin) {
-  originX = origin.x-MARGIN;
-  originY = origin.y-MARGIN;
+  ORIGIN_X = origin.x;
+  ORIGIN_Y = origin.y;
 }
 
 function setCamOffset(offset) {
   camX = CENTER_X + offset.x;
-  camY = HEIGHT - MARGIN + offset.y;
+  camY = HEIGHT + offset.y;
 }
 
 function setSize(size) {
-  WIDTH  = size.w + 2*MARGIN;
-  HEIGHT = size.h + 2*MARGIN;
+  WIDTH  = size.w;
+  HEIGHT = size.h;
   CENTER_X = WIDTH /2 <<0;
   CENTER_Y = HEIGHT/2 <<0;
 
   camX = CENTER_X;
-  camY = HEIGHT-MARGIN;
+  camY = HEIGHT;
 
   Layers.setSize(WIDTH, HEIGHT);
-  maxHeight = camZ-50;
+  MAX_HEIGHT = camZ-50;
 }
 
 function setZoom(z) {
-  zoom = z;
-  size = MAP_TILE_SIZE <<zoom;
+  ZOOM = z;
+  size = MAP_TILE_SIZE <<ZOOM;
 
-  ZOOM_ALPHA = 1 - fromRange(zoom, minZoom, maxZoom, 0, 0.3);
+  var center = pixelToGeo(ORIGIN_X+CENTER_X, ORIGIN_Y+CENTER_Y);
+  // see http://wiki.openstreetmap.org/wiki/Zoom_levels
+  METERS_PER_PIXEL = -40075040 * cos(center.latitude) / pow(2, ZOOM+8);
 
-  wallColorAlpha = defaultWallColor.alpha(ZOOM_ALPHA) + '';
-  altColorAlpha  = defaultAltColor.alpha( ZOOM_ALPHA) + '';
-  roofColorAlpha = defaultRoofColor.alpha(ZOOM_ALPHA) + '';
+  ZOOM_FACTOR = pow(0.9, ZOOM-MIN_ZOOM);
+
+  wallColorAlpha = defaultWallColor.alpha(ZOOM_FACTOR) + '';
+  altColorAlpha  = defaultAltColor.alpha( ZOOM_FACTOR) + '';
+  roofColorAlpha = defaultRoofColor.alpha(ZOOM_FACTOR) + '';
 }
 
 function onResize(e) {
@@ -2535,9 +2198,9 @@ function onZoomEnd(e) {
 var parent = OpenLayers.Layer.prototype;
 
 var osmb = function(map) {
-    this.offset = { x:0, y:0 }; // cumulative cam offset during moveBy
+  this.offset = { x:0, y:0 }; // cumulative cam offset during moveBy
 
-    parent.initialize.call(this, this.name, { projection:'EPSG:900913' });
+  parent.initialize.call(this, this.name, { projection:'EPSG:900913' });
 	map.addLayer(this);
 };
 
@@ -2549,73 +2212,74 @@ proto.isBaseLayer   = false;
 proto.alwaysInRange = true;
 
 proto.setOrigin = function() {
-    var map = this.map,
-        origin = map.getLonLatFromPixel(new OpenLayers.Pixel(0, 0)),
-        res = map.resolution,
-        ext = this.maxExtent,
-        x = (origin.lon - ext.left) / res <<0,
-        y = (ext.top - origin.lat)  / res <<0;
-    setOrigin({ x:x, y:y });
+  var map = this.map,
+    origin = map.getLonLatFromPixel(new OpenLayers.Pixel(0, 0)),
+    res = map.resolution,
+    ext = this.maxExtent,
+    x = (origin.lon - ext.left) / res <<0,
+    y = (ext.top - origin.lat)  / res <<0;
+  setOrigin({ x:x, y:y });
 };
 
 proto.setMap = function(map) {
-    if (!this.map) {
-        parent.setMap.call(this, map);
-    }
-    Layers.appendTo(this.div);
-    maxZoom = map.baseLayer.numZoomLevels;
-    setSize(map.size);
-    setZoom(map.zoom);
-    this.setOrigin();
+  if (!this.map) {
+    parent.setMap.call(this, map);
+  }
+  Layers.appendTo(this.div);
+  setSize(map.size);
+  setZoom(map.zoom);
+  this.setOrigin();
 
-    Data.update();
+  Data.update();
 };
 
 proto.removeMap = function(map) {
-    Layers.remove();
-    parent.removeMap.call(this, map);
-    this.map = null;
+  Layers.remove();
+  parent.removeMap.call(this, map);
+  this.map = null;
 };
 
 proto.onMapResize = function() {
-    var map = this.map;
-    parent.onMapResize.call(this);
-    onResize({ width:map.size.w, height:map.size.h });
+  var map = this.map;
+  parent.onMapResize.call(this);
+  onResize({ width:map.size.w, height:map.size.h });
 };
 
 proto.moveTo = function(bounds, zoomChanged, isDragging) {
-    var map = this.map,
-        res = parent.moveTo.call(this, bounds, zoomChanged, isDragging);
+  var
+    map = this.map,
+    res = parent.moveTo.call(this, bounds, zoomChanged, isDragging);
 
-    if (!isDragging) {
-        var offsetLeft = parseInt(map.layerContainerDiv.style.left, 10),
-            offsetTop  = parseInt(map.layerContainerDiv.style.top,  10);
+  if (!isDragging) {
+    var
+      offsetLeft = parseInt(map.layerContainerDiv.style.left, 10),
+      offsetTop  = parseInt(map.layerContainerDiv.style.top,  10);
 
-        this.div.style.left = -offsetLeft + 'px';
-        this.div.style.top  = -offsetTop  + 'px';
-    }
+    this.div.style.left = -offsetLeft + 'px';
+    this.div.style.top  = -offsetTop  + 'px';
+  }
 
-    this.setOrigin();
-    this.offset.x = 0;
-    this.offset.y = 0;
-    setCamOffset(this.offset);
+  this.setOrigin();
+  this.offset.x = 0;
+  this.offset.y = 0;
+  setCamOffset(this.offset);
 
-    if (zoomChanged) {
-        onZoomEnd({ zoom:map.zoom });
-    } else {
-        onMoveEnd();
-    }
+  if (zoomChanged) {
+    onZoomEnd({ zoom:map.zoom });
+  } else {
+    onMoveEnd();
+  }
 
-    return res;
+  return res;
 };
 
 proto.moveByPx = function(dx, dy) {
-    this.offset.x += dx;
-    this.offset.y += dy;
-    var res = parent.moveByPx.call(this, dx, dy);
-    setCamOffset(this.offset);
-    Buildings.render();
-    return res;
+  this.offset.x += dx;
+  this.offset.y += dy;
+  var res = parent.moveByPx.call(this, dx, dy);
+  setCamOffset(this.offset);
+  Buildings.render();
+  return res;
 };
 
 
@@ -2626,18 +2290,18 @@ proto.setStyle = function(style) {
   var color;
   if ((color = style.color || style.wallColor)) {
     defaultWallColor = parseColor(color);
-    wallColorAlpha   = ''+ defaultWallColor.alpha(ZOOM_ALPHA);
+    wallColorAlpha   = ''+ defaultWallColor.alpha(ZOOM_FACTOR);
 
     defaultAltColor  = defaultWallColor.lightness(0.8);
-    altColorAlpha    = ''+ defaultAltColor.alpha(ZOOM_ALPHA);
+    altColorAlpha    = ''+ defaultAltColor.alpha(ZOOM_FACTOR);
 
     defaultRoofColor = defaultWallColor.lightness(1.2);
-    roofColorAlpha   = ''+ defaultRoofColor.alpha(ZOOM_ALPHA);
+    roofColorAlpha   = ''+ defaultRoofColor.alpha(ZOOM_FACTOR);
   }
 
   if (style.roofColor) {
     defaultRoofColor = parseColor(style.roofColor);
-    roofColorAlpha   = ''+ defaultRoofColor.alpha(ZOOM_ALPHA);
+    roofColorAlpha   = ''+ defaultRoofColor.alpha(ZOOM_FACTOR);
   }
 
   if (style.shadows !== undefined) {

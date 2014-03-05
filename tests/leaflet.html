@@ -29,7 +29,7 @@ var map = new L.Map('map').setView([52.50440, 13.33522], 17);
 
 new L.TileLayer(
   'http://{s}.tiles.mapbox.com/v3/osmbuildings.gm744p3p/{z}/{x}/{y}.png',
-  { attribution: 'Map tiles &copy; <a href="http://mapbox.com">MapBox</a>', maxZoom: 17 }
+  { attribution: 'Map tiles &copy; <a href="http://mapbox.com">MapBox</a>', maxNativeZoom: 19, maxZoom: 21 }
 ).addTo(map);
 
 var osmb = new OSMBuildings(map).loadData();

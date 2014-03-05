@@ -3,18 +3,18 @@ proto.setStyle = function(style) {
   var color;
   if ((color = style.color || style.wallColor)) {
     defaultWallColor = parseColor(color);
-    wallColorAlpha   = ''+ defaultWallColor.alpha(ZOOM_ALPHA);
+    wallColorAlpha   = ''+ defaultWallColor.alpha(ZOOM_FACTOR);
 
     defaultAltColor  = defaultWallColor.lightness(0.8);
-    altColorAlpha    = ''+ defaultAltColor.alpha(ZOOM_ALPHA);
+    altColorAlpha    = ''+ defaultAltColor.alpha(ZOOM_FACTOR);
 
     defaultRoofColor = defaultWallColor.lightness(1.2);
-    roofColorAlpha   = ''+ defaultRoofColor.alpha(ZOOM_ALPHA);
+    roofColorAlpha   = ''+ defaultRoofColor.alpha(ZOOM_FACTOR);
   }
 
   if (style.roofColor) {
     defaultRoofColor = parseColor(style.roofColor);
-    roofColorAlpha   = ''+ defaultRoofColor.alpha(ZOOM_ALPHA);
+    roofColorAlpha   = ''+ defaultRoofColor.alpha(ZOOM_FACTOR);
   }
 
   if (style.shadows !== undefined) {

@@ -8,7 +8,6 @@ var proto = osmb.prototype;
 proto.onAdd = function(map) {
     this.map = map;
     Layers.appendTo(map._panes.overlayPane);
-    maxZoom = map._layersMaxZoom;
 
     var off = this.getOffset(),
         po = map.getPixelOrigin();

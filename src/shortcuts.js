@@ -17,6 +17,7 @@ var
   floor = m.floor,
   round = m.round,
   rand = m.random,
+  pow = m.pow,
   win = window,
   doc = document;
 
