@@ -41,7 +41,7 @@ html, body {
 <div id="map"></div>
 <div id="controls">
   <input id="date" type="range" min="1" max="12" step="1"><label for="date"></label>
-  <input id="time" type="range" min="0" max="23" step="1"><label for="time"></label>
+  <input id="time" type="range" min="0" max="23" step="0.25"><label for="time"></label>
 </div>
 <script>
 var map = new L.Map('map').setView([52.52179, 13.39503], 18); // Berlin Bodemuseum
@@ -56,7 +56,7 @@ function changeDate() {
     M = now.getMonth(),
     D = 15,
     h = now.getHours(),
-    m = 0;
+    m = now.getMinutes();
 
   timeRangeLabel.innerText = pad(h) + ':' + pad(m);
   dateRangeLabel.innerText = Y + '-' + pad(M+1);
@@ -83,8 +83,8 @@ dateRange.value = now.getMonth()+1;
 timeRange.value = now.getHours();
 
 timeRange.addEventListener('change', function() {
-  now.setHours(this.value);
-  now.setMinutes(0);
+  now.setHours(0);
+  now.setMinutes(this.value*60);
   changeDate();
 }, false);
 
