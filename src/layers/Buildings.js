@@ -39,7 +39,7 @@ var Buildings = {
           a.x, a.y,
           _a.x, _a.y,
           _b.x, _b.y
-        ]);
+        ], true);
       }
       roof[i]   = _a.x;
       roof[i+1] = _a.y;
@@ -73,10 +73,10 @@ var Buildings = {
     }
 
     this.context.closePath();
+    this.context.fill();
     if (stroke) {
       this.context.stroke();
     }
-    this.context.fill();
   },
 
   drawCircle: function(c, r, stroke) {
@@ -194,7 +194,7 @@ var Buildings = {
       wallColor = item.wallColor || wallColorAlpha;
       altColor  = item.altColor  || altColorAlpha;
       roofColor = item.roofColor || roofColorAlpha;
-      this.context.strokeStyle = altColor;
+      this.context.strokeStyle = '#000000'; //altColor;
 
       if (item.shape === 'cylinder') {
         roof = this.drawCylinder(

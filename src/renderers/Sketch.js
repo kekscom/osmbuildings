@@ -68,6 +68,7 @@ var Sketch = (function() {
     };
 
     context.beginPath = function() {
+      context.lineWidth = 2*Math.random();
       _xPos0 = _xPos;
       _yPos0 = _yPos;
       _beginPath.call(context);
