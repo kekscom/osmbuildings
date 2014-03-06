@@ -1976,6 +1976,33 @@ var Sketch = (function() {
 }());
 
 
+//****** file: Debug.js ******
+
+var Debug = {
+
+  marker: function(p, color, size) {
+    this.context.fillStyle = color || '#ffcc00';
+    this.context.beginPath();
+    this.context.arc(p.x, p.y, size || 3, 0, PI*2, true);
+    this.context.closePath();
+    this.context.fill();
+  },
+
+  line: function(a, b, color) {
+    this.context.strokeStyle = color || '#ff0000';
+    this.context.beginPath();
+    this.context.moveTo(a.x, a.y);
+    this.context.lineTo(b.x, b.y);
+    this.context.closePath();
+    this.context.stroke();
+  },
+
+  clear: function() {
+    this.context.clearRect(0, 0, WIDTH, HEIGHT);
+  }
+};
+
+
 //****** file: Layers.js ******
 
 function fadeIn() {
@@ -2020,6 +2047,7 @@ var Layers = {
     // TODO: improve this to createContext(Layer) => layer.setContext(context)
     Shadows.context   = this.createContext();
     Buildings.context = this.createContext();
+//  Debug.context     = this.createContext();
   },
 
   render: function() {
@@ -2108,23 +2136,6 @@ var Layers = {
 
 Layers.init();
 
-//function debugMarker(p, color, size) {
-//  context.fillStyle = color || '#ffcc00';
-//  context.beginPath();
-//  context.arc(p.x, p.y, size || 3, 0, PI*2, true);
-//  context.closePath();
-//  context.fill();
-//}
-//
-//function debugLine(a, b, color) {
-//  context.strokeStyle = color || '#ff0000';
-//  context.beginPath();
-//  context.moveTo(a.x, a.y);
-//  context.lineTo(b.x, b.y);
-//  context.closePath();
-//  context.stroke();
-//}
-
 
 //****** file: adapter.js ******
 
@@ -2135,7 +2146,7 @@ function setOrigin(origin) {
 
 function setCamOffset(offset) {
   camX = CENTER_X + offset.x;
-  camY = HEIGHT + offset.y;
+  camY = HEIGHT   + offset.y;
 }
 
 function setSize(size) {
@@ -2155,9 +2166,9 @@ function setZoom(z) {
   ZOOM = z;
   size = MAP_TILE_SIZE <<ZOOM;
 
-  var center = pixelToGeo(ORIGIN_X+CENTER_X, ORIGIN_Y+CENTER_Y);
+  var pxCenter = pixelToGeo(ORIGIN_X+CENTER_X, ORIGIN_Y+CENTER_Y);
   // see http://wiki.openstreetmap.org/wiki/Zoom_levels
-  METERS_PER_PIXEL = -40075040 * cos(center.latitude) / pow(2, ZOOM+8);
+  METERS_PER_PIXEL = Math.abs(40075040 * cos(pxCenter.latitude) / pow(2, ZOOM+8));
 
   ZOOM_FACTOR = pow(0.9, ZOOM-MIN_ZOOM);
 
