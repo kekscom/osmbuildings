@@ -1371,15 +1371,10 @@ var Data = {
       w: floor(nw.longitude/sizeLon) * sizeLon
     };
 
-<<<<<<< HEAD
-function renderPass() {
-    context.clearRect(0, 0, width, height);
-=======
     for (lat = bounds.s; lat <= bounds.n; lat += sizeLat) {
       for (lon = bounds.w; lon <= bounds.e; lon += sizeLon) {
         lat = this.cropDecimals(lat);
         lon = this.cropDecimals(lon);
->>>>>>> master
 
         cacheKey = lat +','+ lon;
         if ((parsedData = Cache.get(cacheKey))) {
@@ -1416,32 +1411,32 @@ var Buildings = {
 
   drawSolid: function(polygon, _h, _mh, color, altColor) {
     var a = { x:0, y:0 }, b = { x:0, y:0 },
-      _a, _b,
-      roof = [];
+    _a, _b,
+    roof = [];
     for (var i = 0, il = polygon.length-3; i < il; i += 2) {
-      a.x = polygon[i]  -ORIGIN_X;
-      a.y = polygon[i+1]-ORIGIN_Y;
-      b.x = polygon[i+2]-ORIGIN_X;
-      b.y = polygon[i+3]-ORIGIN_Y;
+        a.x = polygon[i]  -ORIGIN_X;
+        a.y = polygon[i+1]-ORIGIN_Y;
+        b.x = polygon[i+2]-ORIGIN_X;
+        b.y = polygon[i+3]-ORIGIN_Y;
 
       // project 3d to 2d on extruded footprint
-      _a = this.project(a.x, a.y, _h);
-      _b = this.project(b.x, b.y, _h);
+        _a = this.project(a.x, a.y, _h);
+        _b = this.project(b.x, b.y, _h);
 
       if (_mh) {
-        a = this.project(a.x, a.y, _mh);
-        b = this.project(b.x, b.y, _mh);
+          a = this.project(a.x, a.y, _mh);
+          b = this.project(b.x, b.y, _mh);
       }
 
       // backface culling check
       if ((b.x-a.x) * (_a.y-a.y) > (_a.x-a.x) * (b.y-a.y)) {
         // depending on direction, set wall shading
         if ((a.x < b.x && a.y < b.y) || (a.x > b.x && a.y > b.y)) {
-          this.context.fillStyle = altColor;
+            this.context.fillStyle = altColor;
         } else {
-          this.context.fillStyle = color;
+            this.context.fillStyle = color;
         }
-        this.drawFace([
+          this.drawFace([
           b.x, b.y,
           a.x, a.y,
           _a.x, _a.y,
@@ -1455,66 +1450,62 @@ var Buildings = {
     return roof;
   },
 
-<<<<<<< HEAD
-function render() {
-    var f = width / (window.devicePixelRatio || 1) / 30;
+  render: function() {
+    var f = WIDTH / (window.devicePixelRatio || 1) / 30;
 
     camX -= f;
-    renderPass();
-    var canvasData1 = context.getImageData(0, 0, width, height);
+    this.renderPass();
+    var canvasData1 = this.context.getImageData(0, 0, WIDTH, HEIGHT);
 
     camX += 2*f;
-    renderPass();
-    var canvasData2 = context.getImageData(0, 0, width, height);
+    this.renderPass();
+    var canvasData2 = this.context.getImageData(0, 0, WIDTH, HEIGHT);
 
     camX -= f;
 
     var dataRed = canvasData1.data,
-        dataCyan = canvasData2.data,
-        R, G, B, A;
+    dataCyan = canvasData2.data,
+    R, G, B, A;
 
     for (var i = 0, il = dataRed.length; i < il; i+= 4) {
-        R = i;
-        G = i + 1;
-        B = i + 2;
-        A = i + 3;
+    R = i;
+    G = i + 1;
+    B = i + 2;
+    A = i + 3;
 
-        if (!dataRed[A] && !dataCyan[A]) {
-            continue;
-        }
-
-        dataRed[R] = 0.7 * (dataRed[G] || 235)  + 0.3 * (dataRed[B] || 230);
-        dataRed[G] = dataCyan[G] || defaultRoofColor.g;
-        dataRed[B] = dataCyan[B] || defaultRoofColor.b;
-        dataRed[A] = max(dataCyan[A], dataCyan[A]);
-/*
-        if (dataRed[A] && dataCyan[A]) {
-            dataRed[R] = 0.7 * dataRed[G] + 0.3 * dataRed[B];
-            dataRed[G] = dataCyan[G];
-            dataRed[B] = dataCyan[B];
-            dataRed[A] = max(dataRed[A], dataCyan[A]);
-        } else if (dataRed[A]) {
-            dataRed[R] = 0.7 * dataRed[G] + 0.3 * dataRed[B];
-            dataRed[G] = defaultRoofColor.g;
-            dataRed[B] = defaultRoofColor.b;
-            dataRed[A] = dataRed[A]; // * 0.5;
-        } else if (dataCyan[A]) {
-            dataRed[R] = 0.7 * defaultRoofColor.g + 0.3 * defaultRoofColor.b;
-            dataRed[G] = dataCyan[G];
-            dataRed[B] = dataCyan[B];
-            dataRed[A] = dataCyan[A]; // * 0.5;
-        }
-*/
+    if (!dataRed[A] && !dataCyan[A]) {
+      continue;
     }
 
-    context.clearRect(0, 0, width, height);
-    context.putImageData(canvasData1, 0, 0);
-}
+    dataRed[R] = 0.7 * (dataRed[G] || 235)  + 0.3 * (dataRed[B] || 230);
+    dataRed[G] = dataCyan[G] || defaultRoofColor.g;
+    dataRed[B] = dataCyan[B] || defaultRoofColor.b;
+    dataRed[A] = max(dataCyan[A], dataCyan[A]);
+  /*
+    if (dataRed[A] && dataCyan[A]) {
+      dataRed[R] = 0.7 * dataRed[G] + 0.3 * dataRed[B];
+      dataRed[G] = dataCyan[G];
+      dataRed[B] = dataCyan[B];
+      dataRed[A] = max(dataRed[A], dataCyan[A]);
+    } else if (dataRed[A]) {
+      dataRed[R] = 0.7 * dataRed[G] + 0.3 * dataRed[B];
+      dataRed[G] = defaultRoofColor.g;
+      dataRed[B] = defaultRoofColor.b;
+      dataRed[A] = dataRed[A]; // * 0.5;
+    } else if (dataCyan[A]) {
+      dataRed[R] = 0.7 * defaultRoofColor.g + 0.3 * defaultRoofColor.b;
+      dataRed[G] = dataCyan[G];
+      dataRed[B] = dataCyan[B];
+      dataRed[A] = dataCyan[A]; // * 0.5;
+    }
+  */
+    }
 
-function drawPolygon(points, stroke, holes) {
-=======
+    this.context.clearRect(0, 0, WIDTH, HEIGHT);
+    this.context.putImageData(canvasData1, 0, 0);
+  },
+
   drawFace: function(points, stroke, holes) {
->>>>>>> master
     if (!points.length) {
       return;
     }
@@ -1555,14 +1546,15 @@ function drawPolygon(points, stroke, holes) {
   },
 
   drawCylinder: function(c, r, h, minHeight, color, altColor) {
-    var _h = camZ / (camZ-h),
+    var
+      _h = camZ / (camZ-h),
       _c = this.project(c.x, c.y, _h),
       _r = r*_h,
       a1, a2, col;
 
     if (minHeight) {
       var _mh = camZ / (camZ-minHeight);
-      c = this.project(c.x, c.y, _mh);
+        c = this.project(c.x, c.y, _mh);
       r = r*_mh;
     }
 
@@ -1574,8 +1566,8 @@ function drawPolygon(points, stroke, holes) {
       a2 = atan2(t[1].y1-c.y, t[1].x1-c.x);
 
       if (!altColor) {
-        col = parseColor(color);
-        altColor = ''+ col.lightness(0.8);
+          col = parseColor(color);
+          altColor = ''+ col.lightness(0.8);
       }
 
       this.context.fillStyle = color;
@@ -1596,7 +1588,7 @@ function drawPolygon(points, stroke, holes) {
     return { c:_c, r:_r };
   },
 
-  render: function() {
+  renderPass: function() {
     this.context.clearRect(0, 0, WIDTH, HEIGHT);
 
     // show on high zoom levels only and avoid rendering during zoom
@@ -1604,7 +1596,8 @@ function drawPolygon(points, stroke, holes) {
       return;
     }
 
-    var i, il, j, jl,
+    var
+      i, il, j, jl,
       item,
       h, _h, mh, _mh,
       sortCam = { x:camX+ORIGIN_X, y:camY+ORIGIN_Y },
@@ -1630,8 +1623,8 @@ function drawPolygon(points, stroke, holes) {
       footprint = item.footprint;
 
       for (j = 0, jl = footprint.length - 1; j < jl; j += 2) {
-        // checking footprint is sufficient for visibility
-        // TODO: pre-filter by data tile position
+      // checking footprint is sufficient for visibility
+      // TODO: pre-filter by data tile position
         if (!isVisible) {
           isVisible = (footprint[j] > vp.minX && footprint[j] < vp.maxX && footprint[j+1] > vp.minY && footprint[j+1] < vp.maxY);
         }
@@ -1689,7 +1682,6 @@ function drawPolygon(points, stroke, holes) {
     }
   }
 };
-
 
 //****** file: Shadows.js ******
 
