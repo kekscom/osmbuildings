@@ -40,6 +40,7 @@ var Layers = {
     // TODO: improve this to createContext(Layer) => layer.setContext(context)
     Shadows.context   = this.createContext();
     Buildings.context = this.createContext();
+//  Debug.context     = this.createContext();
   },
 
   render: function() {
@@ -125,20 +126,3 @@ var Layers = {
 };
 
 Layers.init();
-
-//function debugMarker(p, color, size) {
-//  context.fillStyle = color || '#ffcc00';
-//  context.beginPath();
-//  context.arc(p.x, p.y, size || 3, 0, PI*2, true);
-//  context.closePath();
-//  context.fill();
-//}
-//
-//function debugLine(a, b, color) {
-//  context.strokeStyle = color || '#ff0000';
-//  context.beginPath();
-//  context.moveTo(a.x, a.y);
-//  context.lineTo(b.x, b.y);
-//  context.closePath();
-//  context.stroke();
-//}
