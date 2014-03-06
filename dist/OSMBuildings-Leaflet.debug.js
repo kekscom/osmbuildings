@@ -1251,7 +1251,7 @@ var Data = {
       color, wallColor, altColor,
       roofColor, roofHeight,
       holes, innerFootprint,
-      zoomScale = METERS_PER_PIXEL * 3;
+      zoomScale = METERS_PER_PIXEL * 5;
 
     for (i = 0, il = items.length; i < il; i++) {
       item = items[i];
