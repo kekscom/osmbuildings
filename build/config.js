@@ -26,6 +26,7 @@ exports.srcFiles = [
   srcPath + '/layers/Buildings.js',
   srcPath + '/layers/Shadows.js',
   srcPath + '/renderers/Sketch.js',
+  srcPath + '/layers/Debug.js',
   srcPath + '/Layers.js',
   srcPath + '/adapter.js',
   srcPath + '/engines/{engine}.js',
