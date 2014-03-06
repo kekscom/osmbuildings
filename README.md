@@ -11,7 +11,7 @@ http://osmbuildings.org/
 
 ## Deprecation notice!
 
-With version 0.1.9a ahead, there are a few changes regarding files and API.<br>
+By version 0.1.9a, there are a few important changes regarding files and API.<br>
 It's about aligning, functionality stays the same.
 
 1. Files are now named `OSMBuildings-<ENGINE>.js`- where engine is `Leaflet` or `OpenLayers` at the moment.
@@ -24,7 +24,7 @@ For details, see documentation below.
 
 ## Files
 
-Release version 0.1.8a https://github.com/kekscom/osmbuildings/tree/v0.1.8a<br>
+Release version 0.1.9a https://github.com/kekscom/osmbuildings/tree/0.1.9a<br>
 Latest development version https://github.com/kekscom/osmbuildings
 
 For further information visit http://osmbuildings.org, follow [@osmbuildings](https://twitter.com/osmbuildings) on Twitter or report issues here on Github.
@@ -38,8 +38,8 @@ Link Leaflet and OSM Buildings files in your HTML head section.
 
 ~~~ html
 <head>
-  <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.5.1/leaflet.css">
-  <script src="http://cdn.leafletjs.com/leaflet-0.5.1/leaflet.js"></script>
+  <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7/leaflet.css">
+  <script src="http://cdn.leafletjs.com/leaflet-0.7/leaflet.js"></script>
   <script src="OSMBuildings-Leaflet.js"></script>
 </head>
 ~~~
@@ -183,8 +183,13 @@ Methods
 </tr>
 
 <tr>
-<td>setDate(new Date(2013, 15, 1, 10, 30)))</td>
+<td>setDate(new Date(2014, 15, 1, 10, 30)))</td>
 <td>Set date / time for shadow projection.</td>
+</tr>
+
+<tr>
+<td>each({Function})</td>
+<td>A callback method to override each feature's properties on read. Return false in order to skip a feature.</td>
 </tr>
 
 <tr>
@@ -198,6 +203,11 @@ Methods
 <td>Without parameter, it loads data tiles from OpenStreetMaps. You don't need to care for data anymore.
 As an alternative, pass an URL to <a href="http://cartodb.com/">CartoDB</a> or any other GeoJSON service. See below.
 </td>
+</tr>
+
+<tr>
+<td>screenshot({Boolean})</td>
+<td>Creates a screenshot of all visible OSM Buildings content and returns it as data URL. Parameter indicates, whether browser should display the image directly.</td>
 </tr>
 </table>
 

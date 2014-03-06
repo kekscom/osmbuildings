@@ -1,217 +1,220 @@
-var Data = (function() {
+var Data = {
 
-    var _url,
-        _isStatic,
-        _staticData,
-        _currentItemsIndex = {}; // maintain a list of cached items in order to avoid duplicates on tile borders
+  currentItemsIndex: {}, // maintain a list of cached items in order to avoid duplicates on tile borders
 
-    function _getSimpleFootprint(polygon) {
-        var footprint = new Int32Array(polygon.length),
-            px;
-        for (var i = 0, il = polygon.length-1; i < il; i+=2) {
-            px = geoToPixel(polygon[i], polygon[i+1]);
-            footprint[i]   = px.x;
-            footprint[i+1] = px.y;
-        }
-        footprint = simplify(footprint);
-        if (footprint.length < 8) { // 3 points + end==start (*2)
-            return;
-        }
-        return footprint;
+  items: [],
+
+  cropDecimals: function(num) {
+    return parseFloat(num.toFixed(5));
+  },
+
+  getPixelFootprint: function(buffer) {
+    var footprint = new Int32Array(buffer.length),
+      px;
+
+    for (var i = 0, il = buffer.length-1; i < il; i+=2) {
+      px = geoToPixel(buffer[i], buffer[i+1]);
+      footprint[i]   = px.x;
+      footprint[i+1] = px.y;
     }
 
-    function _createClosure(cacheKey) {
-        return function(data) {
-            var parsedData = _parse(data);
-            Cache.add(parsedData, cacheKey);
-            _addRenderItems(parsedData, true);
-        };
+    footprint = simplifyPolygon(footprint);
+    if (footprint.length < 8) { // 3 points & end==start (*2)
+      return;
     }
 
-    function _parse(data) {
-        if (!data) {
-            return [];
+    return footprint;
+  },
+
+  createClosure: function(cacheKey) {
+    var self = this;
+    return function(data) {
+      var parsedData = self.parse(data);
+      Cache.add(parsedData, cacheKey);
+      self.addRenderItems(parsedData, true);
+    };
+  },
+
+  parse: function(data) {
+    if (!data) {
+      return [];
+    }
+    if (data.type === 'FeatureCollection') {
+      return readGeoJSON(data.features, this.each);
+    }
+    if (data.osm3s) { // XAPI
+      return readOSMXAPI(data.elements, this.each);
+    }
+    return [];
+  },
+
+  resetItems: function() {
+    this.items = [];
+    this.currentItemsIndex = {};
+  },
+
+  addRenderItems: function(data, allAreNew) {
+    var scaledItems = this.scale(data);
+    for (var i = 0, il = scaledItems.length; i < il; i++) {
+      if (!this.currentItemsIndex[scaledItems[i].id]) {
+        scaledItems[i].scale = allAreNew ? 0 : 1;
+        this.items.push(scaledItems[i]);
+        this.currentItemsIndex[scaledItems[i].id] = 1;
+      }
+    }
+    fadeIn();
+  },
+
+  scale: function(items) {
+    var i, il, j, jl,
+      res = [],
+      item,
+      height, minHeight, footprint,
+      color, wallColor, altColor,
+      roofColor, roofHeight,
+      holes, innerFootprint,
+      zoomScale = METERS_PER_PIXEL * 3;
+
+    for (i = 0, il = items.length; i < il; i++) {
+      item = items[i];
+
+      height = item.height / zoomScale;
+
+      minHeight = isNaN(item.minHeight) ? 0 : item.minHeight / zoomScale;
+      if (minHeight > MAX_HEIGHT) {
+        continue;
+      }
+
+      if (!(footprint = this.getPixelFootprint(item.footprint))) {
+        continue;
+      }
+
+      holes = [];
+      if (item.holes) {
+        // TODO: simplify
+        for (j = 0, jl = item.holes.length; j < jl; j++) {
+          if ((innerFootprint = this.getPixelFootprint(item.holes[j]))) {
+            holes.push(innerFootprint);
+          }
         }
-        if (data.type === 'FeatureCollection') {
-            return readGeoJSON(data.features);
+      }
+
+      wallColor = null;
+      altColor  = null;
+      if (item.wallColor) {
+        if ((color = parseColor(item.wallColor))) {
+          wallColor = color.alpha(ZOOM_FACTOR);
+          altColor  = ''+ wallColor.lightness(0.8);
+          wallColor = ''+ wallColor;
         }
-        if (data.osm3s) { // XAPI
-            return readOSMXAPI(data.elements);
+      }
+
+      roofColor = null;
+      if (item.roofColor) {
+        if ((color = parseColor(item.roofColor))) {
+          roofColor = ''+ color.alpha(ZOOM_FACTOR);
         }
-        return [];
+      }
+
+      roofHeight = item.roofHeight / zoomScale;
+
+      if (height <= minHeight && roofHeight <= 0) {
+        continue;
+      }
+
+      res.push({
+        id:         item.id,
+        footprint:  footprint,
+        height:     min(height, MAX_HEIGHT),
+        minHeight:  minHeight,
+        wallColor:  wallColor,
+        altColor:   altColor,
+        roofColor:  roofColor,
+        roofShape:  item.roofShape,
+        roofHeight: roofHeight,
+        center:     getCenter(footprint),
+        holes:      holes.length ? holes : null,
+        shape:      item.shape, // TODO: drop footprint
+        radius:     item.radius/METERS_PER_PIXEL
+      });
     }
 
-    function _resetItems() {
-        renderItems = [];
-        _currentItemsIndex = {};
+    return res;
+  },
+
+  set: function(data) {
+    this.isStatic = true;
+    this.resetItems();
+    this.addRenderItems(this.staticData = this.parse(data), true);
+  },
+
+  load: function(url) {
+    this.url = url || OSM_XAPI_URL;
+    this.isStatic = !/(.+\{[nesw]\}){4,}/.test(this.url);
+
+    if (this.isStatic) {
+      this.resetItems();
+      xhr(this.url, {}, function(data) {
+        this.addRenderItems(this.staticData = this.parse(data), true);
+      });
+      return;
     }
 
-    function _addRenderItems(data, allAreNew) {
-        var scaledItems = _scale(data, zoom),
-            item;
-        for (var i = 0, il = scaledItems.length; i < il; i++) {
-            item = scaledItems[i];
-            if (!_currentItemsIndex[item.id]) {
-                item.scale = allAreNew ? 0 : 1;
-                renderItems.push(item);
-                _currentItemsIndex[item.id] = 1;
-            }
-        }
-        fadeIn();
+    this.update();
+  },
+
+  update: function() {
+    this.resetItems();
+
+    if (ZOOM < MIN_ZOOM) {
+      return;
     }
 
-    function _scale(items, zoom) {
-        var i, il, j, jl,
-            res = [],
-            item,
-            height, minHeight, footprint,
-            color, wallColor, altColor,
-            roofColor, roofHeight,
-            holes, innerFootprint,
-            zoomDelta = maxZoom-zoom,
-            meterToPixel = 156412 / Math.pow(2, zoom) / 1.5; // http://wiki.openstreetmap.org/wiki/Zoom_levels, TODO: without factor 1.5, numbers don't match (lat/lon: Berlin)
-
-        for (i = 0, il = items.length; i < il; i++) {
-            item = items[i];
-
-            height = item.height >>zoomDelta;
-
-            minHeight = item.minHeight >>zoomDelta;
-            if (minHeight > maxHeight) {
-                continue;
-            }
-
-            if (!(footprint = _getSimpleFootprint(item.footprint))) {
-                continue;
-            }
-
-            holes = [];
-            if (item.holes) {
-                for (j = 0, jl = item.holes.length; j < jl; j++) {
-                    if ((innerFootprint = _getSimpleFootprint(item.holes[j]))) {
-                        holes.push(innerFootprint);
-                    }
-                }
-            }
-
-            wallColor = null;
-            altColor  = null;
-            if (item.wallColor) {
-                if ((color = Color.parse(item.wallColor))) {
-                    wallColor = color.setAlpha(zoomAlpha);
-                    altColor  = '' + wallColor.setLightness(0.8);
-                    wallColor = '' + wallColor;
-                }
-            }
-
-            roofColor = null;
-            if (item.roofColor) {
-                if ((color = Color.parse(item.roofColor))) {
-                    roofColor = '' + color.setAlpha(zoomAlpha);
-                }
-            }
-
-            roofHeight = item.roofHeight >>zoomDelta;
-
-            // TODO: move buildings without height to FlatBuildings
-            if (height <= minHeight && roofHeight <= 0) {
-                continue;
-            }
-
-            res.push({
-                id:         item.id,
-                footprint:  footprint,
-                height:     min(height, maxHeight),
-                minHeight:  minHeight,
-                wallColor:  wallColor,
-                altColor:   altColor,
-                roofColor:  roofColor,
-                roofShape:  item.roofShape,
-                roofHeight: roofHeight,
-                center:     getCenter(footprint),
-                holes:      holes.length ? holes : null,
-                shape:      item.shape, // TODO: drop footprint
-                radius:     item.radius/meterToPixel
-            });
-        }
-
-        return res;
+    if (this.isStatic) {
+      this.addRenderItems(this.staticData);
+      return;
     }
 
-    var me = {};
+    if (!this.url) {
+      return;
+    }
 
-    me.set = function(data) {
-        _isStatic = true;
-        _resetItems();
-        _addRenderItems(_staticData = _parse(data), true);
+    var lat, lon,
+      parsedData, cacheKey,
+      nw = pixelToGeo(ORIGIN_X,       ORIGIN_Y),
+      se = pixelToGeo(ORIGIN_X+WIDTH, ORIGIN_Y+HEIGHT),
+      sizeLat = DATA_TILE_SIZE,
+      sizeLon = DATA_TILE_SIZE*2;
+
+    var bounds = {
+      n: ceil( nw.latitude /sizeLat) * sizeLat,
+      e: ceil( se.longitude/sizeLon) * sizeLon,
+      s: floor(se.latitude /sizeLat) * sizeLat,
+      w: floor(nw.longitude/sizeLon) * sizeLon
     };
 
-    me.load = function(url) {
-        _url = url || OSM_XAPI_URL;
-        _isStatic = !/(.+\{[nesw]\}){4,}/.test(_url);
+    for (lat = bounds.s; lat <= bounds.n; lat += sizeLat) {
+      for (lon = bounds.w; lon <= bounds.e; lon += sizeLon) {
+        lat = this.cropDecimals(lat);
+        lon = this.cropDecimals(lon);
 
-        if (_isStatic) {
-            _resetItems();
-            xhr(_url, {}, function(data) {
-                _addRenderItems(_staticData = _parse(data), true);
-            });
-            return;
+        cacheKey = lat +','+ lon;
+        if ((parsedData = Cache.get(cacheKey))) {
+          this.addRenderItems(parsedData);
+        } else {
+          xhr(this.url, {
+            n: this.cropDecimals(lat+sizeLat),
+            e: this.cropDecimals(lon+sizeLon),
+            s: lat,
+            w: lon
+          }, this.createClosure(cacheKey));
         }
+      }
+    }
 
-        me.update();
-    };
+    Cache.purge();
+  },
 
-    me.update = function() {
-        _resetItems();
+  each: function() {}
 
-        if (zoom < MIN_ZOOM) {
-            return;
-        }
-
-        if (_isStatic) {
-            _addRenderItems(_staticData);
-            return;
-        }
-
-        if (!_url) {
-            return;
-        }
-
-        var lat, lon,
-            parsedData, cacheKey,
-            nw = pixelToGeo(originX,       originY),
-            se = pixelToGeo(originX+width, originY+height),
-            sizeLat = DATA_TILE_SIZE,
-            sizeLon = DATA_TILE_SIZE*2;
-
-        var bounds = {
-            n: ceil( nw.latitude /sizeLat) * sizeLat,
-            e: ceil( se.longitude/sizeLon) * sizeLon,
-            s: floor(se.latitude /sizeLat) * sizeLat,
-            w: floor(nw.longitude/sizeLon) * sizeLon
-        };
-
-        for (lat = bounds.s; lat <= bounds.n; lat += sizeLat) {
-            for (lon = bounds.w; lon <= bounds.e; lon += sizeLon) {
-                lat = crop(lat);
-                lon = crop(lon);
-                cacheKey = lat + ',' + lon;
-                if ((parsedData = Cache.get(cacheKey))) {
-                    _addRenderItems(parsedData);
-                } else {
-                    xhr(_url, {
-                        n: lat+sizeLat,
-                        e: lon+sizeLon,
-                        s: lat,
-                        w: lon
-                    }, _createClosure(cacheKey));
-                }
-            }
-        }
-
-        Cache.purge();
-    };
-
-    return me;
-
-}());
+};
