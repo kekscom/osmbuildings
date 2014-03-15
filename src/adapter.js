@@ -29,7 +29,7 @@ function setZoom(z) {
   // see http://wiki.openstreetmap.org/wiki/Zoom_levels
   METERS_PER_PIXEL = Math.abs(40075040 * cos(pxCenter.latitude) / pow(2, ZOOM+8));
 
-  ZOOM_FACTOR = pow(0.9, ZOOM-MIN_ZOOM);
+  ZOOM_FACTOR = pow(0.95, ZOOM-MIN_ZOOM);
 
   wallColorAlpha = defaultWallColor.alpha(ZOOM_FACTOR) + '';
   altColorAlpha  = defaultAltColor.alpha( ZOOM_FACTOR) + '';
