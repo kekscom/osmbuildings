@@ -160,6 +160,10 @@ var Buildings = {
     for (i = 0, il = dataItems.length; i < il; i++) {
       item = dataItems[i];
 
+      if (Simplified.isSimple(item)) {
+        continue;
+      }
+
       isVisible = false;
       footprint = item.footprint;
 
