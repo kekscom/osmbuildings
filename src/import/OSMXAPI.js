@@ -1,4 +1,4 @@
-var readOSMXAPI = (function() {
+var importOSM = (function() {
 
   function isBuilding(data) {
     var tags = data.tags;
