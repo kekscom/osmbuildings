@@ -11,8 +11,7 @@ http://osmbuildings.org/
 
 ## Files
 
-It's safe to fork the [latest code revision](https://github.com/kekscom/osmbuildings) for development,<br>
-or use it's [build files for production](https://github.com/kekscom/osmbuildings/tree/master/dist/).
+It's safe to fork the [latest code revision](https://github.com/kekscom/osmbuildings/tree/master/) for development, or use it's [build files for production](https://github.com/kekscom/osmbuildings/tree/master/dist/).
 
 For further information visit http://osmbuildings.org, follow [@osmbuildings](https://twitter.com/osmbuildings/) on Twitter or report issues [here on Github](https://github.com/kekscom/osmbuildings/issues/).
 
