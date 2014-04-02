@@ -10,10 +10,10 @@ var importGeoJSON = (function() {
 
     switch (geometry.type) {
       case 'GeometryCollection':
-        var rec;
-        for (i = 0, il = geometry.geometries; i < il; i++) {
-          if (rec = getPolygons(geometry.geometries[i])) {
-            res[i] = rec;
+        var sub;
+        for (i = 0, il = geometry.geometries.length; i < il; i++) {
+          if ((sub = getPolygons(geometry.geometries[i]))) {
+            res = res.concat(sub);
           }
         }
         return res;
@@ -76,7 +76,8 @@ var importGeoJSON = (function() {
       wallColor = properties.color || properties.wallColor || null;
       roofColor = properties.roofColor || null;
 
-      polygons = getPolygons(feature.geometry)
+      polygons = getPolygons(feature.geometry);
+
       for (j = 0, jl = polygons.length; j < jl; j++) {
         outer = polygons[j].outer;
         res.push({
