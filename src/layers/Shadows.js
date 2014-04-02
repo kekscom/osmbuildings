@@ -55,7 +55,7 @@ var Shadows = {
     }
 
     length = 1 / tan(sun.altitude);
-    alpha = length < 5 ? 1 : 1/length*5;
+    alpha = length < 5 ? 0.75 : 1/length*5;
 
     this.direction.x = cos(sun.azimuth) * length;
     this.direction.y = sin(sun.azimuth) * length;

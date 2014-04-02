@@ -40,10 +40,10 @@ var Data = {
       return [];
     }
     if (data.type === 'FeatureCollection') {
-      return readGeoJSON(data.features, this.each);
+      return importGeoJSON(data.features, this.each);
     }
-    if (data.osm3s) { // XAPI
-      return readOSMXAPI(data.elements, this.each);
+    if (data.osm3s) { // OSM Overpass
+      return importOSM(data.elements, this.each);
     }
     return [];
   },

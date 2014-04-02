@@ -1,9 +1,15 @@
 # Changelog
 
-## 0.2.0b development version
+## 2014-04-03 development version
 
-- successful tests with LeafletJS 0.7
-- callback for each feature added - change objects as they are read
+* added GeoJSON GeometryCollection
+* refactored simple buildings layer
+* fixed flipped perspective on some latitudes
+* fixed meters per pixel calculation
+* added multipolygon relation tags
+* fixed feature.center
+- added ambient shadows
+- tested with LeafletJS 0.7
 
 
 ## 0.1.9a @ 2013-10-17

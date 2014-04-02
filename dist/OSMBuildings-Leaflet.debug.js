@@ -525,96 +525,107 @@ var Import = {
 
 //****** file: GeoJSON.js ******
 
-var readGeoJSON = function(collection, callback) {
+var importGeoJSON = (function() {
 
-  var i, il, j, jl, k, kl,
-    res = [],
-    feature,
-    geometry, properties, coordinates,
-    last,
-    polygon, footprint, holes,
-    lat = 1, lon = 0,
-    item;
+  function getPolygons(geometry) {
+    var
+      i, il, j, jl,
+      polygon,
+      p, lat = 1, lon = 0, alt = 2,
+      outer = [], inner = [], height = 0,
+      res = [];
 
-  for (i = 0, il = collection.length; i < il; i++) {
-    feature = collection[i];
+    switch (geometry.type) {
+      case 'GeometryCollection':
+        var sub;
+        for (i = 0, il = geometry.geometries.length; i < il; i++) {
+          if ((sub = getPolygons(geometry.geometries[i]))) {
+            res = res.concat(sub);
+          }
+        }
+        return res;
 
-    if (feature.type !== 'Feature') {
-      continue;
+      case 'Polygon':
+        polygon = geometry.coordinates;
+      break;
+
+      case 'MultiPolygon':
+        polygon = geometry.coordinates[0];
+      break;
+
+      default: return res;
     }
 
-    item = {};
-
-    geometry = feature.geometry;
-    properties = feature.properties;
-
-    if (geometry.type === 'LineString') {
-      last = coordinates.length-1;
-      if (coordinates[0][0] === coordinates[last][0] && coordinates[0][1] === coordinates[last][1]) {
-        coordinates = geometry.coordinates;
+    p = polygon[0];
+    for (i = 0, il = p.length; i < il; i++) {
+      outer.push(p[i][lat], p[i][lon]);
+      if (p[i][alt] !== undefined) {
+        height += p[i][alt];
       }
     }
 
-    if (geometry.type === 'Polygon') {
-      coordinates = geometry.coordinates;
-    }
-
-    if (geometry.type === 'MultiPolygon') {
-      coordinates = geometry.coordinates[0];
-    }
-
-    if (!coordinates || callback(feature) === false) {
-      continue;
-    }
-
-    polygon = coordinates[0];
-    footprint = [];
-    for (j = 0, jl = polygon.length; j < jl; j++) {
-      footprint.push(polygon[j][lat], polygon[j][lon]);
-    }
-
-    item.id = properties.id || [footprint[0], footprint[1], properties.height, properties.minHeight].join(',');
-    item.footprint = Import.makeWinding(footprint, Import.clockwise);
-
-    holes = [];
-    for (j = 1, jl = coordinates.length; j < jl; j++) {
-      polygon = coordinates[j];
-      holes[j-1] = [];
-      for (k = 0, kl = polygon.length; k < kl; k++) {
-        holes[j-1].push(polygon[k][lat], polygon[k][lon]);
-
+    for (i = 0, il = polygon.length-1; i < il; i++) {
+      p = polygon[i+1];
+      inner[i] = [];
+      for (j = 0, jl = p.length; j < jl; j++) {
+        inner[i].push(p[j][lat], p[j][lon]);
       }
-      holes[j-1] = Import.makeWinding(holes[j-1], Import.counterClockwise);
+      inner[i] = Import.makeWinding(inner[i], Import.counterClockwise);
     }
 
-    if (holes.length) {
-      item.holes = holes;
-    }
-
-    item.height = Import.toMeters(properties.height) || DEFAULT_HEIGHT;
-
-    if (properties.minHeight) {
-      item.minHeight = Import.toMeters(properties.minHeight);
-    }
-
-    if (properties.color || properties.wallColor) {
-      item.wallColor = properties.color || properties.wallColor;
-    }
-
-    if (properties.roofColor) {
-      item.roofColor = properties.roofColor;
-    }
-
-    res.push(item);
+    return [{
+      outer: Import.makeWinding(outer, Import.clockwise),
+      inner: inner.length ? inner : null,
+      height: height / polygon[0].length
+    }];
   }
 
-  return res;
-};
+  return function(collection, callback) {
+    var
+      i, il, j, jl,
+      res = [],
+      feature,
+      properties,
+      polygons, outer,
+      height, minHeight, wallColor, roofColor;
 
+    for (i = 0, il = collection.length; i < il; i++) {
+      feature = collection[i];
+
+      if (feature.type !== 'Feature' || callback(feature) === false) {
+        continue;
+      }
+
+      properties = feature.properties;
+
+      height    = Import.toMeters(properties.height) || DEFAULT_HEIGHT;
+      minHeight = Import.toMeters(properties.minHeight);
+      wallColor = properties.color || properties.wallColor || null;
+      roofColor = properties.roofColor || null;
+
+      polygons = getPolygons(feature.geometry);
+
+      for (j = 0, jl = polygons.length; j < jl; j++) {
+        outer = polygons[j].outer;
+        res.push({
+          footprint: outer,
+          holes:     polygons[j].inner,
+          height:    height || polygons[j].height,
+          id:        feature.id || properties.id || [outer[0], outer[1], height, minHeight].join(','),
+          minHeight: minHeight,
+          wallColor: wallColor,
+          roofColor: roofColor
+        });
+      }
+    }
+
+    return res;
+  };
+}());
 
 //****** file: OSMXAPI.js ******
 
-var readOSMXAPI = (function() {
+var importOSM = (function() {
 
   function isBuilding(data) {
     var tags = data.tags;
@@ -701,7 +712,7 @@ var readOSMXAPI = (function() {
 
   function mergeItems(dst, src) {
     for (var p in src) {
-      if (!dst[p]) {
+      if (src.hasOwnProperty(p)) {
         dst[p] = src[p];
       }
     }
@@ -915,7 +926,7 @@ var VERSION      = '0.1.9a',
   METERS_PER_PIXEL = 1,
   ZOOM_FACTOR = 1,
 
-  MAX_HEIGHT,
+  MAX_HEIGHT, // taller buildings will be cut to this
   DEFAULT_HEIGHT = 5,
 
   camX, camY, camZ = 450,
@@ -1219,10 +1230,10 @@ var Data = {
       return [];
     }
     if (data.type === 'FeatureCollection') {
-      return readGeoJSON(data.features, this.each);
+      return importGeoJSON(data.features, this.each);
     }
-    if (data.osm3s) { // XAPI
-      return readOSMXAPI(data.elements, this.each);
+    if (data.osm3s) { // OSM Overpass
+      return importOSM(data.elements, this.each);
     }
     return [];
   },
@@ -1574,6 +1585,10 @@ var Buildings = {
     for (i = 0, il = dataItems.length; i < il; i++) {
       item = dataItems[i];
 
+      if (Simplified.isSimple(item)) {
+        continue;
+      }
+
       isVisible = false;
       footprint = item.footprint;
 
@@ -1639,6 +1654,129 @@ var Buildings = {
 };
 
 
+//****** file: Simplified.js ******
+
+var Simplified = {
+
+  maxZoom: MIN_ZOOM+2,
+  maxHeight: 2,
+
+  isSimple: function(item) {
+    return (ZOOM <= this.maxZoom && item.height < this.maxHeight);
+  },
+
+  getFace: function(polygon) {
+    var res = [];
+    for (var i = 0, il = polygon.length-3; i < il; i += 2) {
+      res[i]   = polygon[i]  -ORIGIN_X;
+      res[i+1] = polygon[i+1]-ORIGIN_Y;
+    }
+    return res;
+  },
+
+  drawFace: function(points, holes) {
+    if (!points.length) {
+      return;
+    }
+
+    var i, il, j, jl;
+
+    this.context.beginPath();
+
+    this.context.moveTo(points[0], points[1]);
+    for (i = 2, il = points.length; i < il; i += 2) {
+      this.context.lineTo(points[i], points[i+1]);
+    }
+
+    if (holes) {
+      for (i = 0, il = holes.length; i < il; i++) {
+        points = holes[i];
+        this.context.moveTo(points[0], points[1]);
+        for (j = 2, jl = points.length; j < jl; j += 2) {
+          this.context.lineTo(points[j], points[j+1]);
+        }
+      }
+    }
+
+    this.context.closePath();
+    this.context.stroke();
+    this.context.fill();
+  },
+
+  drawCircle: function(c, r) {
+    this.context.beginPath();
+    this.context.arc(c.x, c.y, r, 0, PI*2);
+    this.context.stroke();
+    this.context.fill();
+  },
+
+  render: function() {
+    this.context.clearRect(0, 0, WIDTH, HEIGHT);
+
+    // show on high zoom levels only and avoid rendering during zoom
+    if (ZOOM < MIN_ZOOM || isZooming || ZOOM > this.maxZoom) {
+      return;
+    }
+
+    var i, il, j, jl,
+      item,
+      vp = {
+        minX: ORIGIN_X,
+        maxX: ORIGIN_X+WIDTH,
+        minY: ORIGIN_Y,
+        maxY: ORIGIN_Y+HEIGHT
+      },
+      footprint, roof, holes,
+      isVisible,
+      altColor, roofColor,
+      dataItems = Data.items;
+
+    for (i = 0, il = dataItems.length; i < il; i++) {
+      item = dataItems[i];
+
+      if (item.height >= this.maxHeight) {
+        continue;
+      }
+
+      isVisible = false;
+      footprint = item.footprint;
+
+      for (j = 0, jl = footprint.length - 1; j < jl; j += 2) {
+        if (!isVisible) {
+          isVisible = (footprint[j] > vp.minX && footprint[j] < vp.maxX && footprint[j+1] > vp.minY && footprint[j+1] < vp.maxY);
+        }
+      }
+
+      if (!isVisible) {
+        continue;
+      }
+
+      altColor  = item.altColor  || altColorAlpha;
+      roofColor = item.roofColor || roofColorAlpha;
+
+      this.context.strokeStyle = altColor;
+      this.context.fillStyle = roofColor;
+
+      if (item.shape === 'cylinder') {
+        this.drawCircle({ x:item.center.x-ORIGIN_X, y:item.center.y-ORIGIN_Y }, item.radius);
+        continue;
+      }
+
+      roof = this.getFace(footprint);
+
+      holes = [];
+      if (item.holes) {
+        for (j = 0, jl = item.holes.length; j < jl; j++) {
+          holes[j] = this.getFace(item.holes[j]);
+        }
+      }
+
+      this.drawFace(roof, holes);
+    }
+  }
+};
+
+
 //****** file: Shadows.js ******
 
 var Shadows = {
@@ -1698,7 +1836,7 @@ var Shadows = {
     }
 
     length = 1 / tan(sun.altitude);
-    alpha = length < 5 ? 1 : 1/length*5;
+    alpha = length < 5 ? 0.75 : 1/length*5;
 
     this.direction.x = cos(sun.azimuth) * length;
     this.direction.y = sin(sun.azimuth) * length;
@@ -2045,13 +2183,15 @@ var Layers = {
     this.container.style.top  = 0;
 
     // TODO: improve this to createContext(Layer) => layer.setContext(context)
-    Shadows.context   = this.createContext();
-    Buildings.context = this.createContext();
-//  Debug.context     = this.createContext();
+    Shadows.context    = this.createContext();
+    Simplified.context = this.createContext();
+    Buildings.context  = this.createContext();
+//  Debug.context      = this.createContext();
   },
 
   render: function() {
     Shadows.render();
+    Simplified.render();
     Buildings.render();
   },
 
@@ -2170,7 +2310,7 @@ function setZoom(z) {
   // see http://wiki.openstreetmap.org/wiki/Zoom_levels
   METERS_PER_PIXEL = Math.abs(40075040 * cos(pxCenter.latitude) / pow(2, ZOOM+8));
 
-  ZOOM_FACTOR = pow(0.9, ZOOM-MIN_ZOOM);
+  ZOOM_FACTOR = pow(0.95, ZOOM-MIN_ZOOM);
 
   wallColorAlpha = defaultWallColor.alpha(ZOOM_FACTOR) + '';
   altColorAlpha  = defaultAltColor.alpha( ZOOM_FACTOR) + '';

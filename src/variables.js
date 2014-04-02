@@ -38,7 +38,7 @@ var VERSION      = /*<version=*/'0.1.9a'/*>*/,
   METERS_PER_PIXEL = 1,
   ZOOM_FACTOR = 1,
 
-  MAX_HEIGHT,
+  MAX_HEIGHT, // taller buildings will be cut to this
   DEFAULT_HEIGHT = 5,
 
   camX, camY, camZ = 450,

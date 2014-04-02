@@ -1,4 +1,4 @@
-var readOSMXAPI = (function() {
+var importOSM = (function() {
 
   function isBuilding(data) {
     var tags = data.tags;
@@ -85,7 +85,7 @@ var readOSMXAPI = (function() {
 
   function mergeItems(dst, src) {
     for (var p in src) {
-      if (!dst[p]) {
+      if (src.hasOwnProperty(p)) {
         dst[p] = src[p];
       }
     }
