@@ -711,7 +711,7 @@ var importOSM = (function() {
 
   function mergeItems(dst, src) {
     for (var p in src) {
-      if (!dst[p]) {
+      if (src.hasOwnProperty(p)) {
         dst[p] = src[p];
       }
     }
