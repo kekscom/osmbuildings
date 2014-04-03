@@ -14,28 +14,6 @@ var Shadows = {
     };
   },
 
-  cylinder: function(c, r, h, mh) {
-    var
-      _c = this.project(c.x, c.y, h),
-      a1, a2;
-
-    if (mh) {
-      c = this.project(c.x, c.y, mh);
-    }
-
-    var t = getTangents(c, r, _c, r); // common tangents for ground and roof circle
-
-    // no tangents? roof overlaps everything near cam position
-    if (t) {
-      a1 = atan2(t[0].y1-c.y, t[0].x1-c.x);
-      a2 = atan2(t[1].y1-c.y, t[1].x1-c.x);
-
-      this.context.moveTo(t[1].x2, t[1].y2);
-      this.context.arc(_c.x, _c.y, r, a2, a1);
-      this.context.arc( c.x,  c.y, r, a1, a2);
-    }
-  },
-
   render: function() {
     var center, sun, length, alpha;
 
@@ -186,7 +164,7 @@ var Shadows = {
     for (i = 0, il = specialItems.length; i < il; i++) {
       item = specialItems[i];
       if (item.shape === 'cylinder') {
-        this.cylinder(item.center, item.radius, item.h, item.mh);
+        Cylinder.shadow.call(this, item.center.x, item.center.y, item.radius, item.h, item.mh);
       }
     }
 
@@ -211,8 +189,7 @@ var Shadows = {
     for (i = 0, il = specialItems.length; i < il; i++) {
       item = specialItems[i];
       if (item.shape === 'cylinder' && !item.mh) {
-        this.context.moveTo(item.center.x+item.radius, item.center.y);
-        this.context.arc(item.center.x, item.center.y, item.radius, 0, PI*2);
+        Cylinder.footprintMask.call(this, item.center.x, item.center.y, item.radius);
       }
     }
 

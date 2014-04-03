@@ -45,13 +45,6 @@ var Simplified = {
     this.context.fill();
   },
 
-  drawCircle: function(c, r) {
-    this.context.beginPath();
-    this.context.arc(c.x, c.y, r, 0, PI*2);
-    this.context.stroke();
-    this.context.fill();
-  },
-
   render: function() {
     this.context.clearRect(0, 0, WIDTH, HEIGHT);
 
@@ -100,7 +93,7 @@ var Simplified = {
       this.context.fillStyle = roofColor;
 
       if (item.shape === 'cylinder') {
-        this.drawCircle({ x:item.center.x-ORIGIN_X, y:item.center.y-ORIGIN_Y }, item.radius);
+        Cylinder.circle.call(this, item.center.x-ORIGIN_X, item.center.y-ORIGIN_Y, item.radius);
         continue;
       }
 

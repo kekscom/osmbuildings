@@ -23,6 +23,7 @@ exports.srcFiles = [
   srcPath + '/functions.js',
   srcPath + '/Cache.js',
   srcPath + '/Data.js',
+  srcPath + '/geometry/Cylinder.js',
   srcPath + '/layers/Buildings.js',
   srcPath + '/layers/Simplified.js',
   srcPath + '/layers/Shadows.js',
