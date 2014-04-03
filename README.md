@@ -4,30 +4,16 @@ OSM Buildings is a JavaScript library for visualizing OpenStreetMaps building ge
 Everything is stabilizing now, entering beta state.
 
 
-## Running example
+## Example
 
 http://osmbuildings.org/
 
 
-## Deprecation notice!
-
-With version 0.1.9a ahead, there are a few changes regarding files and API.<br>
-It's about aligning, functionality stays the same.
-
-1. Files are now named `OSMBuildings-<ENGINE>.js`- where engine is `Leaflet` or `OpenLayers` at the moment.
-2. Initialization is just `new OSMBuildings(map)` - no more addTo(...) 
-3. Loading data from external GeoJSON source is done by `loadData(<URL>)`
-3. Setting GeoJSON or alike formatted data is done by `setData(<DATA>)`
-
-For details, see documentation below.
-
-
 ## Files
 
-Release version 0.1.8a https://github.com/kekscom/osmbuildings/tree/v0.1.8a<br>
-Latest development version https://github.com/kekscom/osmbuildings
+It's safe to fork the [latest code revision](https://github.com/kekscom/osmbuildings/tree/master/) for development, or use it's [build files for production](https://github.com/kekscom/osmbuildings/tree/master/dist/).
 
-For further information visit http://osmbuildings.org, follow [@osmbuildings](https://twitter.com/osmbuildings) on Twitter or report issues here on Github.
+For further information visit http://osmbuildings.org, follow [@osmbuildings](https://twitter.com/osmbuildings/) on Twitter or report issues [here on Github](https://github.com/kekscom/osmbuildings/issues/).
 
 
 ## Documentation
@@ -38,8 +24,8 @@ Link Leaflet and OSM Buildings files in your HTML head section.
 
 ~~~ html
 <head>
-  <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.5.1/leaflet.css">
-  <script src="http://cdn.leafletjs.com/leaflet-0.5.1/leaflet.js"></script>
+  <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7/leaflet.css">
+  <script src="http://cdn.leafletjs.com/leaflet-0.7/leaflet.js"></script>
   <script src="OSMBuildings-Leaflet.js"></script>
 </head>
 ~~~
@@ -49,7 +35,7 @@ Position is set to Berlin at zoom level 17, I'm using MapBox tiles here.
 
 ~~~ javascript
 var map = new L.Map('map').setView([52.52020, 13.37570], 17);
-new L.TileLayer('http://{s}.tiles.mapbox.com/v3/<YOUR MAPBOX KEY HERE>/{z}/{x}/{y}.png',
+new L.TileLayer('http://{s}.tiles.mapbox.com/v3/<YOUR KEY HERE>/{z}/{x}/{y}.png',
   { attribution: 'Map tiles &copy; <a href="http://mapbox.com">MapBox</a>', maxZoom: 17 }).addTo(map);
 ~~~
 
@@ -59,8 +45,8 @@ Add the buildings layer.
 new OSMBuildings(map).loadData();
 ~~~
 
-As a popular alternative, you could pass a <a href="http://www.geojson.org/geojson-spec.html">GeoJSON</a> data object.<br>
-Feature types Polygon, Multipolygon and Linestring are supported.<br>
+As a popular alternative, you could pass a <a href="http://www.geojson.org/geojson-spec.html">GeoJSON</a> FeatureCollection object.<br>
+Geometry types Polygon, Multipolygon and GeometryCollection are supported.<br>
 Make sure the building coordinates are projected in <a href="http://spatialreference.org/ref/epsg/4326/">EPSG:4326</a>.<br>
 Height units m, ft, yd, mi are accepted, no given unit defaults to meters.
 
@@ -183,12 +169,17 @@ Methods
 </tr>
 
 <tr>
-<td>setDate(new Date(2013, 15, 1, 10, 30)))</td>
+<td>setDate(new Date(2014, 15, 1, 10, 30)))</td>
 <td>Set date / time for shadow projection.</td>
 </tr>
 
 <tr>
-<td>setData({GeoJSON})</td>
+<td>each({Function})</td>
+<td>A callback method to override each feature's properties on read. Return false in order to skip a feature.</td>
+</tr>
+
+<tr>
+<td>setData({GeoJSON FeatureCollection})</td>
 <td>Just add GeoJSON data to your map.</td>
 </tr>
 
@@ -198,6 +189,11 @@ Methods
 <td>Without parameter, it loads data tiles from OpenStreetMaps. You don't need to care for data anymore.
 As an alternative, pass an URL to <a href="http://cartodb.com/">CartoDB</a> or any other GeoJSON service. See below.
 </td>
+</tr>
+
+<tr>
+<td>screenshot({Boolean})</td>
+<td>Creates a screenshot of all visible OSM Buildings content and returns it as data URL. Parameter indicates, whether browser should display the image directly.</td>
 </tr>
 </table>
 
@@ -234,5 +230,52 @@ wallColor</td>
 <td>shadows</td>
 <td>Boolean</td>
 <td>Enables or disables shadow rendering, default: enabled</td>
+</tr>
+</table>
+
+
+## Data
+
+### OSM Tags used
+
+<table>
+<tr>
+<th>Result</th>
+<th>OSM Tags</th>
+</tr>
+
+<tr>
+<td><b>height</b></td>
+<td>height, building:height, levels, building:levels</td>
+</tr>
+
+<tr>
+<td><b>minHeight</b></td>
+<td>min_height, building:min_height, min_level, building:min_level</td>
+</tr>
+
+<tr>
+<td><b>wallColor</b></td>
+<td>building:color, building:colour, building:material, building:facade:material, building:cladding</td>
+</tr>
+
+<tr>
+<td><b>roofColor</b></td>
+<td>roof:color, roof:colour, building:roof:color, building:roof:colour, roof:material, building:roof:material</td>
+</tr>
+
+<tr>
+<td><b>shape</b></td>
+<td>building:shape[=cylinder,sphere]</td>
+</tr>
+
+<tr>
+<td><b>roofShape</b></td>
+<td>roof:shape[=dome]</td>
+</tr>
+
+<tr>
+<td><b>roofHeight</b></td>
+<td>roof:height</td>
 </tr>
 </table>

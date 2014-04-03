@@ -1,65 +1,65 @@
 function render2() {
-    var p, x, y;
+  var p, x, y;
 
-    context.clearRect(0, 0, width, height);
-    context.strokeStyle = altColorAlpha;
+  context.clearRect(0, 0, width, height);
+  context.strokeStyle = altColorAlpha;
 
-    p = geoToPixel(52.52230, 13.39550);
-    x = p.x-originX;
-    y = p.y-originY;
-    dome({ x:x, y:y }, 30, 30);
+  p = geoToPixel(52.52230, 13.39550);
+  x = p.x-originX;
+  y = p.y-originY;
+  dome({ x:x, y:y }, 30, 30);
 }
 
 function line(a, b) {
-    context.beginPath();
-    context.moveTo(a.x, a.y);
-    context.lineTo(b.x, b.y);
-    context.stroke();
+  context.beginPath();
+  context.moveTo(a.x, a.y);
+  context.lineTo(b.x, b.y);
+  context.stroke();
 }
 
 function cone(c, r, h, minHeight) {
-    // TODO: min height
-    var apex = project(c.x, c.y, camZ / (camZ - h)),
-        _x = apex.x,
-        _y = apex.y;
+  // TODO: min height
+  var apex = project(c.x, c.y, camZ / (camZ - h)),
+    _x = apex.x,
+    _y = apex.y;
 
-    var t = getTangentsFromPoint(c, r, _x, _y),
-        tx, ty, ta,
-        isAlt,
-        ax, ay;
+  var t = getTangentsFromPoint(c, r, _x, _y),
+    tx, ty, ta,
+    isAlt,
+    ax, ay;
 
-    // draw normal and alternative colored wall segments
-    for (var i = 0; i < 2; i++) {
-        isAlt = !!i;
-        tx = t[i].x;
-        ty = t[i].y;
-        ax = (c.x - tx) * (isAlt ? 1 : -1);
-        ay = (c.y - ty) * (isAlt ? 1 : -1);
-        ta = atan2(ay, ax) + (isAlt ? PI : 0);
+  // draw normal and alternative colored wall segments
+  for (var i = 0; i < 2; i++) {
+    isAlt = !!i;
+    tx = t[i].x;
+    ty = t[i].y;
+    ax = (c.x - tx) * (isAlt ? 1 : -1);
+    ay = (c.y - ty) * (isAlt ? 1 : -1);
+    ta = atan2(ay, ax) + (isAlt ? PI : 0);
 
-        // tangent not visible, avoid flickering
-        if (ax < 0) {
-            continue;
-        }
-
-        context.fillStyle = !isAlt ? wallColorAlpha : altColorAlpha;
-        context.beginPath();
-        context.moveTo(tx, ty);
-        context.arc(c.x, c.y, r, ta, HALF_PI, isAlt);
-        context.arc(_x, _y, 0, HALF_PI, ta, !isAlt);
-        context.closePath();
-        context.fill();
+    // tangent not visible, avoid flickering
+    if (ax < 0) {
+        continue;
     }
+
+    context.fillStyle = !isAlt ? wallColorAlpha : altColorAlpha;
+    context.beginPath();
+    context.moveTo(tx, ty);
+    context.arc(c.x, c.y, r, ta, HALF_PI, isAlt);
+    context.arc(_x, _y, 0, HALF_PI, ta, !isAlt);
+    context.closePath();
+    context.fill();
+  }
 }
 
 function rotation(p, c, a) {
-    var ms = sin(a), mc = cos(a);
-    p.x -= c.x;
-    p.y -= c.y;
-    return {
-        x: p.x* mc + p.y*ms + c.x,
-        y: p.x*-ms + p.y*mc + c.y
-    };
+  var ms = sin(a), mc = cos(a);
+  p.x -= c.x;
+  p.y -= c.y;
+  return {
+    x: p.x* mc + p.y*ms + c.x,
+    y: p.x*-ms + p.y*mc + c.y
+  };
 }
 
 var KAPPA = 0.5522847498;
