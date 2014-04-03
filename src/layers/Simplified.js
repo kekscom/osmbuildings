@@ -90,10 +90,9 @@ var Simplified = {
       roofColor = item.roofColor || roofColorAlpha;
 
       this.context.strokeStyle = altColor;
-      this.context.fillStyle = roofColor;
 
-      if (item.shape === 'cylinder') {
-        Cylinder.circle.call(this, item.center.x-ORIGIN_X, item.center.y-ORIGIN_Y, item.radius);
+      if (item.shape === 'cylinder' || item.shape === 'cone') {
+        Cylinder.circle(this.context, item.center.x-ORIGIN_X, item.center.y-ORIGIN_Y, item.radius, roofColor);
         continue;
       }
 
@@ -106,6 +105,7 @@ var Simplified = {
         }
       }
 
+      this.context.fillStyle = roofColor;
       this.drawFace(roof, holes);
     }
   }

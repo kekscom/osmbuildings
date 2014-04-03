@@ -86,16 +86,23 @@ var Shadows = {
         mh = item.scale < 1 ? item.minHeight*item.scale : item.minHeight;
       }
 
-      if (item.shape === 'cylinder') {
-        if (item.roofShape === 'cylinder') {
-          h += item.roofHeight;
-        }
+      if (item.shape === 'cylinder' || item.shape === 'cone') {
         specialItems.push({
           shape:item.shape,
           center:{ x:item.center.x-ORIGIN_X, y:item.center.y-ORIGIN_Y },
           radius:item.radius,
-          h:h, mh:mh
+          h:h,
+          mh:mh
         });
+        if (item.roofShape === 'cone') {
+          specialItems.push({
+            shape:'cone',
+            center:{ x:item.center.x-ORIGIN_X, y:item.center.y-ORIGIN_Y },
+            radius:item.radius,
+            h:h+item.roofHeight,
+            mh:h
+          });
+        }
         continue;
       }
 
@@ -164,7 +171,10 @@ var Shadows = {
     for (i = 0, il = specialItems.length; i < il; i++) {
       item = specialItems[i];
       if (item.shape === 'cylinder') {
-        Cylinder.shadow.call(this, item.center.x, item.center.y, item.radius, item.h, item.mh);
+        Cylinder.shadow(this.context, item.center.x, item.center.y, item.radius, item.h, item.mh);
+      }
+      if (item.shape === 'cone') {
+        Cone.shadow(this.context, item.center.x, item.center.y, item.radius, item.h, item.mh);
       }
     }
 
@@ -188,8 +198,8 @@ var Shadows = {
 
     for (i = 0, il = specialItems.length; i < il; i++) {
       item = specialItems[i];
-      if (item.shape === 'cylinder' && !item.mh) {
-        Cylinder.footprintMask.call(this, item.center.x, item.center.y, item.radius);
+      if ((item.shape === 'cylinder' || item.shape === 'cone') && !item.mh) {
+        Cylinder.footprintMask(this.context, item.center.x, item.center.y, item.radius);
       }
     }
 

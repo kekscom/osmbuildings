@@ -174,11 +174,14 @@ var importOSM = (function() {
 
     res.height = res.height || DEFAULT_HEIGHT;
 
-    if (tags['roof:shape'] === 'dome' || tags['building:shape'] === 'cylinder' || tags['building:shape'] === 'sphere') {
+    if (tags['building:shape'] === 'cone' || tags['building:shape'] === 'dome' || tags['building:shape'] === 'sphere') {
+      res.shape = 'cone';
+      res.radius = Import.getRadius(res.footprint);
+    } else if (tags['building:shape'] === 'cylinder' || tags['roof:shape'] === 'cone' || tags['roof:shape'] === 'dome') {
       res.shape = 'cylinder';
       res.radius = Import.getRadius(res.footprint);
-      if (tags['roof:shape'] === 'dome' && tags['roof:height']) {
-        res.roofShape = 'cylinder';
+      if ((tags['roof:shape'] === 'cone' || tags['roof:shape'] === 'dome') && tags['roof:height']) {
+        res.roofShape = 'cone';
         res.roofHeight = Import.toMeters(tags['roof:height']);
         res.height = max(0, res.height-res.roofHeight);
       }

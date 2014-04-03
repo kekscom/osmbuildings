@@ -47,8 +47,8 @@ html, body {
 var map = new L.Map('map').setView([52.52179, 13.39503], 18); // Berlin Bodemuseum
 
 new L.TileLayer('http://{s}.tiles.mapbox.com/v3/osmbuildings.gm744p3p/{z}/{x}/{y}.png', { maxNativeZoom: 19, maxZoom: 21 }).addTo(map);
-
-var osmb = new OSMBuildings(map).setDate(new Date(2014, 1, 15, 10, 30)).loadData();
+var now = new Date(2014, 4, 10, 8, 0);
+var osmb = new OSMBuildings(map).setDate(now).loadData();
 
 function changeDate() {
   var
@@ -73,7 +73,6 @@ var dateRange = document.querySelector('#date');
 var timeRangeLabel = document.querySelector('label[for=time]');
 var dateRangeLabel = document.querySelector('label[for=date]');
 
-var now = new Date;
 changeDate();
 
 // init with day of year

@@ -147,16 +147,13 @@ var Buildings = {
       roofColor = item.roofColor || roofColorAlpha;
       this.context.strokeStyle = altColor;
 
-      if (item.shape === 'cylinder') {
-        roof = Cylinder.draw.call(this, item.center.x-ORIGIN_X, item.center.y-ORIGIN_Y, item.radius, h, mh, wallColor, altColor);
-
-        if (item.roofShape === 'cylinder') {
-          altColor = ''+ parseColor(roofColor).lightness(0.8);
-          roof = Cylinder.draw.call(this, item.center.x-ORIGIN_X, item.center.y-ORIGIN_Y, item.radius, h+item.roofHeight, h, roofColor, altColor);
+      if (item.shape === 'cone') {
+        Cone.draw(this.context, item.center.x-ORIGIN_X, item.center.y-ORIGIN_Y, item.radius, h, mh, wallColor, altColor);
+      } else if (item.shape === 'cylinder') {
+        Cylinder.draw(this.context, item.center.x-ORIGIN_X, item.center.y-ORIGIN_Y, item.radius, h, mh, wallColor, altColor, roofColor);
+        if (item.roofShape === 'cone') {
+          Cone.draw(this.context, item.center.x-ORIGIN_X, item.center.y-ORIGIN_Y, item.radius, h+item.roofHeight, h, roofColor, ''+ parseColor(roofColor).lightness(0.9));
         }
-
-        this.context.fillStyle = roofColor;
-        Cylinder.circle.call(this, roof.x, roof.y, roof.radius);
       } else {
         roof = this.drawSolid(footprint, _h, _mh, wallColor, altColor);
         holes = [];

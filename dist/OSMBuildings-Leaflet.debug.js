@@ -800,11 +800,14 @@ var importOSM = (function() {
 
     res.height = res.height || DEFAULT_HEIGHT;
 
-    if (tags['roof:shape'] === 'dome' || tags['building:shape'] === 'cylinder' || tags['building:shape'] === 'sphere') {
+    if (tags['building:shape'] === 'cone' || tags['building:shape'] === 'dome' || tags['building:shape'] === 'sphere') {
+      res.shape = 'cone';
+      res.radius = Import.getRadius(res.footprint);
+    } else if (tags['building:shape'] === 'cylinder' || tags['roof:shape'] === 'cone' || tags['roof:shape'] === 'dome') {
       res.shape = 'cylinder';
       res.radius = Import.getRadius(res.footprint);
-      if (tags['roof:shape'] === 'dome' && tags['roof:height']) {
-        res.roofShape = 'cylinder';
+      if ((tags['roof:shape'] === 'cone' || tags['roof:shape'] === 'dome') && tags['roof:height']) {
+        res.roofShape = 'cone';
         res.roofHeight = Import.toMeters(tags['roof:height']);
         res.height = max(0, res.height-res.roofHeight);
       }
@@ -928,7 +931,7 @@ var VERSION      = '0.1.9a',
   MAX_HEIGHT, // taller buildings will be cut to this
   DEFAULT_HEIGHT = 5,
 
-  camX, camY, camZ = 450,
+  CAM_X, CAM_Y, CAM_Z = 450,
 
   isZooming;
 
@@ -1021,54 +1024,6 @@ function getCenter(poly) {
     maxY = max(maxY, poly[i+1]);
   }
   return { x:minX+(maxX-minX)/2 <<0, y:minY+(maxY-minY)/2 <<0 };
-}
-
-// http://en.wikibooks.org/wiki/Algorithm_Implementation/Geometry/Tangents_between_two_circles
-function getTangents(c1, r1, c2, r2) {
-  var dx = c1.x-c2.x,
-    dy = c1.y-c2.y,
-    dr = r1-r2,
-    sqdist = (dx*dx) + (dy*dy);
-
-  if (sqdist <= dr*dr) {
-    return;
-  }
-
-  var dist = sqrt(sqdist),
-    vx = -dx/dist,
-    vy = -dy/dist,
-    c  =  dr/dist,
-    res = [],
-    h, nx, ny;
-
-  // Let A, B be the centers, and C, D be points at which the tangent
-  // touches first and second circle, and n be the normal vector to it.
-  //
-  // We have the system:
-  //   n * n = 1    (n is a unit vector)
-  //   C = A + r1 * n
-  //   D = B + r2 * n
-  //   n * CD = 0   (common orthogonality)
-  //
-  // n * CD = n * (AB + r2*n - r1*n) = AB*n - (r1 -/+ r2) = 0,  <=>
-  // AB * n = (r1 -/+ r2), <=>
-  // v * n = (r1 -/+ r2) / d,  where v = AB/|AB| = AB/d
-  // This is a linear equation in unknown vector n.
-  // Now we're just intersecting a line with a circle: v*n=c, n*n=1
-
-  h = sqrt(max(0, 1 - c*c));
-  for (var sign = 1; sign >= -1; sign -= 2) {
-    nx = vx*c - sign*h*vy;
-    ny = vy*c + sign*h*vx;
-    res.push({
-      x1: c1.x + r1*nx <<0,
-      y1: c1.y + r1*ny <<0,
-      x2: c2.x + r2*nx <<0,
-      y2: c2.y + r2*ny <<0
-    });
-  }
-
-  return res;
 }
 
 
@@ -1409,14 +1364,290 @@ var Data = {
 };
 
 
+//****** file: Cylinder.js ******
+
+var Cylinder = {
+
+  circle: function(context, centerX, centerY, radius, color) {
+    context.fillStyle = color;
+    context.beginPath();
+    context.arc(centerX, centerY, radius, 0, PI*2);
+    context.stroke();
+    context.fill();
+  },
+
+  draw: function(context, centerX, centerY, radius, height, minHeight, color, altColor, roofColor) {
+    var
+      scale = CAM_Z / (CAM_Z-height),
+      apex = Buildings.project(centerX, centerY, scale),
+      topRadius = radius*scale,
+      a1, a2;
+
+    if (minHeight) {
+      scale = CAM_Z / (CAM_Z-minHeight);
+      var center = Buildings.project(centerX, centerY, scale);
+      centerX = center.x;
+      centerY = center.y;
+      radius = radius*scale;
+    }
+
+    // common tangents for ground and roof circle
+    var tangents = Cylinder.getTangents(centerX, centerY, radius, apex.x, apex.y, topRadius);
+
+    // no tangents? roof overlaps everything near cam position
+    if (tangents) {
+      a1 = atan2(tangents[0].y1-centerY, tangents[0].x1-centerX);
+      a2 = atan2(tangents[1].y1-centerY, tangents[1].x1-centerX);
+
+      context.fillStyle = color;
+      context.beginPath();
+      context.arc(apex.x, apex.y, topRadius, HALF_PI, a1, true);
+      context.arc(centerX, centerY, radius, a1, HALF_PI);
+      context.closePath();
+      context.fill();
+
+      context.fillStyle = altColor;
+      context.beginPath();
+      context.arc(apex.x, apex.y, topRadius, a2, HALF_PI, true);
+      context.arc(centerX, centerY, radius, HALF_PI, a2);
+      context.closePath();
+      context.fill();
+    }
+
+    Cylinder.circle(context, apex.x, apex.y, topRadius, roofColor);
+  },
+
+  shadow: function(context, centerX, centerY, radius, height, minHeight) {
+    var
+      apex = Shadows.project(centerX, centerY, height),
+      topRadius = radius, // there is no perspective for shadows
+      p1, p2;
+
+    if (minHeight) {
+      var center = Shadows.project(centerX, centerY, minHeight);
+      centerX = center.x;
+      centerY = center.y;
+    }
+
+    // common tangents for ground and roof circle
+    var tangents = Cylinder.getTangents(centerX, centerY, radius, apex.x, apex.y, topRadius);
+
+    // TODO: no tangents? roof overlaps everything near cam position
+    if (tangents) {
+      p1 = atan2(tangents[0].y1-centerY, tangents[0].x1-centerX);
+      p2 = atan2(tangents[1].y1-centerY, tangents[1].x1-centerX);
+      context.moveTo(tangents[1].x2, tangents[1].y2);
+      context.arc(apex.x, apex.y, topRadius, p2, p1);
+      context.arc(centerX, centerY, radius, p1, p2);
+    } else {
+      context.moveTo(centerX+radius, centerY);
+      context.arc(centerX, centerY, radius, 0, 2*PI);
+    }
+  },
+
+  footprintMask: function(context, centerX, centerY, radius) {
+    context.moveTo(centerX+radius, centerY);
+    context.arc(centerX, centerY, radius, 0, PI*2);
+  },
+
+  // http://en.wikibooks.org/wiki/Algorithm_Implementation/Geometry/Tangents_between_two_circles
+  getTangents: function(c1x, c1y, r1, c2x, c2y, r2) {
+    var
+      dx = c1x-c2x,
+      dy = c1y-c2y,
+      dr = r1-r2,
+      sqdist = (dx*dx) + (dy*dy);
+
+    if (sqdist <= dr*dr) {
+      return;
+    }
+
+    var dist = sqrt(sqdist),
+      vx = -dx/dist,
+      vy = -dy/dist,
+      c  =  dr/dist,
+      res = [],
+      h, nx, ny;
+
+    // Let A, B be the centers, and C, D be points at which the tangent
+    // touches first and second circle, and n be the normal vector to it.
+    //
+    // We have the system:
+    //   n * n = 1    (n is a unit vector)
+    //   C = A + r1 * n
+    //   D = B + r2 * n
+    //   n * CD = 0   (common orthogonality)
+    //
+    // n * CD = n * (AB + r2*n - r1*n) = AB*n - (r1 -/+ r2) = 0,  <=>
+    // AB * n = (r1 -/+ r2), <=>
+    // v * n = (r1 -/+ r2) / d,  where v = AB/|AB| = AB/d
+    // This is a linear equation in unknown vector n.
+    // Now we're just intersecting a line with a circle: v*n=c, n*n=1
+
+    h = sqrt(max(0, 1 - c*c));
+    for (var sign = 1; sign >= -1; sign -= 2) {
+      nx = vx*c - sign*h*vy;
+      ny = vy*c + sign*h*vx;
+      res.push({
+        x1: c1x + r1*nx <<0,
+        y1: c1y + r1*ny <<0,
+        x2: c2x + r2*nx <<0,
+        y2: c2y + r2*ny <<0
+      });
+    }
+
+    return res;
+  }
+};
+
+
+//****** file: Cone.js ******
+
+var Cone = {
+
+  draw: function(context, centerX, centerY, radius, height, minHeight, color, altColor) {
+    var
+      scale = CAM_Z / (CAM_Z-height),
+      apex = Buildings.project(centerX, centerY, scale),
+      a1, a2;
+
+    if (minHeight) {
+      scale = CAM_Z / (CAM_Z-minHeight);
+      var center = Buildings.project(centerX, centerY, scale);
+      centerX = center.x;
+      centerY = center.y;
+      radius = radius*scale;
+    }
+
+    // no tangents? apex is inside footprint circle
+    var tangents = Cone.getTangents(centerX, centerY, radius, apex.x, apex.y);
+
+    context.fillStyle = color;
+    context.beginPath();
+    context.moveTo(apex.x, apex.y);
+    if (tangents) {
+      a1 = atan2(tangents[0].y-centerY, tangents[0].x-centerX);
+      context.lineTo(tangents[0].x, tangents[0].y);
+      context.arc(centerX, centerY, radius, a1, HALF_PI);
+    } else {
+      context.arc(centerX, centerY, radius, HALF_PI, PI+HALF_PI, true);
+    }
+    context.closePath();
+    context.fill();
+
+    context.fillStyle = altColor;
+    context.beginPath();
+    context.moveTo(apex.x, apex.y);
+    if (tangents) {
+      a2 = atan2(tangents[1].y-centerY, tangents[1].x-centerX);
+      context.lineTo(tangents[1].x, tangents[1].y);
+      context.arc(centerX, centerY, radius, a2, HALF_PI, true);
+    } else {
+      context.arc(centerX, centerY, radius, PI+HALF_PI, HALF_PI, true);
+    }
+    context.closePath();
+    context.fill();
+
+    context.beginPath();
+    if (tangents) {
+      context.moveTo(apex.x, apex.y);
+      context.lineTo(tangents[0].x, tangents[0].y);
+      context.arc(centerX, centerY, radius, a1, a2);
+    } else {
+      context.arc(centerX, centerY, radius, 0, 2*PI);
+    }
+    context.closePath();
+    context.stroke();
+  },
+
+  shadow: function(context, centerX, centerY, radius, height, minHeight) {
+    var
+      apex = Shadows.project(centerX, centerY, height),
+      a1, a2;
+
+    if (minHeight) {
+      var center = Shadows.project(centerX, centerY, minHeight);
+      centerX = center.x;
+      centerY = center.y;
+    }
+
+    // no tangents? apex is inside footprint circle
+    var tangents = Cone.getTangents(centerX, centerY, radius, apex.x, apex.y);
+    if (tangents) {
+      a1 = atan2(tangents[0].y-centerY, tangents[0].x-centerX);
+      a2 = atan2(tangents[1].y-centerY, tangents[1].x-centerX);
+      context.moveTo(apex.x, apex.y);
+      context.lineTo(tangents[0].x, tangents[0].y);
+      context.arc(centerX, centerY, radius, a1, a2);
+    } else {
+      context.moveTo(centerX+radius, centerY);
+      context.arc(centerX, centerY, radius, 0, 2*PI);
+    }
+  },
+
+  getTangents: function(c1x, c1y, r1, c2x, c2y) {
+    var
+      dx = c1x-c2x,
+      dy = c1y-c2y,
+      sqdist = (dx*dx) + (dy*dy);
+
+    if (sqdist <= r1*r1) {
+      return;
+    }
+
+    var dist = sqrt(sqdist),
+      vx = -dx/dist,
+      vy = -dy/dist,
+      c  =  r1/dist,
+      res = [],
+      h, nx, ny;
+
+    h = sqrt(max(0, 1 - c*c));
+    for (var sign = 1; sign >= -1; sign -= 2) {
+      nx = vx*c - sign*h*vy;
+      ny = vy*c + sign*h*vx;
+      res.push({
+        x: c1x + r1*nx <<0,
+        y: c1y + r1*ny <<0
+      });
+    }
+
+    return res;
+  }
+};
+
+
+//****** file: Debug.js ******
+
+var Debug = {
+
+  point: function(context, x, y, color, size) {
+    context.fillStyle = color || '#ffcc00';
+    context.beginPath();
+    context.arc(x, y, size || 3, 0, 2*PI);
+    context.closePath();
+    context.fill();
+  },
+
+  line: function(context, ax, ay, bx, by, color) {
+    context.strokeStyle = color || '#ffcc00';
+    context.beginPath();
+    context.moveTo(ax, ay);
+    context.lineTo(bx, by);
+    context.closePath();
+    context.stroke();
+  }
+};
+
+
 //****** file: Buildings.js ******
 
 var Buildings = {
 
   project: function(x, y, m) {
     return {
-      x: (x-camX) * m + camX <<0,
-      y: (y-camY) * m + camY <<0
+      x: (x-CAM_X) * m + CAM_X <<0,
+      y: (y-CAM_Y) * m + CAM_Y <<0
     };
   },
 
@@ -1462,85 +1693,36 @@ var Buildings = {
   },
 
   drawFace: function(points, stroke, holes) {
+    var
+      context = this.context,
+      i, il, j, jl;
+
     if (!points.length) {
       return;
     }
 
-    var i, il, j, jl;
+    context.beginPath();
 
-    this.context.beginPath();
-
-    this.context.moveTo(points[0], points[1]);
+    context.moveTo(points[0], points[1]);
     for (i = 2, il = points.length; i < il; i += 2) {
-      this.context.lineTo(points[i], points[i+1]);
+      context.lineTo(points[i], points[i+1]);
     }
 
     if (holes) {
       for (i = 0, il = holes.length; i < il; i++) {
         points = holes[i];
-        this.context.moveTo(points[0], points[1]);
+        context.moveTo(points[0], points[1]);
         for (j = 2, jl = points.length; j < jl; j += 2) {
-          this.context.lineTo(points[j], points[j+1]);
+          context.lineTo(points[j], points[j+1]);
         }
       }
     }
 
-    this.context.closePath();
+    context.closePath();
     if (stroke) {
-      this.context.stroke();
+      context.stroke();
     }
-    this.context.fill();
-  },
-
-  drawCircle: function(c, r, stroke) {
-    this.context.beginPath();
-    this.context.arc(c.x, c.y, r, 0, PI*2);
-    if (stroke) {
-      this.context.stroke();
-    }
-    this.context.fill();
-  },
-
-  drawCylinder: function(c, r, h, minHeight, color, altColor) {
-    var _h = camZ / (camZ-h),
-      _c = this.project(c.x, c.y, _h),
-      _r = r*_h,
-      a1, a2, col;
-
-    if (minHeight) {
-      var _mh = camZ / (camZ-minHeight);
-      c = this.project(c.x, c.y, _mh);
-      r = r*_mh;
-    }
-
-    var t = getTangents(c, r, _c, _r); // common tangents for ground and roof circle
-
-    // no tangents? roof overlaps everything near cam position
-    if (t) {
-      a1 = atan2(t[0].y1-c.y, t[0].x1-c.x);
-      a2 = atan2(t[1].y1-c.y, t[1].x1-c.x);
-
-      if (!altColor) {
-        col = parseColor(color);
-        altColor = ''+ col.lightness(0.8);
-      }
-
-      this.context.fillStyle = color;
-      this.context.beginPath();
-      this.context.arc(_c.x, _c.y, _r, HALF_PI, a1, true);
-      this.context.arc(c.x, c.y, r, a1, HALF_PI);
-      this.context.closePath();
-      this.context.fill();
-
-      this.context.fillStyle = altColor;
-      this.context.beginPath();
-      this.context.arc(_c.x, _c.y, _r, a2, HALF_PI, true);
-      this.context.arc(c.x, c.y, r, HALF_PI, a2);
-      this.context.closePath();
-      this.context.fill();
-    }
-
-    return { c:_c, r:_r };
+    context.fill();
   },
 
   render: function() {
@@ -1554,7 +1736,7 @@ var Buildings = {
     var i, il, j, jl,
       item,
       h, _h, mh, _mh,
-      sortCam = { x:camX+ORIGIN_X, y:camY+ORIGIN_Y },
+      sortCam = { x:CAM_X+ORIGIN_X, y:CAM_Y+ORIGIN_Y },
       vp = {
         minX: ORIGIN_X,
         maxX: ORIGIN_X+WIDTH,
@@ -1595,13 +1777,13 @@ var Buildings = {
       // when fading in, use a dynamic height
       h = item.scale < 1 ? item.height*item.scale : item.height;
       // precalculating projection height factor
-      _h = camZ / (camZ-h);
+      _h = CAM_Z / (CAM_Z-h);
 
       mh = 0;
       _mh = 0;
       if (item.minHeight) {
         mh = item.scale < 1 ? item.minHeight*item.scale : item.minHeight;
-        _mh = camZ / (camZ-mh);
+        _mh = CAM_Z / (CAM_Z-mh);
       }
 
       wallColor = item.wallColor || wallColorAlpha;
@@ -1609,23 +1791,13 @@ var Buildings = {
       roofColor = item.roofColor || roofColorAlpha;
       this.context.strokeStyle = altColor;
 
-      if (item.shape === 'cylinder') {
-        roof = this.drawCylinder(
-          { x:item.center.x-ORIGIN_X, y:item.center.y-ORIGIN_Y },
-          item.radius,
-          h, mh,
-          wallColor, altColor
-        );
-        if (item.roofShape === 'cylinder') {
-          roof = this.drawCylinder(
-            { x:item.center.x-ORIGIN_X, y:item.center.y-ORIGIN_Y },
-            item.radius,
-            h+item.roofHeight, h,
-            roofColor
-          );
+      if (item.shape === 'cone') {
+        Cone.draw(this.context, item.center.x-ORIGIN_X, item.center.y-ORIGIN_Y, item.radius, h, mh, wallColor, altColor);
+      } else if (item.shape === 'cylinder') {
+        Cylinder.draw(this.context, item.center.x-ORIGIN_X, item.center.y-ORIGIN_Y, item.radius, h, mh, wallColor, altColor, roofColor);
+        if (item.roofShape === 'cone') {
+          Cone.draw(this.context, item.center.x-ORIGIN_X, item.center.y-ORIGIN_Y, item.radius, h+item.roofHeight, h, roofColor, ''+ parseColor(roofColor).lightness(0.9));
         }
-        this.context.fillStyle = roofColor;
-        this.drawCircle(roof.c, roof.r, true);
       } else {
         roof = this.drawSolid(footprint, _h, _mh, wallColor, altColor);
         holes = [];
@@ -1691,13 +1863,6 @@ var Simplified = {
     this.context.fill();
   },
 
-  drawCircle: function(c, r) {
-    this.context.beginPath();
-    this.context.arc(c.x, c.y, r, 0, PI*2);
-    this.context.stroke();
-    this.context.fill();
-  },
-
   render: function() {
     this.context.clearRect(0, 0, WIDTH, HEIGHT);
 
@@ -1743,10 +1908,9 @@ var Simplified = {
       roofColor = item.roofColor || roofColorAlpha;
 
       this.context.strokeStyle = altColor;
-      this.context.fillStyle = roofColor;
 
-      if (item.shape === 'cylinder') {
-        this.drawCircle({ x:item.center.x-ORIGIN_X, y:item.center.y-ORIGIN_Y }, item.radius);
+      if (item.shape === 'cylinder' || item.shape === 'cone') {
+        Cylinder.circle(this.context, item.center.x-ORIGIN_X, item.center.y-ORIGIN_Y, item.radius, roofColor);
         continue;
       }
 
@@ -1759,6 +1923,7 @@ var Simplified = {
         }
       }
 
+      this.context.fillStyle = roofColor;
       this.drawFace(roof, holes);
     }
   }
@@ -1781,28 +1946,6 @@ var Shadows = {
       x: x + this.direction.x*h,
       y: y + this.direction.y*h
     };
-  },
-
-  cylinder: function(c, r, h, mh) {
-    var
-      _c = this.project(c.x, c.y, h),
-      a1, a2;
-
-    if (mh) {
-      c = this.project(c.x, c.y, mh);
-    }
-
-    var t = getTangents(c, r, _c, r); // common tangents for ground and roof circle
-
-    // no tangents? roof overlaps everything near cam position
-    if (t) {
-      a1 = atan2(t[0].y1-c.y, t[0].x1-c.x);
-      a2 = atan2(t[1].y1-c.y, t[1].x1-c.x);
-
-      this.context.moveTo(t[1].x2, t[1].y2);
-      this.context.arc(_c.x, _c.y, r, a2, a1);
-      this.context.arc( c.x,  c.y, r, a1, a2);
-    }
   },
 
   render: function() {
@@ -1877,16 +2020,23 @@ var Shadows = {
         mh = item.scale < 1 ? item.minHeight*item.scale : item.minHeight;
       }
 
-      if (item.shape === 'cylinder') {
-        if (item.roofShape === 'cylinder') {
-          h += item.roofHeight;
-        }
+      if (item.shape === 'cylinder' || item.shape === 'cone') {
         specialItems.push({
           shape:item.shape,
           center:{ x:item.center.x-ORIGIN_X, y:item.center.y-ORIGIN_Y },
           radius:item.radius,
-          h:h, mh:mh
+          h:h,
+          mh:mh
         });
+        if (item.roofShape === 'cone') {
+          specialItems.push({
+            shape:'cone',
+            center:{ x:item.center.x-ORIGIN_X, y:item.center.y-ORIGIN_Y },
+            radius:item.radius,
+            h:h+item.roofHeight,
+            mh:h
+          });
+        }
         continue;
       }
 
@@ -1955,7 +2105,10 @@ var Shadows = {
     for (i = 0, il = specialItems.length; i < il; i++) {
       item = specialItems[i];
       if (item.shape === 'cylinder') {
-        this.cylinder(item.center, item.radius, item.h, item.mh);
+        Cylinder.shadow(this.context, item.center.x, item.center.y, item.radius, item.h, item.mh);
+      }
+      if (item.shape === 'cone') {
+        Cone.shadow(this.context, item.center.x, item.center.y, item.radius, item.h, item.mh);
       }
     }
 
@@ -1979,42 +2132,14 @@ var Shadows = {
 
     for (i = 0, il = specialItems.length; i < il; i++) {
       item = specialItems[i];
-      if (item.shape === 'cylinder' && !item.mh) {
-        this.context.moveTo(item.center.x+item.radius, item.center.y);
-        this.context.arc(item.center.x, item.center.y, item.radius, 0, PI*2);
+      if ((item.shape === 'cylinder' || item.shape === 'cone') && !item.mh) {
+        Cylinder.footprintMask(this.context, item.center.x, item.center.y, item.radius);
       }
     }
 
     this.context.fillStyle = '#00ff00';
     this.context.fill();
     this.context.globalCompositeOperation = 'source-over';
-  }
-};
-
-
-//****** file: Debug.js ******
-
-var Debug = {
-
-  marker: function(p, color, size) {
-    this.context.fillStyle = color || '#ffcc00';
-    this.context.beginPath();
-    this.context.arc(p.x, p.y, size || 3, 0, PI*2, true);
-    this.context.closePath();
-    this.context.fill();
-  },
-
-  line: function(a, b, color) {
-    this.context.strokeStyle = color || '#ff0000';
-    this.context.beginPath();
-    this.context.moveTo(a.x, a.y);
-    this.context.lineTo(b.x, b.y);
-    this.context.closePath();
-    this.context.stroke();
-  },
-
-  clear: function() {
-    this.context.clearRect(0, 0, WIDTH, HEIGHT);
   }
 };
 
@@ -2064,7 +2189,6 @@ var Layers = {
     Shadows.context    = this.createContext();
     Simplified.context = this.createContext();
     Buildings.context  = this.createContext();
-//  Debug.context      = this.createContext();
   },
 
   render: function() {
@@ -2161,8 +2285,8 @@ function setOrigin(origin) {
 }
 
 function setCamOffset(offset) {
-  camX = CENTER_X + offset.x;
-  camY = HEIGHT   + offset.y;
+  CAM_X = CENTER_X + offset.x;
+  CAM_Y = HEIGHT   + offset.y;
 }
 
 function setSize(size) {
@@ -2171,11 +2295,11 @@ function setSize(size) {
   CENTER_X = WIDTH /2 <<0;
   CENTER_Y = HEIGHT/2 <<0;
 
-  camX = CENTER_X;
-  camY = HEIGHT;
+  CAM_X = CENTER_X;
+  CAM_Y = HEIGHT;
 
   Layers.setSize(WIDTH, HEIGHT);
-  MAX_HEIGHT = camZ-50;
+  MAX_HEIGHT = CAM_Z-50;
 }
 
 function setZoom(z) {
