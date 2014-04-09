@@ -14,28 +14,6 @@ var Shadows = {
     };
   },
 
-  cylinder: function(c, r, h, mh) {
-    var
-      _c = this.project(c.x, c.y, h),
-      a1, a2;
-
-    if (mh) {
-      c = this.project(c.x, c.y, mh);
-    }
-
-    var t = getTangents(c, r, _c, r); // common tangents for ground and roof circle
-
-    // no tangents? roof overlaps everything near cam position
-    if (t) {
-      a1 = atan2(t[0].y1-c.y, t[0].x1-c.x);
-      a2 = atan2(t[1].y1-c.y, t[1].x1-c.x);
-
-      this.context.moveTo(t[1].x2, t[1].y2);
-      this.context.arc(_c.x, _c.y, r, a2, a1);
-      this.context.arc( c.x,  c.y, r, a1, a2);
-    }
-  },
-
   render: function() {
     var center, sun, length, alpha;
 
@@ -108,16 +86,23 @@ var Shadows = {
         mh = item.scale < 1 ? item.minHeight*item.scale : item.minHeight;
       }
 
-      if (item.shape === 'cylinder') {
-        if (item.roofShape === 'cylinder') {
-          h += item.roofHeight;
-        }
+      if (item.shape === 'cylinder' || item.shape === 'cone') {
         specialItems.push({
           shape:item.shape,
           center:{ x:item.center.x-ORIGIN_X, y:item.center.y-ORIGIN_Y },
           radius:item.radius,
-          h:h, mh:mh
+          h:h,
+          mh:mh
         });
+        if (item.roofShape === 'cone') {
+          specialItems.push({
+            shape:'cone',
+            center:{ x:item.center.x-ORIGIN_X, y:item.center.y-ORIGIN_Y },
+            radius:item.radius,
+            h:h+item.roofHeight,
+            mh:h
+          });
+        }
         continue;
       }
 
@@ -186,7 +171,10 @@ var Shadows = {
     for (i = 0, il = specialItems.length; i < il; i++) {
       item = specialItems[i];
       if (item.shape === 'cylinder') {
-        this.cylinder(item.center, item.radius, item.h, item.mh);
+        Cylinder.shadow(this.context, item.center.x, item.center.y, item.radius, item.h, item.mh);
+      }
+      if (item.shape === 'cone') {
+        Cone.shadow(this.context, item.center.x, item.center.y, item.radius, item.h, item.mh);
       }
     }
 
@@ -210,9 +198,8 @@ var Shadows = {
 
     for (i = 0, il = specialItems.length; i < il; i++) {
       item = specialItems[i];
-      if (item.shape === 'cylinder' && !item.mh) {
-        this.context.moveTo(item.center.x+item.radius, item.center.y);
-        this.context.arc(item.center.x, item.center.y, item.radius, 0, PI*2);
+      if ((item.shape === 'cylinder' || item.shape === 'cone') && !item.mh) {
+        Cylinder.footprintMask(this.context, item.center.x, item.center.y, item.radius);
       }
     }
 

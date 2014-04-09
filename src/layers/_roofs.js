@@ -1,12 +1,12 @@
-function render2() {
+function render() {
   var p, x, y;
 
   context.clearRect(0, 0, width, height);
   context.strokeStyle = altColorAlpha;
 
   p = geoToPixel(52.52230, 13.39550);
-  x = p.x-originX;
-  y = p.y-originY;
+  x = p.x-ORIGIN_X;
+  y = p.y-ORIGIN_Y;
   dome({ x:x, y:y }, 30, 30);
 }
 
@@ -15,41 +15,6 @@ function line(a, b) {
   context.moveTo(a.x, a.y);
   context.lineTo(b.x, b.y);
   context.stroke();
-}
-
-function cone(c, r, h, minHeight) {
-  // TODO: min height
-  var apex = project(c.x, c.y, camZ / (camZ - h)),
-    _x = apex.x,
-    _y = apex.y;
-
-  var t = getTangentsFromPoint(c, r, _x, _y),
-    tx, ty, ta,
-    isAlt,
-    ax, ay;
-
-  // draw normal and alternative colored wall segments
-  for (var i = 0; i < 2; i++) {
-    isAlt = !!i;
-    tx = t[i].x;
-    ty = t[i].y;
-    ax = (c.x - tx) * (isAlt ? 1 : -1);
-    ay = (c.y - ty) * (isAlt ? 1 : -1);
-    ta = atan2(ay, ax) + (isAlt ? PI : 0);
-
-    // tangent not visible, avoid flickering
-    if (ax < 0) {
-        continue;
-    }
-
-    context.fillStyle = !isAlt ? wallColorAlpha : altColorAlpha;
-    context.beginPath();
-    context.moveTo(tx, ty);
-    context.arc(c.x, c.y, r, ta, HALF_PI, isAlt);
-    context.arc(_x, _y, 0, HALF_PI, ta, !isAlt);
-    context.closePath();
-    context.fill();
-  }
 }
 
 function rotation(p, c, a) {
@@ -73,31 +38,31 @@ function dome(c, r, h, minHeight) {
     // VERTICAL TANGENT POINTS ON SPHERE:
     // side view at scenario:
     // sphere at c.x,c.y & radius => circle at c.y,minHeight
-    // cam    at camX/camY/camZ => point  at camY/camZ
-    var t = getEllipseTangent(r, h, camY-c.y, camZ-minHeight);
+  // cam  at CAM_X/CAM_Y/CAM_Z => point  at CAM_Y/CAM_Z
+  var t = getEllipseTangent(r, h, CAM_Y-c.y, CAM_Z-minHeight);
     t.x += c.y;
     t.y += minHeight;
 
     if (minHeight) {
-        c = project(c.x, c.y, camZ / (camZ-minHeight));
-        r *= camZ / (camZ-minHeight);
+    c = project(c.x, c.y, CAM_Z / (CAM_Z-minHeight));
+    r *= CAM_Z / (CAM_Z-minHeight);
     }
 
 // radialGradient(c, r, roofColorAlpha)
     drawCircle(c, r, TRUE);
 
-    var _h = camZ / (camZ-h),
-      hfK = camZ / (camZ-(h*KAPPA));
+  var _h = CAM_Z / (CAM_Z-h),
+    hfK = CAM_Z / (CAM_Z-(h*KAPPA));
 
-    var apex = project(c.x, c.y, _h);
+  var apex = project(c.x, c.y, _h);
 debugMarker(apex);
 
-    var angle = atan((camX-c.x)/(camY-c.y));
+  var angle = atan((CAM_X-c.x)/(CAM_Y-c.y));
 
     context.beginPath();
 
     // ausgerichteter sichtrand!
-    var _th = camZ / (camZ-t.y);
+  var _th = CAM_Z / (CAM_Z-t.y);
     var p = rotation({ x:c.x, y:t.x }, c, angle);
     var _p = project(p.x, p.y, _th);
 //debugMarker(_p);
@@ -159,7 +124,8 @@ function drawHalfMeridian(c, r, _h, hfK, apex, angle) {
 }
 
 function getEllipseTangent(a, b, x, y) {
-    var C = (x*x) / (a*a) + (y*y) / (b*b),
+  var
+    C = (x*x) / (a*a) + (y*y) / (b*b),
         R = Math.sqrt(C-1),
         yabR = y*(a/b)*R,
         xbaR = x*(b/a)*R;
@@ -170,7 +136,8 @@ function getEllipseTangent(a, b, x, y) {
 }
 
 function getTangentsFromPoint(c, r, p) {
-    var a = c.x-p.x, b = c.y-p.y,
+  var
+    a = c.x-p.x, b = c.y-p.y,
         u = sqrt(a*a + b*b),
         ur = r/u,
         ux = -a/u, uy = -b/u,
@@ -205,7 +172,7 @@ function drawPyramidalRoof(points, height, strokeRoofs) {
         cy += points[i+1];
     }
 
-    apex = project(cx/num, cy/num, camZ / (camZ-h));
+  apex = project(cx/num, cy/num, CAM_Z / (CAM_Z-h));
 
     var ax,bx,ay,by;
     for (i = 0, il = points.length-3; i < il; i += 2) {
