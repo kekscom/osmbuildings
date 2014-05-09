@@ -73,7 +73,7 @@ var Data = {
       color, wallColor, altColor,
       roofColor, roofHeight,
       holes, innerFootprint,
-      zoomScale = METERS_PER_PIXEL * 5;
+      zoomScale = (4/pow(2, ZOOM-MIN_ZOOM)); // TODO: maybe restore old FOV algorithm * WIDTH/HEIGHT;
 
     for (i = 0, il = items.length; i < il; i++) {
       item = items[i];
