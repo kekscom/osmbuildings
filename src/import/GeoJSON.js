@@ -69,12 +69,12 @@ var importGeoJSON = (function() {
         continue;
       }
 
-      properties = feature.properties;
+      properties = Import.alignProperties(feature.properties);
 
-      height    = Import.toMeters(properties.height) || DEFAULT_HEIGHT;
-      minHeight = Import.toMeters(properties.minHeight);
-      wallColor = properties.color || properties.wallColor || null;
-      roofColor = properties.roofColor || null;
+      height    = properties.height || DEFAULT_HEIGHT;
+      minHeight = properties.minHeight;
+      wallColor = properties.color || properties.wallColor;
+      roofColor = properties.roofColor;
 
       polygons = getPolygons(feature.geometry);
 

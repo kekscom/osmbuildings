@@ -569,11 +569,6 @@ var Import = {
       }
     }
 
-if (dst.id === 104991250) {
-  console.log('DST:', dst);
-  console.log('SRC:', src);
-}
-
     if (!dst.roofColor) {
       if (src['roof:material']) {
         dst.roofColor = this.getMaterialColor(src['roof:material']);
@@ -604,8 +599,11 @@ if (dst.id === 104991250) {
         break;
 
         case 'dome':
-        case 'sphere':
           dst.shape = 'dome';
+        break;
+
+        case 'sphere':
+          dst.shape = 'cylinder';
         break;
       }
     }
@@ -1640,7 +1638,8 @@ var Buildings = {
   },
 
   render: function() {
-    this.context.clearRect(0, 0, WIDTH, HEIGHT);
+    var context = this.context;
+    context.clearRect(0, 0, WIDTH, HEIGHT);
 
     // show on high zoom levels only and avoid rendering during zoom
     if (ZOOM < MIN_ZOOM || isZooming) {
@@ -1660,7 +1659,8 @@ var Buildings = {
       footprint, roof, holes,
       isVisible,
       wallColor, altColor, roofColor,
-      dataItems = Data.items;
+      dataItems = Data.items,
+      cx, cy, r;
 
     dataItems.sort(function(a, b) {
       return (a.minHeight-b.minHeight) || getDistance(b.center, sortCam) - getDistance(a.center, sortCam) || (b.height-a.height);
@@ -1703,24 +1703,31 @@ var Buildings = {
       wallColor = item.wallColor || wallColorAlpha;
       altColor  = item.altColor  || altColorAlpha;
       roofColor = item.roofColor || roofColorAlpha;
-      this.context.strokeStyle = altColor;
+      context.strokeStyle = altColor;
 
       switch (item.shape) {
         case 'cylinder':
-          Cylinder.draw(this.context, item.center.x-ORIGIN_X, item.center.y-ORIGIN_Y, item.radius, item.radius, h, mh, wallColor, altColor, roofColor);
+          cx = item.center.x-ORIGIN_X;
+          cy = item.center.y-ORIGIN_Y;
+          r = item.radius;
+
+          Cylinder.draw(context, cx, cy, r, r, h, mh, wallColor, altColor, roofColor);
           if (item.roofShape === 'cone') {
-            Cylinder.draw(this.context, item.center.x-ORIGIN_X, item.center.y-ORIGIN_Y, item.radius, 0, h+item.roofHeight, h, roofColor, ''+ parseColor(roofColor).lightness(0.9));
+            Cylinder.draw(context, cx, cy, r, 0, h+item.roofHeight, h, roofColor, ''+ parseColor(roofColor).lightness(0.9));
           }
           if (item.roofShape === 'dome') {
-            Cylinder.draw(this.context, item.center.x-ORIGIN_X, item.center.y-ORIGIN_Y, item.radius, item.radius/2, h+item.roofHeight, h, roofColor, ''+ parseColor(roofColor).lightness(0.9));
+            Cylinder.draw(context, cx, cy, r, r/2, h+item.roofHeight, h, roofColor, ''+ parseColor(roofColor).lightness(0.9));
           }
         break;
+
         case 'cone':
-          Cylinder.draw(this.context, item.center.x-ORIGIN_X, item.center.y-ORIGIN_Y, item.radius, 0, h, mh, wallColor, altColor);
+          Cylinder.draw(context, item.center.x-ORIGIN_X, item.center.y-ORIGIN_Y, item.radius, 0, h, mh, wallColor, altColor);
         break;
+
         case 'dome':
-          Cylinder.draw(this.context, item.center.x-ORIGIN_X, item.center.y-ORIGIN_Y, item.radius, item.radius/2, h, mh, wallColor, altColor);
+          Cylinder.draw(context, item.center.x-ORIGIN_X, item.center.y-ORIGIN_Y, item.radius, item.radius/2, h, mh, wallColor, altColor);
         break;
+
         default:
           roof = this.drawSolid(footprint, _h, _mh, wallColor, altColor);
           holes = [];
@@ -1729,7 +1736,7 @@ var Buildings = {
               holes[j] = this.drawSolid(item.holes[j], _h, _mh, wallColor, altColor);
             }
           }
-          this.context.fillStyle = roofColor;
+          context.fillStyle = roofColor;
           this.drawFace(roof, true, holes);
       }
     }
@@ -1832,7 +1839,7 @@ var Simplified = {
 
       this.context.strokeStyle = altColor;
 
-      if (item.shape === 'cylinder' || item.shape === 'cone') {
+      if (item.shape === 'cylinder' || item.shape === 'cone' || item.shape === 'dome') {
         Cylinder.circle(this.context, item.center.x-ORIGIN_X, item.center.y-ORIGIN_Y, item.radius, roofColor);
         continue;
       }
@@ -1872,9 +1879,11 @@ var Shadows = {
   },
 
   render: function() {
-    var center, sun, length, alpha;
+    var
+      context = this.context,
+      center, sun, length, alpha;
 
-    this.context.clearRect(0, 0, WIDTH, HEIGHT);
+    context.clearRect(0, 0, WIDTH, HEIGHT);
 
     // show on high zoom levels only and avoid rendering during zoom
     if (!this.enabled || ZOOM < MIN_ZOOM || isZooming) {
@@ -1907,13 +1916,14 @@ var Shadows = {
       points, locPoints,
       specialItems = [],
       clipping = [],
-      dataItems = Data.items;
+      dataItems = Data.items,
+      cx, cy, r;
 
-    this.context.canvas.style.opacity = alpha / (ZOOM_FACTOR * 2);
-    this.context.shadowColor = this.blurColor;
-    this.context.shadowBlur = this.blurSize * (ZOOM_FACTOR / 2);
-    this.context.fillStyle = this.color;
-    this.context.beginPath();
+    context.canvas.style.opacity = alpha / (ZOOM_FACTOR * 2);
+    context.shadowColor = this.blurColor;
+    context.shadowBlur = this.blurSize * (ZOOM_FACTOR / 2);
+    context.fillStyle = this.color;
+    context.beginPath();
 
     for (i = 0, il = dataItems.length; i < il; i++) {
       item = dataItems[i];
@@ -1943,7 +1953,7 @@ var Shadows = {
         mh = item.scale < 1 ? item.minHeight*item.scale : item.minHeight;
       }
 
-      if (item.shape === 'cylinder' || item.shape === 'cone') {
+      if (item.shape === 'cylinder' || item.shape === 'cone' || item.shape === 'dome') {
         specialItems.push({
           shape:item.shape,
           center:{ x:item.center.x-ORIGIN_X, y:item.center.y-ORIGIN_Y },
@@ -1951,7 +1961,7 @@ var Shadows = {
           h:h,
           mh:mh
         });
-        if (item.roofShape === 'cone') {
+        if (item.roofShape === 'cone' || item.roofShape === 'dome') {
           specialItems.push({
             shape:'cone',
             center:{ x:item.center.x-ORIGIN_X, y:item.center.y-ORIGIN_Y },
@@ -1985,22 +1995,22 @@ var Shadows = {
         // mode 0: floor edges, mode 1: roof edges
         if ((bx-ax) * (_a.y-ay) > (_a.x-ax) * (by-ay)) {
           if (mode === 1) {
-            this.context.lineTo(ax, ay);
+            context.lineTo(ax, ay);
           }
           mode = 0;
           if (!j) {
-            this.context.moveTo(ax, ay);
+            context.moveTo(ax, ay);
           }
-          this.context.lineTo(bx, by);
+          context.lineTo(bx, by);
         } else {
           if (mode === 0) {
-            this.context.lineTo(_a.x, _a.y);
+            context.lineTo(_a.x, _a.y);
           }
           mode = 1;
           if (!j) {
-            this.context.moveTo(_a.x, _a.y);
+            context.moveTo(_a.x, _a.y);
           }
-          this.context.lineTo(_b.x, _b.y);
+          context.lineTo(_b.x, _b.y);
         }
       }
 
@@ -2012,7 +2022,7 @@ var Shadows = {
         for (j = 0, jl = item.holes.length; j < jl; j++) {
           points = item.holes[j];
           locPoints = [points[0]-ORIGIN_X, points[1]-ORIGIN_Y];
-          this.context.moveTo(locPoints[0], locPoints[1]);
+          context.moveTo(locPoints[0], locPoints[1]);
           for (k = 2, kl = points.length; k < kl; k += 2) {
             locPoints[k]   = points[k]-ORIGIN_X;
             locPoints[k+1] = points[k+1]-ORIGIN_Y;
@@ -2027,15 +2037,18 @@ var Shadows = {
 
     for (i = 0, il = specialItems.length; i < il; i++) {
       item = specialItems[i];
+      cx = item.center.x;
+      cy = item.center.y;
+      r = item.radius;
       switch (item.shape) {
         case 'cylinder':
-          Cylinder.shadow(this.context, item.center.x, item.center.y, item.radius, item.radius, item.h, item.mh);
+          Cylinder.shadow(context, cx, cy, r, r, item.h, item.mh);
         break;
         case 'cone':
-          Cylinder.shadow(this.context, item.center.x, item.center.y, item.radius, 0, item.h, item.mh);
+          Cylinder.shadow(context, cx, cy, r, 0, item.h, item.mh);
         break;
         case 'dome':
-          Cylinder.shadow(this.context, item.center.x, item.center.y, item.radius, item.radius/2, item.h, item.mh);
+          Cylinder.shadow(context, cx, cy, r, r/2, item.h, item.mh);
         break;
       }
     }
@@ -2060,7 +2073,7 @@ var Shadows = {
 
     for (i = 0, il = specialItems.length; i < il; i++) {
       item = specialItems[i];
-      if ((item.shape === 'cylinder' || item.shape === 'cone') && !item.mh) {
+      if ((item.shape === 'cylinder' || item.shape === 'cone' || item.shape === 'dome') && !item.mh) {
         Cylinder.footprintMask(this.context, item.center.x, item.center.y, item.radius);
       }
     }

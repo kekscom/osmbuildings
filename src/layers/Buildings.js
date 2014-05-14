@@ -153,7 +153,7 @@ var Buildings = {
         case 'cylinder':
           cx = item.center.x-ORIGIN_X;
           cy = item.center.y-ORIGIN_Y;
-          r = item.radius
+          r = item.radius;
 
           Cylinder.draw(context, cx, cy, r, r, h, mh, wallColor, altColor, roofColor);
           if (item.roofShape === 'cone') {
