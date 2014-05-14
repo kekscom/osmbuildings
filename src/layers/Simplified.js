@@ -91,7 +91,7 @@ var Simplified = {
 
       this.context.strokeStyle = altColor;
 
-      if (item.shape === 'cylinder' || item.shape === 'cone') {
+      if (item.shape === 'cylinder' || item.shape === 'cone' || item.shape === 'dome') {
         Cylinder.circle(this.context, item.center.x-ORIGIN_X, item.center.y-ORIGIN_Y, item.radius, roofColor);
         continue;
       }

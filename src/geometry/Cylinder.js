@@ -8,12 +8,13 @@ var Cylinder = {
     context.fill();
   },
 
-  draw: function(context, centerX, centerY, radius, height, minHeight, color, altColor, roofColor) {
+  draw: function(context, centerX, centerY, radius, topRadius, height, minHeight, color, altColor, roofColor) {
     var
       scale = CAM_Z / (CAM_Z-height),
       apex = Buildings.project(centerX, centerY, scale),
-      topRadius = radius*scale,
       a1, a2;
+
+    topRadius *= scale;
 
     if (minHeight) {
       scale = CAM_Z / (CAM_Z-minHeight);
@@ -49,10 +50,9 @@ var Cylinder = {
     Cylinder.circle(context, apex.x, apex.y, topRadius, roofColor);
   },
 
-  shadow: function(context, centerX, centerY, radius, height, minHeight) {
+  shadow: function(context, centerX, centerY, radius, topRadius, height, minHeight) {
     var
       apex = Shadows.project(centerX, centerY, height),
-      topRadius = radius, // there is no perspective for shadows
       p1, p2;
 
     if (minHeight) {
