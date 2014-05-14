@@ -99,7 +99,7 @@ var Shadows = {
         });
         if (item.roofShape === 'cone' || item.roofShape === 'dome') {
           specialItems.push({
-            shape:'cone',
+            shape:item.roofShape,
             center:{ x:item.center.x-ORIGIN_X, y:item.center.y-ORIGIN_Y },
             radius:item.radius,
             h:h+item.roofHeight,
@@ -162,7 +162,7 @@ var Shadows = {
           for (k = 2, kl = points.length; k < kl; k += 2) {
             locPoints[k]   = points[k]-ORIGIN_X;
             locPoints[k+1] = points[k+1]-ORIGIN_Y;
-            this.context.lineTo(locPoints[k], locPoints[k+1]);
+            context.lineTo(locPoints[k], locPoints[k+1]);
           }
           if (!mh) { // if object is hovered, there is no need to clip a hole
             clipping.push(locPoints);
@@ -189,33 +189,33 @@ var Shadows = {
       }
     }
 
-    this.context.closePath();
-    this.context.fill();
+    context.closePath();
+    context.fill();
 
-    this.context.shadowBlur = null;
+    context.shadowBlur = null;
 
     // now draw all the footprints as negative clipping mask
-    this.context.globalCompositeOperation = 'destination-out';
-    this.context.beginPath();
+    context.globalCompositeOperation = 'destination-out';
+    context.beginPath();
 
     for (i = 0, il = clipping.length; i < il; i++) {
       points = clipping[i];
-      this.context.moveTo(points[0], points[1]);
+      context.moveTo(points[0], points[1]);
       for (j = 2, jl = points.length; j < jl; j += 2) {
-        this.context.lineTo(points[j], points[j+1]);
+        context.lineTo(points[j], points[j+1]);
       }
-      this.context.lineTo(points[0], points[1]);
+      context.lineTo(points[0], points[1]);
     }
 
     for (i = 0, il = specialItems.length; i < il; i++) {
       item = specialItems[i];
       if ((item.shape === 'cylinder' || item.shape === 'cone' || item.shape === 'dome') && !item.mh) {
-        Cylinder.footprintMask(this.context, item.center.x, item.center.y, item.radius);
+        Cylinder.footprintMask(context, item.center.x, item.center.y, item.radius);
       }
     }
 
-    this.context.fillStyle = '#00ff00';
-    this.context.fill();
-    this.context.globalCompositeOperation = 'source-over';
+    context.fillStyle = '#00ff00';
+    context.fill();
+    context.globalCompositeOperation = 'source-over';
   }
 };

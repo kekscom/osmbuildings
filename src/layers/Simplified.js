@@ -21,28 +21,30 @@ var Simplified = {
       return;
     }
 
-    var i, il, j, jl;
+    var
+      context = this.context,
+      i, il, j, jl;
 
-    this.context.beginPath();
+    context.beginPath();
 
-    this.context.moveTo(points[0], points[1]);
+    context.moveTo(points[0], points[1]);
     for (i = 2, il = points.length; i < il; i += 2) {
-      this.context.lineTo(points[i], points[i+1]);
+      context.lineTo(points[i], points[i+1]);
     }
 
     if (holes) {
       for (i = 0, il = holes.length; i < il; i++) {
         points = holes[i];
-        this.context.moveTo(points[0], points[1]);
+        context.moveTo(points[0], points[1]);
         for (j = 2, jl = points.length; j < jl; j += 2) {
-          this.context.lineTo(points[j], points[j+1]);
+          context.lineTo(points[j], points[j+1]);
         }
       }
     }
 
-    this.context.closePath();
-    this.context.stroke();
-    this.context.fill();
+    context.closePath();
+    context.stroke();
+    context.fill();
   },
 
   render: function() {

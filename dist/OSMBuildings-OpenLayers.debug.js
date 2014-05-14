@@ -1423,25 +1423,28 @@ var Cylinder = {
     // common tangents for ground and roof circle
     var tangents = Cylinder.getTangents(centerX, centerY, radius, apex.x, apex.y, topRadius);
 
-    // no tangents? roof overlaps everything near cam position
-    if (tangents) {
+    // no tangents? top circle is inside bottom circle
+    if (!tangents) {
+      a1 = 0;
+      a2 = 1.5*PI;
+    } else {
       a1 = atan2(tangents[0].y1-centerY, tangents[0].x1-centerX);
       a2 = atan2(tangents[1].y1-centerY, tangents[1].x1-centerX);
-
-      context.fillStyle = color;
-      context.beginPath();
-      context.arc(apex.x, apex.y, topRadius, HALF_PI, a1, true);
-      context.arc(centerX, centerY, radius, a1, HALF_PI);
-      context.closePath();
-      context.fill();
-
-      context.fillStyle = altColor;
-      context.beginPath();
-      context.arc(apex.x, apex.y, topRadius, a2, HALF_PI, true);
-      context.arc(centerX, centerY, radius, HALF_PI, a2);
-      context.closePath();
-      context.fill();
     }
+
+    context.fillStyle = color;
+    context.beginPath();
+    context.arc(apex.x, apex.y, topRadius, HALF_PI, a1, true);
+    context.arc(centerX, centerY, radius, a1, HALF_PI);
+    context.closePath();
+    context.fill();
+
+    context.fillStyle = altColor;
+    context.beginPath();
+    context.arc(apex.x, apex.y, topRadius, a2, HALF_PI, true);
+    context.arc(centerX, centerY, radius, HALF_PI, a2);
+    context.closePath();
+    context.fill();
 
     Cylinder.circle(context, apex.x, apex.y, topRadius, roofColor);
   },
@@ -1769,28 +1772,30 @@ var Simplified = {
       return;
     }
 
-    var i, il, j, jl;
+    var
+      context = this.context,
+      i, il, j, jl;
 
-    this.context.beginPath();
+    context.beginPath();
 
-    this.context.moveTo(points[0], points[1]);
+    context.moveTo(points[0], points[1]);
     for (i = 2, il = points.length; i < il; i += 2) {
-      this.context.lineTo(points[i], points[i+1]);
+      context.lineTo(points[i], points[i+1]);
     }
 
     if (holes) {
       for (i = 0, il = holes.length; i < il; i++) {
         points = holes[i];
-        this.context.moveTo(points[0], points[1]);
+        context.moveTo(points[0], points[1]);
         for (j = 2, jl = points.length; j < jl; j += 2) {
-          this.context.lineTo(points[j], points[j+1]);
+          context.lineTo(points[j], points[j+1]);
         }
       }
     }
 
-    this.context.closePath();
-    this.context.stroke();
-    this.context.fill();
+    context.closePath();
+    context.stroke();
+    context.fill();
   },
 
   render: function() {
@@ -1963,7 +1968,7 @@ var Shadows = {
         });
         if (item.roofShape === 'cone' || item.roofShape === 'dome') {
           specialItems.push({
-            shape:'cone',
+            shape:item.roofShape,
             center:{ x:item.center.x-ORIGIN_X, y:item.center.y-ORIGIN_Y },
             radius:item.radius,
             h:h+item.roofHeight,
@@ -2026,7 +2031,7 @@ var Shadows = {
           for (k = 2, kl = points.length; k < kl; k += 2) {
             locPoints[k]   = points[k]-ORIGIN_X;
             locPoints[k+1] = points[k+1]-ORIGIN_Y;
-            this.context.lineTo(locPoints[k], locPoints[k+1]);
+            context.lineTo(locPoints[k], locPoints[k+1]);
           }
           if (!mh) { // if object is hovered, there is no need to clip a hole
             clipping.push(locPoints);
@@ -2053,34 +2058,34 @@ var Shadows = {
       }
     }
 
-    this.context.closePath();
-    this.context.fill();
+    context.closePath();
+    context.fill();
 
-    this.context.shadowBlur = null;
+    context.shadowBlur = null;
 
     // now draw all the footprints as negative clipping mask
-    this.context.globalCompositeOperation = 'destination-out';
-    this.context.beginPath();
+    context.globalCompositeOperation = 'destination-out';
+    context.beginPath();
 
     for (i = 0, il = clipping.length; i < il; i++) {
       points = clipping[i];
-      this.context.moveTo(points[0], points[1]);
+      context.moveTo(points[0], points[1]);
       for (j = 2, jl = points.length; j < jl; j += 2) {
-        this.context.lineTo(points[j], points[j+1]);
+        context.lineTo(points[j], points[j+1]);
       }
-      this.context.lineTo(points[0], points[1]);
+      context.lineTo(points[0], points[1]);
     }
 
     for (i = 0, il = specialItems.length; i < il; i++) {
       item = specialItems[i];
       if ((item.shape === 'cylinder' || item.shape === 'cone' || item.shape === 'dome') && !item.mh) {
-        Cylinder.footprintMask(this.context, item.center.x, item.center.y, item.radius);
+        Cylinder.footprintMask(context, item.center.x, item.center.y, item.radius);
       }
     }
 
-    this.context.fillStyle = '#00ff00';
-    this.context.fill();
-    this.context.globalCompositeOperation = 'source-over';
+    context.fillStyle = '#00ff00';
+    context.fill();
+    context.globalCompositeOperation = 'source-over';
   }
 };
 

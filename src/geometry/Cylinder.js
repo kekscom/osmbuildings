@@ -27,25 +27,28 @@ var Cylinder = {
     // common tangents for ground and roof circle
     var tangents = Cylinder.getTangents(centerX, centerY, radius, apex.x, apex.y, topRadius);
 
-    // no tangents? roof overlaps everything near cam position
-    if (tangents) {
+    // no tangents? top circle is inside bottom circle
+    if (!tangents) {
+      a1 = 0;
+      a2 = 1.5*PI;
+    } else {
       a1 = atan2(tangents[0].y1-centerY, tangents[0].x1-centerX);
       a2 = atan2(tangents[1].y1-centerY, tangents[1].x1-centerX);
-
-      context.fillStyle = color;
-      context.beginPath();
-      context.arc(apex.x, apex.y, topRadius, HALF_PI, a1, true);
-      context.arc(centerX, centerY, radius, a1, HALF_PI);
-      context.closePath();
-      context.fill();
-
-      context.fillStyle = altColor;
-      context.beginPath();
-      context.arc(apex.x, apex.y, topRadius, a2, HALF_PI, true);
-      context.arc(centerX, centerY, radius, HALF_PI, a2);
-      context.closePath();
-      context.fill();
     }
+
+    context.fillStyle = color;
+    context.beginPath();
+    context.arc(apex.x, apex.y, topRadius, HALF_PI, a1, true);
+    context.arc(centerX, centerY, radius, a1, HALF_PI);
+    context.closePath();
+    context.fill();
+
+    context.fillStyle = altColor;
+    context.beginPath();
+    context.arc(apex.x, apex.y, topRadius, a2, HALF_PI, true);
+    context.arc(centerX, centerY, radius, HALF_PI, a2);
+    context.closePath();
+    context.fill();
 
     Cylinder.circle(context, apex.x, apex.y, topRadius, roofColor);
   },
