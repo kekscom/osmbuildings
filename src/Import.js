@@ -132,101 +132,111 @@ var Import = {
   },
 
   // aligns and cleans up properties in place
-  alignProperties: function(dst, src) {
-    if (src.height) {
-      dst.height = this.toMeters(src.height);
-    } else {
-      if (src['building:height']) {
-        dst.height = this.toMeters(src['building:height']);
+  alignProperties: function(prop) {
+    var item = {};
+
+    prop = prop || {};
+
+    item.height = this.toMeters(prop.height);
+    if (!item.height) {
+      if (prop['building:height']) {
+        item.height = this.toMeters(prop['building:height']);
       }
-      if (src.levels) {
-        dst.height = src.levels*this.METERS_PER_LEVEL <<0;
+      if (prop.levels) {
+        item.height = prop.levels*this.METERS_PER_LEVEL <<0;
       }
-      if (src['building:levels']) {
-        dst.height = src['building:levels']*this.METERS_PER_LEVEL <<0;
+      if (prop['building:levels']) {
+        item.height = prop['building:levels']*this.METERS_PER_LEVEL <<0;
+      }
+      if (!item.height) {
+        item.height = DEFAULT_HEIGHT;
       }
     }
 
-    if (src.min_height) {
-      dst.minHeight = this.toMeters(src.min_height);
-    } else {
-      if (src['building:min_height']) {
-        dst.minHeight = this.toMeters(src['building:min_height']);
+    item.minHeight = this.toMeters(prop.min_height);
+    if (!item.min_height) {
+      if (prop['building:min_height']) {
+        item.minHeight = this.toMeters(prop['building:min_height']);
       }
-      if (src.min_level) {
-        dst.minHeight = src.min_level*this.METERS_PER_LEVEL <<0;
+      if (prop.min_level) {
+        item.minHeight = prop.min_level*this.METERS_PER_LEVEL <<0;
       }
-      if (src['building:min_level']) {
-        dst.minHeight = src['building:min_level']*this.METERS_PER_LEVEL <<0;
+      if (prop['building:min_level']) {
+        item.minHeight = prop['building:min_level']*this.METERS_PER_LEVEL <<0;
       }
     }
 
-    if (!dst.wallColor) {
-      if (src['building:material']) {
-        dst.wallColor = this.getMaterialColor(src['building:material']);
+    item.wallColor = prop.wallColor || prop.color;
+    if (!item.wallColor) {
+      if (prop.color) {
+        item.wallColor = prop.color;
       }
-      if (src['building:facade:material']) {
-        dst.wallColor = this.getMaterialColor(src['building:facade:material']);
+      if (prop['building:material']) {
+        item.wallColor = this.getMaterialColor(prop['building:material']);
       }
-      if (src['building:cladding']) {
-        dst.wallColor = this.getMaterialColor(src['building:cladding']);
+      if (prop['building:facade:material']) {
+        item.wallColor = this.getMaterialColor(prop['building:facade:material']);
+      }
+      if (prop['building:cladding']) {
+        item.wallColor = this.getMaterialColor(prop['building:cladding']);
       }
       // wall color
-      if (src['building:color']) {
-        dst.wallColor = src['building:color'];
+      if (prop['building:color']) {
+        item.wallColor = prop['building:color'];
       }
-      if (src['building:colour']) {
-        dst.wallColor = src['building:colour'];
+      if (prop['building:colour']) {
+        item.wallColor = prop['building:colour'];
       }
     }
 
-    if (!dst.roofColor) {
-      if (src['roof:material']) {
-        dst.roofColor = this.getMaterialColor(src['roof:material']);
+    item.roofColor = prop.roofColor;
+    if (!item.roofColor) {
+      if (prop['roof:material']) {
+        item.roofColor = this.getMaterialColor(prop['roof:material']);
       }
-      if (src['building:roof:material']) {
-        dst.roofColor = this.getMaterialColor(src['building:roof:material']);
+      if (prop['building:roof:material']) {
+        item.roofColor = this.getMaterialColor(prop['building:roof:material']);
       }
       // roof color
-      if (src['roof:color']) {
-        dst.roofColor = src['roof:color'];
+      if (prop['roof:color']) {
+        item.roofColor = prop['roof:color'];
       }
-      if (src['roof:colour']) {
-        dst.roofColor = src['roof:colour'];
+      if (prop['roof:colour']) {
+        item.roofColor = prop['roof:colour'];
       }
-      if (src['building:roof:color']) {
-        dst.roofColor = src['building:roof:color'];
+      if (prop['building:roof:color']) {
+        item.roofColor = prop['building:roof:color'];
       }
-      if (src['building:roof:colour']) {
-        dst.roofColor = src['building:roof:colour'];
-      }
-    }
-
-    if (!dst.shape) {
-      switch (src['building:shape']) {
-        case 'cone':
-        case 'cylinder':
-          dst.shape = src['building:shape'];
-        break;
-
-        case 'dome':
-          dst.shape = 'dome';
-        break;
-
-        case 'sphere':
-          dst.shape = 'cylinder';
-        break;
+      if (prop['building:roof:colour']) {
+        item.roofColor = prop['building:roof:colour'];
       }
     }
 
-    if (!dst.roofShape) {
-      if ((src['roof:shape'] === 'cone' || src['roof:shape'] === 'dome') && src['roof:height']) {
-        dst.shape = 'cylinder';
-        dst.roofShape = src['roof:shape'];
-        dst.roofHeight = this.toMeters(src['roof:height']);
-      }
+    switch (prop['building:shape']) {
+      case 'cone':
+      case 'cylinder':
+        item.shape = prop['building:shape'];
+      break;
+
+      case 'dome':
+        item.shape = 'dome';
+      break;
+
+      case 'sphere':
+        item.shape = 'cylinder';
+      break;
     }
 
-    return dst;
+    if ((prop['roof:shape'] === 'cone' || prop['roof:shape'] === 'dome') && prop['roof:height']) {
+      item.shape = 'cylinder';
+      item.roofShape = prop['roof:shape'];
+      item.roofHeight = this.toMeters(prop['roof:height']);
+    }
+
+    if (item.roofHeight) {
+      item.height = max(0, item.height-item.roofHeight);
+    }
+
+    return item;
   }
 };

@@ -93,9 +93,7 @@ var importOSM = (function() {
   }
 
   function filterItem(item, footprint) {
-    var
-      res = {},
-      tags = item.tags || {};
+    var res = Import.alignProperties(item.tags);
 
     if (item.id) {
       res.id = item.id;
@@ -105,15 +103,8 @@ var importOSM = (function() {
       res.footprint = Import.makeWinding(footprint, Import.clockwise);
     }
 
-    Import.alignProperties(res, tags);
-    res.height = res.height || DEFAULT_HEIGHT;
-
     if (res.shape === 'cone' || res.shape === 'cylinder') {
       res.radius = Import.getRadius(res.footprint);
-    }
-
-    if (res.roofHeight) {
-      res.height = max(0, res.height-res.roofHeight);
     }
 
     return res;
