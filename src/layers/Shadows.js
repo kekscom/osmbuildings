@@ -15,9 +15,11 @@ var Shadows = {
   },
 
   render: function() {
-    var center, sun, length, alpha;
+    var
+      context = this.context,
+      center, sun, length, alpha;
 
-    this.context.clearRect(0, 0, WIDTH, HEIGHT);
+    context.clearRect(0, 0, WIDTH, HEIGHT);
 
     // show on high zoom levels only and avoid rendering during zoom
     if (!this.enabled || ZOOM < MIN_ZOOM || isZooming) {
@@ -50,13 +52,14 @@ var Shadows = {
       points, locPoints,
       specialItems = [],
       clipping = [],
-      dataItems = Data.items;
+      dataItems = Data.items,
+      cx, cy, r;
 
-    this.context.canvas.style.opacity = alpha / (ZOOM_FACTOR * 2);
-    this.context.shadowColor = this.blurColor;
-    this.context.shadowBlur = this.blurSize * (ZOOM_FACTOR / 2);
-    this.context.fillStyle = this.color;
-    this.context.beginPath();
+    context.canvas.style.opacity = alpha / (ZOOM_FACTOR * 2);
+    context.shadowColor = this.blurColor;
+    context.shadowBlur = this.blurSize * (ZOOM_FACTOR / 2);
+    context.fillStyle = this.color;
+    context.beginPath();
 
     for (i = 0, il = dataItems.length; i < il; i++) {
       item = dataItems[i];
@@ -86,7 +89,7 @@ var Shadows = {
         mh = item.scale < 1 ? item.minHeight*item.scale : item.minHeight;
       }
 
-      if (item.shape === 'cylinder' || item.shape === 'cone') {
+      if (item.shape === 'cylinder' || item.shape === 'cone' || item.shape === 'dome') {
         specialItems.push({
           shape:item.shape,
           center:{ x:item.center.x-ORIGIN_X, y:item.center.y-ORIGIN_Y },
@@ -94,9 +97,9 @@ var Shadows = {
           h:h,
           mh:mh
         });
-        if (item.roofShape === 'cone') {
+        if (item.roofShape === 'cone' || item.roofShape === 'dome') {
           specialItems.push({
-            shape:'cone',
+            shape:item.roofShape,
             center:{ x:item.center.x-ORIGIN_X, y:item.center.y-ORIGIN_Y },
             radius:item.radius,
             h:h+item.roofHeight,
@@ -128,22 +131,22 @@ var Shadows = {
         // mode 0: floor edges, mode 1: roof edges
         if ((bx-ax) * (_a.y-ay) > (_a.x-ax) * (by-ay)) {
           if (mode === 1) {
-            this.context.lineTo(ax, ay);
+            context.lineTo(ax, ay);
           }
           mode = 0;
           if (!j) {
-            this.context.moveTo(ax, ay);
+            context.moveTo(ax, ay);
           }
-          this.context.lineTo(bx, by);
+          context.lineTo(bx, by);
         } else {
           if (mode === 0) {
-            this.context.lineTo(_a.x, _a.y);
+            context.lineTo(_a.x, _a.y);
           }
           mode = 1;
           if (!j) {
-            this.context.moveTo(_a.x, _a.y);
+            context.moveTo(_a.x, _a.y);
           }
-          this.context.lineTo(_b.x, _b.y);
+          context.lineTo(_b.x, _b.y);
         }
       }
 
@@ -155,11 +158,11 @@ var Shadows = {
         for (j = 0, jl = item.holes.length; j < jl; j++) {
           points = item.holes[j];
           locPoints = [points[0]-ORIGIN_X, points[1]-ORIGIN_Y];
-          this.context.moveTo(locPoints[0], locPoints[1]);
+          context.moveTo(locPoints[0], locPoints[1]);
           for (k = 2, kl = points.length; k < kl; k += 2) {
             locPoints[k]   = points[k]-ORIGIN_X;
             locPoints[k+1] = points[k+1]-ORIGIN_Y;
-            this.context.lineTo(locPoints[k], locPoints[k+1]);
+            context.lineTo(locPoints[k], locPoints[k+1]);
           }
           if (!mh) { // if object is hovered, there is no need to clip a hole
             clipping.push(locPoints);
@@ -170,41 +173,49 @@ var Shadows = {
 
     for (i = 0, il = specialItems.length; i < il; i++) {
       item = specialItems[i];
-      if (item.shape === 'cylinder') {
-        Cylinder.shadow(this.context, item.center.x, item.center.y, item.radius, item.h, item.mh);
-      }
-      if (item.shape === 'cone') {
-        Cone.shadow(this.context, item.center.x, item.center.y, item.radius, item.h, item.mh);
+      cx = item.center.x;
+      cy = item.center.y;
+      r = item.radius;
+      switch (item.shape) {
+        case 'cylinder':
+          Cylinder.shadow(context, cx, cy, r, r, item.h, item.mh);
+        break;
+        case 'cone':
+          Cylinder.shadow(context, cx, cy, r, 0, item.h, item.mh);
+        break;
+        case 'dome':
+          Cylinder.shadow(context, cx, cy, r, r/2, item.h, item.mh);
+        break;
       }
     }
 
-    this.context.closePath();
-    this.context.fill();
+    context.closePath();
+    context.fill();
 
-    this.context.shadowBlur = null;
+    context.shadowBlur = null;
 
     // now draw all the footprints as negative clipping mask
-    this.context.globalCompositeOperation = 'destination-out';
-    this.context.beginPath();
+    context.globalCompositeOperation = 'destination-out';
+    context.beginPath();
 
     for (i = 0, il = clipping.length; i < il; i++) {
       points = clipping[i];
-      this.context.moveTo(points[0], points[1]);
+      context.moveTo(points[0], points[1]);
       for (j = 2, jl = points.length; j < jl; j += 2) {
-        this.context.lineTo(points[j], points[j+1]);
+        context.lineTo(points[j], points[j+1]);
       }
-      this.context.lineTo(points[0], points[1]);
+      context.lineTo(points[0], points[1]);
     }
 
     for (i = 0, il = specialItems.length; i < il; i++) {
       item = specialItems[i];
-      if ((item.shape === 'cylinder' || item.shape === 'cone') && !item.mh) {
-        Cylinder.footprintMask(this.context, item.center.x, item.center.y, item.radius);
+      if ((item.shape === 'cylinder' || item.shape === 'cone' || item.shape === 'dome') && !item.mh) {
+        Cylinder.footprintMask(context, item.center.x, item.center.y, item.radius);
       }
     }
 
-    this.context.fillStyle = '#00ff00';
-    this.context.fill();
-    this.context.globalCompositeOperation = 'source-over';
+    context.fillStyle = '#00ff00';
+    context.fill();
+    context.globalCompositeOperation = 'source-over';
   }
 };
