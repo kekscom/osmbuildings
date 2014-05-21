@@ -1248,7 +1248,7 @@ var Data = {
       color, wallColor, altColor,
       roofColor, roofHeight,
       holes, innerFootprint,
-      zoomScale = (4/pow(2, ZOOM-MIN_ZOOM)); // TODO: maybe restore old FOV algorithm * WIDTH/HEIGHT;
+      zoomScale = 6 / pow(2, ZOOM-MIN_ZOOM); // TODO: consider using HEIGHT / (window.devicePixelRatio || 1)
 
     for (i = 0, il = items.length; i < il; i++) {
       item = items[i];
@@ -1758,7 +1758,7 @@ var Simplified = {
   maxHeight: 2,
 
   isSimple: function(item) {
-    return (ZOOM <= this.maxZoom && item.height < this.maxHeight);
+    return (ZOOM <= this.maxZoom && item.height+item.roofHeight < this.maxHeight);
   },
 
   getFace: function(polygon) {
