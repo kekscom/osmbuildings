@@ -53,14 +53,23 @@ var importGeoJSON = (function() {
     }];
   }
 
+  function clone(obj) {
+    var res = {};
+    for (var p in obj) {
+      if (obj.hasOwnProperty(p)) {
+        res[p] = obj[p];
+      }
+    }
+    return res;
+  }
+
   return function(collection, callback) {
     var
       i, il, j, jl,
       res = [],
       feature,
-      properties,
-      polygons, outer,
-      height, minHeight, wallColor, roofColor;
+      polygons,
+      baseItem, item;
 
     for (i = 0, il = collection.length; i < il; i++) {
       feature = collection[i];
@@ -69,26 +78,18 @@ var importGeoJSON = (function() {
         continue;
       }
 
-      properties = feature.properties;
-
-      height    = Import.toMeters(properties.height) || DEFAULT_HEIGHT;
-      minHeight = Import.toMeters(properties.minHeight);
-      wallColor = properties.color || properties.wallColor || null;
-      roofColor = properties.roofColor || null;
-
+      baseItem = Import.alignProperties(feature.properties);
       polygons = getPolygons(feature.geometry);
 
       for (j = 0, jl = polygons.length; j < jl; j++) {
-        outer = polygons[j].outer;
-        res.push({
-          footprint: outer,
-          holes:     polygons[j].inner,
-          height:    height || polygons[j].height,
-          id:        feature.id || properties.id || [outer[0], outer[1], height, minHeight].join(','),
-          minHeight: minHeight,
-          wallColor: wallColor,
-          roofColor: roofColor
-        });
+        item = clone(baseItem);
+        item.footprint = polygons[j].outer;
+        if (item.shape === 'cone' || item.shape === 'cylinder') {
+          item.radius = Import.getRadius(item.footprint);
+        }
+        item.holes = polygons[j].inner;
+        item.id    = feature.id || feature.properties.id || [item.footprint[0], item.footprint[1], item.height, item.minHeight].join(',');
+        res.push(item); // TODO: clone base properties!
       }
     }
 
