@@ -4,7 +4,7 @@ var Simplified = {
   maxHeight: 2,
 
   isSimple: function(item) {
-    return (ZOOM <= this.maxZoom && item.height < this.maxHeight);
+    return (ZOOM <= this.maxZoom && item.height+item.roofHeight < this.maxHeight);
   },
 
   getFace: function(polygon) {
