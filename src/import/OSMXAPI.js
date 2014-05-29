@@ -105,15 +105,6 @@ var importOSM = (function() {
 
     if (res.shape === 'cone' || res.shape === 'cylinder') {
       res.radius = Import.getRadius(res.footprint);
-<<<<<<< HEAD
-
-      if ((tags['roof:shape'] === 'cone' || tags['roof:shape'] === 'dome') && tags['roof:height']) {
-        res.roofShape = tags['roof:shape'];
-        res.roofHeight = Import.toMeters(tags['roof:height']);
-        res.height = max(0, res.height-res.roofHeight);
-      }
-=======
->>>>>>> master
     }
 
     return res;
