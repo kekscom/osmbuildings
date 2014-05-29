@@ -2,8 +2,8 @@ var Buildings = {
 
   project: function(x, y, m) {
     return {
-      x: (x-camX) * m + camX <<0,
-      y: (y-camY) * m + camY <<0
+      x: (x-CAM_X) * m + CAM_X <<0,
+      y: (y-CAM_Y) * m + CAM_Y <<0
     };
   },
 
@@ -49,100 +49,42 @@ var Buildings = {
   },
 
   drawFace: function(points, stroke, holes) {
+    var
+      context = this.context,
+      i, il, j, jl;
+
     if (!points.length) {
       return;
     }
 
-    var i, il, j, jl;
+    context.beginPath();
 
-    this.context.beginPath();
-
-    this.context.moveTo(points[0], points[1]);
+    context.moveTo(points[0], points[1]);
     for (i = 2, il = points.length; i < il; i += 2) {
-      this.context.lineTo(points[i], points[i+1]);
+      context.lineTo(points[i], points[i+1]);
     }
 
     if (holes) {
       for (i = 0, il = holes.length; i < il; i++) {
         points = holes[i];
-        this.context.moveTo(points[0], points[1]);
+        context.moveTo(points[0], points[1]);
         for (j = 2, jl = points.length; j < jl; j += 2) {
-          this.context.lineTo(points[j], points[j+1]);
+          context.lineTo(points[j], points[j+1]);
         }
       }
     }
 
-    this.context.closePath();
-    this.context.fill();
+    context.closePath();
     if (stroke) {
-      this.context.stroke();
+      context.stroke();
     }
-  },
-
-  drawCircle: function(c, r, stroke) {
-    this.context.beginPath();
-    this.context.arc(c.x, c.y, r, 0, PI*2);
-    if (stroke) {
-      this.context.stroke();
-    }
-    this.context.fill();
-  },
-
-  drawCylinder: function(c, r, h, minHeight, color, altColor) {
-    var _h = camZ / (camZ-h),
-      _c = this.project(c.x, c.y, _h),
-      _r = r*_h,
-      col;
-
-    if (minHeight) {
-      var _mh = camZ / (camZ-minHeight);
-      c = this.project(c.x, c.y, _mh);
-      r = r*_mh;
-    }
-
-    var t = getTangents(c, r, _c, _r); // common tangents for ground and roof circle
-
-    // no tangents? roof overlaps everything near cam position
-    if (t) {
-      if (!altColor) {
-        col = parseColor(color);
-        altColor = ''+ col.lightness(0.8);
-      }
-
-      this.context.fillStyle = color;
-
-      this.drawFace([
-        t[0].x2, t[0].y2,
-        t[0].x1, t[0].y1,
-        c.x, c.y+r,
-        _c.x, _c.y+_r
-      ], true);
-
-      this.context.fillStyle = altColor;
-
-      this.drawFace([
-        t[1].x2, t[1].y2,
-        t[1].x1, t[1].y1,
-        c.x, c.y+r,
-        _c.x, _c.y+_r
-      ], true);
-
-      this.context.fillStyle = altColor;
-
-      this.drawFace([
-        t[0].x2, t[0].y2,
-        _c.x, _c.y+_r,
-        t[1].x2, t[1].y2,
-        _c.x, _c.y-_r
-      ], true);
-    }
-
-    return { c:_c, r:_r };
+    context.fill();
   },
 
 
   render: function() {
-    this.context.clearRect(0, 0, WIDTH, HEIGHT);
+    var context = this.context;
+    context.clearRect(0, 0, WIDTH, HEIGHT);
 
     // show on high zoom levels only and avoid rendering during zoom
     if (ZOOM < MIN_ZOOM || isZooming) {
@@ -152,7 +94,7 @@ var Buildings = {
     var i, il, j, jl,
       item,
       h, _h, mh, _mh,
-      sortCam = { x:camX+ORIGIN_X, y:camY+ORIGIN_Y },
+      sortCam = { x:CAM_X+ORIGIN_X, y:CAM_Y+ORIGIN_Y },
       vp = {
         minX: ORIGIN_X,
         maxX: ORIGIN_X+WIDTH,
@@ -162,7 +104,8 @@ var Buildings = {
       footprint, roof, holes,
       isVisible,
       wallColor, altColor, roofColor,
-      dataItems = Data.items;
+      dataItems = Data.items,
+      cx, cy, r;
 
     dataItems.sort(function(a, b) {
       return (a.minHeight-b.minHeight) || getDistance(b.center, sortCam) - getDistance(a.center, sortCam) || (b.height-a.height);
@@ -193,47 +136,53 @@ var Buildings = {
       // when fading in, use a dynamic height
       h = item.scale < 1 ? item.height*item.scale : item.height;
       // precalculating projection height factor
-      _h = camZ / (camZ-h);
+      _h = CAM_Z / (CAM_Z-h);
 
       mh = 0;
       _mh = 0;
       if (item.minHeight) {
         mh = item.scale < 1 ? item.minHeight*item.scale : item.minHeight;
-        _mh = camZ / (camZ-mh);
+        _mh = CAM_Z / (CAM_Z-mh);
       }
 
       wallColor = item.wallColor || wallColorAlpha;
       altColor  = item.altColor  || altColorAlpha;
       roofColor = item.roofColor || roofColorAlpha;
-      this.context.strokeStyle = '#000000'; //altColor;
+      context.strokeStyle = altColor;
 
-      if (item.shape === 'cylinder') {
-        roof = this.drawCylinder(
-          { x:item.center.x-ORIGIN_X, y:item.center.y-ORIGIN_Y },
-          item.radius,
-          h, mh,
-          wallColor, altColor
-        );
-        if (item.roofShape === 'cylinder') {
-          roof = this.drawCylinder(
-            { x:item.center.x-ORIGIN_X, y:item.center.y-ORIGIN_Y },
-            item.radius,
-            h+item.roofHeight, h,
-            roofColor
-          );
-        }
-//        this.context.fillStyle = roofColor;
-//        this.drawCircle(roof.c, roof.r, true);
-      } else {
-        roof = this.drawSolid(footprint, _h, _mh, wallColor, altColor);
-        holes = [];
-        if (item.holes) {
-          for (j = 0, jl = item.holes.length; j < jl; j++) {
-            holes[j] = this.drawSolid(item.holes[j], _h, _mh, wallColor, altColor);
+      switch (item.shape) {
+        case 'cylinder':
+          cx = item.center.x-ORIGIN_X;
+          cy = item.center.y-ORIGIN_Y;
+          r = item.radius;
+
+          Cylinder.draw(context, cx, cy, r, r, h, mh, wallColor, altColor, roofColor);
+          if (item.roofShape === 'cone') {
+            Cylinder.draw(context, cx, cy, r, 0, h+item.roofHeight, h, roofColor, ''+ parseColor(roofColor).lightness(0.9));
           }
-        }
-        this.context.fillStyle = roofColor;
-        this.drawFace(roof, true, holes);
+          if (item.roofShape === 'dome') {
+            Cylinder.draw(context, cx, cy, r, r/2, h+item.roofHeight, h, roofColor, ''+ parseColor(roofColor).lightness(0.9));
+          }
+        break;
+
+        case 'cone':
+          Cylinder.draw(context, item.center.x-ORIGIN_X, item.center.y-ORIGIN_Y, item.radius, 0, h, mh, wallColor, altColor);
+        break;
+
+        case 'dome':
+          Cylinder.draw(context, item.center.x-ORIGIN_X, item.center.y-ORIGIN_Y, item.radius, item.radius/2, h, mh, wallColor, altColor);
+        break;
+
+        default:
+          roof = this.drawSolid(footprint, _h, _mh, wallColor, altColor);
+          holes = [];
+          if (item.holes) {
+            for (j = 0, jl = item.holes.length; j < jl; j++) {
+              holes[j] = this.drawSolid(item.holes[j], _h, _mh, wallColor, altColor);
+            }
+          }
+          context.fillStyle = roofColor;
+          this.drawFace(roof, true, holes);
       }
     }
   }

@@ -98,6 +98,8 @@ var Sketch = (function() {
       shakyArc(context, cx, cy, r, start, end);
     };
 
+    context.fill = function() {};
+
     return context;
   };
 

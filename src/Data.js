@@ -73,7 +73,7 @@ var Data = {
       color, wallColor, altColor,
       roofColor, roofHeight,
       holes, innerFootprint,
-      zoomScale = METERS_PER_PIXEL * 5;
+      zoomScale = 6 / pow(2, ZOOM-MIN_ZOOM); // TODO: consider using HEIGHT / (window.devicePixelRatio || 1)
 
     for (i = 0, il = items.length; i < il; i++) {
       item = items[i];

@@ -41,7 +41,6 @@ var Layers = {
     Shadows.context    = this.createContext();
     Simplified.context = this.createContext();
     Buildings.context  = this.createContext();
-//  Debug.context      = this.createContext();
   },
 
   render: function() {

@@ -41,6 +41,6 @@ var VERSION      = /*<version=*/'0.1.9a'/*>*/,
   MAX_HEIGHT, // taller buildings will be cut to this
   DEFAULT_HEIGHT = 5,
 
-  camX, camY, camZ = 450,
+  CAM_X, CAM_Y, CAM_Z = 450,
 
   isZooming;
