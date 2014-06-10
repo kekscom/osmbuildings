@@ -144,9 +144,9 @@ var Buildings = {
         _mh = CAM_Z / (CAM_Z-mh);
       }
 
-      wallColor = item.wallColor || wallColorAlpha;
-      altColor  = item.altColor  || altColorAlpha;
-      roofColor = item.roofColor || roofColorAlpha;
+      wallColor = item.wallColor || WALL_COLOR_STR;
+      altColor  = item.altColor  || ALT_COLOR_STR;
+      roofColor = item.roofColor || ROOF_COLOR_STR;
       context.strokeStyle = altColor;
 
       switch (item.shape) {

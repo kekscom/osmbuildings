@@ -88,8 +88,8 @@ var Simplified = {
         continue;
       }
 
-      altColor  = item.altColor  || altColorAlpha;
-      roofColor = item.roofColor || roofColorAlpha;
+      altColor  = item.altColor  || ALT_COLOR_STR;
+      roofColor = item.roofColor || ROOF_COLOR_STR;
 
       this.context.strokeStyle = altColor;
 
