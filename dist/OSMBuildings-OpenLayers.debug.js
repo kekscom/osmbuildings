@@ -946,13 +946,13 @@ var VERSION      = '0.1.9a',
 
   activeRequest,
 
-  defaultWallColor = parseColor('rgba(200, 190, 180)'),
-  defaultAltColor  = defaultWallColor.lightness(0.8),
-  defaultRoofColor = defaultWallColor.lightness(1.2),
+  WALL_COLOR = parseColor('rgba(200, 190, 180)'),
+  ALT_COLOR  = WALL_COLOR.lightness(0.8),
+  ROOF_COLOR = WALL_COLOR.lightness(1.2),
 
-  wallColorAlpha = ''+ defaultWallColor,
-  altColorAlpha  = ''+ defaultAltColor,
-  roofColorAlpha = ''+ defaultRoofColor,
+  WALL_COLOR_STR = ''+ WALL_COLOR,
+  ALT_COLOR_STR  = ''+ ALT_COLOR,
+  ROOF_COLOR_STR = ''+ ROOF_COLOR,
 
   fadeFactor = 1,
   animTimer,
@@ -1638,10 +1638,10 @@ var Buildings = {
     }
 
     context.closePath();
+    context.fill();
     if (stroke) {
       context.stroke();
     }
-    context.fill();
   },
 
 
@@ -1708,9 +1708,9 @@ var Buildings = {
         _mh = CAM_Z / (CAM_Z-mh);
       }
 
-      wallColor = item.wallColor || wallColorAlpha;
-      altColor  = item.altColor  || altColorAlpha;
-      roofColor = item.roofColor || roofColorAlpha;
+      wallColor = item.wallColor || WALL_COLOR_STR;
+      altColor  = item.altColor  || ALT_COLOR_STR;
+      roofColor = item.roofColor || ROOF_COLOR_STR;
       context.strokeStyle = altColor;
 
       switch (item.shape) {
@@ -1844,8 +1844,8 @@ var Simplified = {
         continue;
       }
 
-      altColor  = item.altColor  || altColorAlpha;
-      roofColor = item.roofColor || roofColorAlpha;
+      altColor  = item.altColor  || ALT_COLOR_STR;
+      roofColor = item.roofColor || ROOF_COLOR_STR;
 
       this.context.strokeStyle = altColor;
 
@@ -2375,9 +2375,9 @@ function setZoom(z) {
 
   ZOOM_FACTOR = pow(0.95, ZOOM-MIN_ZOOM);
 
-  wallColorAlpha = defaultWallColor.alpha(ZOOM_FACTOR) + '';
-  altColorAlpha  = defaultAltColor.alpha( ZOOM_FACTOR) + '';
-  roofColorAlpha = defaultRoofColor.alpha(ZOOM_FACTOR) + '';
+  WALL_COLOR_STR = ''+ WALL_COLOR.alpha(ZOOM_FACTOR);
+  ALT_COLOR_STR  = ''+ ALT_COLOR.alpha( ZOOM_FACTOR);
+  ROOF_COLOR_STR = ''+ ROOF_COLOR.alpha(ZOOM_FACTOR);
 }
 
 function onResize(e) {
@@ -2500,23 +2500,24 @@ proto.moveByPx = function(dx, dy) {
 
 //****** file: public.js ******
 
+
 proto.setStyle = function(style) {
   style = style || {};
   var color;
   if ((color = style.color || style.wallColor)) {
-    defaultWallColor = parseColor(color);
-    wallColorAlpha   = ''+ defaultWallColor.alpha(ZOOM_FACTOR);
+    WALL_COLOR = parseColor(color);
+    WALL_COLOR_STR = ''+ WALL_COLOR.alpha(ZOOM_FACTOR);
 
-    defaultAltColor  = defaultWallColor.lightness(0.8);
-    altColorAlpha    = ''+ defaultAltColor.alpha(ZOOM_FACTOR);
+    ALT_COLOR = WALL_COLOR.lightness(0.8);
+    ALT_COLOR_STR  = ''+ ALT_COLOR.alpha(ZOOM_FACTOR);
 
-    defaultRoofColor = defaultWallColor.lightness(1.2);
-    roofColorAlpha   = ''+ defaultRoofColor.alpha(ZOOM_FACTOR);
+    ROOF_COLOR = WALL_COLOR.lightness(1.2);
+    ROOF_COLOR_STR = ''+ ROOF_COLOR.alpha(ZOOM_FACTOR);
   }
 
   if (style.roofColor) {
-    defaultRoofColor = parseColor(style.roofColor);
-    roofColorAlpha   = ''+ defaultRoofColor.alpha(ZOOM_FACTOR);
+    ROOF_COLOR = parseColor(style.roofColor);
+    ROOF_COLOR_STR = ''+ ROOF_COLOR.alpha(ZOOM_FACTOR);
   }
 
   if (style.shadows !== undefined) {

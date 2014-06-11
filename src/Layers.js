@@ -68,7 +68,7 @@ var Layers = {
     this.items.push(canvas);
     this.container.appendChild(canvas);
 
-    Sketch.enable(context);
+    Sketch.getContext(canvas);
 
     return context;
   },

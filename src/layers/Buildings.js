@@ -75,10 +75,10 @@ var Buildings = {
     }
 
     context.closePath();
+    context.fill();
     if (stroke) {
       context.stroke();
     }
-    context.fill();
   },
 
 
