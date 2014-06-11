@@ -2221,8 +2221,8 @@ var Sketch = {
     _context.closePath = function() {
       shakyLine(_x, _y, _x0, _y0);
       _closePath.call(_context);
-      _context.strokeStyle = '#330000';
-      _context.lineWidth = 2*rand() / (2*ZOOM_FACTOR);
+      _context.strokeStyle = 'rgba(50, 0, 0, 0.75)';
+      _context.lineWidth = 1/ZOOM_FACTOR;
     };
 
     _context.arc = function(cx, cy, r, start, end, reverse) {
