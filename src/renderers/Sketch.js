@@ -2,7 +2,7 @@ var Sketch = {
 
   getContext: function(canvas) {
 
-  	// http://mrale.ph/blog/2012/11/25/shaky-diagramming.html
+    // http://mrale.ph/blog/2012/11/25/shaky-diagramming.html
 
 /***
     function shakyLine(x0, y0, x1, y1) {
