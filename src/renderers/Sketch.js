@@ -2,7 +2,9 @@ var Sketch = {
 
   getContext: function(canvas) {
 
-    // http://mrale.ph/blog/2012/11/25/shaky-diagramming.html
+  	// http://mrale.ph/blog/2012/11/25/shaky-diagramming.html
+
+/***
     function shakyLine(x0, y0, x1, y1) {
       var
         dx = x1-x0,
@@ -32,6 +34,45 @@ var Sketch = {
       // but points into opposite direction from the one we used for P3.
         x4 = x0dxk - dylo,
         y4 = y0dyk + dxlo;
+
+      // Draw a bezier curve through points P0, P3, P4, P1.
+      // Selection of P3 and P4 makes line "jerk" a little
+      // between them but otherwise it will be mostly straight thus
+      // creating illusion of being hand drawn.
+      _context.bezierCurveTo(x3, y3, x4, y4, x1, y1);
+    }
+***/
+
+    function shakyLine(x0, y0, x1, y1) {
+      var
+        dx = x1-x0,
+        dy = y1-y0,
+        len = sqrt(dx*dx + dy*dy),
+
+      // Now we need to pick two points that are placed
+      // on different sides of the line that passes through
+      // P1 and P2 and not very far from it if length of
+      // P1P2 is small.
+        k = sqrt(len),
+        k1 = 0.20,
+        k2 = 0.85,
+        l3 = 0.60,
+        l4 = 1.20,
+
+        dxlk = dx/len * k,
+        dylk = dy/len * k,
+
+      // Point P3: pick a point on the line between P0 and P1,
+      // then shift it by vector l3l(dy,-dx) which is a line's normal.
+        x3 = x0 + dx*k1 + dylk * l3,
+        y3 = y0 + dy*k1 - dxlk * l3,
+
+
+      // Point P3: pick a point on the line between P0 and P1,
+      // then shift it by vector l4l(-dy,dx) which also is a line's normal
+      // but points into opposite direction from the one we used for P3.
+        x4 = x0 + dx*k2 - dylk * l4,
+        y4 = y0 + dy*k2 + dxlk * l4;
 
       // Draw a bezier curve through points P0, P3, P4, P1.
       // Selection of P3 and P4 makes line "jerk" a little
@@ -73,7 +114,6 @@ var Sketch = {
     };
 
     _context.beginPath = function() {
-      _context.lineWidth = 2*Math.random() / (2*ZOOM_FACTOR);
       _x0 = _x;
       _y0 = _y;
       _beginPath.call(_context);
@@ -82,6 +122,8 @@ var Sketch = {
     _context.closePath = function() {
       shakyLine(_x, _y, _x0, _y0);
       _closePath.call(_context);
+      _context.strokeStyle = '#330000';
+      _context.lineWidth = 2*rand() / (2*ZOOM_FACTOR);
     };
 
     _context.arc = function(cx, cy, r, start, end, reverse) {
