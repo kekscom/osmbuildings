@@ -28,7 +28,6 @@ for (var i = 0; i < config.srcFiles.length; i++) {
   js += str + '\n\n';
 }
 
-console.log(js);
 try {
   eval(js);
 } catch (ex) {

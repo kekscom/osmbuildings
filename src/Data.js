@@ -40,10 +40,10 @@ var Data = {
       return [];
     }
     if (data.type === 'FeatureCollection') {
-      return readGeoJSON(data.features, this.each);
+      return importGeoJSON(data.features, this.each);
     }
-    if (data.osm3s) { // XAPI
-      return readOSMXAPI(data.elements, this.each);
+    if (data.osm3s) { // OSM Overpass
+      return importOSM(data.elements, this.each);
     }
     return [];
   },
@@ -73,7 +73,7 @@ var Data = {
       color, wallColor, altColor,
       roofColor, roofHeight,
       holes, innerFootprint,
-      zoomScale = METERS_PER_PIXEL * 3;
+      zoomScale = 6 / pow(2, ZOOM-MIN_ZOOM); // TODO: consider using HEIGHT / (window.devicePixelRatio || 1)
 
     for (i = 0, il = items.length; i < il; i++) {
       item = items[i];

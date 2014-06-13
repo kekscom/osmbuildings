@@ -1,4 +1,4 @@
-var readOSMXAPI = (function() {
+var importOSM = (function() {
 
   function isBuilding(data) {
     var tags = data.tags;
@@ -85,7 +85,7 @@ var readOSMXAPI = (function() {
 
   function mergeItems(dst, src) {
     for (var p in src) {
-      if (!dst[p]) {
+      if (src.hasOwnProperty(p)) {
         dst[p] = src[p];
       }
     }
@@ -93,8 +93,7 @@ var readOSMXAPI = (function() {
   }
 
   function filterItem(item, footprint) {
-    var res = {},
-      tags = item.tags || {};
+    var res = Import.alignProperties(item.tags);
 
     if (item.id) {
       res.id = item.id;
@@ -104,84 +103,8 @@ var readOSMXAPI = (function() {
       res.footprint = Import.makeWinding(footprint, Import.clockwise);
     }
 
-    if (tags.height) {
-      res.height = Import.toMeters(tags.height);
-    }
-    if (!res.height && tags['building:height']) {
-      res.height = Import.toMeters(tags['building:height']);
-    }
-
-    if (!res.height && tags.levels) {
-      res.height = tags.levels*Import.METERS_PER_LEVEL <<0;
-    }
-    if (!res.height && tags['building:levels']) {
-      res.height = tags['building:levels']*Import.METERS_PER_LEVEL <<0;
-    }
-
-    // min_height
-    if (tags.min_height) {
-      res.minHeight = Import.toMeters(tags.min_height);
-    }
-    if (!res.minHeight && tags['building:min_height']) {
-      res.minHeight = Import.toMeters(tags['building:min_height']);
-    }
-
-    if (!res.minHeight && tags.min_level) {
-      res.minHeight = tags.min_level*Import.METERS_PER_LEVEL <<0;
-    }
-    if (!res.minHeight && tags['building:min_level']) {
-      res.minHeight = tags['building:min_level']*Import.METERS_PER_LEVEL <<0;
-    }
-
-    // wall material
-    if (tags['building:material']) {
-      res.wallColor = Import.getMaterialColor(tags['building:material']);
-    }
-    if (tags['building:facade:material']) {
-      res.wallColor = Import.getMaterialColor(tags['building:facade:material']);
-    }
-    if (tags['building:cladding']) {
-      res.wallColor = Import.getMaterialColor(tags['building:cladding']);
-    }
-    // wall color
-    if (tags['building:color']) {
-      res.wallColor = tags['building:color'];
-    }
-    if (tags['building:colour']) {
-      res.wallColor = tags['building:colour'];
-    }
-
-    // roof material
-    if (tags['roof:material']) {
-      res.roofColor = Import.getMaterialColor(tags['roof:material']);
-    }
-    if (tags['building:roof:material']) {
-      res.roofColor = Import.getMaterialColor(tags['building:roof:material']);
-    }
-    // roof color
-    if (tags['roof:color']) {
-      res.roofColor = tags['roof:color'];
-    }
-    if (tags['roof:colour']) {
-      res.roofColor = tags['roof:colour'];
-    }
-    if (tags['building:roof:color']) {
-      res.roofColor = tags['building:roof:color'];
-    }
-    if (tags['building:roof:colour']) {
-      res.roofColor = tags['building:roof:colour'];
-    }
-
-    res.height = res.height || DEFAULT_HEIGHT;
-
-    if (tags['roof:shape'] === 'dome' || tags['building:shape'] === 'cylinder' || tags['building:shape'] === 'sphere') {
-      res.shape = 'cylinder';
+    if (res.shape === 'cone' || res.shape === 'cylinder') {
       res.radius = Import.getRadius(res.footprint);
-      if (tags['roof:shape'] === 'dome' && tags['roof:height']) {
-        res.roofShape = 'cylinder';
-        res.roofHeight = Import.toMeters(tags['roof:height']);
-        res.height = max(0, res.height-res.roofHeight);
-      }
     }
 
     return res;

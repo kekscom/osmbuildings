@@ -24,13 +24,13 @@ var VERSION      = /*<version=*/'0.1.9a'/*>*/,
 
   activeRequest,
 
-  defaultWallColor = parseColor('rgba(200, 190, 180)'),
-  defaultAltColor  = defaultWallColor.lightness(0.8),
-  defaultRoofColor = defaultWallColor.lightness(1.2),
+  WALL_COLOR = parseColor('rgba(200, 190, 180)'),
+  ALT_COLOR  = WALL_COLOR.lightness(0.8),
+  ROOF_COLOR = WALL_COLOR.lightness(1.2),
 
-  wallColorAlpha = ''+ defaultWallColor,
-  altColorAlpha  = ''+ defaultAltColor,
-  roofColorAlpha = ''+ defaultRoofColor,
+  WALL_COLOR_STR = ''+ WALL_COLOR,
+  ALT_COLOR_STR  = ''+ ALT_COLOR,
+  ROOF_COLOR_STR = ''+ ROOF_COLOR,
 
   fadeFactor = 1,
   animTimer,
@@ -38,9 +38,9 @@ var VERSION      = /*<version=*/'0.1.9a'/*>*/,
   METERS_PER_PIXEL = 1,
   ZOOM_FACTOR = 1,
 
-  MAX_HEIGHT,
+  MAX_HEIGHT, // taller buildings will be cut to this
   DEFAULT_HEIGHT = 5,
 
-  camX, camY, camZ = 450,
+  CAM_X, CAM_Y, CAM_Z = 450,
 
   isZooming;

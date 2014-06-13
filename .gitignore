@@ -2,3 +2,5 @@
 /engines
 /node_modules
 /src/scratch
+/lib/webgl-2d
+/scratch
