@@ -945,13 +945,13 @@ var VERSION      = '0.1.9a',
 
   activeRequest,
 
-  defaultWallColor = parseColor('rgba(200, 190, 180)'),
-  defaultAltColor  = defaultWallColor.lightness(0.8),
-  defaultRoofColor = defaultWallColor.lightness(1.2),
+  WALL_COLOR = parseColor('rgba(200, 190, 180)'),
+  ALT_COLOR  = WALL_COLOR.lightness(0.8),
+  ROOF_COLOR = WALL_COLOR.lightness(1.2),
 
-  wallColorAlpha = ''+ defaultWallColor,
-  altColorAlpha  = ''+ defaultAltColor,
-  roofColorAlpha = ''+ defaultRoofColor,
+  WALL_COLOR_STR = ''+ WALL_COLOR,
+  ALT_COLOR_STR  = ''+ ALT_COLOR,
+  ROOF_COLOR_STR = ''+ ROOF_COLOR,
 
   fadeFactor = 1,
   animTimer,
@@ -1613,15 +1613,15 @@ var Buildings = {
   render: function() {
     var f = WIDTH / (window.devicePixelRatio || 1) / 30;
 
-    camX -= f;
+    CAM_X -= f;
     this.renderPass();
     var canvasData1 = this.context.getImageData(0, 0, WIDTH, HEIGHT);
 
-    camX += 2*f;
+    CAM_X += 2*f;
     this.renderPass();
     var canvasData2 = this.context.getImageData(0, 0, WIDTH, HEIGHT);
 
-    camX -= f;
+    CAM_X -= f;
 
     var dataRed = canvasData1.data,
     dataCyan = canvasData2.data,
@@ -1637,11 +1637,11 @@ var Buildings = {
       continue;
     }
 
-    dataRed[R] = 0.7 * (dataRed[G] || 235)  + 0.3 * (dataRed[B] || 230);
-    dataRed[G] = dataCyan[G] || defaultRoofColor.g;
-    dataRed[B] = dataCyan[B] || defaultRoofColor.b;
-    dataRed[A] = max(dataCyan[A], dataCyan[A]);
-  /*
+//    dataRed[R] = 0.7 * (dataRed[G] || 235)  + 0.3 * (dataRed[B] || 230);
+//    dataRed[G] = dataCyan[G] || ROOF_COLOR.g;
+//    dataRed[B] = dataCyan[B] || ROOF_COLOR.b;
+//    dataRed[A] = max(dataCyan[A], dataCyan[A]);
+
     if (dataRed[A] && dataCyan[A]) {
       dataRed[R] = 0.7 * dataRed[G] + 0.3 * dataRed[B];
       dataRed[G] = dataCyan[G];
@@ -1649,16 +1649,16 @@ var Buildings = {
       dataRed[A] = max(dataRed[A], dataCyan[A]);
     } else if (dataRed[A]) {
       dataRed[R] = 0.7 * dataRed[G] + 0.3 * dataRed[B];
-      dataRed[G] = defaultRoofColor.g;
-      dataRed[B] = defaultRoofColor.b;
+      dataRed[G] = ROOF_COLOR.g;
+      dataRed[B] = ROOF_COLOR.b;
       dataRed[A] = dataRed[A]; // * 0.5;
     } else if (dataCyan[A]) {
-      dataRed[R] = 0.7 * defaultRoofColor.g + 0.3 * defaultRoofColor.b;
+      dataRed[R] = 0.7 * ROOF_COLOR.g + 0.3 * ROOF_COLOR.b;
       dataRed[G] = dataCyan[G];
       dataRed[B] = dataCyan[B];
       dataRed[A] = dataCyan[A]; // * 0.5;
     }
-  */
+
     }
 
     this.context.clearRect(0, 0, WIDTH, HEIGHT);
@@ -1695,72 +1695,12 @@ var Buildings = {
     if (stroke) {
       context.stroke();
     }
-<<<<<<< HEAD
-    this.context.fill();
-  },
-
-  drawCircle: function(c, r, stroke) {
-    this.context.beginPath();
-    this.context.arc(c.x, c.y, r, 0, PI*2);
-    if (stroke) {
-      this.context.stroke();
-    }
-    this.context.fill();
-  },
-
-  drawCylinder: function(c, r, h, minHeight, color, altColor) {
-    var
-      _h = camZ / (camZ-h),
-      _c = this.project(c.x, c.y, _h),
-      _r = r*_h,
-      a1, a2, col;
-
-    if (minHeight) {
-      var _mh = camZ / (camZ-minHeight);
-        c = this.project(c.x, c.y, _mh);
-      r = r*_mh;
-    }
-
-    var t = getTangents(c, r, _c, _r); // common tangents for ground and roof circle
-
-    // no tangents? roof overlaps everything near cam position
-    if (t) {
-      a1 = atan2(t[0].y1-c.y, t[0].x1-c.x);
-      a2 = atan2(t[1].y1-c.y, t[1].x1-c.x);
-
-      if (!altColor) {
-          col = parseColor(color);
-          altColor = ''+ col.lightness(0.8);
-      }
-
-      this.context.fillStyle = color;
-      this.context.beginPath();
-      this.context.arc(_c.x, _c.y, _r, HALF_PI, a1, true);
-      this.context.arc(c.x, c.y, r, a1, HALF_PI);
-      this.context.closePath();
-      this.context.fill();
-
-      this.context.fillStyle = altColor;
-      this.context.beginPath();
-      this.context.arc(_c.x, _c.y, _r, a2, HALF_PI, true);
-      this.context.arc(c.x, c.y, r, HALF_PI, a2);
-      this.context.closePath();
-      this.context.fill();
-    }
-
-    return { c:_c, r:_r };
-  },
-
-  renderPass: function() {
-    this.context.clearRect(0, 0, WIDTH, HEIGHT);
-=======
     context.fill();
   },
 
-  render: function() {
+  renderPass: function() {
     var context = this.context;
     context.clearRect(0, 0, WIDTH, HEIGHT);
->>>>>>> master
 
     // show on high zoom levels only and avoid rendering during zoom
     if (ZOOM < MIN_ZOOM || isZooming) {
@@ -1822,9 +1762,9 @@ var Buildings = {
         _mh = CAM_Z / (CAM_Z-mh);
       }
 
-      wallColor = item.wallColor || wallColorAlpha;
-      altColor  = item.altColor  || altColorAlpha;
-      roofColor = item.roofColor || roofColorAlpha;
+      wallColor = item.wallColor || WALL_COLOR_STR;
+      altColor  = item.altColor  || ALT_COLOR_STR;
+      roofColor = item.roofColor || ROOF_COLOR_STR;
       context.strokeStyle = altColor;
 
       switch (item.shape) {
@@ -1958,8 +1898,8 @@ var Simplified = {
         continue;
       }
 
-      altColor  = item.altColor  || altColorAlpha;
-      roofColor = item.roofColor || roofColorAlpha;
+      altColor  = item.altColor  || ALT_COLOR_STR;
+      roofColor = item.roofColor || ROOF_COLOR_STR;
 
       this.context.strokeStyle = altColor;
 
@@ -1982,6 +1922,7 @@ var Simplified = {
     }
   }
 };
+
 
 //****** file: Shadows.js ******
 
@@ -2376,9 +2317,9 @@ function setZoom(z) {
 
   ZOOM_FACTOR = pow(0.95, ZOOM-MIN_ZOOM);
 
-  wallColorAlpha = defaultWallColor.alpha(ZOOM_FACTOR) + '';
-  altColorAlpha  = defaultAltColor.alpha( ZOOM_FACTOR) + '';
-  roofColorAlpha = defaultRoofColor.alpha(ZOOM_FACTOR) + '';
+  WALL_COLOR_STR = ''+ WALL_COLOR.alpha(ZOOM_FACTOR);
+  ALT_COLOR_STR  = ''+ ALT_COLOR.alpha( ZOOM_FACTOR);
+  ROOF_COLOR_STR = ''+ ROOF_COLOR.alpha(ZOOM_FACTOR);
 }
 
 function onResize(e) {
@@ -2537,23 +2478,24 @@ proto.getOffset = function() {
 
 //****** file: public.js ******
 
+
 proto.setStyle = function(style) {
   style = style || {};
   var color;
   if ((color = style.color || style.wallColor)) {
-    defaultWallColor = parseColor(color);
-    wallColorAlpha   = ''+ defaultWallColor.alpha(ZOOM_FACTOR);
+    WALL_COLOR = parseColor(color);
+    WALL_COLOR_STR = ''+ WALL_COLOR.alpha(ZOOM_FACTOR);
 
-    defaultAltColor  = defaultWallColor.lightness(0.8);
-    altColorAlpha    = ''+ defaultAltColor.alpha(ZOOM_FACTOR);
+    ALT_COLOR = WALL_COLOR.lightness(0.8);
+    ALT_COLOR_STR  = ''+ ALT_COLOR.alpha(ZOOM_FACTOR);
 
-    defaultRoofColor = defaultWallColor.lightness(1.2);
-    roofColorAlpha   = ''+ defaultRoofColor.alpha(ZOOM_FACTOR);
+    ROOF_COLOR = WALL_COLOR.lightness(1.2);
+    ROOF_COLOR_STR = ''+ ROOF_COLOR.alpha(ZOOM_FACTOR);
   }
 
   if (style.roofColor) {
-    defaultRoofColor = parseColor(style.roofColor);
-    roofColorAlpha   = ''+ defaultRoofColor.alpha(ZOOM_FACTOR);
+    ROOF_COLOR = parseColor(style.roofColor);
+    ROOF_COLOR_STR = ''+ ROOF_COLOR.alpha(ZOOM_FACTOR);
   }
 
   if (style.shadows !== undefined) {
