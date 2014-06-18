@@ -94,9 +94,11 @@ var Simplified = {
       this.context.strokeStyle = altColor;
 
       if (item.shape === 'cylinder' || item.shape === 'cone' || item.shape === 'dome') {
-        Cylinder.circle(this.context, item.center.x-ORIGIN_X, item.center.y-ORIGIN_Y, item.radius, roofColor);
+        Cylinder.circle(this.context, { x:item.center.x-ORIGIN_X, y:item.center.y-ORIGIN_Y }, item.radius, roofColor);
         continue;
       }
+
+//    Block.polygon(this.context, footprint, item.holes, true);
 
       roof = this.getFace(footprint);
 

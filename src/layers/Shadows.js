@@ -53,7 +53,7 @@ var Shadows = {
       specialItems = [],
       clipping = [],
       dataItems = Data.items,
-      cx, cy, r;
+      center, radius;
 
     context.canvas.style.opacity = alpha / (ZOOM_FACTOR * 2);
     context.shadowColor = this.blurColor;
@@ -173,18 +173,17 @@ var Shadows = {
 
     for (i = 0, il = specialItems.length; i < il; i++) {
       item = specialItems[i];
-      cx = item.center.x;
-      cy = item.center.y;
-      r = item.radius;
+      center = { x:item.center.x, y:item.center.y };
+      radius = item.radius;
       switch (item.shape) {
         case 'cylinder':
-          Cylinder.shadow(context, cx, cy, r, r, item.h, item.mh);
+          Cylinder.shadow(context, center, radius, radius, item.h, item.mh);
         break;
         case 'cone':
-          Cylinder.shadow(context, cx, cy, r, 0, item.h, item.mh);
+          Cylinder.shadow(context, center, radius, 0, item.h, item.mh);
         break;
         case 'dome':
-          Cylinder.shadow(context, cx, cy, r, r/2, item.h, item.mh);
+          Cylinder.shadow(context, center, radius, radius/2, item.h, item.mh);
         break;
       }
     }
@@ -198,6 +197,8 @@ var Shadows = {
     context.globalCompositeOperation = 'destination-out';
     context.beginPath();
 
+    // if (!minHeight) SKIP ... if object is hovered, there is no need to clip the footprint
+
     for (i = 0, il = clipping.length; i < il; i++) {
       points = clipping[i];
       context.moveTo(points[0], points[1]);
@@ -210,7 +211,7 @@ var Shadows = {
     for (i = 0, il = specialItems.length; i < il; i++) {
       item = specialItems[i];
       if ((item.shape === 'cylinder' || item.shape === 'cone' || item.shape === 'dome') && !item.mh) {
-        Cylinder.footprintMask(context, item.center.x, item.center.y, item.radius);
+        Cylinder.footprintMask(context, item.center, item.radius);
       }
     }
 
