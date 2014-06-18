@@ -47,10 +47,10 @@ var Layers = {
 
   render: function(all) {
     if (this.animFrame) {
-      cancelAnimationFrame(this.animFrame);
+      win.cancelAnimationFrame(this.animFrame);
     }
 
-    this.animFrame = requestAnimationFrame(function() {
+    this.animFrame = win.requestAnimationFrame(function() {
       if (all) {
         Shadows.render();
         Simplified.render();

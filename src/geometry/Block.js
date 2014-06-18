@@ -1,20 +1,32 @@
 var Block = {
 
   draw: function(context, polygon, innerPolygons, height, minHeight, color, altColor, roofColor) {
-    var roof = this.extrude(context, polygon, height, minHeight, color, altColor);
+    var
+      i, il,
+      roof = this._extrude(context, polygon, height, minHeight, color, altColor),
+      innerRoofs = [];
 
-    var innerRoofs = [];
     if (innerPolygons) {
-      for (var i = 0, il = innerPolygons.length; i < il; i++) {
-        innerRoofs[i] = this.extrude(context, innerPolygons[i], height, minHeight, color, altColor);
+      for (i = 0, il = innerPolygons.length; i < il; i++) {
+        innerRoofs[i] = this._extrude(context, innerPolygons[i], height, minHeight, color, altColor);
       }
     }
 
     context.fillStyle = roofColor;
-    this.polygon(context, roof, innerRoofs, true);
+
+    context.beginPath();
+    this._ring(context, roof);
+    if (innerPolygons) {
+      for (i = 0, il = innerRoofs.length; i < il; i++) {
+        this._ring(context, innerRoofs[i]);
+      }
+    }
+    context.closePath();
+    context.stroke();
+    context.fill();
   },
 
-  extrude: function(context, polygon, height, minHeight, color, altColor) {
+  _extrude: function(context, polygon, height, minHeight, color, altColor) {
     var
       scale = CAM_Z / (CAM_Z-height),
       minScale = CAM_Z / (CAM_Z-minHeight),
@@ -30,12 +42,12 @@ var Block = {
       b.y = polygon[i+3]-ORIGIN_Y;
 
       // project 3d to 2d on extruded footprint
-      _a = Buildings.project(a.x, a.y, scale);
-      _b = Buildings.project(b.x, b.y, scale);
+      _a = Buildings.project(a, scale);
+      _b = Buildings.project(b, scale);
 
       if (minHeight) {
-        a = Buildings.project(a.x, a.y, minScale);
-        b = Buildings.project(b.x, b.y, minScale);
+        a = Buildings.project(a, minScale);
+        b = Buildings.project(b, minScale);
       }
 
       // backface culling check
@@ -46,13 +58,18 @@ var Block = {
         } else {
           context.fillStyle = color;
         }
-        this.polygon(context, [
+
+        context.beginPath();
+        this._ring(context, [
            b.x,  b.y,
            a.x,  a.y,
           _a.x, _a.y,
           _b.x, _b.y
         ]);
+        context.closePath();
+        context.fill();
       }
+
       roof[i]   = _a.x;
       roof[i+1] = _a.y;
     }
@@ -60,42 +77,36 @@ var Block = {
     return roof;
   },
 
-  polygon: function(context, polygon, innerPolygons, stroke) {
-    var i, il, j, jl;
-
-    if (!polygon.length) {
-      return;
-    }
-
-    context.beginPath();
-
+  _ring: function(context, polygon) {
     context.moveTo(polygon[0], polygon[1]);
-    for (i = 2, il = polygon.length; i < il; i += 2) {
+    for (var i = 2, il = polygon.length-1; i < il; i += 2) {
       context.lineTo(polygon[i], polygon[i+1]);
     }
+  },
 
+  polygon: function(context, polygon, innerPolygons) {
+    context.beginPath();
+    this.ring(context, polygon);
     if (innerPolygons) {
-      for (i = 0, il = innerPolygons.length; i < il; i++) {
-        polygon = innerPolygons[i];
-        context.moveTo(polygon[0], polygon[1]);
-        for (j = 2, jl = polygon.length; j < jl; j += 2) {
-          context.lineTo(polygon[j], polygon[j+1]);
-        }
+      for (var i = 0, il = innerPolygons.length; i < il; i++) {
+        this.ring(context, innerPolygons[i]);
       }
     }
-
     context.closePath();
-    if (stroke) {
-      context.stroke();
-    }
+    context.stroke();
     context.fill();
+  },
+
+  ring: function(context, polygon) {
+    context.moveTo(polygon[0]-ORIGIN_X, polygon[1]-ORIGIN_Y);
+    for (var i = 2, il = polygon.length-1; i < il; i += 2) {
+      context.lineTo(polygon[i]-ORIGIN_X, polygon[i+1]-ORIGIN_Y);
+    }
   },
 
   shadow: function(context, polygon, innerPolygons, height, minHeight) {
     var
       mode = null,
-      scale = CAM_Z / (CAM_Z-height),
-      minScale = CAM_Z / (CAM_Z-minHeight),
       a = { x:0, y:0 },
       b = { x:0, y:0 },
       _a, _b;
@@ -106,12 +117,12 @@ var Block = {
       b.x = polygon[i+2]-ORIGIN_X;
       b.y = polygon[i+3]-ORIGIN_Y;
 
-      _a = Shadows.project(a.x, a.y, scale);
-      _b = Shadows.project(b.x, b.y, scale);
+      _a = Shadows.project(a, height);
+      _b = Shadows.project(b, height);
 
       if (minHeight) {
-        a = Shadows.project(a.x, a.y, minScale);
-        b = Shadows.project(b.x, b.y, minScale);
+        a = Shadows.project(a, minHeight);
+        b = Shadows.project(b, minHeight);
       }
 
       // mode 0: floor edges, mode 1: roof edges
@@ -136,43 +147,18 @@ var Block = {
       }
     }
 
-    if (!minHeight) { // if object is hovered, there is no need to clip the footprint
-//      clipping.push(polygon);
-    }
-
     if (innerPolygons) {
       for (i = 0, il = innerPolygons.length; i < il; i++) {
-        polygon = innerPolygons[i];
-//        locPoints = [polygon[0]-ORIGIN_X, polygon[1]-ORIGIN_Y];
-        context.moveTo(polygon[0]-ORIGIN_X, polygon[1]-ORIGIN_Y);
-        for (var k = 2, kl = polygon.length; k < kl; k += 2) {
-//          locPoints[k]   = polygon[k]-ORIGIN_X;
-//          locPoints[k+1] = polygon[k+1]-ORIGIN_Y;
-          context.lineTo(polygon[k]-ORIGIN_X, polygon[k+1]-ORIGIN_Y);
-        }
-
-        if (!minHeight) { // if object is hovered, there is no need to clip a hole
-//          clipping.push(locPoints);
-        }
+        this.ring(context, innerPolygons[i]);
       }
     }
   },
 
-  footprintMask: function(context, polygon, innerPolygons) {
-    var i, il, j, jl;
-
-    context.moveTo(polygon[0], polygon[1]);
-    for (i = 2, il = polygon.length; i < il; i += 2) {
-      context.lineTo(polygon[i], polygon[i+1]);
-    }
-
+  mask: function(context, polygon, innerPolygons) {
+    this.ring(context, polygon);
     if (innerPolygons) {
-      for (i = 0, il = innerPolygons.length; i < il; i++) {
-        polygon = innerPolygons[i];
-        context.moveTo(polygon[0], polygon[1]);
-        for (j = 2, jl = polygon.length; j < jl; j += 2) {
-          context.lineTo(polygon[j], polygon[j+1]);
-        }
+      for (var i = 0, il = innerPolygons.length; i < il; i++) {
+        this.ring(context, innerPolygons[i]);
       }
     }
   }

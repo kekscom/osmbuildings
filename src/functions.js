@@ -81,3 +81,17 @@ function xhr(url, param, callback) {
 
   return req;
 }
+
+function isVisible(polygon) {
+   var
+    maxX = WIDTH+ORIGIN_X,
+    maxY = HEIGHT+ORIGIN_Y;
+
+  // TODO: checking footprint is sufficient for visibility - NOT VALID FOR SHADOWS!
+  for (var i = 0, il = polygon.length-3; i < il; i+=2) {
+    if (polygon[i] > ORIGIN_X && polygon[i] < maxX && polygon[i+1] > ORIGIN_Y && polygon[i+1] < maxY) {
+      return true;
+    }
+  }
+  return false;
+}
