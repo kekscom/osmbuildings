@@ -24,7 +24,7 @@ function setSize(size) {
 
 function setZoom(z) {
   ZOOM = z;
-  size = MAP_TILE_SIZE <<ZOOM;
+  MAP_SIZE = MAP_TILE_SIZE <<ZOOM;
 
   var pxCenter = pixelToGeo(ORIGIN_X+CENTER_X, ORIGIN_Y+CENTER_Y);
   // see http://wiki.openstreetmap.org/wiki/Zoom_levels

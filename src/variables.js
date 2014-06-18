@@ -10,6 +10,7 @@ var VERSION      = /*<version=*/'0.1.9a'/*>*/,
 
   MAP_TILE_SIZE  = 256,    // map tile size in pixels
   DATA_TILE_SIZE = 0.0075, // data tile size in geo coordinates, smaller: less data to load but more requests
+  ZOOM, MAP_SIZE,
 
   MIN_ZOOM = 15,
 
@@ -20,9 +21,6 @@ var VERSION      = /*<version=*/'0.1.9a'/*>*/,
   WIDTH = 0, HEIGHT = 0,
   CENTER_X = 0, CENTER_Y = 0,
   ORIGIN_X = 0, ORIGIN_Y = 0,
-  ZOOM, size,
-
-  activeRequest,
 
   WALL_COLOR = parseColor('rgba(200, 190, 180)'),
   ALT_COLOR  = WALL_COLOR.lightness(0.8),
@@ -31,9 +29,6 @@ var VERSION      = /*<version=*/'0.1.9a'/*>*/,
   WALL_COLOR_STR = ''+ WALL_COLOR,
   ALT_COLOR_STR  = ''+ ALT_COLOR,
   ROOF_COLOR_STR = ''+ ROOF_COLOR,
-
-  fadeFactor = 1,
-  animTimer,
 
   METERS_PER_PIXEL = 1,
   ZOOM_FACTOR = 1,

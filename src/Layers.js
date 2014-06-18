@@ -1,3 +1,5 @@
+var animTimer;
+
 function fadeIn() {
   if (animTimer) {
     return;
