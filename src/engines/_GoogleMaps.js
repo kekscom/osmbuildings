@@ -32,7 +32,7 @@ proto.onAdd = function(map) {
     setZoom(this.map.zoom);
     var pxOrigin = geoToPixel(bounds.getNorthEast().lat(), bounds.getSouthWest().lng());
 //    setOrigin(pxOrigin.x, pxOrigin.y);
-    setCamOffset(0, 0);
+    moveCam(0, 0);
 
     this.container.style.width  = w + 'px';
     this.container.style.height = h + 'px';
@@ -46,7 +46,6 @@ proto.onAdd = function(map) {
 //    this.map.attributionControl.addAttribution(OSMBuildings.ATTRIBUTION);
 
     Data.update();
-    Buildings.render(); // in case of for re-adding this layer
 };
 
 proto.onRemove = function() {
@@ -62,15 +61,14 @@ proto.onRemove = function() {
 proto.draw = function() {};
 
 proto.onMove = function() {
-    setCamOffset(0, 0);
-    Buildings.render();
+    moveCam(0, 0);
 };
 
 proto.onMoveEnd = function() {
     var bounds = this.map.getBounds();
     var pxOrigin = geoToPixel(bounds.getNorthEast().lat(), bounds.getSouthWest().lng());
 //    setOrigin(pxOrigin.x, pxOrigin.y);
-    setCamOffset(0, 0);
+    moveCam(0, 0);
 //  this.setMapState();
     onMoveEnd();
 };

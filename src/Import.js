@@ -235,6 +235,8 @@ var Import = {
 
     if (item.roofHeight) {
       item.height = max(0, item.height-item.roofHeight);
+    } else {
+      item.roofHeight = 0;
     }
 
     return item;

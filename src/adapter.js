@@ -3,9 +3,10 @@ function setOrigin(origin) {
   ORIGIN_Y = origin.y;
 }
 
-function setCamOffset(offset) {
+function moveCam(offset) {
   CAM_X = CENTER_X + offset.x;
   CAM_Y = HEIGHT   + offset.y;
+  Layers.render();
 }
 
 function setSize(size) {
@@ -38,25 +39,25 @@ function setZoom(z) {
 
 function onResize(e) {
   setSize(e.width, e.height);
-  Layers.render();
+  Layers.render(true);
   Data.update();
 }
 
 function onMoveEnd(e) {
-  Layers.render();
-  Data.update(); // => fadeIn() => Layers.render()
+  Layers.render(true);
+  Data.update(); // => fadeIn() => Layers.render(true)
 }
 
 function onZoomStart() {
   isZooming = true;
 // effectively clears because of isZooming flag
 // TODO: introduce explicit clear()
-  Layers.render();
+  Layers.render(true);
 }
 
 function onZoomEnd(e) {
   isZooming = false;
   setZoom(e.zoom);
   Data.update(); // => fadeIn()
-  Layers.render();
+  Layers.render(true);
 }

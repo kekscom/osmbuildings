@@ -22,7 +22,7 @@ proto.setStyle = function(style) {
     Shadows.enabled = !!style.shadows;
   }
 
-  Layers.render();
+  Layers.render(true);
 
   return this;
 };

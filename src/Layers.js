@@ -17,7 +17,7 @@ function fadeIn() {
       }
     }
 
-    Layers.render();
+    Layers.render(true);
 
     if (!isNeeded) {
       clearInterval(animTimer);
@@ -43,10 +43,16 @@ var Layers = {
     Buildings.context  = this.createContext();
   },
 
-  render: function() {
-    requestAnimationFrame(function() {
-      Shadows.render();
-      Simplified.render();
+  render: function(all) {
+    if (this.animFrame) {
+      cancelAnimationFrame(this.animFrame);
+    }
+
+    this.animFrame = requestAnimationFrame(function() {
+      if (all) {
+        Shadows.render();
+        Simplified.render();
+      }
       Buildings.render();
     });
   },
@@ -107,7 +113,7 @@ var Layers = {
       dataItems[i].scale = 1;
     }
 
-    this.render();
+    this.render(true);
 
     for (i = 0, il = this.items.length; i < il; i++) {
       item = this.items[i];
