@@ -44,9 +44,11 @@ var Layers = {
   },
 
   render: function() {
-    Shadows.render();
-    Simplified.render();
-    Buildings.render();
+    requestAnimationFrame(function() {
+      Shadows.render();
+      Simplified.render();
+      Buildings.render();
+    });
   },
 
   createContext: function() {

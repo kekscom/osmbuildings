@@ -2,6 +2,18 @@
 
 What's done & why in terms of performance.
 
+## IDEAS
+
+- combine canvases
+- render items of same style at once
+- delete and redraw animated objects
+- split off animated shadows
+- combine simple buildings in low zoom
+- use web workers for data processing
+- adapt features dynamically
+- pre-calc face direction
+- consider using a render queue
+
 
 ## Projection cache
 
@@ -60,7 +72,7 @@ http://jsperf.com/osmb-method-vs-function
 
 ## Considerations for further performance improvement
 
-degrade instantly, increase slowly (tage average score of a few passes)
+degrade instantly, increase slowly (take average score of a few passes)
 
 ### FADE IN
 - NO_STROKES
