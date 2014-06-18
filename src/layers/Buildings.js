@@ -30,7 +30,7 @@ var Buildings = {
       isVisible,
       wallColor, altColor, roofColor,
       dataItems = Data.items,
-      cx, cy, r;
+      center, radius;
 
     dataItems.sort(function(a, b) {
       return (a.minHeight-b.minHeight) || getDistance(b.center, sortCam) - getDistance(a.center, sortCam) || (b.height-a.height);
@@ -48,7 +48,6 @@ var Buildings = {
 
       for (j = 0, jl = footprint.length - 1; j < jl; j += 2) {
         // checking footprint is sufficient for visibility
-        // TODO: pre-filter by data tile position
         if (!isVisible) {
           isVisible = (footprint[j] > vp.minX && footprint[j] < vp.maxX && footprint[j+1] > vp.minY && footprint[j+1] < vp.maxY);
         }
@@ -77,25 +76,24 @@ var Buildings = {
 
       switch (item.shape) {
         case 'cylinder':
-          cx = item.center.x-ORIGIN_X;
-          cy = item.center.y-ORIGIN_Y;
-          r = item.radius;
+          center = { x:item.center.x-ORIGIN_X, y:item.center.y-ORIGIN_Y };
+          radius = item.radius;
 
-          Cylinder.draw(context, cx, cy, r, r, h, mh, wallColor, altColor, roofColor);
+          Cylinder.draw(context, center, radius, radius, h, mh, wallColor, altColor, roofColor);
           if (item.roofShape === 'cone') {
-            Cylinder.draw(context, cx, cy, r, 0, h+item.roofHeight, h, roofColor, ''+ parseColor(roofColor).lightness(0.9));
+            Cylinder.draw(context, center, radius, 0, h+item.roofHeight, h, roofColor, ''+ parseColor(roofColor).lightness(0.9));
           }
           if (item.roofShape === 'dome') {
-            Cylinder.draw(context, cx, cy, r, r/2, h+item.roofHeight, h, roofColor, ''+ parseColor(roofColor).lightness(0.9));
+            Cylinder.draw(context, center, radius, radius/2, h+item.roofHeight, h, roofColor, ''+ parseColor(roofColor).lightness(0.9));
           }
         break;
 
         case 'cone':
-          Cylinder.draw(context, item.center.x-ORIGIN_X, item.center.y-ORIGIN_Y, item.radius, 0, h, mh, wallColor, altColor);
+          Cylinder.draw(context, { x:item.center.x-ORIGIN_X, y:item.center.y-ORIGIN_Y }, item.radius, 0, h, mh, wallColor, altColor);
         break;
 
         case 'dome':
-          Cylinder.draw(context, item.center.x-ORIGIN_X, item.center.y-ORIGIN_Y, item.radius, item.radius/2, h, mh, wallColor, altColor);
+          Cylinder.draw(context, { x:item.center.x-ORIGIN_X, y:item.center.y-ORIGIN_Y }, item.radius, item.radius/2, h, mh, wallColor, altColor);
         break;
 
         default:
