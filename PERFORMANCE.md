@@ -13,6 +13,7 @@ What's done & why in terms of performance.
 - adapt features dynamically
 - pre-calc face direction
 - consider using a render queue
+- style lookup index
 
 
 ## Projection cache

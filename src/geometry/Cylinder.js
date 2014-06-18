@@ -25,7 +25,7 @@ var Cylinder = {
     }
 
     // common tangents for ground and roof circle
-    var tangents = Cylinder.getTangents(centerX, centerY, radius, apex.x, apex.y, topRadius);
+    var tangents = this.getTangents(centerX, centerY, radius, apex.x, apex.y, topRadius);
 
     // no tangents? top circle is inside bottom circle
     if (!tangents) {
@@ -50,7 +50,7 @@ var Cylinder = {
     context.closePath();
     context.fill();
 
-    Cylinder.circle(context, apex.x, apex.y, topRadius, roofColor);
+    this.circle(context, apex.x, apex.y, topRadius, roofColor);
   },
 
   shadow: function(context, centerX, centerY, radius, topRadius, height, minHeight) {
