@@ -2190,7 +2190,11 @@ function setOrigin(origin) {
   ORIGIN_Y = origin.y;
 }
 
+var dynPersp = { x:0, y:0 };
+
 function moveCam(offset) {
+//  CAM_X = CENTER_X + dynPersp.x + offset.x;
+//  CAM_Y = HEIGHT   + dynPersp.y + offset.y;
   CAM_X = CENTER_X + offset.x;
   CAM_Y = HEIGHT   + offset.y;
   Layers.render();
@@ -2248,6 +2252,41 @@ function onZoomEnd(e) {
   Data.update(); // => fadeIn()
   Layers.render(true);
 }
+
+function onDeviceMotion(e) {
+return
+  CAM_X -= dynPersp.x;
+  CAM_Y -= dynPersp.y;
+
+  dynPersp = { x:-e.x * 100, y:e.y * 100 };
+
+  CAM_X += dynPersp.x;
+  CAM_Y += dynPersp.y;
+
+  Layers.render();
+//	moveCam({ x:-e.x*CENTER_X/2, y:e.y*CENTER_Y/2 });
+}
+
+if (win.DeviceMotionEvent) {
+	win.addEventListener('devicemotion', function(e) {
+		var t;
+		if ((e = e.accelerationIncludingGravity || e.acceleration)) {
+      switch (win.orientation) {
+        case  -90: t = e.x; e.x =  e.y; e.y = -t; break;
+        case   90: t = e.x; e.x = -e.y; e.y =  t; break;
+        case -180: e.x *= -1; e.y *= -1; break;
+      }
+      onDeviceMotion(e);
+		}
+  });
+}
+
+//win.addEventListener('mousemove', function(e) {
+//  onDeviceMotion({
+//    x: e.x/CENTER_X - 1,
+//    y: e.y/CENTER_Y - 1
+//  });
+//});
 
 
 //****** file: Leaflet.js ******

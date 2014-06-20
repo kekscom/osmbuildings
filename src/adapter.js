@@ -3,7 +3,11 @@ function setOrigin(origin) {
   ORIGIN_Y = origin.y;
 }
 
+var dynPersp = { x:0, y:0 };
+
 function moveCam(offset) {
+//  CAM_X = CENTER_X + dynPersp.x + offset.x;
+//  CAM_Y = HEIGHT   + dynPersp.y + offset.y;
   CAM_X = CENTER_X + offset.x;
   CAM_Y = HEIGHT   + offset.y;
   Layers.render();
@@ -62,40 +66,37 @@ function onZoomEnd(e) {
   Layers.render(true);
 }
 
-
-
-
-
-
-
-var self = this;
 function onDeviceMotion(e) {
-	self.setCamOffset(e.x, e.y);
-    render();
+return
+  CAM_X -= dynPersp.x;
+  CAM_Y -= dynPersp.y;
+
+  dynPersp = { x:-e.x * 100, y:e.y * 100 };
+
+  CAM_X += dynPersp.x;
+  CAM_Y += dynPersp.y;
+
+  Layers.render();
+//	moveCam({ x:-e.x*CENTER_X/2, y:e.y*CENTER_Y/2 });
 }
 
-if (window.DeviceMotionEvent) {
-	var minMovement = 2, abs = Math.abs;
-	window.addEventListener('devicemotion', function(e) {
+if (win.DeviceMotionEvent) {
+	win.addEventListener('devicemotion', function(e) {
 		var t;
 		if ((e = e.accelerationIncludingGravity || e.acceleration)) {
-			if (abs(e.x) > minMovement || abs(e.y) > minMovement || abs(e.z) > minMovement) {
-				switch (window.orientation) {
-					case  -90: t = e.x; e.x =  e.y; e.y = -t; break;
-					case   90: t = e.x; e.x = -e.y; e.y =  t; break;
-					case  180:
-					case -180: e.x *= -1; e.y *= -1; break;
-				}
-				onDeviceMotion({ x:-e.x*10, y:-e.y*10 });
-			}
+      switch (win.orientation) {
+        case  -90: t = e.x; e.x =  e.y; e.y = -t; break;
+        case   90: t = e.x; e.x = -e.y; e.y =  t; break;
+        case -180: e.x *= -1; e.y *= -1; break;
+      }
+      onDeviceMotion(e);
 		}
-    });
+  });
 }
 
-window.addEventListener('mousemove', function(e) {
-	var minMovement = 2, abs = Math.abs;
-    var x = width/2-e.x, y = height-e.y;
-    if (abs(x) > minMovement || abs(y) > minMovement) {
-        onDeviceMotion({ x:-x/3, y:-y/3 });
-    }
-});
+//win.addEventListener('mousemove', function(e) {
+//  onDeviceMotion({
+//    x: e.x/CENTER_X - 1,
+//    y: e.y/CENTER_Y - 1
+//  });
+//});
