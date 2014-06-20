@@ -26,8 +26,8 @@ html, body {
 <script>
 var map = new L.Map('map').setView([11.24435, 125.00327], 17); // Philippines
 new L.TileLayer('http://{s}.tile.stamen.com/toner-lite/{z}/{x}/{y}.png', {
-  maxZoom: 18,
-  attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, under <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a>. Data by <a href="http://openstreetmap.org/copyright">OpenStreetMap</a>, under ODbL.'
+  maxNativeZoom: 19,
+  maxZoom: 21
 }).addTo(map);
 
 var osmb = new OSMBuildings(map).each(function(item) {

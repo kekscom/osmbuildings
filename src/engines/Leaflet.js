@@ -8,7 +8,6 @@ var proto = osmb.prototype;
 proto.onAdd = function(map) {
     this.map = map;
     Layers.appendTo(map._panes.overlayPane);
-    maxZoom = map._layersMaxZoom;
 
     var off = this.getOffset(),
         po = map.getPixelOrigin();
@@ -62,8 +61,7 @@ proto.onRemove = function() {
 
 proto.onMove = function(e) {
     var off = this.getOffset();
-    setCamOffset({ x:this.offset.x-off.x, y:this.offset.y-off.y });
-    Buildings.render();
+    moveCam({ x:this.offset.x-off.x, y:this.offset.y-off.y });
 };
 
 proto.onMoveEnd = function(e) {
@@ -77,7 +75,7 @@ proto.onMoveEnd = function(e) {
 
     this.offset = off;
     Layers.setPosition(-off.x, -off.y);
-    setCamOffset({ x:0, y:0 });
+    moveCam({ x:0, y:0 });
 
     setSize({ w:map._size.x, h:map._size.y }); // in case this is triggered by resize
     setOrigin({ x:po.x-off.x, y:po.y-off.y });
@@ -117,7 +115,7 @@ proto.onViewReset = function() {
 
     this.offset = off;
     Layers.setPosition(-off.x, -off.y);
-    setCamOffset({ x:0, y:0 });
+    moveCam({ x:0, y:0 });
 };
 
 proto.getOffset = function() {

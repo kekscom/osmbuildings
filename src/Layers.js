@@ -1,5 +1,6 @@
-function fadeIn() {
+var animTimer;
 
+function fadeIn() {
   if (animTimer) {
     return;
   }
@@ -18,7 +19,7 @@ function fadeIn() {
       }
     }
 
-    Layers.render();
+    Layers.render(true);
 
     if (!isNeeded) {
       clearInterval(animTimer);
@@ -44,10 +45,18 @@ var Layers = {
     Buildings.context  = this.createContext();
   },
 
-  render: function() {
-    Shadows.render();
-    Simplified.render();
-    Buildings.render();
+  render: function(all) {
+    if (this.animFrame) {
+      win.cancelAnimationFrame(this.animFrame);
+    }
+
+    this.animFrame = win.requestAnimationFrame(function() {
+      if (all) {
+        Shadows.render();
+        Simplified.render();
+      }
+      Buildings.render();
+    });
   },
 
   createContext: function() {
@@ -87,6 +96,39 @@ var Layers = {
     }
   },
 
+  screenshot: function() {
+    var
+      canvas = doc.createElement('CANVAS'),
+      context = canvas.getContext('2d'),
+      i, il,
+      item;
+
+    canvas.width  = WIDTH;
+    canvas.height = HEIGHT;
+
+    // end fade in
+    clearInterval(animTimer);
+    animTimer = null;
+
+    var dataItems = Data.items;
+    for (i = 0, il = dataItems.length; i < il; i++) {
+      dataItems[i].scale = 1;
+    }
+
+    this.render(true);
+
+    for (i = 0, il = this.items.length; i < il; i++) {
+      item = this.items[i];
+      if (item.style.opacity !== '') {
+        context.globalAlpha = parseFloat(item.style.opacity);
+      }
+      context.drawImage(item, 0, 0);
+      context.globalAlpha = 1;
+    }
+
+    return canvas.toDataURL('image/png');
+  },
+
   // usually called after move: container jumps by move delta, cam is reset
   setPosition: function(x, y) {
     this.container.style.left = x +'px';
@@ -95,20 +137,3 @@ var Layers = {
 };
 
 Layers.init();
-
-//function debugMarker(p, color, size) {
-//  context.fillStyle = color || '#ffcc00';
-//  context.beginPath();
-//  context.arc(p.x, p.y, size || 3, 0, PI*2, true);
-//  context.closePath();
-//  context.fill();
-//}
-//
-//function debugLine(a, b, color) {
-//  context.strokeStyle = color || '#ff0000';
-//  context.beginPath();
-//  context.moveTo(a.x, a.y);
-//  context.lineTo(b.x, b.y);
-//  context.closePath();
-//  context.stroke();
-//}

@@ -9,25 +9,11 @@ Everything is stabilizing now, entering beta state.
 http://osmbuildings.org/
 
 
-## Deprecation notice!
-
-By version 0.1.9a, there are a few important changes regarding files and API.<br>
-It's about aligning, functionality stays the same.
-
-1. Files are now named `OSMBuildings-<ENGINE>.js`- where engine is `Leaflet` or `OpenLayers` at the moment.
-2. Initialization is just `new OSMBuildings(map)` - no more addTo(...)
-3. Loading data from external GeoJSON source is done via `loadData(<URL>)`
-3. Setting GeoJSON or alike formatted data is done by `setData(<DATA>)`
-
-For details, see documentation below.
-
-
 ## Files
 
-Release version 0.1.9a https://github.com/kekscom/osmbuildings/tree/v0.1.9a<br>
-Latest development version https://github.com/kekscom/osmbuildings
+It's safe to fork the [latest code revision](https://github.com/kekscom/osmbuildings/tree/master/) for development, or use it's [build files for production](https://github.com/kekscom/osmbuildings/tree/master/dist/).
 
-For further information visit http://osmbuildings.org, follow [@osmbuildings](https://twitter.com/osmbuildings) on Twitter or report issues here on Github.
+For further information visit http://osmbuildings.org, follow [@osmbuildings](https://twitter.com/osmbuildings/) on Twitter or report issues [here on Github](https://github.com/kekscom/osmbuildings/issues/).
 
 
 ## Documentation
@@ -49,7 +35,7 @@ Position is set to Berlin at zoom level 17, I'm using MapBox tiles here.
 
 ~~~ javascript
 var map = new L.Map('map').setView([52.52020, 13.37570], 17);
-new L.TileLayer('http://{s}.tiles.mapbox.com/v3/<YOUR MAPBOX KEY HERE>/{z}/{x}/{y}.png',
+new L.TileLayer('http://{s}.tiles.mapbox.com/v3/<YOUR KEY HERE>/{z}/{x}/{y}.png',
   { attribution: 'Map tiles &copy; <a href="http://mapbox.com">MapBox</a>', maxZoom: 17 }).addTo(map);
 ~~~
 
@@ -60,7 +46,7 @@ new OSMBuildings(map).loadData();
 ~~~
 
 As a popular alternative, you could pass a <a href="http://www.geojson.org/geojson-spec.html">GeoJSON</a> FeatureCollection object.<br>
-Feature types Polygon, Multipolygon and Linestring are supported.<br>
+Geometry types Polygon, Multipolygon and GeometryCollection are supported.<br>
 Make sure the building coordinates are projected in <a href="http://spatialreference.org/ref/epsg/4326/">EPSG:4326</a>.<br>
 Height units m, ft, yd, mi are accepted, no given unit defaults to meters.
 
@@ -203,6 +189,11 @@ Methods
 <td>Without parameter, it loads data tiles from OpenStreetMaps. You don't need to care for data anymore.
 As an alternative, pass an URL to <a href="http://cartodb.com/">CartoDB</a> or any other GeoJSON service. See below.
 </td>
+</tr>
+
+<tr>
+<td>screenshot({Boolean})</td>
+<td>Creates a screenshot of all visible OSM Buildings content and returns it as data URL. Parameter indicates, whether browser should display the image directly.</td>
 </tr>
 </table>
 

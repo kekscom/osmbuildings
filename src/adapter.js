@@ -1,56 +1,63 @@
 function setOrigin(origin) {
-  originX = origin.x;
-  originY = origin.y;
+  ORIGIN_X = origin.x;
+  ORIGIN_Y = origin.y;
 }
 
-function setCamOffset(offset) {
-  camX = HALF_WIDTH+offset.x;
-  camY = HEIGHT   +offset.y;
+function moveCam(offset) {
+  CAM_X = CENTER_X + offset.x;
+  CAM_Y = HEIGHT   + offset.y;
+  Layers.render();
 }
 
 function setSize(size) {
   WIDTH  = size.w;
   HEIGHT = size.h;
-  HALF_WIDTH  = WIDTH /2 <<0;
-  HALF_HEIGHT = HEIGHT/2 <<0;
-  camX = HALF_WIDTH;
-  camY = HEIGHT;
+  CENTER_X = WIDTH /2 <<0;
+  CENTER_Y = HEIGHT/2 <<0;
+
+  CAM_X = CENTER_X;
+  CAM_Y = HEIGHT;
+
   Layers.setSize(WIDTH, HEIGHT);
-  maxHeight = camZ-50;
+  MAX_HEIGHT = CAM_Z-50;
 }
 
 function setZoom(z) {
-  zoom = z;
-  size = MAP_TILE_SIZE <<zoom;
+  ZOOM = z;
+  MAP_SIZE = MAP_TILE_SIZE <<ZOOM;
 
-  ZOOM_ALPHA = 1 - fromRange(zoom, minZoom, maxZoom, 0, 0.3);
+  var pxCenter = pixelToGeo(ORIGIN_X+CENTER_X, ORIGIN_Y+CENTER_Y);
+  // see http://wiki.openstreetmap.org/wiki/Zoom_levels
+  METERS_PER_PIXEL = Math.abs(40075040 * cos(pxCenter.latitude) / pow(2, ZOOM+8));
 
-  wallColorAlpha = defaultWallColor.alpha(ZOOM_ALPHA) + '';
-  altColorAlpha  = defaultAltColor.alpha( ZOOM_ALPHA) + '';
-  roofColorAlpha = defaultRoofColor.alpha(ZOOM_ALPHA) + '';
+  ZOOM_FACTOR = pow(0.95, ZOOM-MIN_ZOOM);
+
+  WALL_COLOR_STR = ''+ WALL_COLOR.alpha(ZOOM_FACTOR);
+  ALT_COLOR_STR  = ''+ ALT_COLOR.alpha( ZOOM_FACTOR);
+  ROOF_COLOR_STR = ''+ ROOF_COLOR.alpha(ZOOM_FACTOR);
 }
 
 function onResize(e) {
   setSize(e.width, e.height);
-  Layers.render();
+  Layers.render(true);
   Data.update();
 }
 
 function onMoveEnd(e) {
-  Layers.render();
-  Data.update(); // => fadeIn() => Layers.render()
+  Layers.render(true);
+  Data.update(); // => fadeIn() => Layers.render(true)
 }
 
 function onZoomStart() {
   isZooming = true;
 // effectively clears because of isZooming flag
 // TODO: introduce explicit clear()
-  Layers.render();
+  Layers.render(true);
 }
 
 function onZoomEnd(e) {
   isZooming = false;
   setZoom(e.zoom);
   Data.update(); // => fadeIn()
-  Layers.render();
+  Layers.render(true);
 }

@@ -1,27 +1,28 @@
+
 proto.setStyle = function(style) {
   style = style || {};
   var color;
   if ((color = style.color || style.wallColor)) {
-    defaultWallColor = parseColor(color);
-    wallColorAlpha   = ''+ defaultWallColor.alpha(ZOOM_ALPHA);
+    WALL_COLOR = parseColor(color);
+    WALL_COLOR_STR = ''+ WALL_COLOR.alpha(ZOOM_FACTOR);
 
-    defaultAltColor  = defaultWallColor.lightness(0.8);
-    altColorAlpha    = ''+ defaultAltColor.alpha(ZOOM_ALPHA);
+    ALT_COLOR = WALL_COLOR.lightness(0.8);
+    ALT_COLOR_STR  = ''+ ALT_COLOR.alpha(ZOOM_FACTOR);
 
-    defaultRoofColor = defaultWallColor.lightness(1.2);
-    roofColorAlpha   = ''+ defaultRoofColor.alpha(ZOOM_ALPHA);
+    ROOF_COLOR = WALL_COLOR.lightness(1.2);
+    ROOF_COLOR_STR = ''+ ROOF_COLOR.alpha(ZOOM_FACTOR);
   }
 
   if (style.roofColor) {
-    defaultRoofColor = parseColor(style.roofColor);
-    roofColorAlpha   = ''+ defaultRoofColor.alpha(ZOOM_ALPHA);
+    ROOF_COLOR = parseColor(style.roofColor);
+    ROOF_COLOR_STR = ''+ ROOF_COLOR.alpha(ZOOM_FACTOR);
   }
 
   if (style.shadows !== undefined) {
     Shadows.enabled = !!style.shadows;
   }
 
-  Layers.render();
+  Layers.render(true);
 
   return this;
 };
@@ -47,6 +48,14 @@ proto.each = function(handler, scope) {
     return handler.call(scope, feature);
   };
   return this;
+};
+
+proto.screenshot = function(forceDownload) {
+  var dataURL = Layers.screenshot();
+  if (forceDownload) {
+    win.location.href = dataURL.replace('image/png', 'image/octet-stream');
+  }
+  return dataURL;
 };
 
 osmb.VERSION     = VERSION;

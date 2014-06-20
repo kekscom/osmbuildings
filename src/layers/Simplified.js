@@ -1,62 +1,47 @@
 var Simplified = {
 
+  maxZoom: MIN_ZOOM+2,
+  maxHeight: 2,
+
   isSimple: function(item) {
-    return item.height+item.roofHeight <= DEFAULT_HEIGHT && !item.wallColor && !item.roofColor && !item.holes;
+    return (ZOOM <= this.maxZoom && item.height+item.roofHeight < this.maxHeight);
   },
 
   render: function() {
-    this.context.clearRect(0, 0, WIDTH, HEIGHT);
+    var context = this.context;
+    context.clearRect(0, 0, WIDTH, HEIGHT);
 
     // show on high zoom levels only and avoid rendering during zoom
-    if (zoom < minZoom || isZooming) {
+    if (ZOOM < MIN_ZOOM || isZooming || ZOOM > this.maxZoom) {
       return;
     }
 
-    var i, il, j, jl,
+    var
       item,
-      f,
-      x, y,
       footprint,
-      isVisible,
       dataItems = Data.items;
 
-    this.context.beginPath();
-
-    for (i = 0, il = dataItems.length; i < il; i++) {
+    for (var i = 0, il = dataItems.length; i < il; i++) {
       item = dataItems[i];
-      if (!this.isSimple(item)) {
+
+      if (item.height >= this.maxHeight) {
         continue;
       }
 
-      isVisible = false;
-      f = item.footprint;
-      footprint = [];
-      for (j = 0, jl = f.length-1; j < jl; j += 2) {
-        footprint[j]   = x = f[j]  -originX;
-        footprint[j+1] = y = f[j+1]-originY;
+      footprint = item.footprint;
 
-        // checking footprint is sufficient for visibility
-        if (!isVisible) {
-          isVisible = (x > 0 && x < WIDTH && y > 0 && y < HEIGHT);
-        }
-      }
-
-      if (!isVisible) {
+      if (!isVisible(footprint)) {
         continue;
       }
 
-      this.context.moveTo(footprint[0], footprint[1]);
-      for (j = 2, jl = footprint.length-3; j < jl; j += 2) {
-        this.context.lineTo(footprint[j], footprint[j+1]);
-      }
+      context.strokeStyle = item.altColor  || ALT_COLOR_STR;
+      context.fillStyle   = item.roofColor || ROOF_COLOR_STR;
 
-      this.context.closePath();
+      if (item.shape === 'cylinder' || item.shape === 'cone' || item.shape === 'dome') {
+        Cylinder.circle(context, item.center, item.radius);
+      } else {
+        Block.polygon(context, footprint, item.holes);
+      }
     }
-
-    this.context.fillStyle   = roofColorAlpha;
-    this.context.strokeStyle = altColorAlpha;
-
-    this.context.stroke();
-    this.context.fill();
   }
 };

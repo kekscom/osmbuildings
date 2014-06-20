@@ -1,7 +1,5 @@
 // object access shortcuts
 var
-  Int32Array = Int32Array || Array,
-  Uint8Array = Uint8Array || Array,
   m = Math,
   exp = m.exp,
   log = m.log,
@@ -16,12 +14,33 @@ var
   ceil = m.ceil,
   floor = m.floor,
   round = m.round,
+  pow = m.pow,
   win = window,
   doc = document;
 
+
+// polyfills
+
+var
+  Int32Array = Int32Array || Array,
+  Uint8Array = Uint8Array || Array;
+
 if (!win.console) {
-  win.console = {
-    log:function() {},
-    warn:function() {}
-  };
+  win.console = {};
 }
+
+win.requestAnimationFrame = win.requestAnimationFrame ||
+  win.mozRequestAnimationFrame ||
+  win.webkitRequestAnimationFrame ||
+  win.msRequestAnimationFrame ||
+  function(callback) {
+    return setTimeout(callback, 16);
+  };
+
+win.cancelAnimationFrame = win.cancelAnimationFrame ||
+  win.mozCancelAnimationFrame ||
+  win.webkitCancelAnimationFrame ||
+  win.msCancelAnimationFrame ||
+  function(id) {
+		clearTimeout(id);
+  };
