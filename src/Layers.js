@@ -19,7 +19,7 @@ function fadeIn() {
       }
     }
 
-    Layers.render(true);
+    Layers.render();
 
     if (!isNeeded) {
       clearInterval(animTimer);
@@ -45,13 +45,9 @@ var Layers = {
     Buildings.context  = this.createContext();
   },
 
-  render: function(all) {
-    if (this.animFrame) {
-      win.cancelAnimationFrame(this.animFrame);
-    }
-
-    this.animFrame = win.requestAnimationFrame(function() {
-      if (all) {
+  render: function(quick) {
+    requestAnimFrame(function() {
+      if (!quick) {
         Shadows.render();
         Simplified.render();
       }

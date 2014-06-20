@@ -43,31 +43,30 @@ function setZoom(z) {
 
 function onResize(e) {
   setSize(e.width, e.height);
-  Layers.render(true);
+  Layers.render();
   Data.update();
 }
 
 function onMoveEnd(e) {
-  Layers.render(true);
-  Data.update(); // => fadeIn() => Layers.render(true)
+  Layers.render();
+  Data.update(); // => fadeIn() => Layers.render()
 }
 
 function onZoomStart() {
   isZooming = true;
 // effectively clears because of isZooming flag
 // TODO: introduce explicit clear()
-  Layers.render(true);
+  Layers.render();
 }
 
 function onZoomEnd(e) {
   isZooming = false;
   setZoom(e.zoom);
   Data.update(); // => fadeIn()
-  Layers.render(true);
+  Layers.render();
 }
 
 function onDeviceMotion(e) {
-return
   CAM_X -= dynPersp.x;
   CAM_Y -= dynPersp.y;
 
@@ -77,7 +76,6 @@ return
   CAM_Y += dynPersp.y;
 
   Layers.render();
-//	moveCam({ x:-e.x*CENTER_X/2, y:e.y*CENTER_Y/2 });
 }
 
 if (win.DeviceMotionEvent) {
