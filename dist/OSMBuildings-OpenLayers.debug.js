@@ -43,21 +43,13 @@ if (!win.console) {
   win.console = {};
 }
 
-win.requestAnimationFrame = win.requestAnimationFrame ||
-  win.mozRequestAnimationFrame ||
-  win.webkitRequestAnimationFrame ||
-  win.msRequestAnimationFrame ||
-  function(callback) {
-    return setTimeout(callback, 16);
+var IS_IOS = /iP(ad|hone|od)/g.test(navigator.userAgent);
+
+var requestAnimFrame = (win.requestAnimationFrame && !IS_IOS) ?
+  win.requestAnimationFrame : function(callback) {
+    callback();
   };
 
-win.cancelAnimationFrame = win.cancelAnimationFrame ||
-  win.mozCancelAnimationFrame ||
-  win.webkitCancelAnimationFrame ||
-  win.msCancelAnimationFrame ||
-  function(id) {
-		clearTimeout(id);
-  };
 
 
 //****** file: Color.js ******
@@ -2063,7 +2055,7 @@ function fadeIn() {
       }
     }
 
-    Layers.render(true);
+    Layers.render();
 
     if (!isNeeded) {
       clearInterval(animTimer);
@@ -2089,13 +2081,9 @@ var Layers = {
     Buildings.context  = this.createContext();
   },
 
-  render: function(all) {
-    if (this.animFrame) {
-      win.cancelAnimationFrame(this.animFrame);
-    }
-
-    this.animFrame = win.requestAnimationFrame(function() {
-      if (all) {
+  render: function(quick) {
+    requestAnimFrame(function() {
+      if (!quick) {
         Shadows.render();
         Simplified.render();
       }
@@ -2226,27 +2214,27 @@ function setZoom(z) {
 
 function onResize(e) {
   setSize(e.width, e.height);
-  Layers.render(true);
+  Layers.render();
   Data.update();
 }
 
 function onMoveEnd(e) {
-  Layers.render(true);
-  Data.update(); // => fadeIn() => Layers.render(true)
+  Layers.render();
+  Data.update(); // => fadeIn() => Layers.render()
 }
 
 function onZoomStart() {
   isZooming = true;
 // effectively clears because of isZooming flag
 // TODO: introduce explicit clear()
-  Layers.render(true);
+  Layers.render();
 }
 
 function onZoomEnd(e) {
   isZooming = false;
   setZoom(e.zoom);
   Data.update(); // => fadeIn()
-  Layers.render(true);
+  Layers.render();
 }
 
 
@@ -2367,7 +2355,7 @@ proto.setStyle = function(style) {
     Shadows.enabled = !!style.shadows;
   }
 
-  Layers.render(true);
+  Layers.render();
 
   return this;
 };
