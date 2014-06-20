@@ -36,11 +36,3 @@ win.requestAnimationFrame = win.requestAnimationFrame ||
   function(callback) {
     return setTimeout(callback, 16);
   };
-
-win.cancelAnimationFrame = win.cancelAnimationFrame ||
-  win.mozCancelAnimationFrame ||
-  win.webkitCancelAnimationFrame ||
-  win.msCancelAnimationFrame ||
-  function(id) {
-		clearTimeout(id);
-  };

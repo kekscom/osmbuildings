@@ -46,10 +46,6 @@ var Layers = {
   },
 
   render: function(all) {
-    if (this.animFrame) {
-      win.cancelAnimationFrame(this.animFrame);
-    }
-
     this.animFrame = win.requestAnimationFrame(function() {
       if (all) {
         Shadows.render();
