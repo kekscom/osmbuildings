@@ -46,7 +46,7 @@ var Layers = {
   },
 
   render: function(quick) {
-    this.animFrame = win.requestAnimationFrame(function() {
+    requestAnimFrame(function() {
       if (!quick) {
         Shadows.render();
         Simplified.render();

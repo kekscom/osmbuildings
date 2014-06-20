@@ -43,13 +43,13 @@ if (!win.console) {
   win.console = {};
 }
 
-win.requestAnimationFrame = win.requestAnimationFrame ||
-  win.mozRequestAnimationFrame ||
-  win.webkitRequestAnimationFrame ||
-  win.msRequestAnimationFrame ||
-  function(callback) {
-    return setTimeout(callback, 16);
+var IS_IOS = /iP(ad|hone|od)/g.test(navigator.userAgent);
+
+var requestAnimFrame = (win.requestAnimationFrame && !IS_IOS) ?
+  win.requestAnimationFrame : function(callback) {
+    callback();
   };
+
 
 
 //****** file: Color.js ******
@@ -2082,7 +2082,7 @@ var Layers = {
   },
 
   render: function(quick) {
-    this.animFrame = win.requestAnimationFrame(function() {
+    requestAnimFrame(function() {
       if (!quick) {
         Shadows.render();
         Simplified.render();
@@ -2181,6 +2181,7 @@ function setOrigin(origin) {
 function moveCam(offset) {
   CAM_X = CENTER_X + offset.x;
   CAM_Y = HEIGHT   + offset.y;
+  Layers.render();
 }
 
 function setSize(size) {
@@ -2324,7 +2325,6 @@ proto.moveByPx = function(dx, dy) {
   this.offset.y += dy;
   var res = parent.moveByPx.call(this, dx, dy);
   moveCam(this.offset);
-  Layers.render(true);
   return res;
 };
 

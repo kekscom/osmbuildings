@@ -29,10 +29,10 @@ if (!win.console) {
   win.console = {};
 }
 
-win.requestAnimationFrame = win.requestAnimationFrame ||
-  win.mozRequestAnimationFrame ||
-  win.webkitRequestAnimationFrame ||
-  win.msRequestAnimationFrame ||
-  function(callback) {
-    return setTimeout(callback, 16);
+var IS_IOS = /iP(ad|hone|od)/g.test(navigator.userAgent);
+
+var requestAnimFrame = (win.requestAnimationFrame && !IS_IOS) ?
+  win.requestAnimationFrame : function(callback) {
+    callback();
   };
+
