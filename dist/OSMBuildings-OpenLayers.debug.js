@@ -51,14 +51,6 @@ win.requestAnimationFrame = win.requestAnimationFrame ||
     return setTimeout(callback, 16);
   };
 
-win.cancelAnimationFrame = win.cancelAnimationFrame ||
-  win.mozCancelAnimationFrame ||
-  win.webkitCancelAnimationFrame ||
-  win.msCancelAnimationFrame ||
-  function(id) {
-		clearTimeout(id);
-  };
-
 
 //****** file: Color.js ******
 
@@ -2063,7 +2055,7 @@ function fadeIn() {
       }
     }
 
-    Layers.render(true);
+    Layers.render();
 
     if (!isNeeded) {
       clearInterval(animTimer);
@@ -2089,13 +2081,9 @@ var Layers = {
     Buildings.context  = this.createContext();
   },
 
-  render: function(all) {
-    if (this.animFrame) {
-      win.cancelAnimationFrame(this.animFrame);
-    }
-
+  render: function(quick) {
     this.animFrame = win.requestAnimationFrame(function() {
-      if (all) {
+      if (!quick) {
         Shadows.render();
         Simplified.render();
       }
@@ -2193,7 +2181,6 @@ function setOrigin(origin) {
 function moveCam(offset) {
   CAM_X = CENTER_X + offset.x;
   CAM_Y = HEIGHT   + offset.y;
-  Layers.render();
 }
 
 function setSize(size) {
@@ -2226,27 +2213,27 @@ function setZoom(z) {
 
 function onResize(e) {
   setSize(e.width, e.height);
-  Layers.render(true);
+  Layers.render();
   Data.update();
 }
 
 function onMoveEnd(e) {
-  Layers.render(true);
-  Data.update(); // => fadeIn() => Layers.render(true)
+  Layers.render();
+  Data.update(); // => fadeIn() => Layers.render()
 }
 
 function onZoomStart() {
   isZooming = true;
 // effectively clears because of isZooming flag
 // TODO: introduce explicit clear()
-  Layers.render(true);
+  Layers.render();
 }
 
 function onZoomEnd(e) {
   isZooming = false;
   setZoom(e.zoom);
   Data.update(); // => fadeIn()
-  Layers.render(true);
+  Layers.render();
 }
 
 
@@ -2337,6 +2324,7 @@ proto.moveByPx = function(dx, dy) {
   this.offset.y += dy;
   var res = parent.moveByPx.call(this, dx, dy);
   moveCam(this.offset);
+  Layers.render(true);
   return res;
 };
 
@@ -2367,7 +2355,7 @@ proto.setStyle = function(style) {
     Shadows.enabled = !!style.shadows;
   }
 
-  Layers.render(true);
+  Layers.render();
 
   return this;
 };
