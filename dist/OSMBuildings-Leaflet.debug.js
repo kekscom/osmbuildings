@@ -1612,7 +1612,7 @@ var Cylinder = {
 
     // no tangents? top circle is inside bottom circle
     if (!tangents) {
-      a1 = 0;
+      a1 = 1.5*PI;
       a2 = 1.5*PI;
     } else {
       a1 = atan2(tangents[0].y1-c.y, tangents[0].x1-c.x);
