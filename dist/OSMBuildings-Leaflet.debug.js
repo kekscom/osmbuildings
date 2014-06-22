@@ -2245,7 +2245,7 @@ function onDeviceMotion(e) {
   CAM_X -= dynPersp.x;
   CAM_Y -= dynPersp.y;
 
-  dynPersp = { x:-e.x * 100, y:e.y * 100 };
+  dynPersp = { x:-e.x * 50, y:e.y * 50 };
 
   CAM_X += dynPersp.x;
   CAM_Y += dynPersp.y;
@@ -2260,7 +2260,7 @@ if (win.DeviceMotionEvent) {
       x: 0,
       y: 0
     },
-    filteringFactor = 0.1;
+    filteringFactor = 0.5;
 
 	win.addEventListener('devicemotion', function(e) {
 		var t, now = new Date().getTime();
@@ -2276,10 +2276,11 @@ if (win.DeviceMotionEvent) {
         case -180: e.x *= -1; e.y *= -1; break;
       }
 
-      // http://stackoverflow.com/questions/6942626/accelerometer-low-pass-filtering
       lastMotion.time = now;
-      lastMotion.x = -((e.x * filteringFactor) + (lastMotion.x * (1.0-filteringFactor)));
-      lastMotion.y = -((e.y * filteringFactor) + (lastMotion.y * (1.0-filteringFactor)));
+
+      // http://stackoverflow.com/questions/6942626/accelerometer-low-pass-filtering
+      lastMotion.x = (e.x * filteringFactor) + (lastMotion.x * (1.0-filteringFactor));
+      lastMotion.y = (e.y * filteringFactor) + (lastMotion.y * (1.0-filteringFactor));
 
       onDeviceMotion(lastMotion);
     }
