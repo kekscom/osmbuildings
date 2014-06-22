@@ -79,22 +79,34 @@ function onDeviceMotion(e) {
 }
 
 if (win.DeviceMotionEvent) {
+  var
+    lastMotion = {
+      time: new Date().getTime(),
+      x: 0,
+      y: 0
+    },
+    filteringFactor = 0.1;
+
 	win.addEventListener('devicemotion', function(e) {
-		var t;
+		var t, now = new Date().getTime();
+
+    if (now < lastMotion.time + 33) {
+      return;
+    }
+
 		if ((e = e.accelerationIncludingGravity || e.acceleration)) {
       switch (win.orientation) {
         case  -90: t = e.x; e.x =  e.y; e.y = -t; break;
         case   90: t = e.x; e.x = -e.y; e.y =  t; break;
         case -180: e.x *= -1; e.y *= -1; break;
       }
-      onDeviceMotion(e);
-		}
+
+      // http://stackoverflow.com/questions/6942626/accelerometer-low-pass-filtering
+      lastMotion.time = now;
+      lastMotion.x = -((e.x * filteringFactor) + (lastMotion.x * (1.0-filteringFactor)));
+      lastMotion.y = -((e.y * filteringFactor) + (lastMotion.y * (1.0-filteringFactor)));
+
+      onDeviceMotion(lastMotion);
+    }
   });
 }
-
-//win.addEventListener('mousemove', function(e) {
-//  onDeviceMotion({
-//    x: e.x/CENTER_X - 1,
-//    y: e.y/CENTER_Y - 1
-//  });
-//});

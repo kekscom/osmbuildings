@@ -43,21 +43,13 @@ if (!win.console) {
   win.console = {};
 }
 
-win.requestAnimationFrame = win.requestAnimationFrame ||
-  win.mozRequestAnimationFrame ||
-  win.webkitRequestAnimationFrame ||
-  win.msRequestAnimationFrame ||
-  function(callback) {
-    return setTimeout(callback, 16);
+var IS_IOS = /iP(ad|hone|od)/g.test(navigator.userAgent);
+
+var requestAnimFrame = (win.requestAnimationFrame && !IS_IOS) ?
+  win.requestAnimationFrame : function(callback) {
+    callback();
   };
 
-win.cancelAnimationFrame = win.cancelAnimationFrame ||
-  win.mozCancelAnimationFrame ||
-  win.webkitCancelAnimationFrame ||
-  win.msCancelAnimationFrame ||
-  function(id) {
-		clearTimeout(id);
-  };
 
 
 //****** file: Color.js ******
@@ -1620,7 +1612,7 @@ var Cylinder = {
 
     // no tangents? top circle is inside bottom circle
     if (!tangents) {
-      a1 = 0;
+      a1 = 1.5*PI;
       a2 = 1.5*PI;
     } else {
       a1 = atan2(tangents[0].y1-c.y, tangents[0].x1-c.x);
@@ -2063,7 +2055,7 @@ function fadeIn() {
       }
     }
 
-    Layers.render(true);
+    Layers.render();
 
     if (!isNeeded) {
       clearInterval(animTimer);
@@ -2089,13 +2081,9 @@ var Layers = {
     Buildings.context  = this.createContext();
   },
 
-  render: function(all) {
-    if (this.animFrame) {
-      win.cancelAnimationFrame(this.animFrame);
-    }
-
-    this.animFrame = win.requestAnimationFrame(function() {
-      if (all) {
+  render: function(quick) {
+    requestAnimFrame(function() {
+      if (!quick) {
         Shadows.render();
         Simplified.render();
       }
@@ -2230,31 +2218,30 @@ function setZoom(z) {
 
 function onResize(e) {
   setSize(e.width, e.height);
-  Layers.render(true);
+  Layers.render();
   Data.update();
 }
 
 function onMoveEnd(e) {
-  Layers.render(true);
-  Data.update(); // => fadeIn() => Layers.render(true)
+  Layers.render();
+  Data.update(); // => fadeIn() => Layers.render()
 }
 
 function onZoomStart() {
   isZooming = true;
 // effectively clears because of isZooming flag
 // TODO: introduce explicit clear()
-  Layers.render(true);
+  Layers.render();
 }
 
 function onZoomEnd(e) {
   isZooming = false;
   setZoom(e.zoom);
   Data.update(); // => fadeIn()
-  Layers.render(true);
+  Layers.render();
 }
 
 function onDeviceMotion(e) {
-return
   CAM_X -= dynPersp.x;
   CAM_Y -= dynPersp.y;
 
@@ -2264,29 +2251,40 @@ return
   CAM_Y += dynPersp.y;
 
   Layers.render();
-//	moveCam({ x:-e.x*CENTER_X/2, y:e.y*CENTER_Y/2 });
 }
 
 if (win.DeviceMotionEvent) {
+  var
+    lastMotion = {
+      time: new Date().getTime(),
+      x: 0,
+      y: 0
+    },
+    filteringFactor = 0.1;
+
 	win.addEventListener('devicemotion', function(e) {
-		var t;
+		var t, now = new Date().getTime();
+
+    if (now < lastMotion.time + 33) {
+      return;
+    }
+
 		if ((e = e.accelerationIncludingGravity || e.acceleration)) {
       switch (win.orientation) {
         case  -90: t = e.x; e.x =  e.y; e.y = -t; break;
         case   90: t = e.x; e.x = -e.y; e.y =  t; break;
         case -180: e.x *= -1; e.y *= -1; break;
       }
-      onDeviceMotion(e);
-		}
+
+      // http://stackoverflow.com/questions/6942626/accelerometer-low-pass-filtering
+      lastMotion.time = now;
+      lastMotion.x = -((e.x * filteringFactor) + (lastMotion.x * (1.0-filteringFactor)));
+      lastMotion.y = -((e.y * filteringFactor) + (lastMotion.y * (1.0-filteringFactor)));
+
+      onDeviceMotion(lastMotion);
+    }
   });
 }
-
-//win.addEventListener('mousemove', function(e) {
-//  onDeviceMotion({
-//    x: e.x/CENTER_X - 1,
-//    y: e.y/CENTER_Y - 1
-//  });
-//});
 
 
 //****** file: Leaflet.js ******
@@ -2442,7 +2440,7 @@ proto.setStyle = function(style) {
     Shadows.enabled = !!style.shadows;
   }
 
-  Layers.render(true);
+  Layers.render();
 
   return this;
 };
