@@ -1847,7 +1847,7 @@ var Buildings = {
 var Simplified = {
 
   maxZoom: MIN_ZOOM+2,
-  maxHeight: 2,
+  maxHeight: 5,
 
   isSimple: function(item) {
     return (ZOOM <= this.maxZoom && item.height+item.roofHeight < this.maxHeight);
@@ -2178,14 +2178,10 @@ function setOrigin(origin) {
   ORIGIN_Y = origin.y;
 }
 
-var dynPersp = { x:0, y:0 };
-
 function moveCam(offset) {
-//  CAM_X = CENTER_X + dynPersp.x + offset.x;
-//  CAM_Y = HEIGHT   + dynPersp.y + offset.y;
   CAM_X = CENTER_X + offset.x;
   CAM_Y = HEIGHT   + offset.y;
-  Layers.render();
+  Layers.render(true);
 }
 
 function setSize(size) {
@@ -2241,31 +2237,16 @@ function onZoomEnd(e) {
   Layers.render();
 }
 
-function onDeviceMotion(e) {
-  CAM_X -= dynPersp.x;
-  CAM_Y -= dynPersp.y;
-
-  dynPersp = { x:-e.x * 50, y:e.y * 50 };
-
-  CAM_X += dynPersp.x;
-  CAM_Y += dynPersp.y;
-
-  Layers.render();
-}
-
 if (win.DeviceMotionEvent) {
   var
-    lastMotion = {
-      time: new Date().getTime(),
-      x: 0,
-      y: 0
-    },
-    filteringFactor = 0.5;
+    devMotionTime = new Date().getTime(),
+    devMotionPos = { x:0, y:0 },
+    motionFilterFactor = 0.5;
 
 	win.addEventListener('devicemotion', function(e) {
 		var t, now = new Date().getTime();
 
-    if (now < lastMotion.time + 33) {
+    if (now < devMotionTime + 33) {
       return;
     }
 
@@ -2276,13 +2257,18 @@ if (win.DeviceMotionEvent) {
         case -180: e.x *= -1; e.y *= -1; break;
       }
 
-      lastMotion.time = now;
+      devMotionTime = now;
+      CAM_X -= devMotionPos.x;
+      CAM_Y -= devMotionPos.y;
 
       // http://stackoverflow.com/questions/6942626/accelerometer-low-pass-filtering
-      lastMotion.x = (e.x * filteringFactor) + (lastMotion.x * (1.0-filteringFactor));
-      lastMotion.y = (e.y * filteringFactor) + (lastMotion.y * (1.0-filteringFactor));
+      devMotionPos.x = (e.x * -50 * motionFilterFactor) + (devMotionPos.x * (1.0-motionFilterFactor));
+      devMotionPos.y = (e.y *  50 * motionFilterFactor) + (devMotionPos.y * (1.0-motionFilterFactor));
 
-      onDeviceMotion(lastMotion);
+      CAM_X += devMotionPos.x;
+      CAM_Y += devMotionPos.y;
+
+      Layers.render(true);
     }
   });
 }

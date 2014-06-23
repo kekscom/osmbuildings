@@ -1,7 +1,7 @@
 var Simplified = {
 
   maxZoom: MIN_ZOOM+2,
-  maxHeight: 2,
+  maxHeight: 5,
 
   isSimple: function(item) {
     return (ZOOM <= this.maxZoom && item.height+item.roofHeight < this.maxHeight);
