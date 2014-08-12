@@ -61,39 +61,3 @@ function onZoomEnd(e) {
   Data.update(); // => fadeIn()
   Layers.render();
 }
-
-if (win.DeviceMotionEvent) {
-  var
-    devMotionTime = new Date().getTime(),
-    devMotionPos = { x:0, y:0 },
-    motionFilterFactor = 0.5;
-
-	win.addEventListener('devicemotion', function(e) {
-		var t, now = new Date().getTime();
-
-    if (now < devMotionTime + 33) {
-      return;
-    }
-
-		if ((e = e.accelerationIncludingGravity || e.acceleration)) {
-      switch (win.orientation) {
-        case  -90: t = e.x; e.x =  e.y; e.y = -t; break;
-        case   90: t = e.x; e.x = -e.y; e.y =  t; break;
-        case -180: e.x *= -1; e.y *= -1; break;
-      }
-
-      devMotionTime = now;
-      CAM_X -= devMotionPos.x;
-      CAM_Y -= devMotionPos.y;
-
-      // http://stackoverflow.com/questions/6942626/accelerometer-low-pass-filtering
-      devMotionPos.x = (e.x * -50 * motionFilterFactor) + (devMotionPos.x * (1.0-motionFilterFactor));
-      devMotionPos.y = (e.y *  50 * motionFilterFactor) + (devMotionPos.y * (1.0-motionFilterFactor));
-
-      CAM_X += devMotionPos.x;
-      CAM_Y += devMotionPos.y;
-
-      Layers.render(true);
-    }
-  });
-}

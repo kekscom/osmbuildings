@@ -36,16 +36,10 @@ var Data = {
   },
 
   parse: function(data) {
-    if (!data) {
-      return [];
+    if (!data || data.type !== 'FeatureCollection') {
+      return;
     }
-    if (data.type === 'FeatureCollection') {
-      return importGeoJSON(data.features, this.each);
-    }
-    if (data.osm3s) { // OSM Overpass
-      return importOSM(data.elements, this.each);
-    }
-    return [];
+    return importGeoJSON(data.features, this.each);
   },
 
   resetItems: function() {
@@ -106,8 +100,8 @@ var Data = {
           wallColor = color.alpha(ZOOM_FACTOR);
           altColor  = ''+ wallColor.lightness(0.8);
           wallColor = ''+ wallColor;
-        }
       }
+    }
 
       roofColor = null;
       if (item.roofColor) {
@@ -149,7 +143,7 @@ var Data = {
   },
 
   load: function(url) {
-    this.url = url || OSM_XAPI_URL;
+    this.url = url;
     this.isStatic = !/(.+\{[nesw]\}){4,}/.test(this.url);
 
     if (this.isStatic) {

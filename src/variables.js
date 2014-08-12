@@ -1,7 +1,6 @@
-var VERSION      = /*<version=*/'0.1.9a'/*>*/,
+var
+  VERSION      = /*<version=*/'0.1.9a'/*>*/,
   ATTRIBUTION  = '&copy; <a href="http://osmbuildings.org">OSM Buildings</a>',
-  OSM_XAPI_URL = 'http://overpass-api.de/api/interpreter?data=[out:json];(way[%22building%22]({s},{w},{n},{e});node(w);way[%22building:part%22=%22yes%22]({s},{w},{n},{e});node(w);relation[%22building%22]({s},{w},{n},{e});way(r);node(w););out;',
-//OSM_XAPI_URL = 'http://overpass.osm.rambler.ru/cgi/interpreter?data=[out:json];(way[%22building%22]({s},{w},{n},{e});node(w);way[%22building:part%22=%22yes%22]({s},{w},{n},{e});node(w);relation[%22building%22]({s},{w},{n},{e});way(r);node(w););out;',
 
   PI         = Math.PI,
   HALF_PI    = PI/2,

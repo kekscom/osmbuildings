@@ -68,12 +68,13 @@ function xhr(url, param, callback) {
     if (!req.status || req.status < 200 || req.status > 299) {
       return;
     }
-    if (callback && req.responseText) {
-      callback(JSON.parse(req.responseText));
+    if (callback && req.response) {
+      callback(req.response);
     }
   };
 
   changeState(0);
+  req.responseType = 'json';
   req.open('GET', url);
   changeState(1);
   req.send(null);

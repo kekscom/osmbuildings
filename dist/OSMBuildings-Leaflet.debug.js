@@ -222,37 +222,42 @@ var parseColor = (function() {
   var proto = Color.prototype;
 
   proto.toString = function() {
+    var rgba = this.toRGBA();
+
+    rgba.r *= 255;
+    rgba.g *= 255;
+    rgba.b *= 255;
+
+    if (rgba.a === 1) {
+      return '#' + ((1 <<24) + (rgba.r <<16) + (rgba.g <<8) + rgba.b).toString(16).slice(1, 7);
+    }
+    return 'rgba(' + [Math.round(rgba.r), Math.round(rgba.g), Math.round(rgba.b), rgba.a.toFixed(2)].join(',') + ')';
+  };
+
+  proto.toRGBA = function() {
     var
       h = limit(this.H, 360),
       s = limit(this.S, 1),
       l = limit(this.L, 1),
-      a = limit(this.A, 1),
-      r, g, b;
+      rgba = { a:limit(this.A, 1) };
 
     // achromatic
     if (s === 0) {
-      r = l;
-      g = l;
-      b = l;
+      rgba.r = l;
+      rgba.g = l;
+      rgba.b = l;
     } else {
       var
         q = l < 0.5 ? l * (1+s) : l + s - l*s,
         p = 2 * l-q;
         h /= 360;
 
-      r = hue2rgb(p, q, h + 1/3);
-      g = hue2rgb(p, q, h);
-      b = hue2rgb(p, q, h - 1/3);
+      rgba.r = hue2rgb(p, q, h + 1/3);
+      rgba.g = hue2rgb(p, q, h);
+      rgba.b = hue2rgb(p, q, h - 1/3);
     }
 
-    r *= 255;
-    g *= 255;
-    b *= 255;
-
-    if (a === 1) {
-      return '#' + ((1 <<24) + (r <<16) + (g <<8) + b).toString(16).slice(1, 7);
-    }
-    return 'rgba(' + [Math.round(r), Math.round(g), Math.round(b), a.toFixed(2)].join(',') + ')';
+    return rgba;
   };
 
   proto.hue = function(h) {
@@ -287,13 +292,13 @@ var parseColor = (function() {
       r = parseInt(m[1], 16);
       g = parseInt(m[2], 16);
       b = parseInt(m[3], 16);
-    }
-
-    if ((m = str.match(/rgba?\((\d+)\D+(\d+)\D+(\d+)(\D+([\d.]+))?\)/))) {
+    } else if ((m = str.match(/rgba?\((\d+)\D+(\d+)\D+(\d+)(\D+([\d.]+))?\)/))) {
       r = parseInt(m[1], 10);
       g = parseInt(m[2], 10);
       b = parseInt(m[3], 10);
       a = m[4] ? parseFloat(m[5]) : 1;
+    } else {
+      return;
     }
 
     r /= 255;
@@ -650,41 +655,45 @@ var Import = {
 
 var importGeoJSON = (function() {
 
-  function getPolygons(geometry) {
+  function getGeometries(geometry) {
     var
-      i, il, j, jl,
-      polygon,
-      p, lat = 1, lon = 0, alt = 2,
-      outer = [], inner = [], height = 0,
-      res = [];
+      i, il, polygon,
+      geometries = [], sub;
 
     switch (geometry.type) {
       case 'GeometryCollection':
-        var sub;
+        geometries = [];
         for (i = 0, il = geometry.geometries.length; i < il; i++) {
-          if ((sub = getPolygons(geometry.geometries[i]))) {
-            res = res.concat(sub);
+          if ((sub = getGeometries(geometry.geometries[i]))) {
+            geometries.push.apply(geometries, sub);
           }
         }
-        return res;
+        return geometries;
+
+      case 'MultiPolygon':
+        geometries = [];
+        for (i = 0, il = geometry.geometries.length; i < il; i++) {
+          if ((sub = getGeometries({ type: 'Polygon', coordinates: geometry.coordinates[i] }))) {
+            geometries.push.apply(geometries, sub);
+          }
+        }
+        return geometries;
 
       case 'Polygon':
         polygon = geometry.coordinates;
       break;
 
-      case 'MultiPolygon':
-        polygon = geometry.coordinates[0];
-      break;
-
-      default: return res;
+      default: return [];
     }
+
+    var
+      j, jl,
+      p, lat = 1, lon = 0,
+      outer = [], inner = [];
 
     p = polygon[0];
     for (i = 0, il = p.length; i < il; i++) {
       outer.push(p[i][lat], p[i][lon]);
-      if (p[i][alt] !== undefined) {
-        height += p[i][alt];
-      }
     }
 
     for (i = 0, il = polygon.length-1; i < il; i++) {
@@ -698,8 +707,7 @@ var importGeoJSON = (function() {
 
     return [{
       outer: Import.makeWinding(outer, Import.clockwise),
-      inner: inner.length ? inner : null,
-      height: height / polygon[0].length
+      inner: inner.length ? inner : null
     }];
   }
 
@@ -718,7 +726,7 @@ var importGeoJSON = (function() {
       i, il, j, jl,
       res = [],
       feature,
-      polygons,
+      geometries,
       baseItem, item;
 
     for (i = 0, il = collection.length; i < il; i++) {
@@ -729,15 +737,15 @@ var importGeoJSON = (function() {
       }
 
       baseItem = Import.alignProperties(feature.properties);
-      polygons = getPolygons(feature.geometry);
+      geometries = getGeometries(feature.geometry);
 
-      for (j = 0, jl = polygons.length; j < jl; j++) {
+      for (j = 0, jl = geometries.length; j < jl; j++) {
         item = clone(baseItem);
-        item.footprint = polygons[j].outer;
+        item.footprint = geometries[j].outer;
         if (item.shape === 'cone' || item.shape === 'cylinder') {
           item.radius = Import.getRadius(item.footprint);
         }
-        item.holes = polygons[j].inner;
+        item.holes = geometries[j].inner;
         item.id    = feature.id || feature.properties.id || [item.footprint[0], item.footprint[1], item.height, item.minHeight].join(',');
         res.push(item); // TODO: clone base properties!
       }
@@ -748,196 +756,11 @@ var importGeoJSON = (function() {
 }());
 
 
-//****** file: OSMXAPI.js ******
-
-var importOSM = (function() {
-
-  function isBuilding(data) {
-    var tags = data.tags;
-    return (tags && !tags.landuse &&
-      (tags.building || tags['building:part']) && (!tags.layer || tags.layer >= 0));
-  }
-
-//  living:'bricks',
-//  nonliving:'tar_paper',
-//  worship:'copper'
-
-//  function getBuildingType(tags) {
-//    if (tags.amenity === 'place_of_worship') {
-//      return 'worship';
-//    }
-//
-//    var type = tags.building;
-//    if (type === 'yes' || type === 'roof') {
-//      type = tags['building:use'];
-//    }
-//    if (!type) {
-//      type = tags.amenity;
-//    }
-//
-//    switch (type) {
-//      case 'apartments':
-//      case 'house':
-//      case 'residential':
-//      case 'hut':
-//        return 'living';
-//      case 'church':
-//        return 'worship';
-//    }
-//
-//    return 'nonliving';
-//  }
-
-  function getRelationWays(members) {
-    var m, outer, inner = [];
-    for (var i = 0, il = members.length; i < il; i++) {
-      m = members[i];
-      if (m.type !== 'way' || !_ways[m.ref]) {
-        continue;
-      }
-      if (!m.role || m.role === 'outer') {
-        outer = _ways[m.ref];
-        continue;
-      }
-      if (m.role === 'inner' || m.role === 'enclave') {
-        inner.push(_ways[m.ref]);
-        continue;
-      }
-    }
-
-//  if (outer && outer.tags) {
-    if (outer) { // allows tags to be attached to relation - instead of outer way
-      return { outer:outer, inner:inner };
-    }
-  }
-
-  function getFootprint(points) {
-    if (!points) {
-      return;
-    }
-
-    var footprint = [], p;
-    for (var i = 0, il = points.length; i < il; i++) {
-      p = _nodes[ points[i] ];
-      footprint.push(p[0], p[1]);
-    }
-
-    // do not close polygon yet
-    if (footprint[footprint.length-2] !== footprint[0] && footprint[footprint.length-1] !== footprint[1]) {
-      footprint.push(footprint[0], footprint[1]);
-    }
-
-    // can't span a polygon with just 2 points (+ start & end)
-    if (footprint.length < 8) {
-      return;
-    }
-
-    return footprint;
-  }
-
-  function mergeItems(dst, src) {
-    for (var p in src) {
-      if (src.hasOwnProperty(p)) {
-        dst[p] = src[p];
-      }
-    }
-    return dst;
-  }
-
-  function filterItem(item, footprint) {
-    var res = Import.alignProperties(item.tags);
-
-    if (item.id) {
-      res.id = item.id;
-    }
-
-    if (footprint) {
-      res.footprint = Import.makeWinding(footprint, Import.clockwise);
-    }
-
-    if (res.shape === 'cone' || res.shape === 'cylinder') {
-      res.radius = Import.getRadius(res.footprint);
-    }
-
-    return res;
-  }
-
-  function processNode(node) {
-    _nodes[node.id] = [node.lat, node.lon];
-  }
-
-  function processWay(way) {
-    if (isBuilding(way)) {
-      var item, footprint;
-      if ((footprint = getFootprint(way.nodes)) && _callback(way) !== false) {
-        item = filterItem(way, footprint);
-        _res.push(item);
-      }
-      return;
-    }
-
-    var tags = way.tags;
-    if (!tags || (!tags.highway && !tags.railway && !tags.landuse)) { // TODO: add more filters
-      _ways[way.id] = way;
-    }
-  }
-
-  function processRelation(relation) {
-    var relationWays, outerWay, holes = [],
-      item, relItem, outerFootprint, innerFootprint;
-    if (!isBuilding(relation) ||
-      (relation.tags.type !== 'multipolygon' && relation.tags.type !== 'building') ||
-      _callback(relation) === false) {
-      return;
-    }
-
-    if ((relationWays = getRelationWays(relation.members))) {
-      relItem = filterItem(relation);
-      if ((outerWay = relationWays.outer)) {
-        if ((outerFootprint = getFootprint(outerWay.nodes)) && _callback(outerWay) !== false) {
-          item = filterItem(outerWay, outerFootprint);
-          for (var i = 0, il = relationWays.inner.length; i < il; i++) {
-            if ((innerFootprint = getFootprint(relationWays.inner[i].nodes))) {
-              holes.push(Import.makeWinding(innerFootprint, Import.counterClockwise));
-            }
-          }
-          if (holes.length) {
-            item.holes = holes;
-          }
-          _res.push(mergeItems(item, relItem));
-        }
-      }
-    }
-  }
-
-  var _nodes, _ways, _res, _callback;
-
-  return function(data, callback) {
-    _nodes = {};
-    _ways = {};
-    _res = [];
-    _callback = callback;
-
-    var item;
-    for (var i = 0, il = data.length; i < il; i++) {
-      item = data[i];
-      switch(item.type ) {
-        case 'node':     processNode(item);     break;
-        case 'way':      processWay(item);      break;
-        case 'relation': processRelation(item); break;
-      }
-    }
-    return _res;
-  };
-})();
-
-
 //****** file: variables.js ******
 
-var VERSION      = '0.1.9a',
+var
+  VERSION      = '0.1.9a',
   ATTRIBUTION  = '&copy; <a href="http://osmbuildings.org">OSM Buildings</a>',
-  OSM_XAPI_URL = 'http://overpass-api.de/api/interpreter?data=[out:json];(way[%22building%22]({s},{w},{n},{e});node(w);way[%22building:part%22=%22yes%22]({s},{w},{n},{e});node(w);relation[%22building%22]({s},{w},{n},{e});way(r);node(w););out;',
-//OSM_XAPI_URL = 'http://overpass.osm.rambler.ru/cgi/interpreter?data=[out:json];(way[%22building%22]({s},{w},{n},{e});node(w);way[%22building:part%22=%22yes%22]({s},{w},{n},{e});node(w);relation[%22building%22]({s},{w},{n},{e});way(r);node(w););out;',
 
   PI         = Math.PI,
   HALF_PI    = PI/2,
@@ -1140,12 +963,13 @@ function xhr(url, param, callback) {
     if (!req.status || req.status < 200 || req.status > 299) {
       return;
     }
-    if (callback && req.responseText) {
-      callback(JSON.parse(req.responseText));
+    if (callback && req.response) {
+      callback(req.response);
     }
   };
 
   changeState(0);
+  req.responseType = 'json';
   req.open('GET', url);
   changeState(1);
   req.send(null);
@@ -1235,16 +1059,10 @@ var Data = {
   },
 
   parse: function(data) {
-    if (!data) {
-      return [];
+    if (!data || data.type !== 'FeatureCollection') {
+      return;
     }
-    if (data.type === 'FeatureCollection') {
-      return importGeoJSON(data.features, this.each);
-    }
-    if (data.osm3s) { // OSM Overpass
-      return importOSM(data.elements, this.each);
-    }
-    return [];
+    return importGeoJSON(data.features, this.each);
   },
 
   resetItems: function() {
@@ -1305,8 +1123,8 @@ var Data = {
           wallColor = color.alpha(ZOOM_FACTOR);
           altColor  = ''+ wallColor.lightness(0.8);
           wallColor = ''+ wallColor;
-        }
       }
+    }
 
       roofColor = null;
       if (item.roofColor) {
@@ -1348,7 +1166,7 @@ var Data = {
   },
 
   load: function(url) {
-    this.url = url || OSM_XAPI_URL;
+    this.url = url;
     this.isStatic = !/(.+\{[nesw]\}){4,}/.test(this.url);
 
     if (this.isStatic) {
@@ -2235,42 +2053,6 @@ function onZoomEnd(e) {
   setZoom(e.zoom);
   Data.update(); // => fadeIn()
   Layers.render();
-}
-
-if (win.DeviceMotionEvent) {
-  var
-    devMotionTime = new Date().getTime(),
-    devMotionPos = { x:0, y:0 },
-    motionFilterFactor = 0.5;
-
-	win.addEventListener('devicemotion', function(e) {
-		var t, now = new Date().getTime();
-
-    if (now < devMotionTime + 33) {
-      return;
-    }
-
-		if ((e = e.accelerationIncludingGravity || e.acceleration)) {
-      switch (win.orientation) {
-        case  -90: t = e.x; e.x =  e.y; e.y = -t; break;
-        case   90: t = e.x; e.x = -e.y; e.y =  t; break;
-        case -180: e.x *= -1; e.y *= -1; break;
-      }
-
-      devMotionTime = now;
-      CAM_X -= devMotionPos.x;
-      CAM_Y -= devMotionPos.y;
-
-      // http://stackoverflow.com/questions/6942626/accelerometer-low-pass-filtering
-      devMotionPos.x = (e.x * -50 * motionFilterFactor) + (devMotionPos.x * (1.0-motionFilterFactor));
-      devMotionPos.y = (e.y *  50 * motionFilterFactor) + (devMotionPos.y * (1.0-motionFilterFactor));
-
-      CAM_X += devMotionPos.x;
-      CAM_Y += devMotionPos.y;
-
-      Layers.render(true);
-    }
-  });
 }
 
 

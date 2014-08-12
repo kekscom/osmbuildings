@@ -17,7 +17,6 @@ exports.srcFiles = [
   srcPath + '/lib/SunPosition.js',
   srcPath + '/Import.js',
   srcPath + '/import/GeoJSON.js',
-  srcPath + '/import/OSMXAPI.js',
   srcPath + '/variables.js',
   srcPath + '/geometry.js',
   srcPath + '/functions.js',

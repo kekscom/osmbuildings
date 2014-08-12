@@ -18,6 +18,7 @@ html, body {
 </style>
 <link rel="stylesheet" href="leaflet-0.7/leaflet.css">
 <script src="leaflet-0.7/leaflet-src.js"></script>
+<script src="State.js"></script>
 <script src="loader.js"></script>
 </head>
 
@@ -25,6 +26,25 @@ html, body {
 <div id="map"></div>
 
 <script>
+function restoreMapState() {
+  var state = State.load();
+  if (state.lat !== undefined && state.lon !== undefined) {
+    map.setView([parseFloat(state.lat), parseFloat(state.lon)]);
+  }
+  if (state.zoom !== undefined) {
+    map.setZoom(state.zoom);
+  }
+}
+
+function saveMapState() {
+  var center = map.getCenter();
+  State.save({
+    lat: center.lat.toFixed(5),
+    lon: center.lng.toFixed(5),
+    zoom: map.getZoom()
+  });
+};
+
 var map = new L.Map('map').setView([52.52179, 13.39503], 18); // Berlin Bodemuseum
 //var map = new L.Map('map').setView([52.50557, 13.33451], 17); // Berlin Ku'Damm
 //var map = new L.Map('map').setView([52.52079, 13.40882], 16); // Berlin Fernsehturm
@@ -32,10 +52,19 @@ var map = new L.Map('map').setView([52.52179, 13.39503], 18); // Berlin Bodemuse
 //var map = new L.Map('map').setView([37.78923, -122.40597], 16); // SF
 //var map = new L.Map('map').setView([48.86083, 2.33565], 18); // Louvre, Paris
 
-  new L.TileLayer('http://otile1.mqcdn.com/tiles/1.0.0/map/{z}/{x}/{y}.jpg', { maxNativeZoom: 19, maxZoom: 21 }).addTo(map);
+map.on('moveend zoomend', function() {
+  saveMapState()
+});
+
+restoreMapState();
+
+new L.TileLayer('http://otile1.mqcdn.com/tiles/1.0.0/map/{z}/{x}/{y}.jpg', { maxNativeZoom: 19, maxZoom: 21 }).addTo(map);
 //new L.TileLayer('http://{s}.tiles.mapbox.com/v3/osmbuildings.gm744p3p/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
 
-  var osmb = new OSMBuildings(map).setDate(new Date(2014, 5, 15, 17, 30)).loadData();
+  var osmb = new OSMBuildings(map).setDate(new Date(2014, 5, 15, 17, 30))
+//  .loadData();
+    .loadData('http://osmbuildings.org/proxy/?bbox={n},{e},{s},{w}');
+
 //INSERT INTO buildings (the_geom, height) SELECT the_geom, CAST(REPLACE(height, 'm', '') AS int) FROM map_polygon WHERE building IS NOT NULL;
 //var osmb = new OSMBuildings(map).loadData('http://osmbuildings.cartodb.com/api/v2/sql?q=' + ('SELECT cartodb_id AS id, height, ST_AsText(the_geom) AS the_geom FROM buildings2 WHERE the_geom %26%26 ST_SetSRID(ST_MakeBox2D(ST_Point({w},{s}), ST_Point({e},{n})), 4326)') + '&format=geojson');
 
@@ -50,7 +79,7 @@ var map = new L.Map('map').setView([52.52179, 13.39503], 18); // Berlin Bodemuse
 
 //http://pluto.cartodb.com/api/v2/sql?format=geojson&q=SELECT the_geom, numfloors*3 AS height FROM mn_mappluto_13v1 WHERE the_geom %26%26 ST_SetSRID(ST_MakeBox2D(ST_Point({w},{s}), ST_Point({e},{n})), 4326) ORDER BY ycoord DESC limit 10
 
-  L.control.layers({}, { Buildings:osmb }).addTo(map);
-  </script>
+L.control.layers({}, { Buildings:osmb }).addTo(map);
+</script>
 </body>
 </html>
