@@ -37,7 +37,7 @@ var Data = {
 
   parse: function(data) {
     if (!data || data.type !== 'FeatureCollection') {
-      return;
+      return [];
     }
     return importGeoJSON(data.features, this.each);
   },
