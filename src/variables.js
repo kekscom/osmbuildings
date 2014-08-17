@@ -2,6 +2,8 @@ var
   VERSION      = /*<version=*/'0.1.9a'/*>*/,
   ATTRIBUTION  = '&copy; <a href="http://osmbuildings.org">OSM Buildings</a>',
 
+  DATA_URL = 'http://osmbuildings.org/proxy/?bbox={n},{e},{s},{w}',
+
   PI         = Math.PI,
   HALF_PI    = PI/2,
   QUARTER_PI = PI/4,

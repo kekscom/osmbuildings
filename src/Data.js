@@ -143,7 +143,7 @@ var Data = {
   },
 
   load: function(url) {
-    this.url = url;
+    this.url = url || DATA_URL;
     this.isStatic = !/(.+\{[nesw]\}){4,}/.test(this.url);
 
     if (this.isStatic) {
