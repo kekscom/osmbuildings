@@ -44,8 +44,9 @@ if (!win.console) {
 }
 
 var IS_IOS = /iP(ad|hone|od)/g.test(navigator.userAgent);
+var IS_MSIE = !!~navigator.userAgent.indexOf('Trident');
 
-var requestAnimFrame = (win.requestAnimationFrame && !IS_IOS) ?
+var requestAnimFrame = (win.requestAnimationFrame && !IS_IOS && !IS_MSIE) ?
   win.requestAnimationFrame : function(callback) {
     callback();
   };
@@ -407,9 +408,6 @@ var getSunPosition = (function() {
 
 var Import = {
 
-  YARD_TO_METER: 0.9144,
-  FOOT_TO_METER: 0.3048,
-  INCH_TO_METER: 0.0254,
   METERS_PER_LEVEL: 3,
 
   clockwise: 'CW',
@@ -441,29 +439,6 @@ var Import = {
       revPoints.push(points[i], points[i+1]);
     }
     return revPoints;
-  },
-
-  toMeters: function(str) {
-    str = '' + str;
-    var value = parseFloat(str);
-    if (value === str) {
-      return value <<0;
-    }
-    if (~str.indexOf('m')) {
-      return value <<0;
-    }
-    if (~str.indexOf('yd')) {
-      return value*this.YARD_TO_METER <<0;
-    }
-    if (~str.indexOf('ft')) {
-      return value*this.FOOT_TO_METER <<0;
-    }
-    if (~str.indexOf('\'')) {
-      var parts = str.split('\'');
-      var res = parts[0]*this.FOOT_TO_METER + parts[1]*this.INCH_TO_METER;
-      return res <<0;
-    }
-    return value <<0;
   },
 
   getRadius: function(points) {
@@ -538,95 +513,22 @@ var Import = {
     return this.materialColors[this.baseMaterials[str] || str] || null;
   },
 
-  // aligns and cleans up properties in place
   alignProperties: function(prop) {
     var item = {};
 
     prop = prop || {};
 
-    item.height = this.toMeters(prop.height);
-    if (!item.height) {
-      if (prop['building:height']) {
-        item.height = this.toMeters(prop['building:height']);
-      }
-      if (prop.levels) {
-        item.height = prop.levels*this.METERS_PER_LEVEL <<0;
-      }
-      if (prop['building:levels']) {
-        item.height = prop['building:levels']*this.METERS_PER_LEVEL <<0;
-      }
-      if (!item.height) {
-        item.height = DEFAULT_HEIGHT;
-      }
-    }
+    item.height    = prop.height    || (prop.levels   ? prop.levels  *this.METERS_PER_LEVEL : DEFAULT_HEIGHT);
+    item.minHeight = prop.minHeight || (prop.minLevel ? prop.minLevel*this.METERS_PER_LEVEL : 0);
 
-    item.minHeight = this.toMeters(prop.min_height);
-    if (!item.min_height) {
-      if (prop['building:min_height']) {
-        item.minHeight = this.toMeters(prop['building:min_height']);
-      }
-      if (prop.min_level) {
-        item.minHeight = prop.min_level*this.METERS_PER_LEVEL <<0;
-      }
-      if (prop['building:min_level']) {
-        item.minHeight = prop['building:min_level']*this.METERS_PER_LEVEL <<0;
-      }
-    }
+    item.color     = prop.material     ? this.getMaterialColor(prop.material)     : prop.color;
+    item.roofColor = prop.roofMaterial ? this.getMaterialColor(prop.roofMaterial) : prop.roofColor;
 
-    item.wallColor = prop.wallColor || prop.color;
-    if (!item.wallColor) {
-      if (prop.color) {
-        item.wallColor = prop.color;
-      }
-      if (prop['building:material']) {
-        item.wallColor = this.getMaterialColor(prop['building:material']);
-      }
-      if (prop['building:facade:material']) {
-        item.wallColor = this.getMaterialColor(prop['building:facade:material']);
-      }
-      if (prop['building:cladding']) {
-        item.wallColor = this.getMaterialColor(prop['building:cladding']);
-      }
-      // wall color
-      if (prop['building:color']) {
-        item.wallColor = prop['building:color'];
-      }
-      if (prop['building:colour']) {
-        item.wallColor = prop['building:colour'];
-      }
-    }
-
-    item.roofColor = prop.roofColor;
-    if (!item.roofColor) {
-      if (prop['roof:material']) {
-        item.roofColor = this.getMaterialColor(prop['roof:material']);
-      }
-      if (prop['building:roof:material']) {
-        item.roofColor = this.getMaterialColor(prop['building:roof:material']);
-      }
-      // roof color
-      if (prop['roof:color']) {
-        item.roofColor = prop['roof:color'];
-      }
-      if (prop['roof:colour']) {
-        item.roofColor = prop['roof:colour'];
-      }
-      if (prop['building:roof:color']) {
-        item.roofColor = prop['building:roof:color'];
-      }
-      if (prop['building:roof:colour']) {
-        item.roofColor = prop['building:roof:colour'];
-      }
-    }
-
-    switch (prop['building:shape']) {
+    switch (prop.shape) {
       case 'cone':
       case 'cylinder':
-        item.shape = prop['building:shape'];
-      break;
-
       case 'dome':
-        item.shape = 'dome';
+        item.shape = prop.shape;
       break;
 
       case 'sphere':
@@ -634,10 +536,10 @@ var Import = {
       break;
     }
 
-    if ((prop['roof:shape'] === 'cone' || prop['roof:shape'] === 'dome') && prop['roof:height']) {
+    if ((prop.roofShape === 'cone' || prop.roofShape === 'dome') && prop.roofHeight) {
       item.shape = 'cylinder';
-      item.roofShape = prop['roof:shape'];
-      item.roofHeight = this.toMeters(prop['roof:height']);
+      item.roofShape = prop.roofShape;
+      item.roofHeight = prop.roofHeight;
     }
 
     if (item.roofHeight) {
@@ -761,6 +663,8 @@ var importGeoJSON = (function() {
 var
   VERSION      = '0.1.9a',
   ATTRIBUTION  = '&copy; <a href="http://osmbuildings.org">OSM Buildings</a>',
+
+  DATA_URL = 'http://osmbuildings.org/proxy/?bbox={n},{e},{s},{w}',
 
   PI         = Math.PI,
   HALF_PI    = PI/2,
@@ -923,38 +827,7 @@ function xhr(url, param, callback) {
     return param[key] || tag;
   });
 
-  var req = 'XDomainRequest' in win ? new XDomainRequest() : new XMLHttpRequest();
-
-  function changeState(state) {
-    if ('XDomainRequest' in win && state !== req.readyState) {
-      req.readyState = state;
-      if (req.onreadystatechange) {
-        req.onreadystatechange();
-      }
-    }
-  }
-
-  req.onerror = function() {
-    req.status = 500;
-    req.statusText = 'Error';
-    changeState(4);
-  };
-
-  req.ontimeout = function() {
-    req.status = 408;
-    req.statusText = 'Timeout';
-    changeState(4);
-  };
-
-  req.onprogress = function() {
-    changeState(3);
-  };
-
-  req.onload = function() {
-    req.status = 200;
-    req.statusText = 'Ok';
-    changeState(4);
-  };
+  var req = new XMLHttpRequest();
 
   req.onreadystatechange = function() {
     if (req.readyState !== 4) {
@@ -963,17 +836,13 @@ function xhr(url, param, callback) {
     if (!req.status || req.status < 200 || req.status > 299) {
       return;
     }
-    if (callback && req.response) {
-      callback(req.response);
+    if (callback && req.responseText) {
+      callback(JSON.parse(req.responseText));
     }
   };
 
-  changeState(0);
-  req.responseType = 'json';
   req.open('GET', url);
-  changeState(1);
   req.send(null);
-  changeState(2);
 
   return req;
 }
@@ -1166,7 +1035,7 @@ var Data = {
   },
 
   load: function(url) {
-    this.url = url;
+    this.url = url || DATA_URL;
     this.isStatic = !/(.+\{[nesw]\}){4,}/.test(this.url);
 
     if (this.isStatic) {

@@ -30,8 +30,9 @@ if (!win.console) {
 }
 
 var IS_IOS = /iP(ad|hone|od)/g.test(navigator.userAgent);
+var IS_MSIE = !!~navigator.userAgent.indexOf('Trident');
 
-var requestAnimFrame = (win.requestAnimationFrame && !IS_IOS) ?
+var requestAnimFrame = (win.requestAnimationFrame && !IS_IOS && !IS_MSIE) ?
   win.requestAnimationFrame : function(callback) {
     callback();
   };
