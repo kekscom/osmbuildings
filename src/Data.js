@@ -29,17 +29,10 @@ var Data = {
   createClosure: function(cacheKey) {
     var self = this;
     return function(data) {
-      var parsedData = self.parse(data);
+      var parsedData = GeoJSON.read(data);
       Cache.add(parsedData, cacheKey);
       self.addRenderItems(parsedData, true);
     };
-  },
-
-  parse: function(data) {
-    if (!data || data.type !== 'FeatureCollection') {
-      return [];
-    }
-    return importGeoJSON(data.features, this.each);
   },
 
   resetItems: function() {

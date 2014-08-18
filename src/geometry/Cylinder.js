@@ -4,14 +4,14 @@ var Cylinder = {
     var
       c = { x:center.x-ORIGIN_X, y:center.y-ORIGIN_Y },
       scale = CAM_Z / (CAM_Z-height),
+      minScale = CAM_Z / (CAM_Z-minHeight),
       apex = Buildings.project(c, scale),
       a1, a2;
 
     topRadius *= scale;
 
     if (minHeight) {
-      scale = CAM_Z / (CAM_Z-minHeight);
-      c = Buildings.project(c, scale);
+      c = Buildings.project(c, minScale);
       radius = radius*scale;
     }
 
@@ -45,14 +45,7 @@ var Cylinder = {
     this._circle(context, apex, topRadius);
   },
 
-  _circle: function(context, center, radius) {
-    context.beginPath();
-    context.arc(center.x, center.y, radius, 0, PI*2);
-    context.stroke();
-    context.fill();
-  },
-
-  circle: function(context, center, radius) {
+  simplified: function(context, center, radius) {
     this._circle(context, { x:center.x-ORIGIN_X, y:center.y-ORIGIN_Y }, radius);
   },
 
@@ -82,13 +75,57 @@ var Cylinder = {
     }
   },
 
-  mask: function(context, center, radius) {
+  shadowMask: function(context, center, radius) {
     var c = { x:center.x-ORIGIN_X, y:center.y-ORIGIN_Y };
     context.moveTo(c.x+radius, c.y);
     context.arc(c.x, c.y, radius, 0, PI*2);
   },
 
-  // http://en.wikibooks.org/wiki/Algorithm_Implementation/Geometry/Tangents_between_two_circles
+  hitArea: function(context, center, radius, topRadius, height, minHeight, color) {
+    var
+      c = { x:center.x-ORIGIN_X, y:center.y-ORIGIN_Y },
+      scale = CAM_Z / (CAM_Z-height),
+      minScale = CAM_Z / (CAM_Z-minHeight),
+      apex = Buildings.project(c, scale),
+      p1, p2;
+
+    topRadius *= scale;
+
+    if (minHeight) {
+      c = Buildings.project(c, minScale);
+      radius = radius*scale;
+    }
+
+    // common tangents for ground and roof circle
+    var tangents = this._tangents(c, radius, apex, topRadius);
+
+    context.fillStyle = color;
+    context.beginPath();
+
+    // TODO: no tangents? roof overlaps everything near cam position
+    if (tangents) {
+      p1 = atan2(tangents[0].y1-c.y, tangents[0].x1-c.x);
+      p2 = atan2(tangents[1].y1-c.y, tangents[1].x1-c.x);
+      context.moveTo(tangents[1].x2, tangents[1].y2);
+      context.arc(apex.x, apex.y, topRadius, p2, p1);
+      context.arc(c.x, c.y, radius, p1, p2);
+    } else {
+      context.moveTo(c.x+radius, c.y);
+      context.arc(c.x, c.y, radius, 0, 2*PI);
+    }
+
+    context.closePath();
+    context.fill();
+  },
+
+  _circle: function(context, center, radius) {
+    context.beginPath();
+    context.arc(center.x, center.y, radius, 0, PI*2);
+    context.stroke();
+    context.fill();
+  },
+
+    // http://en.wikibooks.org/wiki/Algorithm_Implementation/Geometry/Tangents_between_two_circles
   _tangents: function(c1, r1, c2, r2) {
     var
       dx = c1.x-c2.x,

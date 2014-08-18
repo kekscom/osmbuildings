@@ -35,6 +35,10 @@ proto.setMap = function(map) {
   setZoom(map.zoom);
   this.setOrigin();
 
+  map.events.register('click', map, function(e) {
+    emit('click', Hit.getIdFromXY(e.xy.x, e.xy.y));
+  });
+
   Data.update();
 };
 

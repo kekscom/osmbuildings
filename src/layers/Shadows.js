@@ -121,10 +121,10 @@ var Shadows = {
         case 'cylinder':
         case 'cone':
         case 'dome':
-          Cylinder.mask(context, item.center, item.radius);
+          Cylinder.shadowMask(context, item.center, item.radius);
         break;
         default:
-          Block.mask(context, footprint, item.holes);
+          Block.shadowMask(context, footprint, item.holes);
       }
     }
 

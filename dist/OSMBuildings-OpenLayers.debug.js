@@ -404,6 +404,29 @@ var getSunPosition = (function() {
 }());
 
 
+//****** file: Events.js ******
+
+
+var eventListeners = {};
+
+function addListener(type, listener, scope) {
+  var listeners = eventListeners[type] || (eventListeners[type] = []);
+  listeners.push(function(payload) {
+    return listener.call(scope, payload);
+  });
+}
+
+function emit(type, payload) {
+  if (!eventListeners[type]) {
+    return;
+  }
+  var listeners = eventListeners[type];
+  for (var i = 0, il = listeners.length; i < il; i++) {
+    listeners[i](payload);
+  }
+}
+
+
 //****** file: Import.js ******
 
 var Import = {
@@ -555,7 +578,7 @@ var Import = {
 
 //****** file: GeoJSON.js ******
 
-var importGeoJSON = (function() {
+var GeoJSON = (function() {
 
   function getGeometries(geometry) {
     var
@@ -623,37 +646,44 @@ var importGeoJSON = (function() {
     return res;
   }
 
-  return function(collection, callback) {
-    var
-      i, il, j, jl,
-      res = [],
-      feature,
-      geometries,
-      baseItem, item;
-
-    for (i = 0, il = collection.length; i < il; i++) {
-      feature = collection[i];
-
-      if (feature.type !== 'Feature' || callback(feature) === false) {
-        continue;
+  return {
+    read: function(geojson) {
+      if (!geojson || geojson.type !== 'FeatureCollection') {
+        return [];
       }
 
-      baseItem = Import.alignProperties(feature.properties);
-      geometries = getGeometries(feature.geometry);
+      var
+        collection = geojson.features,
+        i, il, j, jl,
+        res = [],
+        feature,
+        geometries,
+        baseItem, item;
 
-      for (j = 0, jl = geometries.length; j < jl; j++) {
-        item = clone(baseItem);
-        item.footprint = geometries[j].outer;
-        if (item.shape === 'cone' || item.shape === 'cylinder') {
-          item.radius = Import.getRadius(item.footprint);
+      for (i = 0, il = collection.length; i < il; i++) {
+        feature = collection[i];
+
+        if (feature.type !== 'Feature' || emit('eachfeature', feature) === false) {
+          continue;
         }
-        item.holes = geometries[j].inner;
-        item.id    = feature.id || feature.properties.id || [item.footprint[0], item.footprint[1], item.height, item.minHeight].join(',');
-        res.push(item); // TODO: clone base properties!
-      }
-    }
 
-    return res;
+        baseItem = Import.alignProperties(feature.properties);
+        geometries = getGeometries(feature.geometry);
+
+        for (j = 0, jl = geometries.length; j < jl; j++) {
+          item = clone(baseItem);
+          item.footprint = geometries[j].outer;
+          if (item.shape === 'cone' || item.shape === 'cylinder') {
+            item.radius = Import.getRadius(item.footprint);
+          }
+          item.holes = geometries[j].inner;
+          item.id    = feature.id || feature.properties.id || [item.footprint[0], item.footprint[1], item.height, item.minHeight].join(',');
+          res.push(item); // TODO: clone base properties!
+        }
+      }
+
+      return res;
+    }
   };
 }());
 
@@ -921,17 +951,10 @@ var Data = {
   createClosure: function(cacheKey) {
     var self = this;
     return function(data) {
-      var parsedData = self.parse(data);
+      var parsedData = GeoJSON.read(data);
       Cache.add(parsedData, cacheKey);
       self.addRenderItems(parsedData, true);
     };
-  },
-
-  parse: function(data) {
-    if (!data || data.type !== 'FeatureCollection') {
-      return [];
-    }
-    return importGeoJSON(data.features, this.each);
   },
 
   resetItems: function() {
@@ -1151,7 +1174,6 @@ var Block = {
       b.x = polygon[i+2]-ORIGIN_X;
       b.y = polygon[i+3]-ORIGIN_Y;
 
-      // project 3d to 2d on extruded footprint
       _a = Buildings.project(a, scale);
       _b = Buildings.project(b, scale);
 
@@ -1194,7 +1216,7 @@ var Block = {
     }
   },
 
-  polygon: function(context, polygon, innerPolygons) {
+  simplified: function(context, polygon, innerPolygons) {
     context.beginPath();
     this.ring(context, polygon);
     if (innerPolygons) {
@@ -1264,14 +1286,67 @@ var Block = {
     }
   },
 
-  mask: function(context, polygon, innerPolygons) {
+  shadowMask: function(context, polygon, innerPolygons) {
     this.ring(context, polygon);
     if (innerPolygons) {
       for (var i = 0, il = innerPolygons.length; i < il; i++) {
         this.ring(context, innerPolygons[i]);
       }
     }
+  },
+
+  hitArea: function(context, polygon, innerPolygons, height, minHeight, color) {
+    var
+      mode = null,
+      a = { x:0, y:0 },
+      b = { x:0, y:0 },
+      scale = CAM_Z / (CAM_Z-height),
+      minScale = CAM_Z / (CAM_Z-minHeight),
+      _a, _b;
+
+    context.fillStyle = color;
+    context.beginPath();
+
+    for (var i = 0, il = polygon.length-3; i < il; i += 2) {
+      a.x = polygon[i  ]-ORIGIN_X;
+      a.y = polygon[i+1]-ORIGIN_Y;
+      b.x = polygon[i+2]-ORIGIN_X;
+      b.y = polygon[i+3]-ORIGIN_Y;
+
+      _a = Buildings.project(a, scale);
+      _b = Buildings.project(b, scale);
+
+      if (minHeight) {
+        a = Buildings.project(a, minScale);
+        b = Buildings.project(b, minScale);
+      }
+
+      // mode 0: floor edges, mode 1: roof edges
+      if ((b.x-a.x) * (_a.y-a.y) > (_a.x-a.x) * (b.y-a.y)) {
+        if (mode === 1) { // mode is initially undefined
+          context.lineTo(a.x, a.y);
+        }
+        mode = 0;
+        if (!i) {
+          context.moveTo(a.x, a.y);
+        }
+        context.lineTo(b.x, b.y);
+      } else {
+        if (mode === 0) { // mode is initially undefined
+          context.lineTo(_a.x, _a.y);
+        }
+        mode = 1;
+        if (!i) {
+          context.moveTo(_a.x, _a.y);
+        }
+        context.lineTo(_b.x, _b.y);
+      }
+    }
+
+    context.closePath();
+    context.fill();
   }
+
 };
 
 
@@ -1283,14 +1358,14 @@ var Cylinder = {
     var
       c = { x:center.x-ORIGIN_X, y:center.y-ORIGIN_Y },
       scale = CAM_Z / (CAM_Z-height),
+      minScale = CAM_Z / (CAM_Z-minHeight),
       apex = Buildings.project(c, scale),
       a1, a2;
 
     topRadius *= scale;
 
     if (minHeight) {
-      scale = CAM_Z / (CAM_Z-minHeight);
-      c = Buildings.project(c, scale);
+      c = Buildings.project(c, minScale);
       radius = radius*scale;
     }
 
@@ -1324,14 +1399,7 @@ var Cylinder = {
     this._circle(context, apex, topRadius);
   },
 
-  _circle: function(context, center, radius) {
-    context.beginPath();
-    context.arc(center.x, center.y, radius, 0, PI*2);
-    context.stroke();
-    context.fill();
-  },
-
-  circle: function(context, center, radius) {
+  simplified: function(context, center, radius) {
     this._circle(context, { x:center.x-ORIGIN_X, y:center.y-ORIGIN_Y }, radius);
   },
 
@@ -1361,13 +1429,57 @@ var Cylinder = {
     }
   },
 
-  mask: function(context, center, radius) {
+  shadowMask: function(context, center, radius) {
     var c = { x:center.x-ORIGIN_X, y:center.y-ORIGIN_Y };
     context.moveTo(c.x+radius, c.y);
     context.arc(c.x, c.y, radius, 0, PI*2);
   },
 
-  // http://en.wikibooks.org/wiki/Algorithm_Implementation/Geometry/Tangents_between_two_circles
+  hitArea: function(context, center, radius, topRadius, height, minHeight, color) {
+    var
+      c = { x:center.x-ORIGIN_X, y:center.y-ORIGIN_Y },
+      scale = CAM_Z / (CAM_Z-height),
+      minScale = CAM_Z / (CAM_Z-minHeight),
+      apex = Buildings.project(c, scale),
+      p1, p2;
+
+    topRadius *= scale;
+
+    if (minHeight) {
+      c = Buildings.project(c, minScale);
+      radius = radius*scale;
+    }
+
+    // common tangents for ground and roof circle
+    var tangents = this._tangents(c, radius, apex, topRadius);
+
+    context.fillStyle = color;
+    context.beginPath();
+
+    // TODO: no tangents? roof overlaps everything near cam position
+    if (tangents) {
+      p1 = atan2(tangents[0].y1-c.y, tangents[0].x1-c.x);
+      p2 = atan2(tangents[1].y1-c.y, tangents[1].x1-c.x);
+      context.moveTo(tangents[1].x2, tangents[1].y2);
+      context.arc(apex.x, apex.y, topRadius, p2, p1);
+      context.arc(c.x, c.y, radius, p1, p2);
+    } else {
+      context.moveTo(c.x+radius, c.y);
+      context.arc(c.x, c.y, radius, 0, 2*PI);
+    }
+
+    context.closePath();
+    context.fill();
+  },
+
+  _circle: function(context, center, radius) {
+    context.beginPath();
+    context.arc(center.x, center.y, radius, 0, PI*2);
+    context.stroke();
+    context.fill();
+  },
+
+    // http://en.wikibooks.org/wiki/Algorithm_Implementation/Geometry/Tangents_between_two_circles
   _tangents: function(c1, r1, c2, r2) {
     var
       dx = c1.x-c2.x,
@@ -1414,29 +1526,6 @@ var Cylinder = {
     }
 
     return res;
-  }
-};
-
-
-//****** file: Debug.js ******
-
-var Debug = {
-
-  point: function(context, x, y, color, size) {
-    context.fillStyle = color || '#ffcc00';
-    context.beginPath();
-    context.arc(x, y, size || 3, 0, 2*PI);
-    context.closePath();
-    context.fill();
-  },
-
-  line: function(context, ax, ay, bx, by, color) {
-    context.strokeStyle = color || '#ffcc00';
-    context.beginPath();
-    context.moveTo(ax, ay);
-    context.lineTo(bx, by);
-    context.closePath();
-    context.stroke();
   }
 };
 
@@ -1571,9 +1660,9 @@ var Simplified = {
       context.fillStyle   = item.roofColor || ROOF_COLOR_STR;
 
       if (item.shape === 'cylinder' || item.shape === 'cone' || item.shape === 'dome') {
-        Cylinder.circle(context, item.center, item.radius);
+        Cylinder.simplified(context, item.center, item.radius);
       } else {
-        Block.polygon(context, footprint, item.holes);
+        Block.simplified(context, footprint, item.holes);
       }
     }
   }
@@ -1705,16 +1794,141 @@ var Shadows = {
         case 'cylinder':
         case 'cone':
         case 'dome':
-          Cylinder.mask(context, item.center, item.radius);
+          Cylinder.shadowMask(context, item.center, item.radius);
         break;
         default:
-          Block.mask(context, footprint, item.holes);
+          Block.shadowMask(context, footprint, item.holes);
       }
     }
 
     context.fillStyle = '#00ff00';
     context.fill();
     context.globalCompositeOperation = 'source-over';
+  }
+};
+
+
+//****** file: Hit.js ******
+
+
+var Hit = {
+
+  render: function(x, y) {
+    var context = this.context;
+    context.save();
+    context.clearRect(0, 0, WIDTH, HEIGHT);
+
+    // show on high zoom levels only and avoid rendering during zoom
+    if (ZOOM < MIN_ZOOM || isZooming) {
+      return;
+    }
+
+    context.rect(x-50, y-50, 100, 100);
+    context.clip();
+
+    var
+      item,
+      h, mh,
+      sortCam = { x:CAM_X+ORIGIN_X, y:CAM_Y+ORIGIN_Y },
+      footprint,
+      color,
+      dataItems = Data.items,
+      center, radius;
+
+    dataItems.sort(function(a, b) {
+      return (a.minHeight-b.minHeight) || getDistance(b.center, sortCam) - getDistance(a.center, sortCam) || (b.height-a.height);
+    });
+
+    for (var i = 0, il = dataItems.length; i < il; i++) {
+      item = dataItems[i];
+
+      footprint = item.footprint;
+
+      if (!isVisible(footprint)) {
+        continue;
+      }
+
+      h = item.height;
+
+      mh = 0;
+      if (item.minHeight) {
+        mh = item.minHeight;
+      }
+
+      // TODO: prepare this, i.e. in Data.scale()
+      color = this._toColor(item.id);
+
+      switch (item.shape) {
+        case 'cylinder':
+          center = item.center;
+          radius = item.radius;
+          Cylinder.hitArea(context, center, radius, radius, h, mh, color);
+          if (item.roofShape === 'cone') {
+            Cylinder.hitArea(context, center, radius, 0, h+item.roofHeight, h, color);
+          }
+          if (item.roofShape === 'dome') {
+            Cylinder.hitArea(context, center, radius, radius/2, h+item.roofHeight, h, color);
+          }
+        break;
+
+        case 'cone':
+          Cylinder.hitArea(context, item.center, item.radius, 0, h, mh, color);
+        break;
+
+        case 'dome':
+          Cylinder.hitArea(context, item.center, item.radius, item.radius/2, h, mh, color);
+        break;
+
+        default:
+          Block.hitArea(context, footprint, item.holes, h, mh, color);
+      }
+    }
+
+    context.restore();
+  },
+
+  getIdFromXY: function(x, y) {
+    this.render(x, y);
+    var data = this.context.getImageData(x, y, 1, 1).data;
+    return data[0] | (data[1]<<8) | (data[2]<<16);
+  },
+
+  _toNum: function(r, g, b) {
+    return r | (g<<8) | (b<<16);
+  },
+
+  _toColor: function(num) {
+    var r =  num       & 0xff;
+    var g = (num >>8)  & 0xff;
+    var b = (num >>16) & 0xff;
+    return 'rgb('+ [r, g, b].join(',') +')';
+  }
+};
+
+// TODO: offset after move
+// TODO: test openlayers
+
+//****** file: Debug.js ******
+
+var Debug = {
+
+  point: function(x, y, color, size) {
+    var context = this.context;
+    context.fillStyle = color || '#ffcc00';
+    context.beginPath();
+    context.arc(x, y, size || 3, 0, 2*PI);
+    context.closePath();
+    context.fill();
+  },
+
+  line: function(ax, ay, bx, by, color) {
+    var context = this.context;
+    context.strokeStyle = color || '#ffcc00';
+    context.beginPath();
+    context.moveTo(ax, ay);
+    context.lineTo(bx, by);
+    context.closePath();
+    context.stroke();
   }
 };
 
@@ -1762,10 +1976,12 @@ var Layers = {
     this.container.style.left = 0;
     this.container.style.top  = 0;
 
-    // TODO: improve this to createContext(Layer) => layer.setContext(context)
-    Shadows.context    = this.createContext();
-    Simplified.context = this.createContext();
-    Buildings.context  = this.createContext();
+    // TODO: improve this to .setContext(context)
+    Shadows.context    = this.createContext(this.container);
+    Simplified.context = this.createContext(this.container);
+    Buildings.context  = this.createContext(this.container);
+    Hit.context        = this.createContext();
+//    Debug.context      = this.createContext(this.container);
   },
 
   render: function(quick) {
@@ -1778,7 +1994,7 @@ var Layers = {
     });
   },
 
-  createContext: function() {
+  createContext: function(container) {
     var canvas = doc.createElement('CANVAS');
     canvas.style.webkitTransform = 'translate3d(0,0,0)'; // turn on hw acceleration
     canvas.style.imageRendering  = 'optimizeSpeed';
@@ -1795,7 +2011,9 @@ var Layers = {
     context.webkitImageSmoothingEnabled = false;
 
     this.items.push(canvas);
-    this.container.appendChild(canvas);
+    if (container) {
+      container.appendChild(canvas);
+    }
 
     return context;
   },
@@ -1964,6 +2182,10 @@ proto.setMap = function(map) {
   setZoom(map.zoom);
   this.setOrigin();
 
+  map.events.register('click', map, function(e) {
+    emit('click', Hit.getIdFromXY(e.xy.x, e.xy.y));
+  });
+
   Data.update();
 };
 
@@ -2063,19 +2285,23 @@ proto.setData = function(data) {
   return this;
 };
 
-proto.each = function(handler, scope) {
-  Data.each = function(feature) {
-    return handler.call(scope, feature);
-  };
-  return this;
-};
-
 proto.screenshot = function(forceDownload) {
   var dataURL = Layers.screenshot();
   if (forceDownload) {
     win.location.href = dataURL.replace('image/png', 'image/octet-stream');
   }
   return dataURL;
+};
+
+// TODO: remove deprecation
+proto.each = function() {
+  console.warn('OSMBuildings: .each(...) is deprecated, use .on(\'feature\' ...) instead');
+  return this;
+};
+
+proto.on = function(type, handler, scope) {
+  addListener(type, handler, scope);
+  return this;
 };
 
 osmb.VERSION     = VERSION;

@@ -1,4 +1,4 @@
-var importGeoJSON = (function() {
+var GeoJSON = (function() {
 
   function getGeometries(geometry) {
     var
@@ -66,36 +66,43 @@ var importGeoJSON = (function() {
     return res;
   }
 
-  return function(collection, callback) {
-    var
-      i, il, j, jl,
-      res = [],
-      feature,
-      geometries,
-      baseItem, item;
-
-    for (i = 0, il = collection.length; i < il; i++) {
-      feature = collection[i];
-
-      if (feature.type !== 'Feature' || callback(feature) === false) {
-        continue;
+  return {
+    read: function(geojson) {
+      if (!geojson || geojson.type !== 'FeatureCollection') {
+        return [];
       }
 
-      baseItem = Import.alignProperties(feature.properties);
-      geometries = getGeometries(feature.geometry);
+      var
+        collection = geojson.features,
+        i, il, j, jl,
+        res = [],
+        feature,
+        geometries,
+        baseItem, item;
 
-      for (j = 0, jl = geometries.length; j < jl; j++) {
-        item = clone(baseItem);
-        item.footprint = geometries[j].outer;
-        if (item.shape === 'cone' || item.shape === 'cylinder') {
-          item.radius = Import.getRadius(item.footprint);
+      for (i = 0, il = collection.length; i < il; i++) {
+        feature = collection[i];
+
+        if (feature.type !== 'Feature' || emit('eachfeature', feature) === false) {
+          continue;
         }
-        item.holes = geometries[j].inner;
-        item.id    = feature.id || feature.properties.id || [item.footprint[0], item.footprint[1], item.height, item.minHeight].join(',');
-        res.push(item); // TODO: clone base properties!
-      }
-    }
 
-    return res;
+        baseItem = Import.alignProperties(feature.properties);
+        geometries = getGeometries(feature.geometry);
+
+        for (j = 0, jl = geometries.length; j < jl; j++) {
+          item = clone(baseItem);
+          item.footprint = geometries[j].outer;
+          if (item.shape === 'cone' || item.shape === 'cylinder') {
+            item.radius = Import.getRadius(item.footprint);
+          }
+          item.holes = geometries[j].inner;
+          item.id    = feature.id || feature.properties.id || [item.footprint[0], item.footprint[1], item.height, item.minHeight].join(',');
+          res.push(item); // TODO: clone base properties!
+        }
+      }
+
+      return res;
+    }
   };
 }());

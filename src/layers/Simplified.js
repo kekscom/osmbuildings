@@ -38,9 +38,9 @@ var Simplified = {
       context.fillStyle   = item.roofColor || ROOF_COLOR_STR;
 
       if (item.shape === 'cylinder' || item.shape === 'cone' || item.shape === 'dome') {
-        Cylinder.circle(context, item.center, item.radius);
+        Cylinder.simplified(context, item.center, item.radius);
       } else {
-        Block.polygon(context, footprint, item.holes);
+        Block.simplified(context, footprint, item.holes);
       }
     }
   }

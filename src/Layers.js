@@ -39,10 +39,12 @@ var Layers = {
     this.container.style.left = 0;
     this.container.style.top  = 0;
 
-    // TODO: improve this to createContext(Layer) => layer.setContext(context)
-    Shadows.context    = this.createContext();
-    Simplified.context = this.createContext();
-    Buildings.context  = this.createContext();
+    // TODO: improve this to .setContext(context)
+    Shadows.context    = this.createContext(this.container);
+    Simplified.context = this.createContext(this.container);
+    Buildings.context  = this.createContext(this.container);
+    Hit.context        = this.createContext();
+//    Debug.context      = this.createContext(this.container);
   },
 
   render: function(quick) {
@@ -55,7 +57,7 @@ var Layers = {
     });
   },
 
-  createContext: function() {
+  createContext: function(container) {
     var canvas = doc.createElement('CANVAS');
     canvas.style.webkitTransform = 'translate3d(0,0,0)'; // turn on hw acceleration
     canvas.style.imageRendering  = 'optimizeSpeed';
@@ -72,7 +74,9 @@ var Layers = {
     context.webkitImageSmoothingEnabled = false;
 
     this.items.push(canvas);
-    this.container.appendChild(canvas);
+    if (container) {
+      container.appendChild(canvas);
+    }
 
     return context;
   },

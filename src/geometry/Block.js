@@ -41,7 +41,6 @@ var Block = {
       b.x = polygon[i+2]-ORIGIN_X;
       b.y = polygon[i+3]-ORIGIN_Y;
 
-      // project 3d to 2d on extruded footprint
       _a = Buildings.project(a, scale);
       _b = Buildings.project(b, scale);
 
@@ -84,7 +83,7 @@ var Block = {
     }
   },
 
-  polygon: function(context, polygon, innerPolygons) {
+  simplified: function(context, polygon, innerPolygons) {
     context.beginPath();
     this.ring(context, polygon);
     if (innerPolygons) {
@@ -154,12 +153,65 @@ var Block = {
     }
   },
 
-  mask: function(context, polygon, innerPolygons) {
+  shadowMask: function(context, polygon, innerPolygons) {
     this.ring(context, polygon);
     if (innerPolygons) {
       for (var i = 0, il = innerPolygons.length; i < il; i++) {
         this.ring(context, innerPolygons[i]);
       }
     }
+  },
+
+  hitArea: function(context, polygon, innerPolygons, height, minHeight, color) {
+    var
+      mode = null,
+      a = { x:0, y:0 },
+      b = { x:0, y:0 },
+      scale = CAM_Z / (CAM_Z-height),
+      minScale = CAM_Z / (CAM_Z-minHeight),
+      _a, _b;
+
+    context.fillStyle = color;
+    context.beginPath();
+
+    for (var i = 0, il = polygon.length-3; i < il; i += 2) {
+      a.x = polygon[i  ]-ORIGIN_X;
+      a.y = polygon[i+1]-ORIGIN_Y;
+      b.x = polygon[i+2]-ORIGIN_X;
+      b.y = polygon[i+3]-ORIGIN_Y;
+
+      _a = Buildings.project(a, scale);
+      _b = Buildings.project(b, scale);
+
+      if (minHeight) {
+        a = Buildings.project(a, minScale);
+        b = Buildings.project(b, minScale);
+      }
+
+      // mode 0: floor edges, mode 1: roof edges
+      if ((b.x-a.x) * (_a.y-a.y) > (_a.x-a.x) * (b.y-a.y)) {
+        if (mode === 1) { // mode is initially undefined
+          context.lineTo(a.x, a.y);
+        }
+        mode = 0;
+        if (!i) {
+          context.moveTo(a.x, a.y);
+        }
+        context.lineTo(b.x, b.y);
+      } else {
+        if (mode === 0) { // mode is initially undefined
+          context.lineTo(_a.x, _a.y);
+        }
+        mode = 1;
+        if (!i) {
+          context.moveTo(_a.x, _a.y);
+        }
+        context.lineTo(_b.x, _b.y);
+      }
+    }
+
+    context.closePath();
+    context.fill();
   }
+
 };

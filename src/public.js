@@ -43,19 +43,23 @@ proto.setData = function(data) {
   return this;
 };
 
-proto.each = function(handler, scope) {
-  Data.each = function(feature) {
-    return handler.call(scope, feature);
-  };
-  return this;
-};
-
 proto.screenshot = function(forceDownload) {
   var dataURL = Layers.screenshot();
   if (forceDownload) {
     win.location.href = dataURL.replace('image/png', 'image/octet-stream');
   }
   return dataURL;
+};
+
+// TODO: remove deprecation
+proto.each = function() {
+  console.warn('OSMBuildings: .each(...) is deprecated, use .on(\'feature\' ...) instead');
+  return this;
+};
+
+proto.on = function(type, handler, scope) {
+  addListener(type, handler, scope);
+  return this;
 };
 
 osmb.VERSION     = VERSION;
