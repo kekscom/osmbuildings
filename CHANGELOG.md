@@ -1,15 +1,29 @@
 # Changelog
 
-## 2014-04-03 development version
+## 2014-08-22 development version
 
-* added GeoJSON GeometryCollection
-* refactored simple buildings layer
-* fixed flipped perspective on some latitudes
-* fixed meters per pixel calculation
-* added multipolygon relation tags
-* fixed feature.center
-- added ambient shadows
-- tested with LeafletJS 0.7
+
+## 0.2.0b @ 2014-08-22
+
+From version 0.2.0 OSM Buildings is entering beta phase!
+
+** Features **
+
+- Buildings are clickable now, use .on('click', function(featureId) {...})
+- Massive improvements in GeoJSON reading, bigger set of properties and GeometryCollections are supported
+- Ambient shadows for buildings added
+- Introduced a data service for filtering and caching OSM data, results in massive speedup for loading
+- Geometry: cones enabled, also used as an interim replacement for domes
+- Temporarily enabled device accelerated perspective aka Amazon's 'Dynamic Perspective'. Turned off in favor for performance
+- successfully tested with LeafletJS 0.8 and OpenLayers 2.13.1
+
+** Fixes **
+
+- Height scale fixed
+- Relation properties precedence fixed
+- Simple buildings layer refactored
+- Flipped perspective on some latitudes fixed
+- Tried requestAnimationFrame, but needed to drop again for IE and iOS
 
 
 ## 0.1.9a @ 2013-10-17

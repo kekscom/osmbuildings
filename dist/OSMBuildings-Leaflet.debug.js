@@ -691,7 +691,7 @@ var GeoJSON = (function() {
 //****** file: variables.js ******
 
 var
-  VERSION      = '0.1.9a',
+  VERSION      = '0.2.0b',
   ATTRIBUTION  = '&copy; <a href="http://osmbuildings.org">OSM Buildings</a>',
 
   DATA_URL = 'http://osmbuildings.org/proxy/?bbox={n},{e},{s},{w}',
@@ -2145,12 +2145,37 @@ function onZoomEnd(e) {
 
 //****** file: Leaflet.js ******
 
+
 var osmb = function(map) {
-  this.offset = { x:0, y:0 };
-  map.addLayer(this);
+  this.offset = { x:0, y:0 }; // cumulative cam offset during moveBy
+	map.addLayer(this);
 };
 
-var proto = osmb.prototype;
+var proto = osmb.prototype = new L.Layer();
+
+// for Leaflet 0.8+ compatibility. Could be inherited from L.Layer.
+proto._layerAdd = function(e) {
+  var map = e.target;
+
+  // check in case layer gets added and then removed before the map is ready
+  if (!map.hasLayer(this)) { return; }
+
+  this._map = map;
+  this._zoomAnimated = map._zoomAnimated;
+
+  this.onAdd(map);
+
+  if (this.getAttribution && this._map.attributionControl) {
+    this._map.attributionControl.addAttribution(this.getAttribution());
+  }
+
+  if (this.getEvents) {
+    map.on(this.getEvents(), this);
+  }
+
+  this.fire('add');
+  map.fire('layeradd', {layer: this});
+};
 
 proto.onAdd = function(map) {
   this.map = map;
