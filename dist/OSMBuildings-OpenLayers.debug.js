@@ -544,7 +544,7 @@ var Import = {
     item.height    = prop.height    || (prop.levels   ? prop.levels  *this.METERS_PER_LEVEL : DEFAULT_HEIGHT);
     item.minHeight = prop.minHeight || (prop.minLevel ? prop.minLevel*this.METERS_PER_LEVEL : 0);
 
-    item.color     = prop.material     ? this.getMaterialColor(prop.material)     : prop.color;
+    item.wallColor = prop.material     ? this.getMaterialColor(prop.material)     : (prop.wallColor || prop.color);
     item.roofColor = prop.roofMaterial ? this.getMaterialColor(prop.roofMaterial) : prop.roofColor;
 
     switch (prop.shape) {

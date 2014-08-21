@@ -544,7 +544,7 @@ var Import = {
     item.height    = prop.height    || (prop.levels   ? prop.levels  *this.METERS_PER_LEVEL : DEFAULT_HEIGHT);
     item.minHeight = prop.minHeight || (prop.minLevel ? prop.minLevel*this.METERS_PER_LEVEL : 0);
 
-    item.color     = prop.material     ? this.getMaterialColor(prop.material)     : prop.color;
+    item.wallColor = prop.material     ? this.getMaterialColor(prop.material)     : (prop.wallColor || prop.color);
     item.roofColor = prop.roofMaterial ? this.getMaterialColor(prop.roofMaterial) : prop.roofColor;
 
     switch (prop.shape) {
@@ -2147,35 +2147,11 @@ function onZoomEnd(e) {
 
 
 var osmb = function(map) {
-  this.offset = { x:0, y:0 }; // cumulative cam offset during moveBy
+  this.offset = { x:0, y:0 };
 	map.addLayer(this);
 };
 
 var proto = osmb.prototype = new L.Layer();
-
-// for Leaflet 0.8+ compatibility. Could be inherited from L.Layer.
-proto._layerAdd = function(e) {
-  var map = e.target;
-
-  // check in case layer gets added and then removed before the map is ready
-  if (!map.hasLayer(this)) { return; }
-
-  this._map = map;
-  this._zoomAnimated = map._zoomAnimated;
-
-  this.onAdd(map);
-
-  if (this.getAttribution && this._map.attributionControl) {
-    this._map.attributionControl.addAttribution(this.getAttribution());
-  }
-
-  if (this.getEvents) {
-    map.on(this.getEvents(), this);
-  }
-
-  this.fire('add');
-  map.fire('layeradd', {layer: this});
-};
 
 proto.onAdd = function(map) {
   this.map = map;
