@@ -83,7 +83,7 @@ var GeoJSON = (function() {
       for (i = 0, il = collection.length; i < il; i++) {
         feature = collection[i];
 
-        if (feature.type !== 'Feature' || emit('eachfeature', feature) === false) {
+        if (feature.type !== 'Feature' || emit('each', feature) === false) {
           continue;
         }
 

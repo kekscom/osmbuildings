@@ -24,7 +24,7 @@ function fromRange(sVal, sMin, sMax, dMin, dMax) {
 }
 
 function xhr(url, param, callback) {
-  url = url.replace(/\{ *([\w_]+) *\}/g, function(tag, key) {
+  url = url.replace(/\{([\w_]+)\}/g, function(tag, key) {
     return param[key] || tag;
   });
 

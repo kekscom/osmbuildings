@@ -33,7 +33,7 @@ new L.TileLayer('http://{s}.tile.stamen.com/toner-lite/{z}/{x}/{y}.png', {
 
 var osmb = new OSMBuildings(map)
   .setDate(new Date(2014, 5, 15, 17, 30))
-  .on('eachfeature', function(feature) {
+  .on('each', function(feature) {
     var state = feature.tags.building;
     if (state === 'collapsed') {
       feature.tags['building:color'] = 'red';

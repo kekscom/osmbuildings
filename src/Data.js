@@ -137,16 +137,6 @@ var Data = {
 
   load: function(url) {
     this.url = url || DATA_URL;
-    this.isStatic = !/(.+\{[nesw]\}){4,}/.test(this.url);
-
-    if (this.isStatic) {
-      this.resetItems();
-      xhr(this.url, {}, function(data) {
-        this.addRenderItems(this.staticData = this.parse(data), true);
-      });
-      return;
-    }
-
     this.update();
   },
 
@@ -166,35 +156,25 @@ var Data = {
       return;
     }
 
-    var lat, lon,
-      parsedData, cacheKey,
-      nw = pixelToGeo(ORIGIN_X,       ORIGIN_Y),
-      se = pixelToGeo(ORIGIN_X+WIDTH, ORIGIN_Y+HEIGHT),
-      sizeLat = DATA_TILE_SIZE,
-      sizeLon = DATA_TILE_SIZE*2;
+    var
+      tileZoom = 14,
+      tileSize = 256,
+      zoomedTileSize = ZOOM > tileZoom ? tileSize <<(ZOOM-tileZoom) : tileSize >>(tileZoom-ZOOM),
+      minX = ORIGIN_X/zoomedTileSize <<0,
+      minY = ORIGIN_Y/zoomedTileSize <<0,
+      maxX = ceil((ORIGIN_X+WIDTH) /zoomedTileSize),
+      maxY = ceil((ORIGIN_Y+HEIGHT)/zoomedTileSize),
+      x, y, coords,
+      cacheKey, parsedData;
 
-    var bounds = {
-      n: ceil( nw.latitude /sizeLat) * sizeLat,
-      e: ceil( se.longitude/sizeLon) * sizeLon,
-      s: floor(se.latitude /sizeLat) * sizeLat,
-      w: floor(nw.longitude/sizeLon) * sizeLon
-    };
-
-    for (lat = bounds.s; lat <= bounds.n; lat += sizeLat) {
-      for (lon = bounds.w; lon <= bounds.e; lon += sizeLon) {
-        lat = this.cropDecimals(lat);
-        lon = this.cropDecimals(lon);
-
-        cacheKey = lat +','+ lon;
+    for (y = minY; y <= maxY; y++) {
+      for (x = minX; x <= maxX; x++) {
+        coords = { x: x, y: y, z: tileZoom };
+        cacheKey = x +','+ y;
         if ((parsedData = Cache.get(cacheKey))) {
           this.addRenderItems(parsedData);
-        } else {
-          xhr(this.url, {
-            n: this.cropDecimals(lat+sizeLat),
-            e: this.cropDecimals(lon+sizeLon),
-            s: lat,
-            w: lon
-          }, this.createClosure(cacheKey));
+				} else {
+          xhr(this.url, coords, this.createClosure(cacheKey));
         }
       }
     }

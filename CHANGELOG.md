@@ -1,13 +1,10 @@
 # Changelog
 
-## 2014-08-22 development version
-
-
 ## 0.2.0b @ 2014-08-22
 
-From version 0.2.0 OSM Buildings is entering beta phase!
+*From version 0.2.0 OSM Buildings is entering beta phase!*
 
-** Features **
+**Features**
 
 - Buildings are clickable now, use .on('click', function(featureId) {...})
 - Massive improvements in GeoJSON reading, bigger set of properties and GeometryCollections are supported
@@ -17,7 +14,7 @@ From version 0.2.0 OSM Buildings is entering beta phase!
 - Temporarily enabled device accelerated perspective aka Amazon's 'Dynamic Perspective'. Turned off in favor for performance
 - successfully tested with LeafletJS 0.8 and OpenLayers 2.13.1
 
-** Fixes **
+**Fixes**
 
 - Height scale fixed
 - Relation properties precedence fixed
