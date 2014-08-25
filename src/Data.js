@@ -157,7 +157,7 @@ var Data = {
     }
 
     var
-      tileZoom = 14,
+      tileZoom = 16,
       tileSize = 256,
       zoomedTileSize = ZOOM > tileZoom ? tileSize <<(ZOOM-tileZoom) : tileSize >>(tileZoom-ZOOM),
       minX = ORIGIN_X/zoomedTileSize <<0,
