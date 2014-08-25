@@ -1,17 +1,12 @@
 <img src="http://osmbuildings.org/logo.png"/>
 
-OSM Buildings is a JavaScript library for visualizing OpenStreetMaps building geometry on interactive maps.<br>
+OSM Buildings is a JavaScript library for visualizing OpenStreetMaps building geometry on interactive maps.
+
 Everything is stabilizing now, entering beta state.
 
+**Example** http://osmbuildings.org/
 
-## Example
-
-http://osmbuildings.org/
-
-
-## Files
-
-It's safe to fork the [latest code revision](https://github.com/kekscom/osmbuildings/tree/master/) for development, or use it's [build files for production](https://github.com/kekscom/osmbuildings/tree/master/dist/).
+It's safe use the [ master branch](https://github.com/kekscom/osmbuildings/tree/master/dist/) for production.
 
 For further information visit http://osmbuildings.org, follow [@osmbuildings](https://twitter.com/osmbuildings/) on Twitter or report issues [here on Github](https://github.com/kekscom/osmbuildings/issues/).
 
@@ -24,8 +19,8 @@ Link Leaflet and OSM Buildings files in your HTML head section.
 
 ~~~ html
 <head>
-  <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7/leaflet.css">
-  <script src="http://cdn.leafletjs.com/leaflet-0.7/leaflet.js"></script>
+  <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css">
+  <script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
   <script src="OSMBuildings-Leaflet.js"></script>
 </head>
 ~~~
