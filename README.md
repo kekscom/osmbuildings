@@ -159,31 +159,41 @@ Methods
 </tr>
 
 <tr>
-<td>setStyle({Object})</td>
-<td>Set default styles. See below for details.</td>
+<td>style({Object})</td>
+<td>Set default styles. See below for details.<br>
+Former variant setStyle is subject to deprecation.</td>
 </tr>
 
 <tr>
-<td>setDate(new Date(2014, 15, 1, 10, 30)))</td>
-<td>Set date / time for shadow projection.</td>
+<td>date(new Date(2014, 15, 1, 10, 30)))</td>
+<td>Set date / time for shadow projection.<br>
+Former variant setDate is subject to deprecation.</td>
 </tr>
 
 <tr>
 <td>each({Function})</td>
-<td>A callback method to override each feature's properties on read. Return false in order to skip a feature.</td>
+<td>A callback wrapper to override each feature's properties on read. Return false in order to skip a particular feature.<br>
+Callback receives feature object as argument.</td>
 </tr>
 
 <tr>
-<td>setData({GeoJSON FeatureCollection})</td>
-<td>Just add GeoJSON data to your map.</td>
+<td>click({Function})</td>
+<td>A callback wrapper to handle click events on features.<br>
+Callback receives feature object as argument.</td>
 </tr>
 
 <tr>
-<td>loadData({String})</td>
+<td>data({GeoJSON FeatureCollection})</td>
+<td>Just add GeoJSON data to your map.<br>
+Former variant setData is subject to deprecation.</td>
+</tr>
+
+<tr>
+<td>load({String})</td>
 </td>
 <td>Without parameter, it loads data tiles from OpenStreetMaps. You don't need to care for tehe details anymore.
-As an alternative, pass an URL to any other GeoJSON TMS service.
-</td>
+As an alternative, pass an URL to any other GeoJSON TMS service.<br>
+Former variant load is subject to deprecation.</td>
 </tr>
 
 <tr>
@@ -243,13 +253,23 @@ wallColor</td>
 </tr>
 
 <tr>
-<td><b>wallColor</b></td>
-<td>building:color, building:colour, building:material, building:facade:material, building:cladding</td>
+<td><b>color / wallColor</b></td>
+<td>building:color, building:colour</td>
+</tr>
+
+<tr>
+<td><b>material</b></td>
+<td>building:material, building:facade:material, building:cladding</td>
 </tr>
 
 <tr>
 <td><b>roofColor</b></td>
-<td>roof:color, roof:colour, building:roof:color, building:roof:colour, roof:material, building:roof:material</td>
+<td>roof:color, roof:colour, building:roof:color, building:roof:colour</td>
+</tr>
+
+<tr>
+<td><b>roofMaterial</b></td>
+<td>roof:material, building:roof:material</td>
 </tr>
 
 <tr>

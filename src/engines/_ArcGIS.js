@@ -280,7 +280,7 @@ dojo.declare('agsjs.layers.BuildingsLayer', esri.layers.Layer, {
            features: jfs
        });
        if (this._style) {
-           this._osmb.setStyle(this._style);
+           this._osmb.style(this._style);
        }
    },
    _loadData: function() {

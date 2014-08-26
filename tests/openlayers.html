@@ -38,9 +38,9 @@ map.setCenter(
   17
 );
 new OSMBuildings(map)
-  .setDate(new Date(2014, 5, 15, 17, 30))
-  .loadData()
-  .on('click', function(id) {
+  .date(new Date(2014, 5, 15, 17, 30))
+  .load()
+  .click(function(id) {
     console.log('feature id clicked:', id);
   });
 </script>

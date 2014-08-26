@@ -39,7 +39,7 @@ proto.setDate = function(date) {
   return this.date(date);
 };
 
-proto.setDate = function(date) {
+proto.date = function(date) {
   Shadows.date = date;
   Shadows.render();
   return this;
@@ -75,12 +75,16 @@ proto.screenshot = function(forceDownload) {
   return dataURL;
 };
 
+var onEach = function() {};
+
 proto.each = function(handler, scope) {
   onEach = function(payload) {
     return handler.call(scope, payload);
   };
   return this;
 };
+
+var onClick = function() {};
 
 proto.click = function(handler, scope) {
   onClick = function(payload) {

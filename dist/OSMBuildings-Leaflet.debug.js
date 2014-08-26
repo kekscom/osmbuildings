@@ -404,29 +404,6 @@ var getSunPosition = (function() {
 }());
 
 
-//****** file: Events.js ******
-
-
-var eventListeners = {};
-
-function addListener(type, listener, scope) {
-  var listeners = eventListeners[type] || (eventListeners[type] = []);
-  listeners.push(function(payload) {
-    return listener.call(scope, payload);
-  });
-}
-
-function emit(type, payload) {
-  if (!eventListeners[type]) {
-    return;
-  }
-  var listeners = eventListeners[type];
-  for (var i = 0, il = listeners.length; i < il; i++) {
-    listeners[i](payload);
-  }
-}
-
-
 //****** file: Import.js ******
 
 var Import = {
@@ -663,7 +640,7 @@ var GeoJSON = (function() {
       for (i = 0, il = collection.length; i < il; i++) {
         feature = collection[i];
 
-        if (feature.type !== 'Feature' || emit('eachfeature', feature) === false) {
+        if (feature.type !== 'Feature' || onEach(feature) === false) {
           continue;
         }
 
@@ -853,7 +830,7 @@ function fromRange(sVal, sMin, sMax, dMin, dMax) {
 }
 
 function xhr(url, param, callback) {
-  url = url.replace(/\{ *([\w_]+) *\}/g, function(tag, key) {
+  url = url.replace(/\{([\w_]+)\}/g, function(tag, key) {
     return param[key] || tag;
   });
 
@@ -1059,16 +1036,6 @@ var Data = {
 
   load: function(url) {
     this.url = url || DATA_URL;
-    this.isStatic = !/(.+\{[nesw]\}){4,}/.test(this.url);
-
-    if (this.isStatic) {
-      this.resetItems();
-      xhr(this.url, {}, function(data) {
-        this.addRenderItems(this.staticData = this.parse(data), true);
-      });
-      return;
-    }
-
     this.update();
   },
 
@@ -1088,44 +1055,31 @@ var Data = {
       return;
     }
 
-    var lat, lon,
-      parsedData, cacheKey,
-      nw = pixelToGeo(ORIGIN_X,       ORIGIN_Y),
-      se = pixelToGeo(ORIGIN_X+WIDTH, ORIGIN_Y+HEIGHT),
-      sizeLat = DATA_TILE_SIZE,
-      sizeLon = DATA_TILE_SIZE*2;
+    var
+      tileZoom = 16,
+      tileSize = 256,
+      zoomedTileSize = ZOOM > tileZoom ? tileSize <<(ZOOM-tileZoom) : tileSize >>(tileZoom-ZOOM),
+      minX = ORIGIN_X/zoomedTileSize <<0,
+      minY = ORIGIN_Y/zoomedTileSize <<0,
+      maxX = ceil((ORIGIN_X+WIDTH) /zoomedTileSize),
+      maxY = ceil((ORIGIN_Y+HEIGHT)/zoomedTileSize),
+      x, y, coords,
+      cacheKey, parsedData;
 
-    var bounds = {
-      n: ceil( nw.latitude /sizeLat) * sizeLat,
-      e: ceil( se.longitude/sizeLon) * sizeLon,
-      s: floor(se.latitude /sizeLat) * sizeLat,
-      w: floor(nw.longitude/sizeLon) * sizeLon
-    };
-
-    for (lat = bounds.s; lat <= bounds.n; lat += sizeLat) {
-      for (lon = bounds.w; lon <= bounds.e; lon += sizeLon) {
-        lat = this.cropDecimals(lat);
-        lon = this.cropDecimals(lon);
-
-        cacheKey = lat +','+ lon;
+    for (y = minY; y <= maxY; y++) {
+      for (x = minX; x <= maxX; x++) {
+        coords = { x: x, y: y, z: tileZoom };
+        cacheKey = x +','+ y;
         if ((parsedData = Cache.get(cacheKey))) {
           this.addRenderItems(parsedData);
-        } else {
-          xhr(this.url, {
-            n: this.cropDecimals(lat+sizeLat),
-            e: this.cropDecimals(lon+sizeLon),
-            s: lat,
-            w: lon
-          }, this.createClosure(cacheKey));
+				} else {
+          xhr(this.url, coords, this.createClosure(cacheKey));
         }
       }
     }
 
     Cache.purge();
-  },
-
-  each: function() {}
-
+  }
 };
 
 
@@ -2271,7 +2225,7 @@ proto.onViewReset = function() {
 };
 
 proto.onClick = function(e) {
-  emit('click', Hit.getIdFromXY(e.containerPoint.x, e.containerPoint.y));
+  onClick(Hit.getIdFromXY(e.containerPoint.x, e.containerPoint.y));
 };
 
 proto.getOffset = function() {
@@ -2282,7 +2236,13 @@ proto.getOffset = function() {
 //****** file: public.js ******
 
 
+// TODO: remove deprecation
 proto.setStyle = function(style) {
+  console.warn('OSM Buildings: .setStyle() will be deprecated soon. Use .style() instead.');
+  return this.style(style);
+};
+
+proto.style = function(style) {
   style = style || {};
   var color;
   if ((color = style.color || style.wallColor)) {
@@ -2310,18 +2270,36 @@ proto.setStyle = function(style) {
   return this;
 };
 
+// TODO: remove deprecation
 proto.setDate = function(date) {
+  console.warn('OSM Buildings: .setDate() will be deprecated soon. Use .date() instead.');
+  return this.date(date);
+};
+
+proto.date = function(date) {
   Shadows.date = date;
   Shadows.render();
   return this;
 };
 
+// TODO: remove deprecation
 proto.loadData = function(url) {
+  console.warn('OSM Buildings: .loadData() will be deprecated soon. Use .load() instead.');
+  return this.load(url);
+};
+
+proto.load = function(url) {
   Data.load(url);
   return this;
 };
 
+// TODO: remove deprecation
 proto.setData = function(data) {
+  console.warn('OSM Buildings: .setData() will be deprecated soon. Use .data() instead.');
+  return this.data(data);
+};
+
+proto.data = function(data) {
   Data.set(data);
   return this;
 };
@@ -2334,14 +2312,21 @@ proto.screenshot = function(forceDownload) {
   return dataURL;
 };
 
-// TODO: remove deprecation
-proto.each = function() {
-  console.warn('OSMBuildings: .each(...) is deprecated, use .on(\'feature\' ...) instead');
+var onEach = function() {};
+
+proto.each = function(handler, scope) {
+  onEach = function(payload) {
+    return handler.call(scope, payload);
+  };
   return this;
 };
 
-proto.on = function(type, handler, scope) {
-  addListener(type, handler, scope);
+var onClick = function() {};
+
+proto.click = function(handler, scope) {
+  onClick = function(payload) {
+    return handler.call(scope, payload);
+  };
   return this;
 };
 
