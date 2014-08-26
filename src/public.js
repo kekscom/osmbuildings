@@ -1,5 +1,11 @@
 
+// TODO: remove deprecation
 proto.setStyle = function(style) {
+  console.warn('OSM Buildings: .setStyle() will be deprecated soon. Use .style() instead.');
+  return this.style(style);
+};
+
+proto.style = function(style) {
   style = style || {};
   var color;
   if ((color = style.color || style.wallColor)) {
@@ -27,18 +33,36 @@ proto.setStyle = function(style) {
   return this;
 };
 
+// TODO: remove deprecation
+proto.setDate = function(date) {
+  console.warn('OSM Buildings: .setDate() will be deprecated soon. Use .date() instead.');
+  return this.date(date);
+};
+
 proto.setDate = function(date) {
   Shadows.date = date;
   Shadows.render();
   return this;
 };
 
+// TODO: remove deprecation
 proto.loadData = function(url) {
+  console.warn('OSM Buildings: .loadData() will be deprecated soon. Use .load() instead.');
+  return this.load(url);
+};
+
+proto.load = function(url) {
   Data.load(url);
   return this;
 };
 
+// TODO: remove deprecation
 proto.setData = function(data) {
+  console.warn('OSM Buildings: .setData() will be deprecated soon. Use .data() instead.');
+  return this.data(data);
+};
+
+proto.data = function(data) {
   Data.set(data);
   return this;
 };
@@ -51,14 +75,17 @@ proto.screenshot = function(forceDownload) {
   return dataURL;
 };
 
-// TODO: remove deprecation
-proto.each = function() {
-  console.warn('OSMBuildings: .each(...) is deprecated, use .on(\'feature\' ...) instead');
+proto.each = function(handler, scope) {
+  onEach = function(payload) {
+    return handler.call(scope, payload);
+  };
   return this;
 };
 
-proto.on = function(type, handler, scope) {
-  addListener(type, handler, scope);
+proto.click = function(handler, scope) {
+  onClick = function(payload) {
+    return handler.call(scope, payload);
+  };
   return this;
 };
 

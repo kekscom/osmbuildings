@@ -180,8 +180,5 @@ var Data = {
     }
 
     Cache.purge();
-  },
-
-  each: function() {}
-
+  }
 };

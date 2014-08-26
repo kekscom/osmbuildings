@@ -181,8 +181,8 @@ Methods
 <tr>
 <td>loadData({String})</td>
 </td>
-<td>Without parameter, it loads data tiles from OpenStreetMaps. You don't need to care for data anymore.
-As an alternative, pass an URL to <a href="http://cartodb.com/">CartoDB</a> or any other GeoJSON service. See below.
+<td>Without parameter, it loads data tiles from OpenStreetMaps. You don't need to care for tehe details anymore.
+As an alternative, pass an URL to any other GeoJSON TMS service.
 </td>
 </tr>
 
@@ -191,13 +191,6 @@ As an alternative, pass an URL to <a href="http://cartodb.com/">CartoDB</a> or a
 <td>Creates a screenshot of all visible OSM Buildings content and returns it as data URL. Parameter indicates, whether browser should display the image directly.</td>
 </tr>
 </table>
-
-CartoDB URL example
-
-~~~ url
-http://<YOUR CARTODB ACCOUNT HERE>.cartodb.com/api/v2/sql?q=' + ('SELECT cartodb_id AS id, height, ST_AsText(the_geom) AS the_geom FROM <YOURTABLE> WHERE the_geom %26%26 ST_SetSRID(ST_MakeBox2D(ST_Point({w},{s}), ST_Point({e},{n})), 4326)') + '&format=geojson');
-~~~
-
 
 Styles
 

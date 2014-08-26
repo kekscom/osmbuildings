@@ -62,9 +62,9 @@ new L.TileLayer('http://otile1.mqcdn.com/tiles/1.0.0/map/{z}/{x}/{y}.jpg', { max
 //new L.TileLayer('http://{s}.tiles.mapbox.com/v3/osmbuildings.gm744p3p/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
 
 var osmb = new OSMBuildings(map)
-  .setDate(new Date(2014, 5, 15, 17, 30))
-  .loadData()
-  .on('click', function(id) {
+  .date(new Date(2014, 5, 15, 17, 30))
+  .load('http://localhost/osm/data/tiles/index.php?x={x}&y={y}&z={z}')
+  .click(function(id) {
     console.log('feature id clicked:', id);
   });
 

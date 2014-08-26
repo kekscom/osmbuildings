@@ -124,7 +124,7 @@ proto.onViewReset = function() {
 };
 
 proto.onClick = function(e) {
-  emit('click', Hit.getIdFromXY(e.containerPoint.x, e.containerPoint.y));
+  onClick(Hit.getIdFromXY(e.containerPoint.x, e.containerPoint.y));
 };
 
 proto.getOffset = function() {

@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.2.0b @ 2014-08-22
+## 0.2.0b @ 2014-09-01
 
 *From version 0.2.0 OSM Buildings is entering beta phase!*
 
@@ -12,7 +12,7 @@
 - Introduced a data service for filtering and caching OSM data, results in massive speedup for loading
 - Geometry: cones enabled, also used as an interim replacement for domes
 - Temporarily enabled device accelerated perspective aka Amazon's 'Dynamic Perspective'. Turned off in favor for performance
-- successfully tested with LeafletJS 0.8 and OpenLayers 2.13.1
+- Successfully tested with LeafletJS 0.8 and OpenLayers 2.13.1
 
 **Fixes**
 

@@ -32,8 +32,8 @@ new L.TileLayer('http://{s}.tile.stamen.com/toner-lite/{z}/{x}/{y}.png', {
 
 
 var osmb = new OSMBuildings(map)
-  .setDate(new Date(2014, 5, 15, 17, 30))
-  .on('each', function(feature) {
+  .date(new Date(2014, 5, 15, 17, 30))
+  .each(function(feature) {
     var state = feature.tags.building;
     if (state === 'collapsed') {
       feature.tags['building:color'] = 'red';
@@ -49,7 +49,7 @@ var osmb = new OSMBuildings(map)
       feature.tags['height'] = 60; // add more height for untouched buildings
     }
   })
-  .loadData();
+  .load();
 </script>
 </body>
 </html>
