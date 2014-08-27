@@ -2,6 +2,18 @@
 var HitAreas = {
 
   render: function() {
+    if (this._timer) {
+      clearTimeout(this._timer);
+      delete this._timer;
+    }
+    var self = this;
+    this._timer = setTimeout(function() {
+      delete self._timer;
+      self._render();
+    }, 500);
+  },
+
+  _render: function() {
     var context = this.context;
 
     context.clearRect(0, 0, WIDTH, HEIGHT);

@@ -63,7 +63,8 @@ new L.TileLayer('http://otile1.mqcdn.com/tiles/1.0.0/map/{z}/{x}/{y}.jpg', { max
 
 var osmb = new OSMBuildings(map)
   .date(new Date(2014, 5, 15, 17, 30))
-  .load('http://localhost/osm/data/tiles/index.php?x={x}&y={y}&z={z}')
+//  .load('http://localhost/data/tiles/0.2/index.php?key=rkc8ywdl&zoom={z}&x={x}&y={y}')
+  .load()
   .click(function(id) {
     console.log('feature id clicked:', id);
   });

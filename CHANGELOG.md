@@ -13,7 +13,7 @@
 - Geometry: cones enabled, also used as an interim replacement for domes
 - Temporarily enabled device accelerated perspective aka Amazon's 'Dynamic Perspective'. Turned off in favor for performance
 - Successfully tested with LeafletJS 0.8 and OpenLayers 2.13.1
-- Code size reduced from 10.23 to 9.41k (all gzipped)
+- Code size reduced from 10.23 to 9.44k (all gzipped)
 
 **Fixes**
 

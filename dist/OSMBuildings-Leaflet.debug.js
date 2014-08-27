@@ -847,7 +847,11 @@ function xhr(url, callback) {
       return;
     }
     if (callback && req.responseText) {
-      callback(JSON.parse(req.responseText));
+      var json;
+      try {
+        json = JSON.parse(req.responseText);
+      } catch(ex) {}
+      callback(json);
     }
   };
 
@@ -1020,7 +1024,8 @@ var Data = {
         center:     getCenter(footprint),
         holes:      holes.length ? holes : null,
         shape:      item.shape, // TODO: drop footprint
-        radius:     item.radius/METERS_PER_PIXEL
+        radius:     item.radius/METERS_PER_PIXEL,
+        hitColor:   HitAreas.toColor(item.id)
       });
     }
 
@@ -1761,23 +1766,32 @@ var Shadows = {
 };
 
 
-//****** file: Hit.js ******
+//****** file: HitAreas.js ******
 
 
-var Hit = {
+var HitAreas = {
 
-  render: function(x, y) {
+  render: function() {
+    if (this._timer) {
+      clearTimeout(this._timer);
+      delete this._timer;
+    }
+    var self = this;
+    this._timer = setTimeout(function() {
+      delete self._timer;
+      self._render();
+    }, 500);
+  },
+
+  _render: function() {
     var context = this.context;
-    context.save();
+
     context.clearRect(0, 0, WIDTH, HEIGHT);
 
     // show on high zoom levels only and avoid rendering during zoom
     if (ZOOM < MIN_ZOOM || isZooming) {
       return;
     }
-
-    context.rect(x-50, y-50, 100, 100);
-    context.clip();
 
     var
       item,
@@ -1808,8 +1822,7 @@ var Hit = {
         mh = item.minHeight;
       }
 
-      // TODO: prepare this, i.e. in Data.scale()
-      color = this._toColor(item.id);
+      color = item.hitColor;
 
       switch (item.shape) {
         case 'cylinder':
@@ -1836,25 +1849,23 @@ var Hit = {
           Block.hitArea(context, footprint, item.holes, h, mh, color);
       }
     }
-
-    context.restore();
+    this._data = this.context.getImageData(0, 0, WIDTH, HEIGHT).data;
   },
 
   getIdFromXY: function(x, y) {
-    this.render(x, y);
-    var data = this.context.getImageData(x, y, 1, 1).data;
-    return data[0] | (data[1]<<8) | (data[2]<<16);
+    var index = 4*((y|0) * WIDTH + (x|0));
+    return this._data[index] | (this._data[index+1]<<8) | (this._data[index+2]<<16);
   },
 
-  _toNum: function(r, g, b) {
-    return r | (g<<8) | (b<<16);
-  },
-
-  _toColor: function(num) {
+  toColor: function(num) {
     var r =  num       & 0xff;
     var g = (num >>8)  & 0xff;
     var b = (num >>16) & 0xff;
     return 'rgb('+ [r, g, b].join(',') +')';
+  },
+
+  _toNum: function(r, g, b) {
+    return r | (g<<8) | (b<<16);
   }
 };
 
@@ -1933,7 +1944,7 @@ var Layers = {
     Shadows.context    = this.createContext(this.container);
     Simplified.context = this.createContext(this.container);
     Buildings.context  = this.createContext(this.container);
-    Hit.context        = this.createContext();
+    HitAreas.context   = this.createContext();
 //    Debug.context      = this.createContext(this.container);
   },
 
@@ -1942,6 +1953,7 @@ var Layers = {
       if (!quick) {
         Shadows.render();
         Simplified.render();
+        HitAreas.render();
       }
       Buildings.render();
     });
@@ -2231,7 +2243,7 @@ proto.onClick = function(e) {
     delete this.noClick;
     return;
   }
-  onClick(Hit.getIdFromXY(e.containerPoint.x, e.containerPoint.y));
+  onClick(HitAreas.getIdFromXY(e.containerPoint.x, e.containerPoint.y));
 };
 
 proto.getOffset = function() {
