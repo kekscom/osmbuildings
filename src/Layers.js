@@ -43,7 +43,7 @@ var Layers = {
     Shadows.context    = this.createContext(this.container);
     Simplified.context = this.createContext(this.container);
     Buildings.context  = this.createContext(this.container);
-    Hit.context        = this.createContext();
+    HitAreas.context   = this.createContext();
 //    Debug.context      = this.createContext(this.container);
   },
 
@@ -52,6 +52,7 @@ var Layers = {
       if (!quick) {
         Shadows.render();
         Simplified.render();
+        HitAreas.render();
       }
       Buildings.render();
     });

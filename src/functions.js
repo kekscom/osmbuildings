@@ -40,7 +40,11 @@ function xhr(url, callback) {
       return;
     }
     if (callback && req.responseText) {
-      callback(JSON.parse(req.responseText));
+      var json;
+      try {
+        json = JSON.parse(req.responseText);
+      } catch(ex) {}
+      callback(json);
     }
   };
 

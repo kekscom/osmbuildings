@@ -118,7 +118,8 @@ var Data = {
         center:     getCenter(footprint),
         holes:      holes.length ? holes : null,
         shape:      item.shape, // TODO: drop footprint
-        radius:     item.radius/METERS_PER_PIXEL
+        radius:     item.radius/METERS_PER_PIXEL,
+        hitColor:   HitAreas.toColor(item.id)
       });
     }
 

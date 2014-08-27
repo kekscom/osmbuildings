@@ -1,18 +1,15 @@
 
-var Hit = {
+var HitAreas = {
 
-  render: function(x, y) {
+  render: function() {
     var context = this.context;
-    context.save();
+
     context.clearRect(0, 0, WIDTH, HEIGHT);
 
     // show on high zoom levels only and avoid rendering during zoom
     if (ZOOM < MIN_ZOOM || isZooming) {
       return;
     }
-
-    context.rect(x-50, y-50, 100, 100);
-    context.clip();
 
     var
       item,
@@ -43,8 +40,7 @@ var Hit = {
         mh = item.minHeight;
       }
 
-      // TODO: prepare this, i.e. in Data.scale()
-      color = this._toColor(item.id);
+      color = item.hitColor;
 
       switch (item.shape) {
         case 'cylinder':
@@ -71,25 +67,23 @@ var Hit = {
           Block.hitArea(context, footprint, item.holes, h, mh, color);
       }
     }
-
-    context.restore();
+    this._data = this.context.getImageData(0, 0, WIDTH, HEIGHT).data;
   },
 
   getIdFromXY: function(x, y) {
-    this.render(x, y);
-    var data = this.context.getImageData(x, y, 1, 1).data;
-    return data[0] | (data[1]<<8) | (data[2]<<16);
+    var index = 4*((y|0) * WIDTH + (x|0));
+    return this._data[index] | (this._data[index+1]<<8) | (this._data[index+2]<<16);
   },
 
-  _toNum: function(r, g, b) {
-    return r | (g<<8) | (b<<16);
-  },
-
-  _toColor: function(num) {
+  toColor: function(num) {
     var r =  num       & 0xff;
     var g = (num >>8)  & 0xff;
     var b = (num >>16) & 0xff;
     return 'rgb('+ [r, g, b].join(',') +')';
+  },
+
+  _toNum: function(r, g, b) {
+    return r | (g<<8) | (b<<16);
   }
 };
 
