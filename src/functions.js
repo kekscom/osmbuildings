@@ -23,11 +23,13 @@ function fromRange(sVal, sMin, sMax, dMin, dMax) {
   return min(max(dMin + rel*range, dMin), dMax);
 }
 
-function xhr(url, param, callback) {
-  url = url.replace(/\{([\w_]+)\}/g, function(tag, key) {
+function template(str, param) {
+  return str.replace(/\{([\w_]+)\}/g, function(tag, key) {
     return param[key] || tag;
   });
+}
 
+function xhr(url, callback) {
   var req = new XMLHttpRequest();
 
   req.onreadystatechange = function() {

@@ -671,7 +671,8 @@ var
   VERSION      = '0.2.0b',
   ATTRIBUTION  = '&copy; <a href="http://osmbuildings.org">OSM Buildings</a>',
 
-  DATA_URL = 'http://osmbuildings.org/proxy/?bbox={n},{e},{s},{w}',
+  DATA_URL = 'http://tiles.osmbuildings.org/0.2/{k}/{z}/{x}/{y}.json',
+  DATA_KEY = 'rkc8ywdl',
 
   PI         = Math.PI,
   HALF_PI    = PI/2,
@@ -829,11 +830,13 @@ function fromRange(sVal, sMin, sMax, dMin, dMax) {
   return min(max(dMin + rel*range, dMin), dMax);
 }
 
-function xhr(url, param, callback) {
-  url = url.replace(/\{([\w_]+)\}/g, function(tag, key) {
+function template(str, param) {
+  return str.replace(/\{([\w_]+)\}/g, function(tag, key) {
     return param[key] || tag;
   });
+}
 
+function xhr(url, callback) {
   var req = new XMLHttpRequest();
 
   req.onreadystatechange = function() {
@@ -902,10 +905,6 @@ var Data = {
   currentItemsIndex: {}, // maintain a list of cached items in order to avoid duplicates on tile borders
 
   items: [],
-
-  cropDecimals: function(num) {
-    return parseFloat(num.toFixed(5));
-  },
 
   getPixelFootprint: function(buffer) {
     var footprint = new Int32Array(buffer.length),
@@ -1035,7 +1034,7 @@ var Data = {
   },
 
   load: function(url) {
-    this.url = url || DATA_URL;
+    this.url = template(url || DATA_URL, { k: DATA_KEY });
     this.update();
   },
 
@@ -1073,7 +1072,7 @@ var Data = {
         if ((parsedData = Cache.get(cacheKey))) {
           this.addRenderItems(parsedData);
 				} else {
-          xhr(this.url, coords, this.createClosure(cacheKey));
+          xhr(template(this.url, coords), this.createClosure(cacheKey));
         }
       }
     }

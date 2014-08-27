@@ -2,7 +2,8 @@ var
   VERSION      = /*<version=*/'0.1.9a'/*>*/,
   ATTRIBUTION  = '&copy; <a href="http://osmbuildings.org">OSM Buildings</a>',
 
-  DATA_URL = 'http://osmbuildings.org/proxy/?bbox={n},{e},{s},{w}',
+  DATA_URL = 'http://tiles.osmbuildings.org/0.2/{k}/{z}/{x}/{y}.json',
+  DATA_KEY = 'rkc8ywdl',
 
   PI         = Math.PI,
   HALF_PI    = PI/2,

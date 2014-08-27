@@ -161,39 +161,38 @@ Methods
 <tr>
 <td>style({Object})</td>
 <td>Set default styles. See below for details.<br>
-Former variant setStyle is subject to deprecation.</td>
+*Former variant `setStyle()` is subject to deprecation.*</td>
 </tr>
 
 <tr>
 <td>date(new Date(2014, 15, 1, 10, 30)))</td>
-<td>Set date / time for shadow projection.<br>
-Former variant setDate is subject to deprecation.</td>
+<td>Set date/time for shadow projection.<br>
+*Former variant `setDate()` is subject to deprecation.*</td>
 </tr>
 
 <tr>
 <td>each({Function})</td>
 <td>A callback wrapper to override each feature's properties on read. Return false in order to skip a particular feature.<br>
-Callback receives feature object as argument.</td>
+Callback receives a feature object as argument.</td>
 </tr>
 
 <tr>
 <td>click({Function})</td>
 <td>A callback wrapper to handle click events on features.<br>
-Callback receives feature object as argument.</td>
+Callback receives a feature id as argument.</td>
 </tr>
 
 <tr>
 <td>data({GeoJSON FeatureCollection})</td>
 <td>Just add GeoJSON data to your map.<br>
-Former variant setData is subject to deprecation.</td>
+*Former variant `setData()` is subject to deprecation.*</td>
 </tr>
 
 <tr>
 <td>load({String})</td>
-</td>
 <td>Without parameter, it loads data tiles from OpenStreetMaps. You don't need to care for tehe details anymore.
 As an alternative, pass an URL to any other GeoJSON TMS service.<br>
-Former variant load is subject to deprecation.</td>
+*Former variant `load()` is subject to deprecation.*</td>
 </tr>
 
 <tr>
@@ -212,20 +211,19 @@ Styles
 </tr>
 
 <tr>
-<td>color or <br>
-wallColor</td>
+<td>**color/wallColor**</td>
 <td>String</td>
 <td>Defines the objects default primary color. I.e. #ffcc00, rgb(255,200,200), rgba(255,200,200,0.9)</td>
 </tr>
 
 <tr>
-<td>roofColor</td>
+<td>**roofColor**</td>
 <td>String</td>
 <td>Defines the objects default roof color.</td>
 </tr>
 
 <tr>
-<td>shadows</td>
+<td>**shadows**</td>
 <td>Boolean</td>
 <td>Enables or disables shadow rendering, default: enabled</td>
 </tr>
@@ -238,52 +236,52 @@ wallColor</td>
 
 <table>
 <tr>
-<th>Result</th>
+<th>GeoJSON property</th>
 <th>OSM Tags</th>
 </tr>
 
 <tr>
-<td><b>height</b></td>
+<td>**height**</td>
 <td>height, building:height, levels, building:levels</td>
 </tr>
 
 <tr>
-<td><b>minHeight</b></td>
+<td>**minHeight**</td>
 <td>min_height, building:min_height, min_level, building:min_level</td>
 </tr>
 
 <tr>
-<td><b>color / wallColor</b></td>
+<td>**color/wallColor**</td>
 <td>building:color, building:colour</td>
 </tr>
 
 <tr>
-<td><b>material</b></td>
+<td>**material**</td>
 <td>building:material, building:facade:material, building:cladding</td>
 </tr>
 
 <tr>
-<td><b>roofColor</b></td>
+<td>**roofColor**</td>
 <td>roof:color, roof:colour, building:roof:color, building:roof:colour</td>
 </tr>
 
 <tr>
-<td><b>roofMaterial</b></td>
+<td>**roofMaterial**</td>
 <td>roof:material, building:roof:material</td>
 </tr>
 
 <tr>
-<td><b>shape</b></td>
+<td>**shape**</td>
 <td>building:shape[=cylinder,sphere]</td>
 </tr>
 
 <tr>
-<td><b>roofShape</b></td>
+<td>**roofShape**</td>
 <td>roof:shape[=dome]</td>
 </tr>
 
 <tr>
-<td><b>roofHeight</b></td>
+<td>**roofHeight**</td>
 <td>roof:height</td>
 </tr>
 </table>

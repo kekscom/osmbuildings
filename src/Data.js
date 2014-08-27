@@ -4,10 +4,6 @@ var Data = {
 
   items: [],
 
-  cropDecimals: function(num) {
-    return parseFloat(num.toFixed(5));
-  },
-
   getPixelFootprint: function(buffer) {
     var footprint = new Int32Array(buffer.length),
       px;
@@ -136,7 +132,7 @@ var Data = {
   },
 
   load: function(url) {
-    this.url = url || DATA_URL;
+    this.url = template(url || DATA_URL, { k: DATA_KEY });
     this.update();
   },
 
@@ -174,7 +170,7 @@ var Data = {
         if ((parsedData = Cache.get(cacheKey))) {
           this.addRenderItems(parsedData);
 				} else {
-          xhr(this.url, coords, this.createClosure(cacheKey));
+          xhr(template(this.url, coords), this.createClosure(cacheKey));
         }
       }
     }

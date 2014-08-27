@@ -4,7 +4,7 @@ var osmb = function(map) {
 	map.addLayer(this);
 };
 
-var proto = osmb.prototype = new L.Layer();
+var proto = osmb.prototype = L.Layer ? new L.Layer() : {};
 
 proto.onAdd = function(map) {
   this.map = map;
@@ -69,10 +69,13 @@ proto.onMove = function(e) {
 };
 
 proto.onMoveEnd = function(e) {
-  if (this.skipMoveEnd) { // moveend is also fired after zoom
-    this.skipMoveEnd = false;
+  this.noClick = true;
+
+  if (this.noMoveEnd) { // moveend is also fired after zoom
+    delete this.noMoveEnd;
     return;
   }
+
   var
     map = this.map,
     off = this.getOffset(),
@@ -110,7 +113,7 @@ proto.onZoomEnd = function(e) {
 
   setOrigin({ x:po.x-off.x, y:po.y-off.y });
   onZoomEnd({ zoom:map._zoom });
-  this.skipMoveEnd = true;
+  this.noMoveEnd = true;
 };
 
 proto.onResize = function() {};
@@ -124,6 +127,10 @@ proto.onViewReset = function() {
 };
 
 proto.onClick = function(e) {
+  if (this.noClick) {
+    delete this.noClick;
+    return;
+  }
   onClick(Hit.getIdFromXY(e.containerPoint.x, e.containerPoint.y));
 };
 
