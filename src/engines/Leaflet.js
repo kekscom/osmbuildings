@@ -72,7 +72,7 @@ proto.onMoveEnd = function(e) {
   this.noClick = true;
 
   if (this.noMoveEnd) { // moveend is also fired after zoom
-    delete this.noMoveEnd;
+    this.noMoveEnd = false;
     return;
   }
 
@@ -128,7 +128,7 @@ proto.onViewReset = function() {
 
 proto.onClick = function(e) {
   if (this.noClick) {
-    delete this.noClick;
+    this.noClick = false;
     return;
   }
   onClick(HitAreas.getIdFromXY(e.containerPoint.x, e.containerPoint.y));

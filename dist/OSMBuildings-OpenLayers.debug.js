@@ -671,7 +671,7 @@ var
   VERSION      = '0.2.0b',
   ATTRIBUTION  = '&copy; <a href="http://osmbuildings.org">OSM Buildings</a>',
 
-  DATA_URL = 'http://tiles.osmbuildings.org/0.2/{k}/{z}/{x}/{y}.json',
+  DATA_URL = 'http://data.osmbuildings.org/0.2/{k}/tile/{z}/{x}/{y}.json',
   DATA_KEY = 'rkc8ywdl',
 
   PI         = Math.PI,
@@ -1774,11 +1774,11 @@ var HitAreas = {
   render: function() {
     if (this._timer) {
       clearTimeout(this._timer);
-      delete this._timer;
+      this._timer = null;
     }
     var self = this;
     this._timer = setTimeout(function() {
-      delete self._timer;
+      self._timer = null;
       self._render();
     }, 500);
   },

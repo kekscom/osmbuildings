@@ -11,7 +11,7 @@
 - Ambient shadows for buildings added
 - Introduced a data service for filtering and caching OSM data, results in massive speedup for loading
 - Geometry: cones enabled, also used as an interim replacement for domes
-- Temporarily enabled device accelerated perspective aka Amazon's 'Dynamic Perspective'. Turned off in favor for performance
+- Temporarily enabled device accelerated perspective aka Amazon's 'Dynamic Perspective'. Turned off again in favor for performance
 - Successfully tested with LeafletJS 0.8 and OpenLayers 2.13.1
 - Code size reduced from 10.23 to 9.44k (all gzipped)
 
@@ -41,8 +41,7 @@
 - cylindric object rendering added
 - API is now documented in GitHub README
 - map engine adapters simplified
-- minHeight for GeoJSON enabled
-- height units for GeoJSON enabled
+- minHeight and height units for GeoJSON enabled
 - very simple fix for building occlusion
 - successful tests with LeafletJS 0.6.4
 
