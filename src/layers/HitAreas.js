@@ -85,6 +85,9 @@ var HitAreas = {
   },
 
   getIdFromXY: function(x, y) {
+    if (!this._data) {
+      return;
+    }
     var index = 4*((y|0) * WIDTH + (x|0));
     return this._data[index] | (this._data[index+1]<<8) | (this._data[index+2]<<16);
   },
