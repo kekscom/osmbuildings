@@ -37,7 +37,7 @@ new L.TileLayer('http://{s}.tiles.mapbox.com/v3/<YOUR KEY HERE>/{z}/{x}/{y}.png'
 Add the buildings layer.
 
 ~~~ javascript
-new OSMBuildings(map).loadData();
+new OSMBuildings(map).load();
 ~~~
 
 As a popular alternative, you could pass a <a href="http://www.geojson.org/geojson-spec.html">GeoJSON</a> FeatureCollection object.<br>
@@ -69,7 +69,7 @@ var geoJSON = {
   }]
 };
 
-new OSMBuildings(map).setData(geoJSON);
+new OSMBuildings(map).set(geoJSON);
 ~~~
 
 
@@ -107,7 +107,7 @@ map.setCenter(
 Add the buildings layer.
 
 ~~~ javascript
-new OSMBuildings(map).loadData();
+new OSMBuildings(map).load();
 ~~~
 
 
@@ -183,7 +183,7 @@ Callback receives a feature id as argument.</td>
 </tr>
 
 <tr>
-<td>data({GeoJSON FeatureCollection})</td>
+<td>set({GeoJSON FeatureCollection})</td>
 <td>Just add GeoJSON data to your map.<br>
 *Former variant `setData()` is subject to deprecation.*</td>
 </tr>
