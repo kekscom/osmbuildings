@@ -581,7 +581,7 @@ var GeoJSON = (function() {
 
       case 'MultiPolygon':
         geometries = [];
-        for (i = 0, il = geometry.geometries.length; i < il; i++) {
+        for (i = 0, il = geometry.coordinates.length; i < il; i++) {
           if ((sub = getGeometries({ type: 'Polygon', coordinates: geometry.coordinates[i] }))) {
             geometries.push.apply(geometries, sub);
           }
