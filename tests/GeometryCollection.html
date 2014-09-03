@@ -25,7 +25,7 @@ html, body {
 <div id="map"></div>
 
 <script>
-var map = new L.Map('map').setView([41.38933, 2.15941], 15); // Barcelona
+var map = new L.Map('map').setView([41.38273, 2.18623], 17); // Barcelona
 new L.TileLayer('http://otile1.mqcdn.com/tiles/1.0.0/map/{z}/{x}/{y}.jpg', { maxNativeZoom: 19, maxZoom: 21 }).addTo(map);
 
 var geojson = {
@@ -266,7 +266,10 @@ var geojson = {
           }
         ]
       },
-      "properties": {}
+      "properties": {
+        color: '#ffcc00',
+        roofColor: '#ff0000'
+      }
     }
   ]
 };

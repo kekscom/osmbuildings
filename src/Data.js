@@ -129,7 +129,8 @@ var Data = {
   set: function(data) {
     this.isStatic = true;
     this.resetItems();
-    this.addRenderItems(this.staticData = this.parse(data), true);
+    this._staticData = GeoJSON.read(data);
+    this.addRenderItems(this._staticData, true);
   },
 
   load: function(url) {
@@ -145,7 +146,7 @@ var Data = {
     }
 
     if (this.isStatic) {
-      this.addRenderItems(this.staticData);
+      this.addRenderItems(this._staticData);
       return;
     }
 

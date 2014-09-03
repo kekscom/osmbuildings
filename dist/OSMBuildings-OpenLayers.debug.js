@@ -1035,7 +1035,8 @@ var Data = {
   set: function(data) {
     this.isStatic = true;
     this.resetItems();
-    this.addRenderItems(this.staticData = this.parse(data), true);
+    this._staticData = GeoJSON.read(data);
+    this.addRenderItems(this._staticData, true);
   },
 
   load: function(url) {
@@ -1051,7 +1052,7 @@ var Data = {
     }
 
     if (this.isStatic) {
-      this.addRenderItems(this.staticData);
+      this.addRenderItems(this._staticData);
       return;
     }
 
@@ -2266,10 +2267,10 @@ proto.load = function(url) {
 // TODO: remove deprecation
 proto.setData = function(data) {
   console.warn('OSM Buildings: .setData() will be deprecated soon. Use .data() instead.');
-  return this.data(data);
+  return this.set(data);
 };
 
-proto.data = function(data) {
+proto.set = function(data) {
   Data.set(data);
   return this;
 };
