@@ -39,6 +39,10 @@ var HitAreas = {
     for (var i = 0, il = dataItems.length; i < il; i++) {
       item = dataItems[i];
 
+      if (!(color = item.hitColor)) {
+        continue;
+      }
+
       footprint = item.footprint;
 
       if (!isVisible(footprint)) {
@@ -51,8 +55,6 @@ var HitAreas = {
       if (item.minHeight) {
         mh = item.minHeight;
       }
-
-      color = item.hitColor;
 
       switch (item.shape) {
         case 'cylinder':
