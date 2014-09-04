@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.2.0b @ 2014-09-01
+## 0.2.0b @ 2014-09-04
 
 *From version 0.2.0 OSM Buildings is entering beta phase!*
 
@@ -11,7 +11,7 @@
 - Ambient shadows for buildings added
 - Introduced a data service for filtering and caching OSM data, results in massive speedup for loading
 - Geometry: cones enabled, also used as an interim replacement for domes
-- Temporarily enabled device accelerated perspective aka Amazon's 'Dynamic Perspective'. Turned off again in favor for performance
+- Tested device accelerated perspective aka Amazon's 'Dynamic Perspective', but disabled again in favor for performance
 - Successfully tested with LeafletJS 0.8 and OpenLayers 2.13.1
 - Code size reduced from 10.23 to 9.44k (all gzipped)
 
