@@ -59,10 +59,10 @@ proto.load = function(url) {
 // TODO: remove deprecation
 proto.setData = function(data) {
   console.warn('OSM Buildings: .setData() will be deprecated soon. Use .data() instead.');
-  return this.data(data);
+  return this.set(data);
 };
 
-proto.data = function(data) {
+proto.set = function(data) {
   Data.set(data);
   return this;
 };

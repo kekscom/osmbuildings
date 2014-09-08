@@ -521,8 +521,15 @@ var Import = {
     item.height    = prop.height    || (prop.levels   ? prop.levels  *this.METERS_PER_LEVEL : DEFAULT_HEIGHT);
     item.minHeight = prop.minHeight || (prop.minLevel ? prop.minLevel*this.METERS_PER_LEVEL : 0);
 
-    item.wallColor = prop.material     ? this.getMaterialColor(prop.material)     : (prop.wallColor || prop.color);
-    item.roofColor = prop.roofMaterial ? this.getMaterialColor(prop.roofMaterial) : prop.roofColor;
+    var wallColor = prop.material ? this.getMaterialColor(prop.material) : (prop.wallColor || prop.color);
+    if (wallColor) {
+      item.wallColor = wallColor;
+    }
+
+    var roofColor = prop.roofMaterial ? this.getMaterialColor(prop.roofMaterial) : prop.roofColor;
+    if (roofColor) {
+      item.roofColor = roofColor;
+    }
 
     switch (prop.shape) {
       case 'cone':
@@ -574,7 +581,7 @@ var GeoJSON = (function() {
 
       case 'MultiPolygon':
         geometries = [];
-        for (i = 0, il = geometry.geometries.length; i < il; i++) {
+        for (i = 0, il = geometry.coordinates.length; i < il; i++) {
           if ((sub = getGeometries({ type: 'Polygon', coordinates: geometry.coordinates[i] }))) {
             geometries.push.apply(geometries, sub);
           }
@@ -653,8 +660,12 @@ var GeoJSON = (function() {
           if (item.shape === 'cone' || item.shape === 'cylinder') {
             item.radius = Import.getRadius(item.footprint);
           }
-          item.holes = geometries[j].inner;
-          item.id    = feature.id || feature.properties.id || [item.footprint[0], item.footprint[1], item.height, item.minHeight].join(',');
+          if (geometries[j].inner) {
+            item.holes = geometries[j].inner;
+          }
+          if (feature.id || feature.properties.id) {
+            item.id = feature.id || feature.properties.id;
+          }
           res.push(item); // TODO: clone base properties!
         }
       }
@@ -943,90 +954,90 @@ var Data = {
   },
 
   addRenderItems: function(data, allAreNew) {
-    var scaledItems = this.scale(data);
-    for (var i = 0, il = scaledItems.length; i < il; i++) {
-      if (!this.currentItemsIndex[scaledItems[i].id]) {
-        scaledItems[i].scale = allAreNew ? 0 : 1;
-        this.items.push(scaledItems[i]);
-        this.currentItemsIndex[scaledItems[i].id] = 1;
+    var item, scaledItem, id;
+    for (var i = 0, il = data.length; i < il; i++) {
+      item = data[i];
+      id = item.id || [item.footprint[0], item.footprint[1], item.height, item.minHeight].join(',');
+      if (!this.currentItemsIndex[id]) {
+        if ((scaledItem = this.scale(item))) {
+          scaledItem.scale = allAreNew ? 0 : 1;
+          this.items.push(scaledItem);
+          this.currentItemsIndex[id] = 1;
+        }
       }
     }
     fadeIn();
   },
 
-  scale: function(items) {
-    var i, il, j, jl,
-      res = [],
-      item,
-      height, minHeight, footprint,
-      color, wallColor, altColor,
-      roofColor, roofHeight,
-      holes, innerFootprint,
+  scale: function(item) {
+    var
+      res = {},
+      // TODO: calculate this on zoom change only
       zoomScale = 6 / pow(2, ZOOM-MIN_ZOOM); // TODO: consider using HEIGHT / (window.devicePixelRatio || 1)
 
-    for (i = 0, il = items.length; i < il; i++) {
-      item = items[i];
+    if (item.id) {
+      res.id = item.id;
+      res.hitColor = HitAreas.toColor(item.id);
+    }
 
-      height = item.height / zoomScale;
+    res.height = min(item.height/zoomScale, MAX_HEIGHT);
 
-      minHeight = isNaN(item.minHeight) ? 0 : item.minHeight / zoomScale;
-      if (minHeight > MAX_HEIGHT) {
-        continue;
-      }
+    res.minHeight = isNaN(item.minHeight) ? 0 : item.minHeight / zoomScale;
+    if (res.minHeight > MAX_HEIGHT) {
+      return;
+    }
 
-      if (!(footprint = this.getPixelFootprint(item.footprint))) {
-        continue;
-      }
+    res.footprint = this.getPixelFootprint(item.footprint);
+    if (!res.footprint) {
+      return;
+    }
+    res.center = getCenter(res.footprint);
 
-      holes = [];
-      if (item.holes) {
-        // TODO: simplify
-        for (j = 0, jl = item.holes.length; j < jl; j++) {
-          if ((innerFootprint = this.getPixelFootprint(item.holes[j]))) {
-            holes.push(innerFootprint);
-          }
-        }
-      }
-
-      wallColor = null;
-      altColor  = null;
-      if (item.wallColor) {
-        if ((color = parseColor(item.wallColor))) {
-          wallColor = color.alpha(ZOOM_FACTOR);
-          altColor  = ''+ wallColor.lightness(0.8);
-          wallColor = ''+ wallColor;
+    if (item.shape) {
+      // TODO: drop footprint
+      res.shape = item.shape;
+      if (item.radius) {
+        res.radius = item.radius/METERS_PER_PIXEL;
       }
     }
 
-      roofColor = null;
-      if (item.roofColor) {
-        if ((color = parseColor(item.roofColor))) {
-          roofColor = ''+ color.alpha(ZOOM_FACTOR);
+    if (item.holes) {
+      res.holes = [];
+      var innerFootprint;
+      for (var i = 0, il = item.holes.length; i < il; i++) {
+        // TODO: simplify
+        if ((innerFootprint = this.getPixelFootprint(item.holes[i]))) {
+          res.holes.push(innerFootprint);
         }
       }
+    }
 
-      roofHeight = item.roofHeight / zoomScale;
+    var color;
 
-      if (height <= minHeight && roofHeight <= 0) {
-        continue;
+    if (item.wallColor) {
+      if ((color = parseColor(item.wallColor))) {
+        color = color.alpha(ZOOM_FACTOR);
+        res.altColor  = ''+ color.lightness(0.8);
+        res.wallColor = ''+ color;
       }
+    }
 
-      res.push({
-        id:         item.id,
-        footprint:  footprint,
-        height:     min(height, MAX_HEIGHT),
-        minHeight:  minHeight,
-        wallColor:  wallColor,
-        altColor:   altColor,
-        roofColor:  roofColor,
-        roofShape:  item.roofShape,
-        roofHeight: roofHeight,
-        center:     getCenter(footprint),
-        holes:      holes.length ? holes : null,
-        shape:      item.shape, // TODO: drop footprint
-        radius:     item.radius/METERS_PER_PIXEL,
-        hitColor:   HitAreas.toColor(item.id)
-      });
+    if (item.roofColor) {
+      if ((color = parseColor(item.roofColor))) {
+        res.roofColor = ''+ color.alpha(ZOOM_FACTOR);
+      }
+    }
+
+    if (item.roofHeight) {
+      res.roofHeight = item.roofHeight/zoomScale;
+    }
+
+    if (res.height+res.roofHeight <= res.minHeight) {
+      return;
+    }
+
+    if (item.roofShape) {
+      res.roofShape = item.roofShape;
     }
 
     return res;
@@ -1035,7 +1046,8 @@ var Data = {
   set: function(data) {
     this.isStatic = true;
     this.resetItems();
-    this.addRenderItems(this.staticData = this.parse(data), true);
+    this._staticData = GeoJSON.read(data);
+    this.addRenderItems(this._staticData, true);
   },
 
   load: function(url) {
@@ -1050,8 +1062,8 @@ var Data = {
       return;
     }
 
-    if (this.isStatic) {
-      this.addRenderItems(this.staticData);
+    if (this.isStatic && this._staticData) {
+      this.addRenderItems(this._staticData);
       return;
     }
 
@@ -1809,6 +1821,10 @@ var HitAreas = {
     for (var i = 0, il = dataItems.length; i < il; i++) {
       item = dataItems[i];
 
+      if (!(color = item.hitColor)) {
+        continue;
+      }
+
       footprint = item.footprint;
 
       if (!isVisible(footprint)) {
@@ -1821,8 +1837,6 @@ var HitAreas = {
       if (item.minHeight) {
         mh = item.minHeight;
       }
-
-      color = item.hitColor;
 
       switch (item.shape) {
         case 'cylinder':
@@ -1853,6 +1867,9 @@ var HitAreas = {
   },
 
   getIdFromXY: function(x, y) {
+    if (!this._data) {
+      return;
+    }
     var index = 4*((y|0) * WIDTH + (x|0));
     return this._data[index] | (this._data[index+1]<<8) | (this._data[index+2]<<16);
   },
@@ -2266,10 +2283,10 @@ proto.load = function(url) {
 // TODO: remove deprecation
 proto.setData = function(data) {
   console.warn('OSM Buildings: .setData() will be deprecated soon. Use .data() instead.');
-  return this.data(data);
+  return this.set(data);
 };
 
-proto.data = function(data) {
+proto.set = function(data) {
   Data.set(data);
   return this;
 };

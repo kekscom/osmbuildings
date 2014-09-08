@@ -17,7 +17,7 @@ var GeoJSON = (function() {
 
       case 'MultiPolygon':
         geometries = [];
-        for (i = 0, il = geometry.geometries.length; i < il; i++) {
+        for (i = 0, il = geometry.coordinates.length; i < il; i++) {
           if ((sub = getGeometries({ type: 'Polygon', coordinates: geometry.coordinates[i] }))) {
             geometries.push.apply(geometries, sub);
           }
@@ -96,8 +96,12 @@ var GeoJSON = (function() {
           if (item.shape === 'cone' || item.shape === 'cylinder') {
             item.radius = Import.getRadius(item.footprint);
           }
-          item.holes = geometries[j].inner;
-          item.id    = feature.id || feature.properties.id || [item.footprint[0], item.footprint[1], item.height, item.minHeight].join(',');
+          if (geometries[j].inner) {
+            item.holes = geometries[j].inner;
+          }
+          if (feature.id || feature.properties.id) {
+            item.id = feature.id || feature.properties.id;
+          }
           res.push(item); // TODO: clone base properties!
         }
       }

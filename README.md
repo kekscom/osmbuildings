@@ -37,7 +37,7 @@ new L.TileLayer('http://{s}.tiles.mapbox.com/v3/<YOUR KEY HERE>/{z}/{x}/{y}.png'
 Add the buildings layer.
 
 ~~~ javascript
-new OSMBuildings(map).loadData();
+new OSMBuildings(map).load();
 ~~~
 
 As a popular alternative, you could pass a <a href="http://www.geojson.org/geojson-spec.html">GeoJSON</a> FeatureCollection object.<br>
@@ -69,7 +69,7 @@ var geoJSON = {
   }]
 };
 
-new OSMBuildings(map).setData(geoJSON);
+new OSMBuildings(map).set(geoJSON);
 ~~~
 
 
@@ -107,7 +107,7 @@ map.setCenter(
 Add the buildings layer.
 
 ~~~ javascript
-new OSMBuildings(map).loadData();
+new OSMBuildings(map).load();
 ~~~
 
 
@@ -183,7 +183,7 @@ Callback receives a feature id as argument.</td>
 </tr>
 
 <tr>
-<td>data({GeoJSON FeatureCollection})</td>
+<td>set({GeoJSON FeatureCollection})</td>
 <td>Just add GeoJSON data to your map.<br>
 *Former variant `setData()` is subject to deprecation.*</td>
 </tr>
@@ -211,19 +211,19 @@ Styles
 </tr>
 
 <tr>
-<td>**color/wallColor**</td>
+<td>color/wallColor</td>
 <td>String</td>
 <td>Defines the objects default primary color. I.e. #ffcc00, rgb(255,200,200), rgba(255,200,200,0.9)</td>
 </tr>
 
 <tr>
-<td>**roofColor**</td>
+<td>roofColor</td>
 <td>String</td>
 <td>Defines the objects default roof color.</td>
 </tr>
 
 <tr>
-<td>**shadows**</td>
+<td>shadows</td>
 <td>Boolean</td>
 <td>Enables or disables shadow rendering, default: enabled</td>
 </tr>
@@ -241,47 +241,47 @@ Styles
 </tr>
 
 <tr>
-<td>**height**</td>
+<td>height</td>
 <td>height, building:height, levels, building:levels</td>
 </tr>
 
 <tr>
-<td>**minHeight**</td>
+<td>minHeight</td>
 <td>min_height, building:min_height, min_level, building:min_level</td>
 </tr>
 
 <tr>
-<td>**color/wallColor**</td>
+<td>color/wallColor</td>
 <td>building:color, building:colour</td>
 </tr>
 
 <tr>
-<td>**material**</td>
+<td>material</td>
 <td>building:material, building:facade:material, building:cladding</td>
 </tr>
 
 <tr>
-<td>**roofColor**</td>
+<td>roofColor</td>
 <td>roof:color, roof:colour, building:roof:color, building:roof:colour</td>
 </tr>
 
 <tr>
-<td>**roofMaterial**</td>
+<td>roofMaterial</td>
 <td>roof:material, building:roof:material</td>
 </tr>
 
 <tr>
-<td>**shape**</td>
+<td>shape</td>
 <td>building:shape[=cylinder,sphere]</td>
 </tr>
 
 <tr>
-<td>**roofShape**</td>
+<td>roofShape</td>
 <td>roof:shape[=dome]</td>
 </tr>
 
 <tr>
-<td>**roofHeight**</td>
+<td>roofHeight</td>
 <td>roof:height</td>
 </tr>
 </table>
