@@ -6,7 +6,7 @@
 
 **Features**
 
-- Buildings are clickable now, use .on('click', function(featureId) {...})
+- Buildings are clickable now, use .click(function(featureId) {...})
 - Massive improvements in GeoJSON reading, bigger set of properties and GeometryCollections are supported
 - Ambient shadows for buildings added
 - Introduced a data service for filtering and caching OSM data, results in massive speedup for loading
