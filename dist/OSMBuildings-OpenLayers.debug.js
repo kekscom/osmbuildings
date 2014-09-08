@@ -708,22 +708,9 @@ var
   ALT_COLOR  = WALL_COLOR.lightness(0.8),
   ROOF_COLOR = WALL_COLOR.lightness(1.2),
 
-<<<<<<< HEAD
-  WALL_COLOR = parseColor('rgba(200, 190, 180)'),
-  ALT_COLOR  = WALL_COLOR.lightness(0.8),
-  ROOF_COLOR = WALL_COLOR.lightness(1.2),
-
   WALL_COLOR_STR = ''+ WALL_COLOR,
   ALT_COLOR_STR  = ''+ ALT_COLOR,
   ROOF_COLOR_STR = ''+ ROOF_COLOR,
-
-  fadeFactor = 1,
-  animTimer,
-=======
-  WALL_COLOR_STR = ''+ WALL_COLOR,
-  ALT_COLOR_STR  = ''+ ALT_COLOR,
-  ROOF_COLOR_STR = ''+ ROOF_COLOR,
->>>>>>> master
 
   METERS_PER_PIXEL = 1,
   ZOOM_FACTOR = 1,
@@ -1524,48 +1511,6 @@ var Buildings = {
     };
   },
 
-<<<<<<< HEAD
-  drawSolid: function(polygon, _h, _mh, color, altColor) {
-    var a = { x:0, y:0 }, b = { x:0, y:0 },
-    _a, _b,
-    roof = [];
-    for (var i = 0, il = polygon.length-3; i < il; i += 2) {
-        a.x = polygon[i]  -ORIGIN_X;
-        a.y = polygon[i+1]-ORIGIN_Y;
-        b.x = polygon[i+2]-ORIGIN_X;
-        b.y = polygon[i+3]-ORIGIN_Y;
-
-      // project 3d to 2d on extruded footprint
-        _a = this.project(a.x, a.y, _h);
-        _b = this.project(b.x, b.y, _h);
-
-      if (_mh) {
-          a = this.project(a.x, a.y, _mh);
-          b = this.project(b.x, b.y, _mh);
-      }
-
-      // backface culling check
-      if ((b.x-a.x) * (_a.y-a.y) > (_a.x-a.x) * (b.y-a.y)) {
-        // depending on direction, set wall shading
-        if ((a.x < b.x && a.y < b.y) || (a.x > b.x && a.y > b.y)) {
-            this.context.fillStyle = altColor;
-        } else {
-            this.context.fillStyle = color;
-        }
-          this.drawFace([
-          b.x, b.y,
-          a.x, a.y,
-          _a.x, _a.y,
-          _b.x, _b.y
-        ]);
-      }
-      roof[i]   = _a.x;
-      roof[i+1] = _a.y;
-    }
-
-    return roof;
-  },
-
   render: function() {
     var f = WIDTH / (window.devicePixelRatio || 1) / 30;
 
@@ -1584,36 +1529,36 @@ var Buildings = {
     R, G, B, A;
 
     for (var i = 0, il = dataRed.length; i < il; i+= 4) {
-    R = i;
-    G = i + 1;
-    B = i + 2;
-    A = i + 3;
+      R = i;
+      G = i + 1;
+      B = i + 2;
+      A = i + 3;
 
-    if (!dataRed[A] && !dataCyan[A]) {
-      continue;
-    }
+      if (!dataRed[A] && !dataCyan[A]) {
+        continue;
+      }
 
-//    dataRed[R] = 0.7 * (dataRed[G] || 235)  + 0.3 * (dataRed[B] || 230);
-//    dataRed[G] = dataCyan[G] || ROOF_COLOR.g;
-//    dataRed[B] = dataCyan[B] || ROOF_COLOR.b;
-//    dataRed[A] = max(dataCyan[A], dataCyan[A]);
+      dataRed[R] = 0.7 * (dataRed[G] || 235)  + 0.3 * (dataRed[B] || 230);
+      dataRed[G] = dataCyan[G] || ROOF_COLOR.g;
+      dataRed[B] = dataCyan[B] || ROOF_COLOR.b;
+      dataRed[A] = max(dataCyan[A], dataCyan[A]);
 
-    if (dataRed[A] && dataCyan[A]) {
-      dataRed[R] = 0.7 * dataRed[G] + 0.3 * dataRed[B];
-      dataRed[G] = dataCyan[G];
-      dataRed[B] = dataCyan[B];
-      dataRed[A] = max(dataRed[A], dataCyan[A]);
-    } else if (dataRed[A]) {
-      dataRed[R] = 0.7 * dataRed[G] + 0.3 * dataRed[B];
-      dataRed[G] = ROOF_COLOR.g;
-      dataRed[B] = ROOF_COLOR.b;
-      dataRed[A] = dataRed[A]; // * 0.5;
-    } else if (dataCyan[A]) {
-      dataRed[R] = 0.7 * ROOF_COLOR.g + 0.3 * ROOF_COLOR.b;
-      dataRed[G] = dataCyan[G];
-      dataRed[B] = dataCyan[B];
-      dataRed[A] = dataCyan[A]; // * 0.5;
-    }
+//      if (dataRed[A] && dataCyan[A]) {
+//        dataRed[R] = 0.7 * dataRed[G] + 0.3 * dataRed[B];
+//        dataRed[G] = dataCyan[G];
+//        dataRed[B] = dataCyan[B];
+//        dataRed[A] = max(dataRed[A], dataCyan[A]);
+//      } else if (dataRed[A]) {
+//        dataRed[R] = 0.7 * dataRed[G] + 0.3 * dataRed[B];
+//        dataRed[G] = ROOF_COLOR.g;
+//        dataRed[B] = ROOF_COLOR.b;
+//        dataRed[A] = dataRed[A]; // * 0.5;
+//      } else if (dataCyan[A]) {
+//        dataRed[R] = 0.7 * ROOF_COLOR.g + 0.3 * ROOF_COLOR.b;
+//        dataRed[G] = dataCyan[G];
+//        dataRed[B] = dataCyan[B];
+//        dataRed[A] = dataCyan[A]; // * 0.5;
+//      }
 
     }
 
@@ -1621,43 +1566,7 @@ var Buildings = {
     this.context.putImageData(canvasData1, 0, 0);
   },
 
-  drawFace: function(points, stroke, holes) {
-    var
-      context = this.context,
-      i, il, j, jl;
-
-    if (!points.length) {
-      return;
-    }
-
-    context.beginPath();
-
-    context.moveTo(points[0], points[1]);
-    for (i = 2, il = points.length; i < il; i += 2) {
-      context.lineTo(points[i], points[i+1]);
-    }
-
-    if (holes) {
-      for (i = 0, il = holes.length; i < il; i++) {
-        points = holes[i];
-        context.moveTo(points[0], points[1]);
-        for (j = 2, jl = points.length; j < jl; j += 2) {
-          context.lineTo(points[j], points[j+1]);
-        }
-      }
-    }
-
-    context.closePath();
-    if (stroke) {
-      context.stroke();
-    }
-    context.fill();
-  },
-
   renderPass: function() {
-=======
-  render: function() {
->>>>>>> master
     var context = this.context;
     context.clearRect(0, 0, WIDTH, HEIGHT);
 
@@ -1667,10 +1576,6 @@ var Buildings = {
     }
 
     var
-<<<<<<< HEAD
-      i, il, j, jl,
-=======
->>>>>>> master
       item,
       h, mh,
       sortCam = { x:CAM_X+ORIGIN_X, y:CAM_Y+ORIGIN_Y },
@@ -1692,19 +1597,7 @@ var Buildings = {
 
       footprint = item.footprint;
 
-<<<<<<< HEAD
-      for (j = 0, jl = footprint.length - 1; j < jl; j += 2) {
-      // checking footprint is sufficient for visibility
-      // TODO: pre-filter by data tile position
-        if (!isVisible) {
-          isVisible = (footprint[j] > vp.minX && footprint[j] < vp.maxX && footprint[j+1] > vp.minY && footprint[j+1] < vp.maxY);
-        }
-      }
-
-      if (!isVisible) {
-=======
       if (!isVisible(footprint)) {
->>>>>>> master
         continue;
       }
 
@@ -1788,15 +1681,8 @@ var Simplified = {
         continue;
       }
 
-<<<<<<< HEAD
-      altColor  = item.altColor  || ALT_COLOR_STR;
-      roofColor = item.roofColor || ROOF_COLOR_STR;
-
-      this.context.strokeStyle = altColor;
-=======
       context.strokeStyle = item.altColor  || ALT_COLOR_STR;
       context.fillStyle   = item.roofColor || ROOF_COLOR_STR;
->>>>>>> master
 
       if (item.shape === 'cylinder' || item.shape === 'cone' || item.shape === 'dome') {
         Cylinder.simplified(context, item.center, item.radius);
@@ -2392,10 +2278,7 @@ proto.moveByPx = function(dx, dy) {
 //****** file: public.js ******
 
 
-<<<<<<< HEAD
-=======
 // TODO: remove deprecation
->>>>>>> master
 proto.setStyle = function(style) {
   console.warn('OSM Buildings: .setStyle() will be deprecated soon. Use .style() instead.');
   return this.style(style);
