@@ -85,10 +85,10 @@ var Block = {
 
   simplified: function(context, polygon, innerPolygons) {
     context.beginPath();
-    this.ring(context, polygon);
+    this._ringAbs(context, polygon);
     if (innerPolygons) {
       for (var i = 0, il = innerPolygons.length; i < il; i++) {
-        this.ring(context, innerPolygons[i]);
+        this._ringAbs(context, innerPolygons[i]);
       }
     }
     context.closePath();
@@ -96,7 +96,7 @@ var Block = {
     context.fill();
   },
 
-  ring: function(context, polygon) {
+  _ringAbs: function(context, polygon) {
     context.moveTo(polygon[0]-ORIGIN_X, polygon[1]-ORIGIN_Y);
     for (var i = 2, il = polygon.length-1; i < il; i += 2) {
       context.lineTo(polygon[i]-ORIGIN_X, polygon[i+1]-ORIGIN_Y);
@@ -148,16 +148,16 @@ var Block = {
 
     if (innerPolygons) {
       for (i = 0, il = innerPolygons.length; i < il; i++) {
-        this.ring(context, innerPolygons[i]);
+        this._ringAbs(context, innerPolygons[i]);
       }
     }
   },
 
   shadowMask: function(context, polygon, innerPolygons) {
-    this.ring(context, polygon);
+    this._ringAbs(context, polygon);
     if (innerPolygons) {
       for (var i = 0, il = innerPolygons.length; i < il; i++) {
-        this.ring(context, innerPolygons[i]);
+        this._ringAbs(context, innerPolygons[i]);
       }
     }
   },
