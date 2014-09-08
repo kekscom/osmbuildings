@@ -30,23 +30,26 @@ new L.TileLayer('http://{s}.tile.stamen.com/toner-lite/{z}/{x}/{y}.png', {
   maxZoom: 21
 }).addTo(map);
 
-var osmb = new OSMBuildings(map).each(function(item) {
-  var state = item.tags.building;
-  if (state === 'collapsed') {
-    item.tags['building:color'] = 'red';
-    item.tags['roof:color'] = 'red';
-    item.tags['height'] = 35; // increase height otherwise OSMB won't add perspective'
-  } else if (state === 'damaged') {
-    item.tags['building:color'] = 'rgb(255, 140, 0)';
-    item.tags['roof:color'] = 'rgb(255, 140, 0)';
-    item.tags['height'] = 35; // increase height otherwise OSMB won't add perspective'
-  } else {
-    item.tags['building:color'] = 'grey';
-    item.tags['roof:color'] = 'grey';
-    item.tags['height'] = 60; // add more height for untouched buildings
-//  return false; // return false in order to skip untouched buildings
-  }
-}).loadData();
+
+var osmb = new OSMBuildings(map)
+  .date(new Date(2014, 5, 15, 17, 30))
+  .each(function(feature) {
+    var state = feature.tags.building;
+    if (state === 'collapsed') {
+      feature.tags['building:color'] = 'red';
+      feature.tags['roof:color'] = 'red';
+      feature.tags['height'] = 35; // increase height otherwise OSMB won't add perspective'
+    } else if (state === 'damaged') {
+      feature.tags['building:color'] = 'rgb(255, 140, 0)';
+      feature.tags['roof:color'] = 'rgb(255, 140, 0)';
+      feature.tags['height'] = 35; // increase height otherwise OSMB won't add perspective'
+    } else {
+      feature.tags['building:color'] = 'grey';
+      feature.tags['roof:color'] = 'grey';
+      feature.tags['height'] = 60; // add more height for untouched buildings
+    }
+  })
+  .load();
 </script>
 </body>
 </html>

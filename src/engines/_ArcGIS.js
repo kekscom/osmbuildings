@@ -183,7 +183,7 @@ dojo.declare('agsjs.layers.BuildingsLayer', esri.layers.Layer, {
    _onResize: function(extent, width, height) {
        if (this._osmb) {
            this._osmb.setSize(width,height );
-           this._osmb.render();
+           Layers.render();
        }
    },
    _onPan: function(extent, delta) {
@@ -192,10 +192,10 @@ dojo.declare('agsjs.layers.BuildingsLayer', esri.layers.Layer, {
            left: delta.x + 'px',
            top: delta.y + 'px'
         });
-        //this._osmb.setCamOffset(-delta.x, -delta.y);
+        //moveCam(-delta.x, -delta.y);
        } else {
-           this._setOrigin(-delta.x, -delta.y);
-           this._osmb.render();
+         this._setOrigin(-delta.x, -delta.y);
+         Layers.render();
        }
    },
    _onExtentChange: function(extent, delta, levelChange, lod) {
@@ -204,7 +204,7 @@ dojo.declare('agsjs.layers.BuildingsLayer', esri.layers.Layer, {
            top: 0
        });
        this._setOrigin();
-       this._osmb.setCamOffset(0, 0);
+       moveCam(0, 0);
        if (levelChange) {
            this._osmb.onZoomEnd({
                zoom: this._map.getLevel()
@@ -280,7 +280,7 @@ dojo.declare('agsjs.layers.BuildingsLayer', esri.layers.Layer, {
            features: jfs
        });
        if (this._style) {
-           this._osmb.setStyle(this._style);
+           this._osmb.style(this._style);
        }
    },
    _loadData: function() {

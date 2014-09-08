@@ -32,7 +32,13 @@ new L.TileLayer(
   { attribution: 'Map tiles &copy; <a href="http://mapbox.com">MapBox</a>', maxNativeZoom: 19, maxZoom: 21 }
 ).addTo(map);
 
-var osmb = new OSMBuildings(map).loadData();
+var osmb = new OSMBuildings(map)
+  .date(new Date(2014, 5, 15, 17, 30))
+  .load()
+  .click(function(id) {
+    console.log('feature id clicked:', id);
+  });
+
 L.control.layers({}, { Buildings: osmb }).addTo(map);
 </script>
 </body>

@@ -1,8 +1,5 @@
 var Import = {
 
-  YARD_TO_METER: 0.9144,
-  FOOT_TO_METER: 0.3048,
-  INCH_TO_METER: 0.0254,
   METERS_PER_LEVEL: 3,
 
   clockwise: 'CW',
@@ -34,29 +31,6 @@ var Import = {
       revPoints.push(points[i], points[i+1]);
     }
     return revPoints;
-  },
-
-  toMeters: function(str) {
-    str = '' + str;
-    var value = parseFloat(str);
-    if (value === str) {
-      return value <<0;
-    }
-    if (~str.indexOf('m')) {
-      return value <<0;
-    }
-    if (~str.indexOf('yd')) {
-      return value*this.YARD_TO_METER <<0;
-    }
-    if (~str.indexOf('ft')) {
-      return value*this.FOOT_TO_METER <<0;
-    }
-    if (~str.indexOf('\'')) {
-      var parts = str.split('\'');
-      var res = parts[0]*this.FOOT_TO_METER + parts[1]*this.INCH_TO_METER;
-      return res <<0;
-    }
-    return value <<0;
   },
 
   getRadius: function(points) {
@@ -131,95 +105,29 @@ var Import = {
     return this.materialColors[this.baseMaterials[str] || str] || null;
   },
 
-  // aligns and cleans up properties in place
   alignProperties: function(prop) {
     var item = {};
 
     prop = prop || {};
 
-    item.height = this.toMeters(prop.height);
-    if (!item.height) {
-      if (prop['building:height']) {
-        item.height = this.toMeters(prop['building:height']);
-      }
-      if (prop.levels) {
-        item.height = prop.levels*this.METERS_PER_LEVEL <<0;
-      }
-      if (prop['building:levels']) {
-        item.height = prop['building:levels']*this.METERS_PER_LEVEL <<0;
-      }
-      if (!item.height) {
-        item.height = DEFAULT_HEIGHT;
-      }
+    item.height    = prop.height    || (prop.levels   ? prop.levels  *this.METERS_PER_LEVEL : DEFAULT_HEIGHT);
+    item.minHeight = prop.minHeight || (prop.minLevel ? prop.minLevel*this.METERS_PER_LEVEL : 0);
+
+    var wallColor = prop.material ? this.getMaterialColor(prop.material) : (prop.wallColor || prop.color);
+    if (wallColor) {
+      item.wallColor = wallColor;
     }
 
-    item.minHeight = this.toMeters(prop.min_height);
-    if (!item.min_height) {
-      if (prop['building:min_height']) {
-        item.minHeight = this.toMeters(prop['building:min_height']);
-      }
-      if (prop.min_level) {
-        item.minHeight = prop.min_level*this.METERS_PER_LEVEL <<0;
-      }
-      if (prop['building:min_level']) {
-        item.minHeight = prop['building:min_level']*this.METERS_PER_LEVEL <<0;
-      }
+    var roofColor = prop.roofMaterial ? this.getMaterialColor(prop.roofMaterial) : prop.roofColor;
+    if (roofColor) {
+      item.roofColor = roofColor;
     }
 
-    item.wallColor = prop.wallColor || prop.color;
-    if (!item.wallColor) {
-      if (prop.color) {
-        item.wallColor = prop.color;
-      }
-      if (prop['building:material']) {
-        item.wallColor = this.getMaterialColor(prop['building:material']);
-      }
-      if (prop['building:facade:material']) {
-        item.wallColor = this.getMaterialColor(prop['building:facade:material']);
-      }
-      if (prop['building:cladding']) {
-        item.wallColor = this.getMaterialColor(prop['building:cladding']);
-      }
-      // wall color
-      if (prop['building:color']) {
-        item.wallColor = prop['building:color'];
-      }
-      if (prop['building:colour']) {
-        item.wallColor = prop['building:colour'];
-      }
-    }
-
-    item.roofColor = prop.roofColor;
-    if (!item.roofColor) {
-      if (prop['roof:material']) {
-        item.roofColor = this.getMaterialColor(prop['roof:material']);
-      }
-      if (prop['building:roof:material']) {
-        item.roofColor = this.getMaterialColor(prop['building:roof:material']);
-      }
-      // roof color
-      if (prop['roof:color']) {
-        item.roofColor = prop['roof:color'];
-      }
-      if (prop['roof:colour']) {
-        item.roofColor = prop['roof:colour'];
-      }
-      if (prop['building:roof:color']) {
-        item.roofColor = prop['building:roof:color'];
-      }
-      if (prop['building:roof:colour']) {
-        item.roofColor = prop['building:roof:colour'];
-      }
-    }
-
-    switch (prop['building:shape']) {
+    switch (prop.shape) {
       case 'cone':
       case 'cylinder':
-        item.shape = prop['building:shape'];
-      break;
-
       case 'dome':
-        item.shape = 'dome';
+        item.shape = prop.shape;
       break;
 
       case 'sphere':
@@ -227,14 +135,16 @@ var Import = {
       break;
     }
 
-    if ((prop['roof:shape'] === 'cone' || prop['roof:shape'] === 'dome') && prop['roof:height']) {
+    if ((prop.roofShape === 'cone' || prop.roofShape === 'dome') && prop.roofHeight) {
       item.shape = 'cylinder';
-      item.roofShape = prop['roof:shape'];
-      item.roofHeight = this.toMeters(prop['roof:height']);
+      item.roofShape = prop.roofShape;
+      item.roofHeight = prop.roofHeight;
     }
 
     if (item.roofHeight) {
       item.height = max(0, item.height-item.roofHeight);
+    } else {
+      item.roofHeight = 0;
     }
 
     return item;

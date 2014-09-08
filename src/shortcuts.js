@@ -1,7 +1,5 @@
 // object access shortcuts
 var
-  Int32Array = Int32Array || Array,
-  Uint8Array = Uint8Array || Array,
   m = Math,
   exp = m.exp,
   log = m.log,
@@ -20,6 +18,22 @@ var
   win = window,
   doc = document;
 
+
+// polyfills
+
+var
+  Int32Array = Int32Array || Array,
+  Uint8Array = Uint8Array || Array;
+
 if (!win.console) {
   win.console = {};
 }
+
+var IS_IOS = /iP(ad|hone|od)/g.test(navigator.userAgent);
+var IS_MSIE = !!~navigator.userAgent.indexOf('Trident');
+
+var requestAnimFrame = (win.requestAnimationFrame && !IS_IOS && !IS_MSIE) ?
+  win.requestAnimationFrame : function(callback) {
+    callback();
+  };
+

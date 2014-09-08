@@ -1,17 +1,12 @@
 <img src="http://osmbuildings.org/logo.png"/>
 
-OSM Buildings is a JavaScript library for visualizing OpenStreetMaps building geometry on interactive maps.<br>
+OSM Buildings is a JavaScript library for visualizing OpenStreetMaps building geometry on interactive maps.
+
 Everything is stabilizing now, entering beta state.
 
+**Example** http://osmbuildings.org/
 
-## Example
-
-http://osmbuildings.org/
-
-
-## Files
-
-It's safe to fork the [latest code revision](https://github.com/kekscom/osmbuildings/tree/master/) for development, or use it's [build files for production](https://github.com/kekscom/osmbuildings/tree/master/dist/).
+It's safe use the [ master branch](https://github.com/kekscom/osmbuildings/tree/master/dist/) for production.
 
 For further information visit http://osmbuildings.org, follow [@osmbuildings](https://twitter.com/osmbuildings/) on Twitter or report issues [here on Github](https://github.com/kekscom/osmbuildings/issues/).
 
@@ -24,8 +19,8 @@ Link Leaflet and OSM Buildings files in your HTML head section.
 
 ~~~ html
 <head>
-  <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7/leaflet.css">
-  <script src="http://cdn.leafletjs.com/leaflet-0.7/leaflet.js"></script>
+  <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css">
+  <script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
   <script src="OSMBuildings-Leaflet.js"></script>
 </head>
 ~~~
@@ -42,7 +37,7 @@ new L.TileLayer('http://{s}.tiles.mapbox.com/v3/<YOUR KEY HERE>/{z}/{x}/{y}.png'
 Add the buildings layer.
 
 ~~~ javascript
-new OSMBuildings(map).loadData();
+new OSMBuildings(map).load();
 ~~~
 
 As a popular alternative, you could pass a <a href="http://www.geojson.org/geojson-spec.html">GeoJSON</a> FeatureCollection object.<br>
@@ -74,7 +69,7 @@ var geoJSON = {
   }]
 };
 
-new OSMBuildings(map).setData(geoJSON);
+new OSMBuildings(map).set(geoJSON);
 ~~~
 
 
@@ -112,7 +107,7 @@ map.setCenter(
 Add the buildings layer.
 
 ~~~ javascript
-new OSMBuildings(map).loadData();
+new OSMBuildings(map).load();
 ~~~
 
 
@@ -164,31 +159,40 @@ Methods
 </tr>
 
 <tr>
-<td>setStyle({Object})</td>
-<td>Set default styles. See below for details.</td>
+<td>style({Object})</td>
+<td>Set default styles. See below for details.<br>
+*Former variant `setStyle()` is subject to deprecation.*</td>
 </tr>
 
 <tr>
-<td>setDate(new Date(2014, 15, 1, 10, 30)))</td>
-<td>Set date / time for shadow projection.</td>
+<td>date(new Date(2014, 15, 1, 10, 30)))</td>
+<td>Set date/time for shadow projection.<br>
+*Former variant `setDate()` is subject to deprecation.*</td>
 </tr>
 
 <tr>
 <td>each({Function})</td>
-<td>A callback method to override each feature's properties on read. Return false in order to skip a feature.</td>
+<td>A callback wrapper to override each feature's properties on read. Return false in order to skip a particular feature.<br>
+Callback receives a feature object as argument.</td>
 </tr>
 
 <tr>
-<td>setData({GeoJSON FeatureCollection})</td>
-<td>Just add GeoJSON data to your map.</td>
+<td>click({Function})</td>
+<td>A callback wrapper to handle click events on features.<br>
+Callback receives a feature id as argument.</td>
 </tr>
 
 <tr>
-<td>loadData({String})</td>
-</td>
-<td>Without parameter, it loads data tiles from OpenStreetMaps. You don't need to care for data anymore.
-As an alternative, pass an URL to <a href="http://cartodb.com/">CartoDB</a> or any other GeoJSON service. See below.
-</td>
+<td>set({GeoJSON FeatureCollection})</td>
+<td>Just add GeoJSON data to your map.<br>
+*Former variant `setData()` is subject to deprecation.*</td>
+</tr>
+
+<tr>
+<td>load({String})</td>
+<td>Without parameter, it loads data tiles from OpenStreetMaps. You don't need to care for tehe details anymore.
+As an alternative, pass an URL to any other GeoJSON TMS service.<br>
+*Former variant `load()` is subject to deprecation.*</td>
 </tr>
 
 <tr>
@@ -196,13 +200,6 @@ As an alternative, pass an URL to <a href="http://cartodb.com/">CartoDB</a> or a
 <td>Creates a screenshot of all visible OSM Buildings content and returns it as data URL. Parameter indicates, whether browser should display the image directly.</td>
 </tr>
 </table>
-
-CartoDB URL example
-
-~~~ url
-http://<YOUR CARTODB ACCOUNT HERE>.cartodb.com/api/v2/sql?q=' + ('SELECT cartodb_id AS id, height, ST_AsText(the_geom) AS the_geom FROM <YOURTABLE> WHERE the_geom %26%26 ST_SetSRID(ST_MakeBox2D(ST_Point({w},{s}), ST_Point({e},{n})), 4326)') + '&format=geojson');
-~~~
-
 
 Styles
 
@@ -214,8 +211,7 @@ Styles
 </tr>
 
 <tr>
-<td>color or <br>
-wallColor</td>
+<td>color/wallColor</td>
 <td>String</td>
 <td>Defines the objects default primary color. I.e. #ffcc00, rgb(255,200,200), rgba(255,200,200,0.9)</td>
 </tr>
@@ -240,42 +236,52 @@ wallColor</td>
 
 <table>
 <tr>
-<th>Result</th>
+<th>GeoJSON property</th>
 <th>OSM Tags</th>
 </tr>
 
 <tr>
-<td><b>height</b></td>
+<td>height</td>
 <td>height, building:height, levels, building:levels</td>
 </tr>
 
 <tr>
-<td><b>minHeight</b></td>
+<td>minHeight</td>
 <td>min_height, building:min_height, min_level, building:min_level</td>
 </tr>
 
 <tr>
-<td><b>wallColor</b></td>
-<td>building:color, building:colour, building:material, building:facade:material, building:cladding</td>
+<td>color/wallColor</td>
+<td>building:color, building:colour</td>
 </tr>
 
 <tr>
-<td><b>roofColor</b></td>
-<td>roof:color, roof:colour, building:roof:color, building:roof:colour, roof:material, building:roof:material</td>
+<td>material</td>
+<td>building:material, building:facade:material, building:cladding</td>
 </tr>
 
 <tr>
-<td><b>shape</b></td>
+<td>roofColor</td>
+<td>roof:color, roof:colour, building:roof:color, building:roof:colour</td>
+</tr>
+
+<tr>
+<td>roofMaterial</td>
+<td>roof:material, building:roof:material</td>
+</tr>
+
+<tr>
+<td>shape</td>
 <td>building:shape[=cylinder,sphere]</td>
 </tr>
 
 <tr>
-<td><b>roofShape</b></td>
+<td>roofShape</td>
 <td>roof:shape[=dome]</td>
 </tr>
 
 <tr>
-<td><b>roofHeight</b></td>
+<td>roofHeight</td>
 <td>roof:height</td>
 </tr>
 </table>

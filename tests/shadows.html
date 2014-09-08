@@ -48,7 +48,7 @@ var map = new L.Map('map').setView([52.52179, 13.39503], 18); // Berlin Bodemuse
 
 new L.TileLayer('http://{s}.tiles.mapbox.com/v3/osmbuildings.gm744p3p/{z}/{x}/{y}.png', { maxNativeZoom: 19, maxZoom: 21 }).addTo(map);
 var now = new Date(2014, 4, 10, 8, 0);
-var osmb = new OSMBuildings(map).setDate(now).loadData();
+var osmb = new OSMBuildings(map).date(now).load();
 
 function changeDate() {
   var
@@ -60,7 +60,7 @@ function changeDate() {
 
   timeRangeLabel.innerText = pad(h) + ':' + pad(m);
   dateRangeLabel.innerText = Y + '-' + pad(M+1);
-  osmb.setDate(new Date(Y, M, D, h, m));
+  osmb.date(new Date(Y, M, D, h, m));
 }
 
 function pad(v) {

@@ -35,6 +35,10 @@ proto.setMap = function(map) {
   setZoom(map.zoom);
   this.setOrigin();
 
+  map.events.register('click', map, function(e) {
+    onClick(HitAreas.getIdFromXY(e.xy.x, e.xy.y));
+  });
+
   Data.update();
 };
 
@@ -67,7 +71,7 @@ proto.moveTo = function(bounds, zoomChanged, isDragging) {
   this.setOrigin();
   this.offset.x = 0;
   this.offset.y = 0;
-  setCamOffset(this.offset);
+  moveCam(this.offset);
 
   if (zoomChanged) {
     onZoomEnd({ zoom:map.zoom });
@@ -82,7 +86,6 @@ proto.moveByPx = function(dx, dy) {
   this.offset.x += dx;
   this.offset.y += dy;
   var res = parent.moveByPx.call(this, dx, dy);
-  setCamOffset(this.offset);
-  Buildings.render();
+  moveCam(this.offset);
   return res;
 };

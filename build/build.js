@@ -126,7 +126,7 @@ Tasks.onEmpty = function() {
 
 if (options.watch) {
   options.debug = true;
-  Tasks.start('watch') = 1;
+  Tasks.start('watch');
   builder.watch(config.srcFiles, start);
 } else {
   start();
