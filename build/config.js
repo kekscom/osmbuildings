@@ -8,7 +8,7 @@ exports.COPYRIGHT = '/**\n' +
                     ' * @osmbuildings, http://osmbuildings.org\n' +
                     ' */\n';
 
-exports.VERSION = '0.1.9a';
+exports.VERSION = '0.2.0b';
 
 exports.srcFiles = [
   srcPath + '/prefix.js',
@@ -17,18 +17,19 @@ exports.srcFiles = [
   srcPath + '/lib/SunPosition.js',
   srcPath + '/Import.js',
   srcPath + '/import/GeoJSON.js',
-  srcPath + '/import/OSMXAPI.js',
   srcPath + '/variables.js',
   srcPath + '/geometry.js',
   srcPath + '/functions.js',
   srcPath + '/Cache.js',
   srcPath + '/Data.js',
+  srcPath + '/geometry/Block.js',
   srcPath + '/geometry/Cylinder.js',
-  srcPath + '/geometry/Debug.js',
   srcPath + '/layers/Buildings.js',
 srcPath + '/layers/_roofs.js',
   srcPath + '/layers/Simplified.js',
   srcPath + '/layers/Shadows.js',
+  srcPath + '/layers/HitAreas.js',
+  srcPath + '/layers/Debug.js',
   srcPath + '/Layers.js',
   srcPath + '/adapter.js',
   srcPath + '/engines/{engine}.js',
@@ -47,7 +48,7 @@ exports.engines = ['Leaflet', 'OpenLayers'];
 exports.jshint = {
 	"browser": true,
 	"node": true,
-	"predef": ["XDomainRequest", "L", "OpenLayers", "google"],
+	"predef": ["L", "OpenLayers"],
 //"unused": true,
 
 	"debug": false,

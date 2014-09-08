@@ -1,6 +1,7 @@
 var Debug = {
 
-  point: function(context, x, y, color, size) {
+  point: function(x, y, color, size) {
+    var context = this.context;
     context.fillStyle = color || '#ffcc00';
     context.beginPath();
     context.arc(x, y, size || 3, 0, 2*PI);
@@ -8,7 +9,8 @@ var Debug = {
     context.fill();
   },
 
-  line: function(context, ax, ay, bx, by, color) {
+  line: function(ax, ay, bx, by, color) {
+    var context = this.context;
     context.strokeStyle = color || '#ffcc00';
     context.beginPath();
     context.moveTo(ax, ay);

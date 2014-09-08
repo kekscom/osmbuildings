@@ -2836,8 +2836,6 @@ var OSMBuildings = (function() {
 
 // object access shortcuts
 var
-  Int32Array = Int32Array || Array,
-  Uint8Array = Uint8Array || Array,
   m = Math,
   exp = m.exp,
   log = m.log,
@@ -2856,9 +2854,25 @@ var
   win = window,
   doc = document;
 
+
+// polyfills
+
+var
+  Int32Array = Int32Array || Array,
+  Uint8Array = Uint8Array || Array;
+
 if (!win.console) {
   win.console = {};
 }
+
+var IS_IOS = /iP(ad|hone|od)/g.test(navigator.userAgent);
+var IS_MSIE = !!~navigator.userAgent.indexOf('Trident');
+
+var requestAnimFrame = (win.requestAnimationFrame && !IS_IOS && !IS_MSIE) ?
+  win.requestAnimationFrame : function(callback) {
+    callback();
+  };
+
 
 
 //****** file: Color.js ******
@@ -3031,37 +3045,42 @@ var parseColor = (function() {
   var proto = Color.prototype;
 
   proto.toString = function() {
+    var rgba = this.toRGBA();
+
+    rgba.r *= 255;
+    rgba.g *= 255;
+    rgba.b *= 255;
+
+    if (rgba.a === 1) {
+      return '#' + ((1 <<24) + (rgba.r <<16) + (rgba.g <<8) + rgba.b).toString(16).slice(1, 7);
+    }
+    return 'rgba(' + [Math.round(rgba.r), Math.round(rgba.g), Math.round(rgba.b), rgba.a.toFixed(2)].join(',') + ')';
+  };
+
+  proto.toRGBA = function() {
     var
       h = limit(this.H, 360),
       s = limit(this.S, 1),
       l = limit(this.L, 1),
-      a = limit(this.A, 1),
-      r, g, b;
+      rgba = { a:limit(this.A, 1) };
 
     // achromatic
     if (s === 0) {
-      r = l;
-      g = l;
-      b = l;
+      rgba.r = l;
+      rgba.g = l;
+      rgba.b = l;
     } else {
       var
         q = l < 0.5 ? l * (1+s) : l + s - l*s,
         p = 2 * l-q;
         h /= 360;
 
-      r = hue2rgb(p, q, h + 1/3);
-      g = hue2rgb(p, q, h);
-      b = hue2rgb(p, q, h - 1/3);
+      rgba.r = hue2rgb(p, q, h + 1/3);
+      rgba.g = hue2rgb(p, q, h);
+      rgba.b = hue2rgb(p, q, h - 1/3);
     }
 
-    r *= 255;
-    g *= 255;
-    b *= 255;
-
-    if (a === 1) {
-      return '#' + ((1 <<24) + (r <<16) + (g <<8) + b).toString(16).slice(1, 7);
-    }
-    return 'rgba(' + [Math.round(r), Math.round(g), Math.round(b), a.toFixed(2)].join(',') + ')';
+    return rgba;
   };
 
   proto.hue = function(h) {
@@ -3096,13 +3115,13 @@ var parseColor = (function() {
       r = parseInt(m[1], 16);
       g = parseInt(m[2], 16);
       b = parseInt(m[3], 16);
-    }
-
-    if ((m = str.match(/rgba?\((\d+)\D+(\d+)\D+(\d+)(\D+([\d.]+))?\)/))) {
+    } else if ((m = str.match(/rgba?\((\d+)\D+(\d+)\D+(\d+)(\D+([\d.]+))?\)/))) {
       r = parseInt(m[1], 10);
       g = parseInt(m[2], 10);
       b = parseInt(m[3], 10);
       a = m[4] ? parseFloat(m[5]) : 1;
+    } else {
+      return;
     }
 
     r /= 255;
@@ -3211,9 +3230,6 @@ var getSunPosition = (function() {
 
 var Import = {
 
-  YARD_TO_METER: 0.9144,
-  FOOT_TO_METER: 0.3048,
-  INCH_TO_METER: 0.0254,
   METERS_PER_LEVEL: 3,
 
   clockwise: 'CW',
@@ -3245,29 +3261,6 @@ var Import = {
       revPoints.push(points[i], points[i+1]);
     }
     return revPoints;
-  },
-
-  toMeters: function(str) {
-    str = '' + str;
-    var value = parseFloat(str);
-    if (value === str) {
-      return value <<0;
-    }
-    if (~str.indexOf('m')) {
-      return value <<0;
-    }
-    if (~str.indexOf('yd')) {
-      return value*this.YARD_TO_METER <<0;
-    }
-    if (~str.indexOf('ft')) {
-      return value*this.FOOT_TO_METER <<0;
-    }
-    if (~str.indexOf('\'')) {
-      var parts = str.split('\'');
-      var res = parts[0]*this.FOOT_TO_METER + parts[1]*this.INCH_TO_METER;
-      return res <<0;
-    }
-    return value <<0;
   },
 
   getRadius: function(points) {
@@ -3342,95 +3335,29 @@ var Import = {
     return this.materialColors[this.baseMaterials[str] || str] || null;
   },
 
-  // aligns and cleans up properties in place
   alignProperties: function(prop) {
     var item = {};
 
     prop = prop || {};
 
-    item.height = this.toMeters(prop.height);
-    if (!item.height) {
-      if (prop['building:height']) {
-        item.height = this.toMeters(prop['building:height']);
-      }
-      if (prop.levels) {
-        item.height = prop.levels*this.METERS_PER_LEVEL <<0;
-      }
-      if (prop['building:levels']) {
-        item.height = prop['building:levels']*this.METERS_PER_LEVEL <<0;
-      }
-      if (!item.height) {
-        item.height = DEFAULT_HEIGHT;
-      }
+    item.height    = prop.height    || (prop.levels   ? prop.levels  *this.METERS_PER_LEVEL : DEFAULT_HEIGHT);
+    item.minHeight = prop.minHeight || (prop.minLevel ? prop.minLevel*this.METERS_PER_LEVEL : 0);
+
+    var wallColor = prop.material ? this.getMaterialColor(prop.material) : (prop.wallColor || prop.color);
+    if (wallColor) {
+      item.wallColor = wallColor;
     }
 
-    item.minHeight = this.toMeters(prop.min_height);
-    if (!item.min_height) {
-      if (prop['building:min_height']) {
-        item.minHeight = this.toMeters(prop['building:min_height']);
-      }
-      if (prop.min_level) {
-        item.minHeight = prop.min_level*this.METERS_PER_LEVEL <<0;
-      }
-      if (prop['building:min_level']) {
-        item.minHeight = prop['building:min_level']*this.METERS_PER_LEVEL <<0;
-      }
+    var roofColor = prop.roofMaterial ? this.getMaterialColor(prop.roofMaterial) : prop.roofColor;
+    if (roofColor) {
+      item.roofColor = roofColor;
     }
 
-    item.wallColor = prop.wallColor || prop.color;
-    if (!item.wallColor) {
-      if (prop.color) {
-        item.wallColor = prop.color;
-      }
-      if (prop['building:material']) {
-        item.wallColor = this.getMaterialColor(prop['building:material']);
-      }
-      if (prop['building:facade:material']) {
-        item.wallColor = this.getMaterialColor(prop['building:facade:material']);
-      }
-      if (prop['building:cladding']) {
-        item.wallColor = this.getMaterialColor(prop['building:cladding']);
-      }
-      // wall color
-      if (prop['building:color']) {
-        item.wallColor = prop['building:color'];
-      }
-      if (prop['building:colour']) {
-        item.wallColor = prop['building:colour'];
-      }
-    }
-
-    item.roofColor = prop.roofColor;
-    if (!item.roofColor) {
-      if (prop['roof:material']) {
-        item.roofColor = this.getMaterialColor(prop['roof:material']);
-      }
-      if (prop['building:roof:material']) {
-        item.roofColor = this.getMaterialColor(prop['building:roof:material']);
-      }
-      // roof color
-      if (prop['roof:color']) {
-        item.roofColor = prop['roof:color'];
-      }
-      if (prop['roof:colour']) {
-        item.roofColor = prop['roof:colour'];
-      }
-      if (prop['building:roof:color']) {
-        item.roofColor = prop['building:roof:color'];
-      }
-      if (prop['building:roof:colour']) {
-        item.roofColor = prop['building:roof:colour'];
-      }
-    }
-
-    switch (prop['building:shape']) {
+    switch (prop.shape) {
       case 'cone':
       case 'cylinder':
-        item.shape = prop['building:shape'];
-      break;
-
       case 'dome':
-        item.shape = 'dome';
+        item.shape = prop.shape;
       break;
 
       case 'sphere':
@@ -3438,14 +3365,16 @@ var Import = {
       break;
     }
 
-    if ((prop['roof:shape'] === 'cone' || prop['roof:shape'] === 'dome') && prop['roof:height']) {
+    if ((prop.roofShape === 'cone' || prop.roofShape === 'dome') && prop.roofHeight) {
       item.shape = 'cylinder';
-      item.roofShape = prop['roof:shape'];
-      item.roofHeight = this.toMeters(prop['roof:height']);
+      item.roofShape = prop.roofShape;
+      item.roofHeight = prop.roofHeight;
     }
 
     if (item.roofHeight) {
       item.height = max(0, item.height-item.roofHeight);
+    } else {
+      item.roofHeight = 0;
     }
 
     return item;
@@ -3455,43 +3384,47 @@ var Import = {
 
 //****** file: GeoJSON.js ******
 
-var importGeoJSON = (function() {
+var GeoJSON = (function() {
 
-  function getPolygons(geometry) {
+  function getGeometries(geometry) {
     var
-      i, il, j, jl,
-      polygon,
-      p, lat = 1, lon = 0, alt = 2,
-      outer = [], inner = [], height = 0,
-      res = [];
+      i, il, polygon,
+      geometries = [], sub;
 
     switch (geometry.type) {
       case 'GeometryCollection':
-        var sub;
+        geometries = [];
         for (i = 0, il = geometry.geometries.length; i < il; i++) {
-          if ((sub = getPolygons(geometry.geometries[i]))) {
-            res = res.concat(sub);
+          if ((sub = getGeometries(geometry.geometries[i]))) {
+            geometries.push.apply(geometries, sub);
           }
         }
-        return res;
+        return geometries;
+
+      case 'MultiPolygon':
+        geometries = [];
+        for (i = 0, il = geometry.coordinates.length; i < il; i++) {
+          if ((sub = getGeometries({ type: 'Polygon', coordinates: geometry.coordinates[i] }))) {
+            geometries.push.apply(geometries, sub);
+          }
+        }
+        return geometries;
 
       case 'Polygon':
         polygon = geometry.coordinates;
       break;
 
-      case 'MultiPolygon':
-        polygon = geometry.coordinates[0];
-      break;
-
-      default: return res;
+      default: return [];
     }
+
+    var
+      j, jl,
+      p, lat = 1, lon = 0,
+      outer = [], inner = [];
 
     p = polygon[0];
     for (i = 0, il = p.length; i < il; i++) {
       outer.push(p[i][lat], p[i][lon]);
-      if (p[i][alt] !== undefined) {
-        height += p[i][alt];
-      }
     }
 
     for (i = 0, il = polygon.length-1; i < il; i++) {
@@ -3505,8 +3438,7 @@ var importGeoJSON = (function() {
 
     return [{
       outer: Import.makeWinding(outer, Import.clockwise),
-      inner: inner.length ? inner : null,
-      height: height / polygon[0].length
+      inner: inner.length ? inner : null
     }];
   }
 
@@ -3520,231 +3452,60 @@ var importGeoJSON = (function() {
     return res;
   }
 
-  return function(collection, callback) {
-    var
-      i, il, j, jl,
-      res = [],
-      feature,
-      polygons,
-      baseItem, item;
-
-    for (i = 0, il = collection.length; i < il; i++) {
-      feature = collection[i];
-
-      if (feature.type !== 'Feature' || callback(feature) === false) {
-        continue;
+  return {
+    read: function(geojson) {
+      if (!geojson || geojson.type !== 'FeatureCollection') {
+        return [];
       }
 
-      baseItem = Import.alignProperties(feature.properties);
-      polygons = getPolygons(feature.geometry);
+      var
+        collection = geojson.features,
+        i, il, j, jl,
+        res = [],
+        feature,
+        geometries,
+        baseItem, item;
 
-      for (j = 0, jl = polygons.length; j < jl; j++) {
-        item = clone(baseItem);
-        item.footprint = polygons[j].outer;
-        if (item.shape === 'cone' || item.shape === 'cylinder') {
-          item.radius = Import.getRadius(item.footprint);
+      for (i = 0, il = collection.length; i < il; i++) {
+        feature = collection[i];
+
+        if (feature.type !== 'Feature' || onEach(feature) === false) {
+          continue;
         }
-        item.holes = polygons[j].inner;
-        item.id    = feature.id || feature.properties.id || [item.footprint[0], item.footprint[1], item.height, item.minHeight].join(',');
-        res.push(item); // TODO: clone base properties!
-      }
-    }
 
-    return res;
+        baseItem = Import.alignProperties(feature.properties);
+        geometries = getGeometries(feature.geometry);
+
+        for (j = 0, jl = geometries.length; j < jl; j++) {
+          item = clone(baseItem);
+          item.footprint = geometries[j].outer;
+          if (item.shape === 'cone' || item.shape === 'cylinder') {
+            item.radius = Import.getRadius(item.footprint);
+          }
+          if (geometries[j].inner) {
+            item.holes = geometries[j].inner;
+          }
+          if (feature.id || feature.properties.id) {
+            item.id = feature.id || feature.properties.id;
+          }
+          res.push(item); // TODO: clone base properties!
+        }
+      }
+
+      return res;
+    }
   };
 }());
 
 
-//****** file: OSMXAPI.js ******
-
-var importOSM = (function() {
-
-  function isBuilding(data) {
-    var tags = data.tags;
-    return (tags && !tags.landuse &&
-      (tags.building || tags['building:part']) && (!tags.layer || tags.layer >= 0));
-  }
-
-//  living:'bricks',
-//  nonliving:'tar_paper',
-//  worship:'copper'
-
-//  function getBuildingType(tags) {
-//    if (tags.amenity === 'place_of_worship') {
-//      return 'worship';
-//    }
-//
-//    var type = tags.building;
-//    if (type === 'yes' || type === 'roof') {
-//      type = tags['building:use'];
-//    }
-//    if (!type) {
-//      type = tags.amenity;
-//    }
-//
-//    switch (type) {
-//      case 'apartments':
-//      case 'house':
-//      case 'residential':
-//      case 'hut':
-//        return 'living';
-//      case 'church':
-//        return 'worship';
-//    }
-//
-//    return 'nonliving';
-//  }
-
-  function getRelationWays(members) {
-    var m, outer, inner = [];
-    for (var i = 0, il = members.length; i < il; i++) {
-      m = members[i];
-      if (m.type !== 'way' || !_ways[m.ref]) {
-        continue;
-      }
-      if (!m.role || m.role === 'outer') {
-        outer = _ways[m.ref];
-        continue;
-      }
-      if (m.role === 'inner' || m.role === 'enclave') {
-        inner.push(_ways[m.ref]);
-        continue;
-      }
-    }
-
-//  if (outer && outer.tags) {
-    if (outer) { // allows tags to be attached to relation - instead of outer way
-      return { outer:outer, inner:inner };
-    }
-  }
-
-  function getFootprint(points) {
-    if (!points) {
-      return;
-    }
-
-    var footprint = [], p;
-    for (var i = 0, il = points.length; i < il; i++) {
-      p = _nodes[ points[i] ];
-      footprint.push(p[0], p[1]);
-    }
-
-    // do not close polygon yet
-    if (footprint[footprint.length-2] !== footprint[0] && footprint[footprint.length-1] !== footprint[1]) {
-      footprint.push(footprint[0], footprint[1]);
-    }
-
-    // can't span a polygon with just 2 points (+ start & end)
-    if (footprint.length < 8) {
-      return;
-    }
-
-    return footprint;
-  }
-
-  function mergeItems(dst, src) {
-    for (var p in src) {
-      if (src.hasOwnProperty(p)) {
-        dst[p] = src[p];
-      }
-    }
-    return dst;
-  }
-
-  function filterItem(item, footprint) {
-    var res = Import.alignProperties(item.tags);
-
-    if (item.id) {
-      res.id = item.id;
-    }
-
-    if (footprint) {
-      res.footprint = Import.makeWinding(footprint, Import.clockwise);
-    }
-
-    if (res.shape === 'cone' || res.shape === 'cylinder') {
-      res.radius = Import.getRadius(res.footprint);
-    }
-
-    return res;
-  }
-
-  function processNode(node) {
-    _nodes[node.id] = [node.lat, node.lon];
-  }
-
-  function processWay(way) {
-    if (isBuilding(way)) {
-      var item, footprint;
-      if ((footprint = getFootprint(way.nodes)) && _callback(way) !== false) {
-        item = filterItem(way, footprint);
-        _res.push(item);
-      }
-      return;
-    }
-
-    var tags = way.tags;
-    if (!tags || (!tags.highway && !tags.railway && !tags.landuse)) { // TODO: add more filters
-      _ways[way.id] = way;
-    }
-  }
-
-  function processRelation(relation) {
-    var relationWays, outerWay, holes = [],
-      item, relItem, outerFootprint, innerFootprint;
-    if (!isBuilding(relation) ||
-      (relation.tags.type !== 'multipolygon' && relation.tags.type !== 'building') ||
-      _callback(relation) === false) {
-      return;
-    }
-
-    if ((relationWays = getRelationWays(relation.members))) {
-      relItem = filterItem(relation);
-      if ((outerWay = relationWays.outer)) {
-        if ((outerFootprint = getFootprint(outerWay.nodes)) && _callback(outerWay) !== false) {
-          item = filterItem(outerWay, outerFootprint);
-          for (var i = 0, il = relationWays.inner.length; i < il; i++) {
-            if ((innerFootprint = getFootprint(relationWays.inner[i].nodes))) {
-              holes.push(Import.makeWinding(innerFootprint, Import.counterClockwise));
-            }
-          }
-          if (holes.length) {
-            item.holes = holes;
-          }
-          _res.push(mergeItems(item, relItem));
-        }
-      }
-    }
-  }
-
-  var _nodes, _ways, _res, _callback;
-
-  return function(data, callback) {
-    _nodes = {};
-    _ways = {};
-    _res = [];
-    _callback = callback;
-
-    var item;
-    for (var i = 0, il = data.length; i < il; i++) {
-      item = data[i];
-      switch(item.type ) {
-        case 'node':     processNode(item);     break;
-        case 'way':      processWay(item);      break;
-        case 'relation': processRelation(item); break;
-      }
-    }
-    return _res;
-  };
-})();
-
-
 //****** file: variables.js ******
 
-var VERSION      = '0.1.9a',
+var
+  VERSION      = '0.2.0b',
   ATTRIBUTION  = '&copy; <a href="http://osmbuildings.org">OSM Buildings</a>',
-  OSM_XAPI_URL = 'http://overpass-api.de/api/interpreter?data=[out:json];(way[%22building%22]({s},{w},{n},{e});node(w);way[%22building:part%22=%22yes%22]({s},{w},{n},{e});node(w);relation[%22building%22]({s},{w},{n},{e});way(r);node(w););out;',
-//OSM_XAPI_URL = 'http://overpass.osm.rambler.ru/cgi/interpreter?data=[out:json];(way[%22building%22]({s},{w},{n},{e});node(w);way[%22building:part%22=%22yes%22]({s},{w},{n},{e});node(w);relation[%22building%22]({s},{w},{n},{e});way(r);node(w););out;',
+
+  DATA_URL = 'http://data.osmbuildings.org/0.2/{k}/tile/{z}/{x}/{y}.json',
+  DATA_KEY = 'rkc8ywdl',
 
   PI         = Math.PI,
   HALF_PI    = PI/2,
@@ -3753,6 +3514,7 @@ var VERSION      = '0.1.9a',
 
   MAP_TILE_SIZE  = 256,    // map tile size in pixels
   DATA_TILE_SIZE = 0.0075, // data tile size in geo coordinates, smaller: less data to load but more requests
+  ZOOM, MAP_SIZE,
 
   MIN_ZOOM = 15,
 
@@ -3763,20 +3525,14 @@ var VERSION      = '0.1.9a',
   WIDTH = 0, HEIGHT = 0,
   CENTER_X = 0, CENTER_Y = 0,
   ORIGIN_X = 0, ORIGIN_Y = 0,
-  ZOOM, size,
 
-  activeRequest,
+  WALL_COLOR = parseColor('rgba(200, 190, 180)'),
+  ALT_COLOR  = WALL_COLOR.lightness(0.8),
+  ROOF_COLOR = WALL_COLOR.lightness(1.2),
 
-  defaultWallColor = parseColor('rgba(200, 190, 180)'),
-  defaultAltColor  = defaultWallColor.lightness(0.8),
-  defaultRoofColor = defaultWallColor.lightness(1.2),
-
-  wallColorAlpha = ''+ defaultWallColor,
-  altColorAlpha  = ''+ defaultAltColor,
-  roofColorAlpha = ''+ defaultRoofColor,
-
-  fadeFactor = 1,
-  animTimer,
+  WALL_COLOR_STR = ''+ WALL_COLOR,
+  ALT_COLOR_STR  = ''+ ALT_COLOR,
+  ROOF_COLOR_STR = ''+ ROOF_COLOR,
 
   METERS_PER_PIXEL = 1,
   ZOOM_FACTOR = 1,
@@ -3884,8 +3640,8 @@ function getCenter(poly) {
 
 function pixelToGeo(x, y) {
   var res = {};
-  x /= size;
-  y /= size;
+  x /= MAP_SIZE;
+  y /= MAP_SIZE;
   res[LAT] = y <= 0  ? 90 : y >= 1 ? -90 : RAD * (2 * atan(exp(PI * (1 - 2*y))) - HALF_PI),
   res[LON] = (x === 1 ?  1 : (x%1 + 1) % 1) * 360 - 180;
   return res;
@@ -3895,8 +3651,8 @@ function geoToPixel(lat, lon) {
   var latitude  = min(1, max(0, 0.5 - (log(tan(QUARTER_PI + HALF_PI * lat / 180)) / PI) / 2)),
     longitude = lon/360 + 0.5;
   return {
-    x: longitude*size <<0,
-    y: latitude *size <<0
+    x: longitude*MAP_SIZE <<0,
+    y: latitude *MAP_SIZE <<0
   };
 }
 
@@ -3907,43 +3663,14 @@ function fromRange(sVal, sMin, sMax, dMin, dMax) {
   return min(max(dMin + rel*range, dMin), dMax);
 }
 
-function xhr(url, param, callback) {
-  url = url.replace(/\{ *([\w_]+) *\}/g, function(tag, key) {
+function template(str, param) {
+  return str.replace(/\{([\w_]+)\}/g, function(tag, key) {
     return param[key] || tag;
   });
+}
 
-  var req = 'XDomainRequest' in win ? new XDomainRequest() : new XMLHttpRequest();
-
-  function changeState(state) {
-    if ('XDomainRequest' in win && state !== req.readyState) {
-      req.readyState = state;
-      if (req.onreadystatechange) {
-        req.onreadystatechange();
-      }
-    }
-  }
-
-  req.onerror = function() {
-    req.status = 500;
-    req.statusText = 'Error';
-    changeState(4);
-  };
-
-  req.ontimeout = function() {
-    req.status = 408;
-    req.statusText = 'Timeout';
-    changeState(4);
-  };
-
-  req.onprogress = function() {
-    changeState(3);
-  };
-
-  req.onload = function() {
-    req.status = 200;
-    req.statusText = 'Ok';
-    changeState(4);
-  };
+function xhr(url, callback) {
+  var req = new XMLHttpRequest();
 
   req.onreadystatechange = function() {
     if (req.readyState !== 4) {
@@ -3953,17 +3680,32 @@ function xhr(url, param, callback) {
       return;
     }
     if (callback && req.responseText) {
-      callback(JSON.parse(req.responseText));
+      var json;
+      try {
+        json = JSON.parse(req.responseText);
+      } catch(ex) {}
+      callback(json);
     }
   };
 
-  changeState(0);
   req.open('GET', url);
-  changeState(1);
   req.send(null);
-  changeState(2);
 
   return req;
+}
+
+function isVisible(polygon) {
+   var
+    maxX = WIDTH+ORIGIN_X,
+    maxY = HEIGHT+ORIGIN_Y;
+
+  // TODO: checking footprint is sufficient for visibility - NOT VALID FOR SHADOWS!
+  for (var i = 0, il = polygon.length-3; i < il; i+=2) {
+    if (polygon[i] > ORIGIN_X && polygon[i] < maxX && polygon[i+1] > ORIGIN_Y && polygon[i+1] < maxY) {
+      return true;
+    }
+  }
+  return false;
 }
 
 
@@ -4001,10 +3743,6 @@ var Data = {
 
   items: [],
 
-  cropDecimals: function(num) {
-    return parseFloat(num.toFixed(5));
-  },
-
   getPixelFootprint: function(buffer) {
     var footprint = new Int32Array(buffer.length),
       px;
@@ -4026,23 +3764,10 @@ var Data = {
   createClosure: function(cacheKey) {
     var self = this;
     return function(data) {
-      var parsedData = self.parse(data);
+      var parsedData = GeoJSON.read(data);
       Cache.add(parsedData, cacheKey);
       self.addRenderItems(parsedData, true);
     };
-  },
-
-  parse: function(data) {
-    if (!data) {
-      return [];
-    }
-    if (data.type === 'FeatureCollection') {
-      return importGeoJSON(data.features, this.each);
-    }
-    if (data.osm3s) { // OSM Overpass
-      return importOSM(data.elements, this.each);
-    }
-    return [];
   },
 
   resetItems: function() {
@@ -4051,89 +3776,90 @@ var Data = {
   },
 
   addRenderItems: function(data, allAreNew) {
-    var scaledItems = this.scale(data);
-    for (var i = 0, il = scaledItems.length; i < il; i++) {
-      if (!this.currentItemsIndex[scaledItems[i].id]) {
-        scaledItems[i].scale = allAreNew ? 0 : 1;
-        this.items.push(scaledItems[i]);
-        this.currentItemsIndex[scaledItems[i].id] = 1;
+    var item, scaledItem, id;
+    for (var i = 0, il = data.length; i < il; i++) {
+      item = data[i];
+      id = item.id || [item.footprint[0], item.footprint[1], item.height, item.minHeight].join(',');
+      if (!this.currentItemsIndex[id]) {
+        if ((scaledItem = this.scale(item))) {
+          scaledItem.scale = allAreNew ? 0 : 1;
+          this.items.push(scaledItem);
+          this.currentItemsIndex[id] = 1;
+        }
       }
     }
     fadeIn();
   },
 
-  scale: function(items) {
-    var i, il, j, jl,
-      res = [],
-      item,
-      height, minHeight, footprint,
-      color, wallColor, altColor,
-      roofColor, roofHeight,
-      holes, innerFootprint,
+  scale: function(item) {
+    var
+      res = {},
+      // TODO: calculate this on zoom change only
       zoomScale = 6 / pow(2, ZOOM-MIN_ZOOM); // TODO: consider using HEIGHT / (window.devicePixelRatio || 1)
 
-    for (i = 0, il = items.length; i < il; i++) {
-      item = items[i];
+    if (item.id) {
+      res.id = item.id;
+      res.hitColor = HitAreas.toColor(item.id);
+    }
 
-      height = item.height / zoomScale;
+    res.height = min(item.height/zoomScale, MAX_HEIGHT);
 
-      minHeight = isNaN(item.minHeight) ? 0 : item.minHeight / zoomScale;
-      if (minHeight > MAX_HEIGHT) {
-        continue;
+    res.minHeight = isNaN(item.minHeight) ? 0 : item.minHeight / zoomScale;
+    if (res.minHeight > MAX_HEIGHT) {
+      return;
+    }
+
+    res.footprint = this.getPixelFootprint(item.footprint);
+    if (!res.footprint) {
+      return;
+    }
+    res.center = getCenter(res.footprint);
+
+    if (item.shape) {
+      // TODO: drop footprint
+      res.shape = item.shape;
+      if (item.radius) {
+        res.radius = item.radius/METERS_PER_PIXEL;
       }
+    }
 
-      if (!(footprint = this.getPixelFootprint(item.footprint))) {
-        continue;
-      }
-
-      holes = [];
-      if (item.holes) {
+    if (item.holes) {
+      res.holes = [];
+      var innerFootprint;
+      for (var i = 0, il = item.holes.length; i < il; i++) {
         // TODO: simplify
-        for (j = 0, jl = item.holes.length; j < jl; j++) {
-          if ((innerFootprint = this.getPixelFootprint(item.holes[j]))) {
-            holes.push(innerFootprint);
-          }
+        if ((innerFootprint = this.getPixelFootprint(item.holes[i]))) {
+          res.holes.push(innerFootprint);
         }
       }
+    }
 
-      wallColor = null;
-      altColor  = null;
-      if (item.wallColor) {
-        if ((color = parseColor(item.wallColor))) {
-          wallColor = color.alpha(ZOOM_FACTOR);
-          altColor  = ''+ wallColor.lightness(0.8);
-          wallColor = ''+ wallColor;
-        }
+    var color;
+
+    if (item.wallColor) {
+      if ((color = parseColor(item.wallColor))) {
+        color = color.alpha(ZOOM_FACTOR);
+        res.altColor  = ''+ color.lightness(0.8);
+        res.wallColor = ''+ color;
       }
+    }
 
-      roofColor = null;
-      if (item.roofColor) {
-        if ((color = parseColor(item.roofColor))) {
-          roofColor = ''+ color.alpha(ZOOM_FACTOR);
-        }
+    if (item.roofColor) {
+      if ((color = parseColor(item.roofColor))) {
+        res.roofColor = ''+ color.alpha(ZOOM_FACTOR);
       }
+    }
 
-      roofHeight = item.roofHeight / zoomScale;
+    if (item.roofHeight) {
+      res.roofHeight = item.roofHeight/zoomScale;
+    }
 
-      if (height <= minHeight && roofHeight <= 0) {
-        continue;
-      }
+    if (res.height+res.roofHeight <= res.minHeight) {
+      return;
+    }
 
-      res.push({
-        id:         item.id,
-        footprint:  footprint,
-        height:     min(height, MAX_HEIGHT),
-        minHeight:  minHeight,
-        wallColor:  wallColor,
-        altColor:   altColor,
-        roofColor:  roofColor,
-        roofShape:  item.roofShape,
-        roofHeight: roofHeight,
-        center:     getCenter(footprint),
-        holes:      holes.length ? holes : null,
-        shape:      item.shape, // TODO: drop footprint
-        radius:     item.radius/METERS_PER_PIXEL
-      });
+    if (item.roofShape) {
+      res.roofShape = item.roofShape;
     }
 
     return res;
@@ -4142,21 +3868,12 @@ var Data = {
   set: function(data) {
     this.isStatic = true;
     this.resetItems();
-    this.addRenderItems(this.staticData = this.parse(data), true);
+    this._staticData = GeoJSON.read(data);
+    this.addRenderItems(this._staticData, true);
   },
 
   load: function(url) {
-    this.url = url || OSM_XAPI_URL;
-    this.isStatic = !/(.+\{[nesw]\}){4,}/.test(this.url);
-
-    if (this.isStatic) {
-      this.resetItems();
-      xhr(this.url, {}, function(data) {
-        this.addRenderItems(this.staticData = this.parse(data), true);
-      });
-      return;
-    }
-
+    this.url = template(url || DATA_URL, { k: DATA_KEY });
     this.update();
   },
 
@@ -4167,8 +3884,8 @@ var Data = {
       return;
     }
 
-    if (this.isStatic) {
-      this.addRenderItems(this.staticData);
+    if (this.isStatic && this._staticData) {
+      this.addRenderItems(this._staticData);
       return;
     }
 
@@ -4176,43 +3893,251 @@ var Data = {
       return;
     }
 
-    var lat, lon,
-      parsedData, cacheKey,
-      nw = pixelToGeo(ORIGIN_X,       ORIGIN_Y),
-      se = pixelToGeo(ORIGIN_X+WIDTH, ORIGIN_Y+HEIGHT),
-      sizeLat = DATA_TILE_SIZE,
-      sizeLon = DATA_TILE_SIZE*2;
+    var
+      tileZoom = 16,
+      tileSize = 256,
+      zoomedTileSize = ZOOM > tileZoom ? tileSize <<(ZOOM-tileZoom) : tileSize >>(tileZoom-ZOOM),
+      minX = ORIGIN_X/zoomedTileSize <<0,
+      minY = ORIGIN_Y/zoomedTileSize <<0,
+      maxX = ceil((ORIGIN_X+WIDTH) /zoomedTileSize),
+      maxY = ceil((ORIGIN_Y+HEIGHT)/zoomedTileSize),
+      x, y, coords,
+      cacheKey, parsedData;
 
-    var bounds = {
-      n: ceil( nw.latitude /sizeLat) * sizeLat,
-      e: ceil( se.longitude/sizeLon) * sizeLon,
-      s: floor(se.latitude /sizeLat) * sizeLat,
-      w: floor(nw.longitude/sizeLon) * sizeLon
-    };
-
-    for (lat = bounds.s; lat <= bounds.n; lat += sizeLat) {
-      for (lon = bounds.w; lon <= bounds.e; lon += sizeLon) {
-        lat = this.cropDecimals(lat);
-        lon = this.cropDecimals(lon);
-
-        cacheKey = lat +','+ lon;
+    for (y = minY; y <= maxY; y++) {
+      for (x = minX; x <= maxX; x++) {
+        coords = { x: x, y: y, z: tileZoom };
+        cacheKey = x +','+ y;
         if ((parsedData = Cache.get(cacheKey))) {
           this.addRenderItems(parsedData);
-        } else {
-          xhr(this.url, {
-            n: this.cropDecimals(lat+sizeLat),
-            e: this.cropDecimals(lon+sizeLon),
-            s: lat,
-            w: lon
-          }, this.createClosure(cacheKey));
+				} else {
+          xhr(template(this.url, coords), this.createClosure(cacheKey));
         }
       }
     }
 
     Cache.purge();
+  }
+};
+
+
+//****** file: Block.js ******
+
+var Block = {
+
+  draw: function(context, polygon, innerPolygons, height, minHeight, color, altColor, roofColor) {
+    var
+      i, il,
+      roof = this._extrude(context, polygon, height, minHeight, color, altColor),
+      innerRoofs = [];
+
+    if (innerPolygons) {
+      for (i = 0, il = innerPolygons.length; i < il; i++) {
+        innerRoofs[i] = this._extrude(context, innerPolygons[i], height, minHeight, color, altColor);
+      }
+    }
+
+    context.fillStyle = roofColor;
+
+    context.beginPath();
+    this._ring(context, roof);
+    if (innerPolygons) {
+      for (i = 0, il = innerRoofs.length; i < il; i++) {
+        this._ring(context, innerRoofs[i]);
+      }
+    }
+    context.closePath();
+    context.stroke();
+    context.fill();
   },
 
-  each: function() {}
+  _extrude: function(context, polygon, height, minHeight, color, altColor) {
+    var
+      scale = CAM_Z / (CAM_Z-height),
+      minScale = CAM_Z / (CAM_Z-minHeight),
+      a = { x:0, y:0 },
+      b = { x:0, y:0 },
+      _a, _b,
+      roof = [];
+
+    for (var i = 0, il = polygon.length-3; i < il; i += 2) {
+      a.x = polygon[i  ]-ORIGIN_X;
+      a.y = polygon[i+1]-ORIGIN_Y;
+      b.x = polygon[i+2]-ORIGIN_X;
+      b.y = polygon[i+3]-ORIGIN_Y;
+
+      _a = Buildings.project(a, scale);
+      _b = Buildings.project(b, scale);
+
+      if (minHeight) {
+        a = Buildings.project(a, minScale);
+        b = Buildings.project(b, minScale);
+      }
+
+      // backface culling check
+      if ((b.x-a.x) * (_a.y-a.y) > (_a.x-a.x) * (b.y-a.y)) {
+        // depending on direction, set wall shading
+        if ((a.x < b.x && a.y < b.y) || (a.x > b.x && a.y > b.y)) {
+          context.fillStyle = altColor;
+        } else {
+          context.fillStyle = color;
+        }
+
+        context.beginPath();
+        this._ring(context, [
+           b.x,  b.y,
+           a.x,  a.y,
+          _a.x, _a.y,
+          _b.x, _b.y
+        ]);
+        context.closePath();
+        context.fill();
+      }
+
+      roof[i]   = _a.x;
+      roof[i+1] = _a.y;
+    }
+
+    return roof;
+  },
+
+  _ring: function(context, polygon) {
+    context.moveTo(polygon[0], polygon[1]);
+    for (var i = 2, il = polygon.length-1; i < il; i += 2) {
+      context.lineTo(polygon[i], polygon[i+1]);
+    }
+  },
+
+  simplified: function(context, polygon, innerPolygons) {
+    context.beginPath();
+    this.ring(context, polygon);
+    if (innerPolygons) {
+      for (var i = 0, il = innerPolygons.length; i < il; i++) {
+        this.ring(context, innerPolygons[i]);
+      }
+    }
+    context.closePath();
+    context.stroke();
+    context.fill();
+  },
+
+  ring: function(context, polygon) {
+    context.moveTo(polygon[0]-ORIGIN_X, polygon[1]-ORIGIN_Y);
+    for (var i = 2, il = polygon.length-1; i < il; i += 2) {
+      context.lineTo(polygon[i]-ORIGIN_X, polygon[i+1]-ORIGIN_Y);
+    }
+  },
+
+  shadow: function(context, polygon, innerPolygons, height, minHeight) {
+    var
+      mode = null,
+      a = { x:0, y:0 },
+      b = { x:0, y:0 },
+      _a, _b;
+
+    for (var i = 0, il = polygon.length-3; i < il; i += 2) {
+      a.x = polygon[i  ]-ORIGIN_X;
+      a.y = polygon[i+1]-ORIGIN_Y;
+      b.x = polygon[i+2]-ORIGIN_X;
+      b.y = polygon[i+3]-ORIGIN_Y;
+
+      _a = Shadows.project(a, height);
+      _b = Shadows.project(b, height);
+
+      if (minHeight) {
+        a = Shadows.project(a, minHeight);
+        b = Shadows.project(b, minHeight);
+      }
+
+      // mode 0: floor edges, mode 1: roof edges
+      if ((b.x-a.x) * (_a.y-a.y) > (_a.x-a.x) * (b.y-a.y)) {
+        if (mode === 1) {
+          context.lineTo(a.x, a.y);
+        }
+        mode = 0;
+        if (!i) {
+          context.moveTo(a.x, a.y);
+        }
+        context.lineTo(b.x, b.y);
+      } else {
+        if (mode === 0) {
+          context.lineTo(_a.x, _a.y);
+        }
+        mode = 1;
+        if (!i) {
+          context.moveTo(_a.x, _a.y);
+        }
+        context.lineTo(_b.x, _b.y);
+      }
+    }
+
+    if (innerPolygons) {
+      for (i = 0, il = innerPolygons.length; i < il; i++) {
+        this.ring(context, innerPolygons[i]);
+      }
+    }
+  },
+
+  shadowMask: function(context, polygon, innerPolygons) {
+    this.ring(context, polygon);
+    if (innerPolygons) {
+      for (var i = 0, il = innerPolygons.length; i < il; i++) {
+        this.ring(context, innerPolygons[i]);
+      }
+    }
+  },
+
+  hitArea: function(context, polygon, innerPolygons, height, minHeight, color) {
+    var
+      mode = null,
+      a = { x:0, y:0 },
+      b = { x:0, y:0 },
+      scale = CAM_Z / (CAM_Z-height),
+      minScale = CAM_Z / (CAM_Z-minHeight),
+      _a, _b;
+
+    context.fillStyle = color;
+    context.beginPath();
+
+    for (var i = 0, il = polygon.length-3; i < il; i += 2) {
+      a.x = polygon[i  ]-ORIGIN_X;
+      a.y = polygon[i+1]-ORIGIN_Y;
+      b.x = polygon[i+2]-ORIGIN_X;
+      b.y = polygon[i+3]-ORIGIN_Y;
+
+      _a = Buildings.project(a, scale);
+      _b = Buildings.project(b, scale);
+
+      if (minHeight) {
+        a = Buildings.project(a, minScale);
+        b = Buildings.project(b, minScale);
+      }
+
+      // mode 0: floor edges, mode 1: roof edges
+      if ((b.x-a.x) * (_a.y-a.y) > (_a.x-a.x) * (b.y-a.y)) {
+        if (mode === 1) { // mode is initially undefined
+          context.lineTo(a.x, a.y);
+        }
+        mode = 0;
+        if (!i) {
+          context.moveTo(a.x, a.y);
+        }
+        context.lineTo(b.x, b.y);
+      } else {
+        if (mode === 0) { // mode is initially undefined
+          context.lineTo(_a.x, _a.y);
+        }
+        mode = 1;
+        if (!i) {
+          context.moveTo(_a.x, _a.y);
+        }
+        context.lineTo(_b.x, _b.y);
+      }
+    }
+
+    context.closePath();
+    context.fill();
+  }
 
 };
 
@@ -4221,96 +4146,136 @@ var Data = {
 
 var Cylinder = {
 
-  circle: function(context, centerX, centerY, radius, color) {
-    context.fillStyle = color;
-    context.beginPath();
-    context.arc(centerX, centerY, radius, 0, PI*2);
-    context.stroke();
-    context.fill();
-  },
-
-  draw: function(context, centerX, centerY, radius, topRadius, height, minHeight, color, altColor, roofColor) {
+  draw: function(context, center, radius, topRadius, height, minHeight, color, altColor, roofColor) {
     var
+      c = { x:center.x-ORIGIN_X, y:center.y-ORIGIN_Y },
       scale = CAM_Z / (CAM_Z-height),
-      apex = Buildings.project(centerX, centerY, scale),
+      minScale = CAM_Z / (CAM_Z-minHeight),
+      apex = Buildings.project(c, scale),
       a1, a2;
 
     topRadius *= scale;
 
     if (minHeight) {
-      scale = CAM_Z / (CAM_Z-minHeight);
-      var center = Buildings.project(centerX, centerY, scale);
-      centerX = center.x;
-      centerY = center.y;
+      c = Buildings.project(c, minScale);
       radius = radius*scale;
     }
 
     // common tangents for ground and roof circle
-    var tangents = Cylinder.getTangents(centerX, centerY, radius, apex.x, apex.y, topRadius);
+    var tangents = this._tangents(c, radius, apex, topRadius);
 
     // no tangents? top circle is inside bottom circle
     if (!tangents) {
-      a1 = 0;
+      a1 = 1.5*PI;
       a2 = 1.5*PI;
     } else {
-      a1 = atan2(tangents[0].y1-centerY, tangents[0].x1-centerX);
-      a2 = atan2(tangents[1].y1-centerY, tangents[1].x1-centerX);
+      a1 = atan2(tangents[0].y1-c.y, tangents[0].x1-c.x);
+      a2 = atan2(tangents[1].y1-c.y, tangents[1].x1-c.x);
     }
 
     context.fillStyle = color;
     context.beginPath();
     context.arc(apex.x, apex.y, topRadius, HALF_PI, a1, true);
-    context.arc(centerX, centerY, radius, a1, HALF_PI);
+    context.arc(c.x, c.y, radius, a1, HALF_PI);
     context.closePath();
     context.fill();
 
     context.fillStyle = altColor;
     context.beginPath();
     context.arc(apex.x, apex.y, topRadius, a2, HALF_PI, true);
-    context.arc(centerX, centerY, radius, HALF_PI, a2);
+    context.arc(c.x, c.y, radius, HALF_PI, a2);
     context.closePath();
     context.fill();
 
-    Cylinder.circle(context, apex.x, apex.y, topRadius, roofColor);
+    context.fillStyle = roofColor;
+    this._circle(context, apex, topRadius);
   },
 
-  shadow: function(context, centerX, centerY, radius, topRadius, height, minHeight) {
+  simplified: function(context, center, radius) {
+    this._circle(context, { x:center.x-ORIGIN_X, y:center.y-ORIGIN_Y }, radius);
+  },
+
+  shadow: function(context, center, radius, topRadius, height, minHeight) {
     var
-      apex = Shadows.project(centerX, centerY, height),
+      c = { x:center.x-ORIGIN_X, y:center.y-ORIGIN_Y },
+      apex = Shadows.project(c, height),
       p1, p2;
 
     if (minHeight) {
-      var center = Shadows.project(centerX, centerY, minHeight);
-      centerX = center.x;
-      centerY = center.y;
+      c = Shadows.project(c, minHeight);
     }
 
     // common tangents for ground and roof circle
-    var tangents = Cylinder.getTangents(centerX, centerY, radius, apex.x, apex.y, topRadius);
+    var tangents = this._tangents(c, radius, apex, topRadius);
 
     // TODO: no tangents? roof overlaps everything near cam position
     if (tangents) {
-      p1 = atan2(tangents[0].y1-centerY, tangents[0].x1-centerX);
-      p2 = atan2(tangents[1].y1-centerY, tangents[1].x1-centerX);
+      p1 = atan2(tangents[0].y1-c.y, tangents[0].x1-c.x);
+      p2 = atan2(tangents[1].y1-c.y, tangents[1].x1-c.x);
       context.moveTo(tangents[1].x2, tangents[1].y2);
       context.arc(apex.x, apex.y, topRadius, p2, p1);
-      context.arc(centerX, centerY, radius, p1, p2);
+      context.arc(c.x, c.y, radius, p1, p2);
     } else {
-      context.moveTo(centerX+radius, centerY);
-      context.arc(centerX, centerY, radius, 0, 2*PI);
+      context.moveTo(c.x+radius, c.y);
+      context.arc(c.x, c.y, radius, 0, 2*PI);
     }
   },
 
-  footprintMask: function(context, centerX, centerY, radius) {
-    context.moveTo(centerX+radius, centerY);
-    context.arc(centerX, centerY, radius, 0, PI*2);
+  shadowMask: function(context, center, radius) {
+    var c = { x:center.x-ORIGIN_X, y:center.y-ORIGIN_Y };
+    context.moveTo(c.x+radius, c.y);
+    context.arc(c.x, c.y, radius, 0, PI*2);
   },
 
-  // http://en.wikibooks.org/wiki/Algorithm_Implementation/Geometry/Tangents_between_two_circles
-  getTangents: function(c1x, c1y, r1, c2x, c2y, r2) {
+  hitArea: function(context, center, radius, topRadius, height, minHeight, color) {
     var
-      dx = c1x-c2x,
-      dy = c1y-c2y,
+      c = { x:center.x-ORIGIN_X, y:center.y-ORIGIN_Y },
+      scale = CAM_Z / (CAM_Z-height),
+      minScale = CAM_Z / (CAM_Z-minHeight),
+      apex = Buildings.project(c, scale),
+      p1, p2;
+
+    topRadius *= scale;
+
+    if (minHeight) {
+      c = Buildings.project(c, minScale);
+      radius = radius*scale;
+    }
+
+    // common tangents for ground and roof circle
+    var tangents = this._tangents(c, radius, apex, topRadius);
+
+    context.fillStyle = color;
+    context.beginPath();
+
+    // TODO: no tangents? roof overlaps everything near cam position
+    if (tangents) {
+      p1 = atan2(tangents[0].y1-c.y, tangents[0].x1-c.x);
+      p2 = atan2(tangents[1].y1-c.y, tangents[1].x1-c.x);
+      context.moveTo(tangents[1].x2, tangents[1].y2);
+      context.arc(apex.x, apex.y, topRadius, p2, p1);
+      context.arc(c.x, c.y, radius, p1, p2);
+    } else {
+      context.moveTo(c.x+radius, c.y);
+      context.arc(c.x, c.y, radius, 0, 2*PI);
+    }
+
+    context.closePath();
+    context.fill();
+  },
+
+  _circle: function(context, center, radius) {
+    context.beginPath();
+    context.arc(center.x, center.y, radius, 0, PI*2);
+    context.stroke();
+    context.fill();
+  },
+
+    // http://en.wikibooks.org/wiki/Algorithm_Implementation/Geometry/Tangents_between_two_circles
+  _tangents: function(c1, r1, c2, r2) {
+    var
+      dx = c1.x-c2.x,
+      dy = c1.y-c2.y,
       dr = r1-r2,
       sqdist = (dx*dx) + (dy*dy);
 
@@ -4345,10 +4310,10 @@ var Cylinder = {
       nx = vx*c - sign*h*vy;
       ny = vy*c + sign*h*vx;
       res.push({
-        x1: c1x + r1*nx <<0,
-        y1: c1y + r1*ny <<0,
-        x2: c2x + r2*nx <<0,
-        y2: c2y + r2*ny <<0
+        x1: c1.x + r1*nx <<0,
+        y1: c1.y + r1*ny <<0,
+        x2: c2.x + r2*nx <<0,
+        y2: c2.y + r2*ny <<0
       });
     }
 
@@ -4357,112 +4322,15 @@ var Cylinder = {
 };
 
 
-//****** file: Debug.js ******
-
-var Debug = {
-
-  point: function(context, x, y, color, size) {
-    context.fillStyle = color || '#ffcc00';
-    context.beginPath();
-    context.arc(x, y, size || 3, 0, 2*PI);
-    context.closePath();
-    context.fill();
-  },
-
-  line: function(context, ax, ay, bx, by, color) {
-    context.strokeStyle = color || '#ffcc00';
-    context.beginPath();
-    context.moveTo(ax, ay);
-    context.lineTo(bx, by);
-    context.closePath();
-    context.stroke();
-  }
-};
-
-
 //****** file: Buildings.js ******
 
 var Buildings = {
 
-  project: function(x, y, m) {
+  project: function(p, m) {
     return {
-      x: (x-CAM_X) * m + CAM_X <<0,
-      y: (y-CAM_Y) * m + CAM_Y <<0
+      x: (p.x-CAM_X) * m + CAM_X <<0,
+      y: (p.y-CAM_Y) * m + CAM_Y <<0
     };
-  },
-
-  drawSolid: function(polygon, _h, _mh, color, altColor) {
-    var a = { x:0, y:0 }, b = { x:0, y:0 },
-      _a, _b,
-      roof = [];
-    for (var i = 0, il = polygon.length-3; i < il; i += 2) {
-      a.x = polygon[i]  -ORIGIN_X;
-      a.y = polygon[i+1]-ORIGIN_Y;
-      b.x = polygon[i+2]-ORIGIN_X;
-      b.y = polygon[i+3]-ORIGIN_Y;
-
-      // project 3d to 2d on extruded footprint
-      _a = this.project(a.x, a.y, _h);
-      _b = this.project(b.x, b.y, _h);
-
-      if (_mh) {
-        a = this.project(a.x, a.y, _mh);
-        b = this.project(b.x, b.y, _mh);
-      }
-
-      // backface culling check
-      if ((b.x-a.x) * (_a.y-a.y) > (_a.x-a.x) * (b.y-a.y)) {
-        // depending on direction, set wall shading
-        if ((a.x < b.x && a.y < b.y) || (a.x > b.x && a.y > b.y)) {
-          this.context.fillStyle = altColor;
-        } else {
-          this.context.fillStyle = color;
-        }
-        this.drawFace([
-          b.x, b.y,
-          a.x, a.y,
-          _a.x, _a.y,
-          _b.x, _b.y
-        ]);
-      }
-      roof[i]   = _a.x;
-      roof[i+1] = _a.y;
-    }
-
-    return roof;
-  },
-
-  drawFace: function(points, stroke, holes) {
-    var
-      context = this.context,
-      i, il, j, jl;
-
-    if (!points.length) {
-      return;
-    }
-
-    context.beginPath();
-
-    context.moveTo(points[0], points[1]);
-    for (i = 2, il = points.length; i < il; i += 2) {
-      context.lineTo(points[i], points[i+1]);
-    }
-
-    if (holes) {
-      for (i = 0, il = holes.length; i < il; i++) {
-        points = holes[i];
-        context.moveTo(points[0], points[1]);
-        for (j = 2, jl = points.length; j < jl; j += 2) {
-          context.lineTo(points[j], points[j+1]);
-        }
-      }
-    }
-
-    context.closePath();
-    if (stroke) {
-      context.stroke();
-    }
-    context.fill();
   },
 
   render: function() {
@@ -4474,98 +4342,68 @@ var Buildings = {
       return;
     }
 
-    var i, il, j, jl,
+    var
       item,
-      h, _h, mh, _mh,
+      h, mh,
       sortCam = { x:CAM_X+ORIGIN_X, y:CAM_Y+ORIGIN_Y },
-      vp = {
-        minX: ORIGIN_X,
-        maxX: ORIGIN_X+WIDTH,
-        minY: ORIGIN_Y,
-        maxY: ORIGIN_Y+HEIGHT
-      },
-      footprint, roof, holes,
-      isVisible,
+      footprint,
       wallColor, altColor, roofColor,
       dataItems = Data.items,
-      cx, cy, r;
+      center, radius;
 
     dataItems.sort(function(a, b) {
       return (a.minHeight-b.minHeight) || getDistance(b.center, sortCam) - getDistance(a.center, sortCam) || (b.height-a.height);
     });
 
-    for (i = 0, il = dataItems.length; i < il; i++) {
+    for (var i = 0, il = dataItems.length; i < il; i++) {
       item = dataItems[i];
 
       if (Simplified.isSimple(item)) {
         continue;
       }
 
-      isVisible = false;
       footprint = item.footprint;
 
-      for (j = 0, jl = footprint.length - 1; j < jl; j += 2) {
-        // checking footprint is sufficient for visibility
-        // TODO: pre-filter by data tile position
-        if (!isVisible) {
-          isVisible = (footprint[j] > vp.minX && footprint[j] < vp.maxX && footprint[j+1] > vp.minY && footprint[j+1] < vp.maxY);
-        }
-      }
-
-      if (!isVisible) {
+      if (!isVisible(footprint)) {
         continue;
       }
 
       // when fading in, use a dynamic height
       h = item.scale < 1 ? item.height*item.scale : item.height;
-      // precalculating projection height factor
-      _h = CAM_Z / (CAM_Z-h);
 
       mh = 0;
-      _mh = 0;
       if (item.minHeight) {
         mh = item.scale < 1 ? item.minHeight*item.scale : item.minHeight;
-        _mh = CAM_Z / (CAM_Z-mh);
       }
 
-      wallColor = item.wallColor || wallColorAlpha;
-      altColor  = item.altColor  || altColorAlpha;
-      roofColor = item.roofColor || roofColorAlpha;
+      wallColor = item.wallColor || WALL_COLOR_STR;
+      altColor  = item.altColor  || ALT_COLOR_STR;
+      roofColor = item.roofColor || ROOF_COLOR_STR;
       context.strokeStyle = altColor;
 
       switch (item.shape) {
         case 'cylinder':
-          cx = item.center.x-ORIGIN_X;
-          cy = item.center.y-ORIGIN_Y;
-          r = item.radius;
-
-          Cylinder.draw(context, cx, cy, r, r, h, mh, wallColor, altColor, roofColor);
+          center = item.center;
+          radius = item.radius;
+          Cylinder.draw(context, center, radius, radius, h, mh, wallColor, altColor, roofColor);
           if (item.roofShape === 'cone') {
-            Cylinder.draw(context, cx, cy, r, 0, h+item.roofHeight, h, roofColor, ''+ parseColor(roofColor).lightness(0.9));
+            Cylinder.draw(context, center, radius, 0, h+item.roofHeight, h, roofColor, ''+ parseColor(roofColor).lightness(0.9));
           }
           if (item.roofShape === 'dome') {
-            Cylinder.draw(context, cx, cy, r, r/2, h+item.roofHeight, h, roofColor, ''+ parseColor(roofColor).lightness(0.9));
+            Cylinder.draw(context, center, radius, radius/2, h+item.roofHeight, h, roofColor, ''+ parseColor(roofColor).lightness(0.9));
           }
         break;
 
         case 'cone':
-          Cylinder.draw(context, item.center.x-ORIGIN_X, item.center.y-ORIGIN_Y, item.radius, 0, h, mh, wallColor, altColor);
+          Cylinder.draw(context, item.center, item.radius, 0, h, mh, wallColor, altColor);
         break;
 
         case 'dome':
-          Cylinder.draw(context, item.center.x-ORIGIN_X, item.center.y-ORIGIN_Y, item.radius, item.radius/2, h, mh, wallColor, altColor);
+          Cylinder.draw(context, item.center, item.radius, item.radius/2, h, mh, wallColor, altColor);
         break;
 
         default:
-          roof = this.drawSolid(footprint, _h, _mh, wallColor, altColor);
-          holes = [];
-          if (item.holes) {
-            for (j = 0, jl = item.holes.length; j < jl; j++) {
-              holes[j] = this.drawSolid(item.holes[j], _h, _mh, wallColor, altColor);
-            }
-          }
-          context.fillStyle = roofColor;
-          this.drawFace(roof, true, holes);
+          Block.draw(context, footprint, item.holes, h, mh, wallColor, altColor, roofColor);
       }
     }
   }
@@ -4577,114 +4415,47 @@ var Buildings = {
 var Simplified = {
 
   maxZoom: MIN_ZOOM+2,
-  maxHeight: 2,
+  maxHeight: 5,
 
   isSimple: function(item) {
     return (ZOOM <= this.maxZoom && item.height+item.roofHeight < this.maxHeight);
   },
 
-  getFace: function(polygon) {
-    var res = [];
-    for (var i = 0, il = polygon.length-3; i < il; i += 2) {
-      res[i]   = polygon[i]  -ORIGIN_X;
-      res[i+1] = polygon[i+1]-ORIGIN_Y;
-    }
-    return res;
-  },
-
-  drawFace: function(points, holes) {
-    if (!points.length) {
-      return;
-    }
-
-    var
-      context = this.context,
-      i, il, j, jl;
-
-    context.beginPath();
-
-    context.moveTo(points[0], points[1]);
-    for (i = 2, il = points.length; i < il; i += 2) {
-      context.lineTo(points[i], points[i+1]);
-    }
-
-    if (holes) {
-      for (i = 0, il = holes.length; i < il; i++) {
-        points = holes[i];
-        context.moveTo(points[0], points[1]);
-        for (j = 2, jl = points.length; j < jl; j += 2) {
-          context.lineTo(points[j], points[j+1]);
-        }
-      }
-    }
-
-    context.closePath();
-    context.stroke();
-    context.fill();
-  },
-
   render: function() {
-    this.context.clearRect(0, 0, WIDTH, HEIGHT);
+    var context = this.context;
+    context.clearRect(0, 0, WIDTH, HEIGHT);
 
     // show on high zoom levels only and avoid rendering during zoom
     if (ZOOM < MIN_ZOOM || isZooming || ZOOM > this.maxZoom) {
       return;
     }
 
-    var i, il, j, jl,
+    var
       item,
-      vp = {
-        minX: ORIGIN_X,
-        maxX: ORIGIN_X+WIDTH,
-        minY: ORIGIN_Y,
-        maxY: ORIGIN_Y+HEIGHT
-      },
-      footprint, roof, holes,
-      isVisible,
-      altColor, roofColor,
+      footprint,
       dataItems = Data.items;
 
-    for (i = 0, il = dataItems.length; i < il; i++) {
+    for (var i = 0, il = dataItems.length; i < il; i++) {
       item = dataItems[i];
 
       if (item.height >= this.maxHeight) {
         continue;
       }
 
-      isVisible = false;
       footprint = item.footprint;
 
-      for (j = 0, jl = footprint.length - 1; j < jl; j += 2) {
-        if (!isVisible) {
-          isVisible = (footprint[j] > vp.minX && footprint[j] < vp.maxX && footprint[j+1] > vp.minY && footprint[j+1] < vp.maxY);
-        }
-      }
-
-      if (!isVisible) {
+      if (!isVisible(footprint)) {
         continue;
       }
 
-      altColor  = item.altColor  || altColorAlpha;
-      roofColor = item.roofColor || roofColorAlpha;
-
-      this.context.strokeStyle = altColor;
+      context.strokeStyle = item.altColor  || ALT_COLOR_STR;
+      context.fillStyle   = item.roofColor || ROOF_COLOR_STR;
 
       if (item.shape === 'cylinder' || item.shape === 'cone' || item.shape === 'dome') {
-        Cylinder.circle(this.context, item.center.x-ORIGIN_X, item.center.y-ORIGIN_Y, item.radius, roofColor);
-        continue;
+        Cylinder.simplified(context, item.center, item.radius);
+      } else {
+        Block.simplified(context, footprint, item.holes);
       }
-
-      roof = this.getFace(footprint);
-
-      holes = [];
-      if (item.holes) {
-        for (j = 0, jl = item.holes.length; j < jl; j++) {
-          holes[j] = this.getFace(item.holes[j]);
-        }
-      }
-
-      this.context.fillStyle = roofColor;
-      this.drawFace(roof, holes);
     }
   }
 };
@@ -4701,17 +4472,17 @@ var Shadows = {
   date: new Date(),
   direction: { x:0, y:0 },
 
-  project: function(x, y, h) {
+  project: function(p, h) {
     return {
-      x: x + this.direction.x*h,
-      y: y + this.direction.y*h
+      x: p.x + this.direction.x*h,
+      y: p.y + this.direction.y*h
     };
   },
 
   render: function() {
     var
       context = this.context,
-      center, sun, length, alpha;
+      screenCenter, sun, length, alpha;
 
     context.clearRect(0, 0, WIDTH, HEIGHT);
 
@@ -4720,9 +4491,9 @@ var Shadows = {
       return;
     }
 
-    // TODO: at some point, calculate this just on demand
-    center = pixelToGeo(ORIGIN_X+CENTER_X, ORIGIN_Y+CENTER_Y);
-    sun = getSunPosition(this.date, center.latitude, center.longitude);
+    // TODO: calculate this just on demand
+    screenCenter = pixelToGeo(CENTER_X+ORIGIN_X, CENTER_Y+ORIGIN_Y);
+    sun = getSunPosition(this.date, screenCenter.latitude, screenCenter.longitude);
 
     if (sun.altitude <= 0) {
       return;
@@ -4734,20 +4505,13 @@ var Shadows = {
     this.direction.x = cos(sun.azimuth) * length;
     this.direction.y = sin(sun.azimuth) * length;
 
-    var i, il, j, jl, k, kl,
+    var
+      i, il,
       item,
-      f, h, mh,
-      x, y,
+      h, mh,
       footprint,
-      mode,
-      isVisible,
-      ax, ay, bx, by,
-      a, b, _a, _b,
-      points, locPoints,
-      specialItems = [],
-      clipping = [],
       dataItems = Data.items,
-      cx, cy, r;
+      center, radius;
 
     context.canvas.style.opacity = alpha / (ZOOM_FACTOR * 2);
     context.shadowColor = this.blurColor;
@@ -4758,20 +4522,9 @@ var Shadows = {
     for (i = 0, il = dataItems.length; i < il; i++) {
       item = dataItems[i];
 
-      isVisible = false;
-      f = item.footprint;
-      footprint = [];
-      for (j = 0, jl = f.length - 1; j < jl; j += 2) {
-        footprint[j]   = x = f[j]  -ORIGIN_X;
-        footprint[j+1] = y = f[j+1]-ORIGIN_Y;
+      footprint = item.footprint;
 
-        // TODO: checking footprint is sufficient for visibility - NOT VALID FOR SHADOWS!
-        if (!isVisible) {
-          isVisible = (x > 0 && x < WIDTH && y > 0 && y < HEIGHT);
-        }
-      }
-
-      if (!isVisible) {
+      if (!isVisible(footprint)) {
         continue;
       }
 
@@ -4783,103 +4536,26 @@ var Shadows = {
         mh = item.scale < 1 ? item.minHeight*item.scale : item.minHeight;
       }
 
-      if (item.shape === 'cylinder' || item.shape === 'cone' || item.shape === 'dome') {
-        specialItems.push({
-          shape:item.shape,
-          center:{ x:item.center.x-ORIGIN_X, y:item.center.y-ORIGIN_Y },
-          radius:item.radius,
-          h:h,
-          mh:mh
-        });
-        if (item.roofShape === 'cone' || item.roofShape === 'dome') {
-          specialItems.push({
-            shape:item.roofShape,
-            center:{ x:item.center.x-ORIGIN_X, y:item.center.y-ORIGIN_Y },
-            radius:item.radius,
-            h:h+item.roofHeight,
-            mh:h
-          });
-        }
-        continue;
-      }
-
-      mode = null;
-      for (j = 0, jl = footprint.length-3; j < jl; j += 2) {
-        ax = footprint[j];
-        ay = footprint[j+1];
-        bx = footprint[j+2];
-        by = footprint[j+3];
-
-        _a = this.project(ax, ay, h);
-        _b = this.project(bx, by, h);
-
-        if (mh) {
-          a = this.project(ax, ay, mh);
-          b = this.project(bx, by, mh);
-          ax = a.x;
-          ay = a.y;
-          bx = b.x;
-          by = b.y;
-        }
-
-        // mode 0: floor edges, mode 1: roof edges
-        if ((bx-ax) * (_a.y-ay) > (_a.x-ax) * (by-ay)) {
-          if (mode === 1) {
-            context.lineTo(ax, ay);
-          }
-          mode = 0;
-          if (!j) {
-            context.moveTo(ax, ay);
-          }
-          context.lineTo(bx, by);
-        } else {
-          if (mode === 0) {
-            context.lineTo(_a.x, _a.y);
-          }
-          mode = 1;
-          if (!j) {
-            context.moveTo(_a.x, _a.y);
-          }
-          context.lineTo(_b.x, _b.y);
-        }
-      }
-
-      if (!mh) { // if object is hovered, there is no need to clip the footprint
-        clipping.push(footprint);
-      }
-
-      if (item.holes) {
-        for (j = 0, jl = item.holes.length; j < jl; j++) {
-          points = item.holes[j];
-          locPoints = [points[0]-ORIGIN_X, points[1]-ORIGIN_Y];
-          context.moveTo(locPoints[0], locPoints[1]);
-          for (k = 2, kl = points.length; k < kl; k += 2) {
-            locPoints[k]   = points[k]-ORIGIN_X;
-            locPoints[k+1] = points[k+1]-ORIGIN_Y;
-            context.lineTo(locPoints[k], locPoints[k+1]);
-          }
-          if (!mh) { // if object is hovered, there is no need to clip a hole
-            clipping.push(locPoints);
-          }
-        }
-      }
-    }
-
-    for (i = 0, il = specialItems.length; i < il; i++) {
-      item = specialItems[i];
-      cx = item.center.x;
-      cy = item.center.y;
-      r = item.radius;
       switch (item.shape) {
         case 'cylinder':
-          Cylinder.shadow(context, cx, cy, r, r, item.h, item.mh);
+          center = item.center;
+          radius = item.radius;
+          Cylinder.shadow(context, center, radius, radius, h, mh);
+          if (item.roofShape === 'cone') {
+            Cylinder.shadow(context, center, radius, 0, h+item.roofHeight, h);
+          }
+          if (item.roofShape === 'dome') {
+            Cylinder.shadow(context, center, radius, radius/2, h+item.roofHeight, h);
+          }
         break;
         case 'cone':
-          Cylinder.shadow(context, cx, cy, r, 0, item.h, item.mh);
+          Cylinder.shadow(context, item.center, item.radius, 0, h, mh);
         break;
         case 'dome':
-          Cylinder.shadow(context, cx, cy, r, r/2, item.h, item.mh);
+          Cylinder.shadow(context, item.center, item.radius, item.radius/2, h, mh);
         break;
+        default:
+          Block.shadow(context, footprint, item.holes, h, mh);
       }
     }
 
@@ -4892,19 +4568,28 @@ var Shadows = {
     context.globalCompositeOperation = 'destination-out';
     context.beginPath();
 
-    for (i = 0, il = clipping.length; i < il; i++) {
-      points = clipping[i];
-      context.moveTo(points[0], points[1]);
-      for (j = 2, jl = points.length; j < jl; j += 2) {
-        context.lineTo(points[j], points[j+1]);
-      }
-      context.lineTo(points[0], points[1]);
-    }
+    for (i = 0, il = dataItems.length; i < il; i++) {
+      item = dataItems[i];
 
-    for (i = 0, il = specialItems.length; i < il; i++) {
-      item = specialItems[i];
-      if ((item.shape === 'cylinder' || item.shape === 'cone' || item.shape === 'dome') && !item.mh) {
-        Cylinder.footprintMask(context, item.center.x, item.center.y, item.radius);
+      footprint = item.footprint;
+
+      if (!isVisible(footprint)) {
+        continue;
+      }
+
+      // if object is hovered, there is no need to clip it's footprint
+      if (item.minHeight) {
+        continue;
+      }
+
+      switch (item.shape) {
+        case 'cylinder':
+        case 'cone':
+        case 'dome':
+          Cylinder.shadowMask(context, item.center, item.radius);
+        break;
+        default:
+          Block.shadowMask(context, footprint, item.holes);
       }
     }
 
@@ -4915,7 +4600,145 @@ var Shadows = {
 };
 
 
+//****** file: HitAreas.js ******
+
+
+var HitAreas = {
+
+  render: function() {
+    if (this._timer) {
+      clearTimeout(this._timer);
+      this._timer = null;
+    }
+    var self = this;
+    this._timer = setTimeout(function() {
+      self._timer = null;
+      self._render();
+    }, 500);
+  },
+
+  _render: function() {
+    var context = this.context;
+
+    context.clearRect(0, 0, WIDTH, HEIGHT);
+
+    // show on high zoom levels only and avoid rendering during zoom
+    if (ZOOM < MIN_ZOOM || isZooming) {
+      return;
+    }
+
+    var
+      item,
+      h, mh,
+      sortCam = { x:CAM_X+ORIGIN_X, y:CAM_Y+ORIGIN_Y },
+      footprint,
+      color,
+      dataItems = Data.items,
+      center, radius;
+
+    dataItems.sort(function(a, b) {
+      return (a.minHeight-b.minHeight) || getDistance(b.center, sortCam) - getDistance(a.center, sortCam) || (b.height-a.height);
+    });
+
+    for (var i = 0, il = dataItems.length; i < il; i++) {
+      item = dataItems[i];
+
+      if (!(color = item.hitColor)) {
+        continue;
+      }
+
+      footprint = item.footprint;
+
+      if (!isVisible(footprint)) {
+        continue;
+      }
+
+      h = item.height;
+
+      mh = 0;
+      if (item.minHeight) {
+        mh = item.minHeight;
+      }
+
+      switch (item.shape) {
+        case 'cylinder':
+          center = item.center;
+          radius = item.radius;
+          Cylinder.hitArea(context, center, radius, radius, h, mh, color);
+          if (item.roofShape === 'cone') {
+            Cylinder.hitArea(context, center, radius, 0, h+item.roofHeight, h, color);
+          }
+          if (item.roofShape === 'dome') {
+            Cylinder.hitArea(context, center, radius, radius/2, h+item.roofHeight, h, color);
+          }
+        break;
+
+        case 'cone':
+          Cylinder.hitArea(context, item.center, item.radius, 0, h, mh, color);
+        break;
+
+        case 'dome':
+          Cylinder.hitArea(context, item.center, item.radius, item.radius/2, h, mh, color);
+        break;
+
+        default:
+          Block.hitArea(context, footprint, item.holes, h, mh, color);
+      }
+    }
+    this._data = this.context.getImageData(0, 0, WIDTH, HEIGHT).data;
+  },
+
+  getIdFromXY: function(x, y) {
+    if (!this._data) {
+      return;
+    }
+    var index = 4*((y|0) * WIDTH + (x|0));
+    return this._data[index] | (this._data[index+1]<<8) | (this._data[index+2]<<16);
+  },
+
+  toColor: function(num) {
+    var r =  num       & 0xff;
+    var g = (num >>8)  & 0xff;
+    var b = (num >>16) & 0xff;
+    return 'rgb('+ [r, g, b].join(',') +')';
+  },
+
+  _toNum: function(r, g, b) {
+    return r | (g<<8) | (b<<16);
+  }
+};
+
+// TODO: offset after move
+// TODO: test openlayers
+
+//****** file: Debug.js ******
+
+var Debug = {
+
+  point: function(x, y, color, size) {
+    var context = this.context;
+    context.fillStyle = color || '#ffcc00';
+    context.beginPath();
+    context.arc(x, y, size || 3, 0, 2*PI);
+    context.closePath();
+    context.fill();
+  },
+
+  line: function(ax, ay, bx, by, color) {
+    var context = this.context;
+    context.strokeStyle = color || '#ffcc00';
+    context.beginPath();
+    context.moveTo(ax, ay);
+    context.lineTo(bx, by);
+    context.closePath();
+    context.stroke();
+  }
+};
+
+
 //****** file: Layers.js ******
+
+var animTimer;
 
 function fadeIn() {
   if (animTimer) {
@@ -4956,19 +4779,26 @@ var Layers = {
     this.container.style.left = 0;
     this.container.style.top  = 0;
 
-    // TODO: improve this to createContext(Layer) => layer.setContext(context)
-    Shadows.context    = this.createContext();
-    Simplified.context = this.createContext();
-    Buildings.context  = this.createContext();
+    // TODO: improve this to .setContext(context)
+    Shadows.context    = this.createContext(this.container);
+    Simplified.context = this.createContext(this.container);
+    Buildings.context  = this.createContext(this.container);
+    HitAreas.context   = this.createContext();
+//    Debug.context      = this.createContext(this.container);
   },
 
-  render: function() {
-    Shadows.render();
-    Simplified.render();
-    Buildings.render();
+  render: function(quick) {
+    requestAnimFrame(function() {
+      if (!quick) {
+        Shadows.render();
+        Simplified.render();
+        HitAreas.render();
+      }
+      Buildings.render();
+    });
   },
 
-  createContext: function() {
+  createContext: function(container) {
     var canvas = doc.createElement('CANVAS');
     canvas.style.webkitTransform = 'translate3d(0,0,0)'; // turn on hw acceleration
     canvas.style.imageRendering  = 'optimizeSpeed';
@@ -4985,7 +4815,9 @@ var Layers = {
     context.webkitImageSmoothingEnabled = false;
 
     this.items.push(canvas);
-    this.container.appendChild(canvas);
+    if (container) {
+      container.appendChild(canvas);
+    }
 
     return context;
   },
@@ -5024,7 +4856,7 @@ var Layers = {
       dataItems[i].scale = 1;
     }
 
-    this.render();
+    this.render(true);
 
     for (i = 0, il = this.items.length; i < il; i++) {
       item = this.items[i];
@@ -5055,9 +4887,10 @@ function setOrigin(origin) {
   ORIGIN_Y = origin.y;
 }
 
-function setCamOffset(offset) {
+function moveCam(offset) {
   CAM_X = CENTER_X + offset.x;
   CAM_Y = HEIGHT   + offset.y;
+  Layers.render(true);
 }
 
 function setSize(size) {
@@ -5075,7 +4908,7 @@ function setSize(size) {
 
 function setZoom(z) {
   ZOOM = z;
-  size = MAP_TILE_SIZE <<ZOOM;
+  MAP_SIZE = MAP_TILE_SIZE <<ZOOM;
 
   var pxCenter = pixelToGeo(ORIGIN_X+CENTER_X, ORIGIN_Y+CENTER_Y);
   // see http://wiki.openstreetmap.org/wiki/Zoom_levels
@@ -5083,9 +4916,9 @@ function setZoom(z) {
 
   ZOOM_FACTOR = pow(0.95, ZOOM-MIN_ZOOM);
 
-  wallColorAlpha = defaultWallColor.alpha(ZOOM_FACTOR) + '';
-  altColorAlpha  = defaultAltColor.alpha( ZOOM_FACTOR) + '';
-  roofColorAlpha = defaultRoofColor.alpha(ZOOM_FACTOR) + '';
+  WALL_COLOR_STR = ''+ WALL_COLOR.alpha(ZOOM_FACTOR);
+  ALT_COLOR_STR  = ''+ ALT_COLOR.alpha( ZOOM_FACTOR);
+  ROOF_COLOR_STR = ''+ ROOF_COLOR.alpha(ZOOM_FACTOR);
 }
 
 function onResize(e) {
@@ -5116,93 +4949,100 @@ function onZoomEnd(e) {
 
 //****** file: Leaflet.js ******
 
+
 var osmb = function(map) {
-    this.offset = { x:0, y:0 };
-    map.addLayer(this);
+  this.offset = { x:0, y:0 };
+	map.addLayer(this);
 };
 
-var proto = osmb.prototype;
+var proto = osmb.prototype = L.Layer ? new L.Layer() : {};
 
 proto.onAdd = function(map) {
-    this.map = map;
-    Layers.appendTo(map._panes.overlayPane);
+  this.map = map;
+  Layers.appendTo(map._panes.overlayPane);
 
-    var off = this.getOffset(),
-        po = map.getPixelOrigin();
-    setSize({ w:map._size.x, h:map._size.y });
-    setOrigin({ x:po.x-off.x, y:po.y-off.y });
-    setZoom(map._zoom);
+  var
+    off = this.getOffset(),
+    po = map.getPixelOrigin();
+  setSize({ w:map._size.x, h:map._size.y });
+  setOrigin({ x:po.x-off.x, y:po.y-off.y });
+  setZoom(map._zoom);
 
-    Layers.setPosition(-off.x, -off.y);
+  Layers.setPosition(-off.x, -off.y);
 
-    map.on({
-        move:      this.onMove,
-        moveend:   this.onMoveEnd,
-        zoomstart: this.onZoomStart,
-        zoomend:   this.onZoomEnd,
-        resize:    this.onResize,
-        viewreset: this.onViewReset
-    }, this);
+  map.on({
+    move:      this.onMove,
+    moveend:   this.onMoveEnd,
+    zoomstart: this.onZoomStart,
+    zoomend:   this.onZoomEnd,
+    resize:    this.onResize,
+    viewreset: this.onViewReset,
+    mouseup:   this.onClick
+  }, this);
 
-    if (map.options.zoomAnimation) {
-        map.on('zoomanim', this.onZoom, this);
-    }
+  if (map.options.zoomAnimation) {
+    map.on('zoomanim', this.onZoom, this);
+  }
 
-    if (map.attributionControl) {
-        map.attributionControl.addAttribution(ATTRIBUTION);
-    }
+  if (map.attributionControl) {
+    map.attributionControl.addAttribution(ATTRIBUTION);
+  }
 
-    Data.update();
+  Data.update();
 };
 
 proto.onRemove = function() {
-    var map = this.map;
-    if (map.attributionControl) {
-        map.attributionControl.removeAttribution(ATTRIBUTION);
-    }
+  var map = this.map;
+  if (map.attributionControl) {
+    map.attributionControl.removeAttribution(ATTRIBUTION);
+  }
 
-    map.off({
-        move:      this.onMove,
-        moveend:   this.onMoveEnd,
-        zoomstart: this.onZoomStart,
-        zoomend:   this.onZoomEnd,
-        resize:    this.onResize,
-        viewreset: this.onViewReset
-    }, this);
+  map.off({
+    move:      this.onMove,
+    moveend:   this.onMoveEnd,
+    zoomstart: this.onZoomStart,
+    zoomend:   this.onZoomEnd,
+    resize:    this.onResize,
+    viewreset: this.onViewReset,
+    mouseup:   this.onClick
+  }, this);
 
-    if (map.options.zoomAnimation) {
-        map.off('zoomanim', this.onZoom, this);
-    }
-    Layers.remove();
-    map = null;
+  if (map.options.zoomAnimation) {
+    map.off('zoomanim', this.onZoom, this);
+  }
+  Layers.remove();
+  map = null;
 };
 
 proto.onMove = function(e) {
-    var off = this.getOffset();
-    setCamOffset({ x:this.offset.x-off.x, y:this.offset.y-off.y });
-    Buildings.render();
+  var off = this.getOffset();
+  moveCam({ x:this.offset.x-off.x, y:this.offset.y-off.y });
 };
 
 proto.onMoveEnd = function(e) {
-    if (this.skipMoveEnd) { // moveend is also fired after zoom
-        this.skipMoveEnd = false;
-        return;
-    }
-    var map = this.map,
-        off = this.getOffset(),
-        po = map.getPixelOrigin();
+  this.noClick = true;
 
-    this.offset = off;
-    Layers.setPosition(-off.x, -off.y);
-    setCamOffset({ x:0, y:0 });
+  if (this.noMoveEnd) { // moveend is also fired after zoom
+    this.noMoveEnd = false;
+    return;
+  }
 
-    setSize({ w:map._size.x, h:map._size.y }); // in case this is triggered by resize
-    setOrigin({ x:po.x-off.x, y:po.y-off.y });
-    onMoveEnd(e);
+  var
+    map = this.map,
+    off = this.getOffset(),
+    po = map.getPixelOrigin();
+
+  this.offset = off;
+  Layers.setPosition(-off.x, -off.y);
+  moveCam({ x:0, y:0 });
+
+  setSize({ w:map._size.x, h:map._size.y }); // in case this is triggered by resize
+  setOrigin({ x:po.x-off.x, y:po.y-off.y });
+  onMoveEnd(e);
 };
 
 proto.onZoomStart = function(e) {
-    onZoomStart(e);
+  onZoomStart(e);
 };
 
 proto.onZoom = function(e) {
@@ -5217,50 +5057,65 @@ proto.onZoom = function(e) {
 };
 
 proto.onZoomEnd = function(e) {
-    var map = this.map,
-        off = this.getOffset(),
-        po = map.getPixelOrigin();
+  var
+    map = this.map,
+    off = this.getOffset(),
+    po = map.getPixelOrigin();
 
-    setOrigin({ x:po.x-off.x, y:po.y-off.y });
-    onZoomEnd({ zoom:map._zoom });
-    this.skipMoveEnd = true;
+  setOrigin({ x:po.x-off.x, y:po.y-off.y });
+  onZoomEnd({ zoom:map._zoom });
+  this.noMoveEnd = true;
 };
 
-proto.onResize = function() {
-};
+proto.onResize = function() {};
 
 proto.onViewReset = function() {
-    var off = this.getOffset();
+  var off = this.getOffset();
 
-    this.offset = off;
-    Layers.setPosition(-off.x, -off.y);
-    setCamOffset({ x:0, y:0 });
+  this.offset = off;
+  Layers.setPosition(-off.x, -off.y);
+  moveCam({ x:0, y:0 });
+};
+
+proto.onClick = function(e) {
+  if (this.noClick) {
+    this.noClick = false;
+    return;
+  }
+  onClick(HitAreas.getIdFromXY(e.containerPoint.x, e.containerPoint.y));
 };
 
 proto.getOffset = function() {
-    return L.DomUtil.getPosition(this.map._mapPane);
+  return L.DomUtil.getPosition(this.map._mapPane);
 };
 
 
 //****** file: public.js ******
 
+
+// TODO: remove deprecation
 proto.setStyle = function(style) {
+  console.warn('OSM Buildings: .setStyle() will be deprecated soon. Use .style() instead.');
+  return this.style(style);
+};
+
+proto.style = function(style) {
   style = style || {};
   var color;
   if ((color = style.color || style.wallColor)) {
-    defaultWallColor = parseColor(color);
-    wallColorAlpha   = ''+ defaultWallColor.alpha(ZOOM_FACTOR);
+    WALL_COLOR = parseColor(color);
+    WALL_COLOR_STR = ''+ WALL_COLOR.alpha(ZOOM_FACTOR);
 
-    defaultAltColor  = defaultWallColor.lightness(0.8);
-    altColorAlpha    = ''+ defaultAltColor.alpha(ZOOM_FACTOR);
+    ALT_COLOR = WALL_COLOR.lightness(0.8);
+    ALT_COLOR_STR  = ''+ ALT_COLOR.alpha(ZOOM_FACTOR);
 
-    defaultRoofColor = defaultWallColor.lightness(1.2);
-    roofColorAlpha   = ''+ defaultRoofColor.alpha(ZOOM_FACTOR);
+    ROOF_COLOR = WALL_COLOR.lightness(1.2);
+    ROOF_COLOR_STR = ''+ ROOF_COLOR.alpha(ZOOM_FACTOR);
   }
 
   if (style.roofColor) {
-    defaultRoofColor = parseColor(style.roofColor);
-    roofColorAlpha   = ''+ defaultRoofColor.alpha(ZOOM_FACTOR);
+    ROOF_COLOR = parseColor(style.roofColor);
+    ROOF_COLOR_STR = ''+ ROOF_COLOR.alpha(ZOOM_FACTOR);
   }
 
   if (style.shadows !== undefined) {
@@ -5272,26 +5127,37 @@ proto.setStyle = function(style) {
   return this;
 };
 
+// TODO: remove deprecation
 proto.setDate = function(date) {
+  console.warn('OSM Buildings: .setDate() will be deprecated soon. Use .date() instead.');
+  return this.date(date);
+};
+
+proto.date = function(date) {
   Shadows.date = date;
   Shadows.render();
   return this;
 };
 
+// TODO: remove deprecation
 proto.loadData = function(url) {
+  console.warn('OSM Buildings: .loadData() will be deprecated soon. Use .load() instead.');
+  return this.load(url);
+};
+
+proto.load = function(url) {
   Data.load(url);
   return this;
 };
 
+// TODO: remove deprecation
 proto.setData = function(data) {
-  Data.set(data);
-  return this;
+  console.warn('OSM Buildings: .setData() will be deprecated soon. Use .data() instead.');
+  return this.set(data);
 };
 
-proto.each = function(handler, scope) {
-  Data.each = function(feature) {
-    return handler.call(scope, feature);
-  };
+proto.set = function(data) {
+  Data.set(data);
   return this;
 };
 
@@ -5301,6 +5167,24 @@ proto.screenshot = function(forceDownload) {
     win.location.href = dataURL.replace('image/png', 'image/octet-stream');
   }
   return dataURL;
+};
+
+var onEach = function() {};
+
+proto.each = function(handler, scope) {
+  onEach = function(payload) {
+    return handler.call(scope, payload);
+  };
+  return this;
+};
+
+var onClick = function() {};
+
+proto.click = function(handler, scope) {
+  onClick = function(payload) {
+    return handler.call(scope, payload);
+  };
+  return this;
 };
 
 osmb.VERSION     = VERSION;

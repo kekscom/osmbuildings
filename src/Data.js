@@ -4,10 +4,6 @@ var Data = {
 
   items: [],
 
-  cropDecimals: function(num) {
-    return parseFloat(num.toFixed(5));
-  },
-
   getPixelFootprint: function(buffer) {
     var footprint = new Int32Array(buffer.length),
       px;
@@ -29,23 +25,10 @@ var Data = {
   createClosure: function(cacheKey) {
     var self = this;
     return function(data) {
-      var parsedData = self.parse(data);
+      var parsedData = GeoJSON.read(data);
       Cache.add(parsedData, cacheKey);
       self.addRenderItems(parsedData, true);
     };
-  },
-
-  parse: function(data) {
-    if (!data) {
-      return [];
-    }
-    if (data.type === 'FeatureCollection') {
-      return importGeoJSON(data.features, this.each);
-    }
-    if (data.osm3s) { // OSM Overpass
-      return importOSM(data.elements, this.each);
-    }
-    return [];
   },
 
   resetItems: function() {
@@ -54,89 +37,90 @@ var Data = {
   },
 
   addRenderItems: function(data, allAreNew) {
-    var scaledItems = this.scale(data);
-    for (var i = 0, il = scaledItems.length; i < il; i++) {
-      if (!this.currentItemsIndex[scaledItems[i].id]) {
-        scaledItems[i].scale = allAreNew ? 0 : 1;
-        this.items.push(scaledItems[i]);
-        this.currentItemsIndex[scaledItems[i].id] = 1;
+    var item, scaledItem, id;
+    for (var i = 0, il = data.length; i < il; i++) {
+      item = data[i];
+      id = item.id || [item.footprint[0], item.footprint[1], item.height, item.minHeight].join(',');
+      if (!this.currentItemsIndex[id]) {
+        if ((scaledItem = this.scale(item))) {
+          scaledItem.scale = allAreNew ? 0 : 1;
+          this.items.push(scaledItem);
+          this.currentItemsIndex[id] = 1;
+        }
       }
     }
     fadeIn();
   },
 
-  scale: function(items) {
-    var i, il, j, jl,
-      res = [],
-      item,
-      height, minHeight, footprint,
-      color, wallColor, altColor,
-      roofColor, roofHeight,
-      holes, innerFootprint,
+  scale: function(item) {
+    var
+      res = {},
+      // TODO: calculate this on zoom change only
       zoomScale = 6 / pow(2, ZOOM-MIN_ZOOM); // TODO: consider using HEIGHT / (window.devicePixelRatio || 1)
 
-    for (i = 0, il = items.length; i < il; i++) {
-      item = items[i];
+    if (item.id) {
+      res.id = item.id;
+      res.hitColor = HitAreas.toColor(item.id);
+    }
 
-      height = item.height / zoomScale;
+    res.height = min(item.height/zoomScale, MAX_HEIGHT);
 
-      minHeight = isNaN(item.minHeight) ? 0 : item.minHeight / zoomScale;
-      if (minHeight > MAX_HEIGHT) {
-        continue;
+    res.minHeight = isNaN(item.minHeight) ? 0 : item.minHeight / zoomScale;
+    if (res.minHeight > MAX_HEIGHT) {
+      return;
+    }
+
+    res.footprint = this.getPixelFootprint(item.footprint);
+    if (!res.footprint) {
+      return;
+    }
+    res.center = getCenter(res.footprint);
+
+    if (item.shape) {
+      // TODO: drop footprint
+      res.shape = item.shape;
+      if (item.radius) {
+        res.radius = item.radius/METERS_PER_PIXEL;
       }
+    }
 
-      if (!(footprint = this.getPixelFootprint(item.footprint))) {
-        continue;
-      }
-
-      holes = [];
-      if (item.holes) {
+    if (item.holes) {
+      res.holes = [];
+      var innerFootprint;
+      for (var i = 0, il = item.holes.length; i < il; i++) {
         // TODO: simplify
-        for (j = 0, jl = item.holes.length; j < jl; j++) {
-          if ((innerFootprint = this.getPixelFootprint(item.holes[j]))) {
-            holes.push(innerFootprint);
-          }
+        if ((innerFootprint = this.getPixelFootprint(item.holes[i]))) {
+          res.holes.push(innerFootprint);
         }
       }
+    }
 
-      wallColor = null;
-      altColor  = null;
-      if (item.wallColor) {
-        if ((color = parseColor(item.wallColor))) {
-          wallColor = color.alpha(ZOOM_FACTOR);
-          altColor  = ''+ wallColor.lightness(0.8);
-          wallColor = ''+ wallColor;
-        }
+    var color;
+
+    if (item.wallColor) {
+      if ((color = parseColor(item.wallColor))) {
+        color = color.alpha(ZOOM_FACTOR);
+        res.altColor  = ''+ color.lightness(0.8);
+        res.wallColor = ''+ color;
       }
+    }
 
-      roofColor = null;
-      if (item.roofColor) {
-        if ((color = parseColor(item.roofColor))) {
-          roofColor = ''+ color.alpha(ZOOM_FACTOR);
-        }
+    if (item.roofColor) {
+      if ((color = parseColor(item.roofColor))) {
+        res.roofColor = ''+ color.alpha(ZOOM_FACTOR);
       }
+    }
 
-      roofHeight = item.roofHeight / zoomScale;
+    if (item.roofHeight) {
+      res.roofHeight = item.roofHeight/zoomScale;
+    }
 
-      if (height <= minHeight && roofHeight <= 0) {
-        continue;
-      }
+    if (res.height+res.roofHeight <= res.minHeight) {
+      return;
+    }
 
-      res.push({
-        id:         item.id,
-        footprint:  footprint,
-        height:     min(height, MAX_HEIGHT),
-        minHeight:  minHeight,
-        wallColor:  wallColor,
-        altColor:   altColor,
-        roofColor:  roofColor,
-        roofShape:  item.roofShape,
-        roofHeight: roofHeight,
-        center:     getCenter(footprint),
-        holes:      holes.length ? holes : null,
-        shape:      item.shape, // TODO: drop footprint
-        radius:     item.radius/METERS_PER_PIXEL
-      });
+    if (item.roofShape) {
+      res.roofShape = item.roofShape;
     }
 
     return res;
@@ -145,21 +129,12 @@ var Data = {
   set: function(data) {
     this.isStatic = true;
     this.resetItems();
-    this.addRenderItems(this.staticData = this.parse(data), true);
+    this._staticData = GeoJSON.read(data);
+    this.addRenderItems(this._staticData, true);
   },
 
   load: function(url) {
-    this.url = url || OSM_XAPI_URL;
-    this.isStatic = !/(.+\{[nesw]\}){4,}/.test(this.url);
-
-    if (this.isStatic) {
-      this.resetItems();
-      xhr(this.url, {}, function(data) {
-        this.addRenderItems(this.staticData = this.parse(data), true);
-      });
-      return;
-    }
-
+    this.url = template(url || DATA_URL, { k: DATA_KEY });
     this.update();
   },
 
@@ -170,8 +145,8 @@ var Data = {
       return;
     }
 
-    if (this.isStatic) {
-      this.addRenderItems(this.staticData);
+    if (this.isStatic && this._staticData) {
+      this.addRenderItems(this._staticData);
       return;
     }
 
@@ -179,42 +154,29 @@ var Data = {
       return;
     }
 
-    var lat, lon,
-      parsedData, cacheKey,
-      nw = pixelToGeo(ORIGIN_X,       ORIGIN_Y),
-      se = pixelToGeo(ORIGIN_X+WIDTH, ORIGIN_Y+HEIGHT),
-      sizeLat = DATA_TILE_SIZE,
-      sizeLon = DATA_TILE_SIZE*2;
+    var
+      tileZoom = 16,
+      tileSize = 256,
+      zoomedTileSize = ZOOM > tileZoom ? tileSize <<(ZOOM-tileZoom) : tileSize >>(tileZoom-ZOOM),
+      minX = ORIGIN_X/zoomedTileSize <<0,
+      minY = ORIGIN_Y/zoomedTileSize <<0,
+      maxX = ceil((ORIGIN_X+WIDTH) /zoomedTileSize),
+      maxY = ceil((ORIGIN_Y+HEIGHT)/zoomedTileSize),
+      x, y, coords,
+      cacheKey, parsedData;
 
-    var bounds = {
-      n: ceil( nw.latitude /sizeLat) * sizeLat,
-      e: ceil( se.longitude/sizeLon) * sizeLon,
-      s: floor(se.latitude /sizeLat) * sizeLat,
-      w: floor(nw.longitude/sizeLon) * sizeLon
-    };
-
-    for (lat = bounds.s; lat <= bounds.n; lat += sizeLat) {
-      for (lon = bounds.w; lon <= bounds.e; lon += sizeLon) {
-        lat = this.cropDecimals(lat);
-        lon = this.cropDecimals(lon);
-
-        cacheKey = lat +','+ lon;
+    for (y = minY; y <= maxY; y++) {
+      for (x = minX; x <= maxX; x++) {
+        coords = { x: x, y: y, z: tileZoom };
+        cacheKey = x +','+ y;
         if ((parsedData = Cache.get(cacheKey))) {
           this.addRenderItems(parsedData);
-        } else {
-          xhr(this.url, {
-            n: this.cropDecimals(lat+sizeLat),
-            e: this.cropDecimals(lon+sizeLon),
-            s: lat,
-            w: lon
-          }, this.createClosure(cacheKey));
+				} else {
+          xhr(template(this.url, coords), this.createClosure(cacheKey));
         }
       }
     }
 
     Cache.purge();
-  },
-
-  each: function() {}
-
+  }
 };

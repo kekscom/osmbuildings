@@ -1,95 +1,135 @@
 var Cylinder = {
 
-  circle: function(context, centerX, centerY, radius, color) {
-    context.fillStyle = color;
-    context.beginPath();
-    context.arc(centerX, centerY, radius, 0, PI*2);
-    context.stroke();
-    context.fill();
-  },
-
-  draw: function(context, centerX, centerY, radius, topRadius, height, minHeight, color, altColor, roofColor) {
+  draw: function(context, center, radius, topRadius, height, minHeight, color, altColor, roofColor) {
     var
+      c = { x:center.x-ORIGIN_X, y:center.y-ORIGIN_Y },
       scale = CAM_Z / (CAM_Z-height),
-      apex = Buildings.project(centerX, centerY, scale),
+      minScale = CAM_Z / (CAM_Z-minHeight),
+      apex = Buildings.project(c, scale),
       a1, a2;
 
     topRadius *= scale;
 
     if (minHeight) {
-      scale = CAM_Z / (CAM_Z-minHeight);
-      var center = Buildings.project(centerX, centerY, scale);
-      centerX = center.x;
-      centerY = center.y;
+      c = Buildings.project(c, minScale);
       radius = radius*scale;
     }
 
     // common tangents for ground and roof circle
-    var tangents = Cylinder.getTangents(centerX, centerY, radius, apex.x, apex.y, topRadius);
+    var tangents = this._tangents(c, radius, apex, topRadius);
 
     // no tangents? top circle is inside bottom circle
     if (!tangents) {
-      a1 = 0;
+      a1 = 1.5*PI;
       a2 = 1.5*PI;
     } else {
-      a1 = atan2(tangents[0].y1-centerY, tangents[0].x1-centerX);
-      a2 = atan2(tangents[1].y1-centerY, tangents[1].x1-centerX);
+      a1 = atan2(tangents[0].y1-c.y, tangents[0].x1-c.x);
+      a2 = atan2(tangents[1].y1-c.y, tangents[1].x1-c.x);
     }
 
     context.fillStyle = color;
     context.beginPath();
     context.arc(apex.x, apex.y, topRadius, HALF_PI, a1, true);
-    context.arc(centerX, centerY, radius, a1, HALF_PI);
+    context.arc(c.x, c.y, radius, a1, HALF_PI);
     context.closePath();
     context.fill();
 
     context.fillStyle = altColor;
     context.beginPath();
     context.arc(apex.x, apex.y, topRadius, a2, HALF_PI, true);
-    context.arc(centerX, centerY, radius, HALF_PI, a2);
+    context.arc(c.x, c.y, radius, HALF_PI, a2);
     context.closePath();
     context.fill();
 
-    Cylinder.circle(context, apex.x, apex.y, topRadius, roofColor);
+    context.fillStyle = roofColor;
+    this._circle(context, apex, topRadius);
   },
 
-  shadow: function(context, centerX, centerY, radius, topRadius, height, minHeight) {
+  simplified: function(context, center, radius) {
+    this._circle(context, { x:center.x-ORIGIN_X, y:center.y-ORIGIN_Y }, radius);
+  },
+
+  shadow: function(context, center, radius, topRadius, height, minHeight) {
     var
-      apex = Shadows.project(centerX, centerY, height),
+      c = { x:center.x-ORIGIN_X, y:center.y-ORIGIN_Y },
+      apex = Shadows.project(c, height),
       p1, p2;
 
     if (minHeight) {
-      var center = Shadows.project(centerX, centerY, minHeight);
-      centerX = center.x;
-      centerY = center.y;
+      c = Shadows.project(c, minHeight);
     }
 
     // common tangents for ground and roof circle
-    var tangents = Cylinder.getTangents(centerX, centerY, radius, apex.x, apex.y, topRadius);
+    var tangents = this._tangents(c, radius, apex, topRadius);
 
     // TODO: no tangents? roof overlaps everything near cam position
     if (tangents) {
-      p1 = atan2(tangents[0].y1-centerY, tangents[0].x1-centerX);
-      p2 = atan2(tangents[1].y1-centerY, tangents[1].x1-centerX);
+      p1 = atan2(tangents[0].y1-c.y, tangents[0].x1-c.x);
+      p2 = atan2(tangents[1].y1-c.y, tangents[1].x1-c.x);
       context.moveTo(tangents[1].x2, tangents[1].y2);
       context.arc(apex.x, apex.y, topRadius, p2, p1);
-      context.arc(centerX, centerY, radius, p1, p2);
+      context.arc(c.x, c.y, radius, p1, p2);
     } else {
-      context.moveTo(centerX+radius, centerY);
-      context.arc(centerX, centerY, radius, 0, 2*PI);
+      context.moveTo(c.x+radius, c.y);
+      context.arc(c.x, c.y, radius, 0, 2*PI);
     }
   },
 
-  footprintMask: function(context, centerX, centerY, radius) {
-    context.moveTo(centerX+radius, centerY);
-    context.arc(centerX, centerY, radius, 0, PI*2);
+  shadowMask: function(context, center, radius) {
+    var c = { x:center.x-ORIGIN_X, y:center.y-ORIGIN_Y };
+    context.moveTo(c.x+radius, c.y);
+    context.arc(c.x, c.y, radius, 0, PI*2);
   },
 
-  // http://en.wikibooks.org/wiki/Algorithm_Implementation/Geometry/Tangents_between_two_circles
-  getTangents: function(c1x, c1y, r1, c2x, c2y, r2) {
+  hitArea: function(context, center, radius, topRadius, height, minHeight, color) {
     var
-      dx = c1x-c2x,
-      dy = c1y-c2y,
+      c = { x:center.x-ORIGIN_X, y:center.y-ORIGIN_Y },
+      scale = CAM_Z / (CAM_Z-height),
+      minScale = CAM_Z / (CAM_Z-minHeight),
+      apex = Buildings.project(c, scale),
+      p1, p2;
+
+    topRadius *= scale;
+
+    if (minHeight) {
+      c = Buildings.project(c, minScale);
+      radius = radius*scale;
+    }
+
+    // common tangents for ground and roof circle
+    var tangents = this._tangents(c, radius, apex, topRadius);
+
+    context.fillStyle = color;
+    context.beginPath();
+
+    // TODO: no tangents? roof overlaps everything near cam position
+    if (tangents) {
+      p1 = atan2(tangents[0].y1-c.y, tangents[0].x1-c.x);
+      p2 = atan2(tangents[1].y1-c.y, tangents[1].x1-c.x);
+      context.moveTo(tangents[1].x2, tangents[1].y2);
+      context.arc(apex.x, apex.y, topRadius, p2, p1);
+      context.arc(c.x, c.y, radius, p1, p2);
+    } else {
+      context.moveTo(c.x+radius, c.y);
+      context.arc(c.x, c.y, radius, 0, 2*PI);
+    }
+
+    context.closePath();
+    context.fill();
+  },
+
+  _circle: function(context, center, radius) {
+    context.beginPath();
+    context.arc(center.x, center.y, radius, 0, PI*2);
+    context.stroke();
+    context.fill();
+  },
+
+    // http://en.wikibooks.org/wiki/Algorithm_Implementation/Geometry/Tangents_between_two_circles
+  _tangents: function(c1, r1, c2, r2) {
+    var
+      dx = c1.x-c2.x,
+      dy = c1.y-c2.y,
       dr = r1-r2,
       sqdist = (dx*dx) + (dy*dy);
 
@@ -124,10 +164,10 @@ var Cylinder = {
       nx = vx*c - sign*h*vy;
       ny = vy*c + sign*h*vx;
       res.push({
-        x1: c1x + r1*nx <<0,
-        y1: c1y + r1*ny <<0,
-        x2: c2x + r2*nx <<0,
-        y2: c2y + r2*ny <<0
+        x1: c1.x + r1*nx <<0,
+        y1: c1.y + r1*ny <<0,
+        x2: c2.x + r2*nx <<0,
+        y2: c2.y + r2*ny <<0
       });
     }
 
