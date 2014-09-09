@@ -68,7 +68,11 @@ var Pyramid = {
         b = Shadows.project(b, minHeight);
       }
 
-      // TODO !
+      // backface culling check
+      if ((b.x-a.x) * (apex.y-a.y) > (apex.x-a.x) * (b.y-a.y)) {
+        // depending on direction, set shading
+        this._triangle(context, a, b, apex);
+      }
     }
   },
 

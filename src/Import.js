@@ -123,14 +123,11 @@ var Import = {
       item.roofColor = roofColor;
     }
 
-    var isRotational = false;
-
     switch (prop.shape) {
       case 'cone':
       case 'cylinder':
       case 'dome':
         item.shape = prop.shape;
-        isRotational = true;
       break;
 
       case 'pyramid':
@@ -140,7 +137,6 @@ var Import = {
 
       case 'sphere':
         item.shape = 'cylinder';
-        isRotational = true;
       break;
     }
 
@@ -148,7 +144,6 @@ var Import = {
       case 'cone':
       case 'dome':
         item.shape = 'cylinder';
-        isRotational = true;
         item.roofShape = prop.roofShape;
       break;
 
@@ -156,11 +151,6 @@ var Import = {
       case 'pyramidal':
         item.roofShape = 'pyramid';
       break;
-    }
-
-    if (isRotational) {
-      // TODO: remove footprint
-      item.radius = Import.getRadius(item.footprint);
     }
 
     if (item.roofShape && prop.roofHeight) {

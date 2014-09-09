@@ -530,14 +530,11 @@ var Import = {
       item.roofColor = roofColor;
     }
 
-    var isRotational = false;
-
     switch (prop.shape) {
       case 'cone':
       case 'cylinder':
       case 'dome':
         item.shape = prop.shape;
-        isRotational = true;
       break;
 
       case 'pyramid':
@@ -547,7 +544,6 @@ var Import = {
 
       case 'sphere':
         item.shape = 'cylinder';
-        isRotational = true;
       break;
     }
 
@@ -555,7 +551,6 @@ var Import = {
       case 'cone':
       case 'dome':
         item.shape = 'cylinder';
-        isRotational = true;
         item.roofShape = prop.roofShape;
       break;
 
@@ -563,11 +558,6 @@ var Import = {
       case 'pyramidal':
         item.roofShape = 'pyramid';
       break;
-    }
-
-    if (isRotational) {
-      // TODO: remove footprint
-      item.radius = Import.getRadius(item.footprint);
     }
 
     if (item.roofShape && prop.roofHeight) {
@@ -679,6 +669,9 @@ var GeoJSON = (function() {
         for (j = 0, jl = geometries.length; j < jl; j++) {
           item = clone(baseItem);
           item.footprint = geometries[j].outer;
+          if (item.shape === 'cone' || item.shape === 'cylinder') {
+            item.radius = Import.getRadius(item.footprint);
+          }
           if (geometries[j].inner) {
             item.holes = geometries[j].inner;
           }
@@ -1595,7 +1588,11 @@ var Pyramid = {
         b = Shadows.project(b, minHeight);
       }
 
-      // TODO !
+      // backface culling check
+      if ((b.x-a.x) * (apex.y-a.y) > (apex.x-a.x) * (b.y-a.y)) {
+        // depending on direction, set shading
+        this._triangle(context, a, b, apex);
+      }
     }
   },
 
@@ -2422,7 +2419,10 @@ proto.onClick = function(e) {
     this.noClick = false;
     return;
   }
-  onClick(HitAreas.getIdFromXY(e.containerPoint.x, e.containerPoint.y));
+  var id = HitAreas.getIdFromXY(e.containerPoint.x, e.containerPoint.y);
+  if (id) {
+    onClick(id);
+  }
 };
 
 proto.getOffset = function() {
