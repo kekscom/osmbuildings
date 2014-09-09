@@ -15,7 +15,6 @@ var
   floor = m.floor,
   round = m.round,
   pow = m.pow,
-  win = window,
   doc = document;
 
 
@@ -25,15 +24,15 @@ var
   Int32Array = Int32Array || Array,
   Uint8Array = Uint8Array || Array;
 
-if (!win.console) {
-  win.console = {};
+if (!global.console) {
+  global.console = {};
 }
 
 var IS_IOS = /iP(ad|hone|od)/g.test(navigator.userAgent);
 var IS_MSIE = !!~navigator.userAgent.indexOf('Trident');
 
-var requestAnimFrame = (win.requestAnimationFrame && !IS_IOS && !IS_MSIE) ?
-  win.requestAnimationFrame : function(callback) {
+var requestAnimFrame = (global.requestAnimationFrame && !IS_IOS && !IS_MSIE) ?
+  global.requestAnimationFrame : function(callback) {
     callback();
   };
 
