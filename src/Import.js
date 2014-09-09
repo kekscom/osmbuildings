@@ -130,18 +130,31 @@ var Import = {
         item.shape = prop.shape;
       break;
 
+      case 'pyramid':
+      case 'pyramidal':
+        item.shape = 'pyramid';
+      break;
+
       case 'sphere':
         item.shape = 'cylinder';
       break;
     }
 
-    if ((prop.roofShape === 'cone' || prop.roofShape === 'dome') && prop.roofHeight) {
-      item.shape = 'cylinder';
-      item.roofShape = prop.roofShape;
-      item.roofHeight = prop.roofHeight;
+    switch (prop.roofShape) {
+      case 'cone':
+      case 'dome':
+        item.shape = 'cylinder';
+        item.roofShape = prop.roofShape;
+      break;
+
+      case 'pyramid':
+      case 'pyramidal':
+        item.roofShape = 'pyramid';
+      break;
     }
 
-    if (item.roofHeight) {
+    if (item.roofShape && prop.roofHeight) {
+      item.roofHeight = prop.roofHeight;
       item.height = max(0, item.height-item.roofHeight);
     } else {
       item.roofHeight = 0;

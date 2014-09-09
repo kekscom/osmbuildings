@@ -72,12 +72,19 @@ var Buildings = {
           Cylinder.draw(context, item.center, item.radius, 0, h, mh, wallColor, altColor);
         break;
 
+        case 'pyramid':
+          Pyramid.draw(context, footprint, item.center, h, mh, wallColor, altColor);
+        break;
+
         case 'dome':
           Cylinder.draw(context, item.center, item.radius, item.radius/2, h, mh, wallColor, altColor);
         break;
 
         default:
           Block.draw(context, footprint, item.holes, h, mh, wallColor, altColor, roofColor);
+          if (item.roofShape === 'pyramid') {
+            Pyramid.draw(context, footprint, item.center, h+item.roofHeight, h, roofColor, parseColor(roofColor).lightness(0.9));
+          }
       }
     }
   }

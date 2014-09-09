@@ -56,7 +56,7 @@ var Data = {
     var
       res = {},
       // TODO: calculate this on zoom change only
-      zoomScale = 6 / pow(2, ZOOM-MIN_ZOOM); // TODO: consider using HEIGHT / (window.devicePixelRatio || 1)
+      zoomScale = 6 / pow(2, ZOOM-MIN_ZOOM); // TODO: consider using HEIGHT / (global.devicePixelRatio || 1)
 
     if (item.id) {
       res.id = item.id;

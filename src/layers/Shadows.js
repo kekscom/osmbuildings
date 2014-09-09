@@ -83,14 +83,24 @@ var Shadows = {
             Cylinder.shadow(context, center, radius, radius/2, h+item.roofHeight, h);
           }
         break;
+
         case 'cone':
           Cylinder.shadow(context, item.center, item.radius, 0, h, mh);
         break;
+
+        case 'pyramid':
+          Pyramid.shadow(context, footprint, item.center, h, mh);
+        break;
+
         case 'dome':
           Cylinder.shadow(context, item.center, item.radius, item.radius/2, h, mh);
         break;
+
         default:
           Block.shadow(context, footprint, item.holes, h, mh);
+          if (item.roofShape === 'pyramid') {
+            Pyramid.shadow(context, footprint, item.center, h+item.roofHeight, h);
+          }
       }
     }
 

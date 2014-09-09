@@ -70,7 +70,7 @@ proto.set = function(data) {
 proto.screenshot = function(forceDownload) {
   var dataURL = Layers.screenshot();
   if (forceDownload) {
-    win.location.href = dataURL.replace('image/png', 'image/octet-stream');
+    global.location.href = dataURL.replace('image/png', 'image/octet-stream');
   }
   return dataURL;
 };

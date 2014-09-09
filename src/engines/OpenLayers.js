@@ -36,7 +36,10 @@ proto.setMap = function(map) {
   this.setOrigin();
 
   map.events.register('click', map, function(e) {
-    onClick(HitAreas.getIdFromXY(e.xy.x, e.xy.y));
+    var id = HitAreas.getIdFromXY(e.xy.x, e.xy.y);
+    if (id) {
+      onClick(id);
+    }
   });
 
   Data.update();

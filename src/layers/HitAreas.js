@@ -73,12 +73,19 @@ var HitAreas = {
           Cylinder.hitArea(context, item.center, item.radius, 0, h, mh, color);
         break;
 
+        case 'pyramid':
+          Pyramid.hitArea(context, footprint, item.center, h, mh, color);
+        break;
+
         case 'dome':
           Cylinder.hitArea(context, item.center, item.radius, item.radius/2, h, mh, color);
         break;
 
         default:
           Block.hitArea(context, footprint, item.holes, h, mh, color);
+          if (item.roofShape === 'dome') {
+            Pyramid.hitArea(context, footprint, item.center, h+item.roofHeight, h, color);
+          }
       }
     }
     this._data = this.context.getImageData(0, 0, WIDTH, HEIGHT).data;

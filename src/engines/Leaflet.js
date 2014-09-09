@@ -131,7 +131,10 @@ proto.onClick = function(e) {
     this.noClick = false;
     return;
   }
-  onClick(HitAreas.getIdFromXY(e.containerPoint.x, e.containerPoint.y));
+  var id = HitAreas.getIdFromXY(e.containerPoint.x, e.containerPoint.y);
+  if (id) {
+    onClick(id);
+  }
 };
 
 proto.getOffset = function() {
