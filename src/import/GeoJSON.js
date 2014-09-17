@@ -93,7 +93,7 @@ var GeoJSON = (function() {
         for (j = 0, jl = geometries.length; j < jl; j++) {
           item = clone(baseItem);
           item.footprint = geometries[j].outer;
-          if (item.shape === 'cone' || item.shape === 'cylinder') {
+          if (item.shape === 'cone' || item.shape === 'cylinder' || item.shape === 'dome') {
             item.radius = Import.getRadius(item.footprint);
           }
           if (geometries[j].inner) {

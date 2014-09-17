@@ -25,6 +25,7 @@ exports.srcFiles = [
   srcPath + '/geometry/Block.js',
   srcPath + '/geometry/Cylinder.js',
   srcPath + '/geometry/Pyramid.js',
+  srcPath + '/geometry/Dome.js',
   srcPath + '/layers/Buildings.js',
   srcPath + '/layers/Simplified.js',
   srcPath + '/layers/Shadows.js',

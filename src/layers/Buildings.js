@@ -64,7 +64,7 @@ var Buildings = {
             Cylinder.draw(context, center, radius, 0, h+item.roofHeight, h, roofColor, ''+ parseColor(roofColor).lightness(0.9));
           }
           if (item.roofShape === 'dome') {
-            Cylinder.draw(context, center, radius, radius/2, h+item.roofHeight, h, roofColor, ''+ parseColor(roofColor).lightness(0.9));
+            Dome.draw(context, center, radius, h+item.roofHeight, h, roofColor, ''+ parseColor(roofColor).lightness(0.9));
           }
         break;
 
@@ -77,7 +77,7 @@ var Buildings = {
         break;
 
         case 'dome':
-          Cylinder.draw(context, item.center, item.radius, item.radius/2, h, mh, wallColor, altColor);
+          Dome.draw(context, item.center, item.radius, h, mh, wallColor, altColor);
         break;
 
         default:

@@ -65,7 +65,7 @@ var HitAreas = {
             Cylinder.hitArea(context, center, radius, 0, h+item.roofHeight, h, color);
           }
           if (item.roofShape === 'dome') {
-            Cylinder.hitArea(context, center, radius, radius/2, h+item.roofHeight, h, color);
+            Dome.hitArea(context, center, radius, h+item.roofHeight, h, color);
           }
         break;
 
@@ -78,12 +78,12 @@ var HitAreas = {
         break;
 
         case 'dome':
-          Cylinder.hitArea(context, item.center, item.radius, item.radius/2, h, mh, color);
+          Dome.hitArea(context, item.center, item.radius, h, mh, color);
         break;
 
         default:
           Block.hitArea(context, footprint, item.holes, h, mh, color);
-          if (item.roofShape === 'dome') {
+          if (item.roofShape === 'pyramid') {
             Pyramid.hitArea(context, footprint, item.center, h+item.roofHeight, h, color);
           }
       }
