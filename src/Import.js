@@ -2,37 +2,6 @@ var Import = {
 
   METERS_PER_LEVEL: 3,
 
-  clockwise: 'CW',
-  counterClockwise: 'CCW',
-
-  // detect winding direction: clockwise or counter clockwise
-  getWinding: function(points) {
-    var x1, y1, x2, y2,
-      a = 0,
-      i, il;
-    for (i = 0, il = points.length-3; i < il; i += 2) {
-      x1 = points[i];
-      y1 = points[i+1];
-      x2 = points[i+2];
-      y2 = points[i+3];
-      a += x1*y2 - x2*y1;
-    }
-    return (a/2) > 0 ? this.clockwise : this.counterClockwise;
-  },
-
-  // enforce a polygon winding direcetion. Needed for proper backface culling.
-  makeWinding: function(points, direction) {
-    var winding = this.getWinding(points);
-    if (winding === direction) {
-      return points;
-    }
-    var revPoints = [];
-    for (var i = points.length-2; i >= 0; i -= 2) {
-      revPoints.push(points[i], points[i+1]);
-    }
-    return revPoints;
-  },
-
   getRadius: function(points) {
     var minLat = 90, maxLat = -90;
     for (var i = 0, il = points.length; i < il; i += 2) {
@@ -127,12 +96,8 @@ var Import = {
       case 'cone':
       case 'cylinder':
       case 'dome':
-        item.shape = prop.shape;
-      break;
-
       case 'pyramid':
-      case 'pyramidal':
-        item.shape = 'pyramid';
+        item.shape = prop.shape;
       break;
 
       case 'sphere':
@@ -148,8 +113,7 @@ var Import = {
       break;
 
       case 'pyramid':
-      case 'pyramidal':
-        item.roofShape = 'pyramid';
+        item.roofShape = prop.roofShape;
       break;
     }
 

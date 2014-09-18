@@ -47,11 +47,10 @@ var GeoJSON = (function() {
       for (j = 0, jl = p.length; j < jl; j++) {
         inner[i].push(p[j][lat], p[j][lon]);
       }
-      inner[i] = Import.makeWinding(inner[i], Import.counterClockwise);
     }
 
     return [{
-      outer: Import.makeWinding(outer, Import.clockwise),
+      outer: outer,
       inner: inner.length ? inner : null
     }];
   }
