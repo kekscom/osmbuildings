@@ -111,9 +111,7 @@ var Data = {
       }
     }
 
-    if (item.roofHeight) {
-      res.roofHeight = item.roofHeight/zoomScale;
-    }
+    res.roofHeight = isNaN(item.minHeight) ? 0 : item.roofHeight/zoomScale;
 
     if (res.height+res.roofHeight <= res.minHeight) {
       return;

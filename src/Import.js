@@ -108,8 +108,8 @@ var Import = {
     switch (prop.roofShape) {
       case 'cone':
       case 'dome':
-        item.shape = 'cylinder';
         item.roofShape = prop.roofShape;
+        item.shape = 'cylinder';
       break;
 
       case 'pyramid':

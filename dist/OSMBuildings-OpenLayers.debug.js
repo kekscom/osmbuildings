@@ -222,42 +222,37 @@ var parseColor = (function() {
   var proto = Color.prototype;
 
   proto.toString = function() {
-    var rgba = this.toRGBA();
-
-    rgba.r *= 255;
-    rgba.g *= 255;
-    rgba.b *= 255;
-
-    if (rgba.a === 1) {
-      return '#' + ((1 <<24) + (rgba.r <<16) + (rgba.g <<8) + rgba.b).toString(16).slice(1, 7);
-    }
-    return 'rgba(' + [Math.round(rgba.r), Math.round(rgba.g), Math.round(rgba.b), rgba.a.toFixed(2)].join(',') + ')';
-  };
-
-  proto.toRGBA = function() {
     var
       h = limit(this.H, 360),
       s = limit(this.S, 1),
       l = limit(this.L, 1),
-      rgba = { a:limit(this.A, 1) };
+      a = limit(this.A, 1),
+      r, g, b;
 
     // achromatic
     if (s === 0) {
-      rgba.r = l;
-      rgba.g = l;
-      rgba.b = l;
+      r = l;
+      g = l;
+      b = l;
     } else {
       var
         q = l < 0.5 ? l * (1+s) : l + s - l*s,
         p = 2 * l-q;
         h /= 360;
 
-      rgba.r = hue2rgb(p, q, h + 1/3);
-      rgba.g = hue2rgb(p, q, h);
-      rgba.b = hue2rgb(p, q, h - 1/3);
+      r = hue2rgb(p, q, h + 1/3);
+      g = hue2rgb(p, q, h);
+      b = hue2rgb(p, q, h - 1/3);
     }
 
-    return rgba;
+    r *= 255;
+    g *= 255;
+    b *= 255;
+
+    if (a === 1) {
+      return '#' + ((1 <<24) + (r <<16) + (g <<8) + b).toString(16).slice(1, 7);
+    }
+    return 'rgba(' + [Math.round(r), Math.round(g), Math.round(b), a.toFixed(2)].join(',') + ')';
   };
 
   proto.hue = function(h) {
@@ -292,13 +287,13 @@ var parseColor = (function() {
       r = parseInt(m[1], 16);
       g = parseInt(m[2], 16);
       b = parseInt(m[3], 16);
-    } else if ((m = str.match(/rgba?\((\d+)\D+(\d+)\D+(\d+)(\D+([\d.]+))?\)/))) {
+    }
+
+    if ((m = str.match(/rgba?\((\d+)\D+(\d+)\D+(\d+)(\D+([\d.]+))?\)/))) {
       r = parseInt(m[1], 10);
       g = parseInt(m[2], 10);
       b = parseInt(m[3], 10);
       a = m[4] ? parseFloat(m[5]) : 1;
-    } else {
-      return;
     }
 
     r /= 255;
@@ -409,37 +404,6 @@ var Import = {
 
   METERS_PER_LEVEL: 3,
 
-  clockwise: 'CW',
-  counterClockwise: 'CCW',
-
-  // detect winding direction: clockwise or counter clockwise
-  getWinding: function(points) {
-    var x1, y1, x2, y2,
-      a = 0,
-      i, il;
-    for (i = 0, il = points.length-3; i < il; i += 2) {
-      x1 = points[i];
-      y1 = points[i+1];
-      x2 = points[i+2];
-      y2 = points[i+3];
-      a += x1*y2 - x2*y1;
-    }
-    return (a/2) > 0 ? this.clockwise : this.counterClockwise;
-  },
-
-  // enforce a polygon winding direcetion. Needed for proper backface culling.
-  makeWinding: function(points, direction) {
-    var winding = this.getWinding(points);
-    if (winding === direction) {
-      return points;
-    }
-    var revPoints = [];
-    for (var i = points.length-2; i >= 0; i -= 2) {
-      revPoints.push(points[i], points[i+1]);
-    }
-    return revPoints;
-  },
-
   getRadius: function(points) {
     var minLat = 90, maxLat = -90;
     for (var i = 0, il = points.length; i < il; i += 2) {
@@ -534,12 +498,8 @@ var Import = {
       case 'cone':
       case 'cylinder':
       case 'dome':
-        item.shape = prop.shape;
-      break;
-
       case 'pyramid':
-      case 'pyramidal':
-        item.shape = 'pyramid';
+        item.shape = prop.shape;
       break;
 
       case 'sphere':
@@ -550,13 +510,12 @@ var Import = {
     switch (prop.roofShape) {
       case 'cone':
       case 'dome':
-        item.shape = 'cylinder';
         item.roofShape = prop.roofShape;
+        item.shape = 'cylinder';
       break;
 
       case 'pyramid':
-      case 'pyramidal':
-        item.roofShape = 'pyramid';
+        item.roofShape = prop.roofShape;
       break;
     }
 
@@ -623,11 +582,10 @@ var GeoJSON = (function() {
       for (j = 0, jl = p.length; j < jl; j++) {
         inner[i].push(p[j][lat], p[j][lon]);
       }
-      inner[i] = Import.makeWinding(inner[i], Import.counterClockwise);
     }
 
     return [{
-      outer: Import.makeWinding(outer, Import.clockwise),
+      outer: outer,
       inner: inner.length ? inner : null
     }];
   }
@@ -1044,9 +1002,7 @@ var Data = {
       }
     }
 
-    if (item.roofHeight) {
-      res.roofHeight = item.roofHeight/zoomScale;
-    }
+    res.roofHeight = isNaN(item.minHeight) ? 0 : item.roofHeight/zoomScale;
 
     if (res.height+res.roofHeight <= res.minHeight) {
       return;
