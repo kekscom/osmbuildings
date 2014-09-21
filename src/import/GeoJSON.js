@@ -101,6 +101,9 @@ var GeoJSON = (function() {
           if (feature.id || feature.properties.id) {
             item.id = feature.id || feature.properties.id;
           }
+
+          item.hitColor = HitAreas.toColor(feature.properties.relationId || item.id);
+
           res.push(item); // TODO: clone base properties!
         }
       }

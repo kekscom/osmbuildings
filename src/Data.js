@@ -60,7 +60,6 @@ var Data = {
 
     if (item.id) {
       res.id = item.id;
-      res.hitColor = HitAreas.toColor(item.id);
     }
 
     res.height = min(item.height/zoomScale, MAX_HEIGHT);
@@ -110,6 +109,8 @@ var Data = {
         res.roofColor = ''+ color.alpha(ZOOM_FACTOR);
       }
     }
+
+    res.hitColor = item.hitColor;
 
     res.roofHeight = isNaN(item.minHeight) ? 0 : item.roofHeight/zoomScale;
 
