@@ -1897,8 +1897,7 @@ var HitAreas = {
 
   render: function() {
     if (this._timer) {
-      clearTimeout(this._timer);
-      this._timer = null;
+      return;
     }
     var self = this;
     this._timer = setTimeout(function() {
@@ -2263,6 +2262,7 @@ proto.name          = 'OSM Buildings';
 proto.attribution   = ATTRIBUTION;
 proto.isBaseLayer   = false;
 proto.alwaysInRange = true;
+proto.EPSG4326      = new OpenLayers.Projection('EPSG:4326');
 
 proto.setOrigin = function() {
   var map = this.map,
@@ -2283,10 +2283,12 @@ proto.setMap = function(map) {
   setZoom(map.zoom);
   this.setOrigin();
 
+  var layerProjection = this.projection;
   map.events.register('click', map, function(e) {
     var id = HitAreas.getIdFromXY(e.xy.x, e.xy.y);
     if (id) {
-      onClick(id);
+      var geo = map.getLonLatFromPixel(e.xy).transform(layerProjection, this.projection);
+      onClick({ feature:id, lat:geo.lat, lon:geo.lon });
     }
   });
 

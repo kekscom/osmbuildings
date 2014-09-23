@@ -35,10 +35,12 @@ proto.setMap = function(map) {
   setZoom(map.zoom);
   this.setOrigin();
 
+  var layerProjection = this.projection;
   map.events.register('click', map, function(e) {
     var id = HitAreas.getIdFromXY(e.xy.x, e.xy.y);
     if (id) {
-      onClick(id);
+      var geo = map.getLonLatFromPixel(e.xy).transform(layerProjection, this.projection);
+      onClick({ feature:id, lat:geo.lat, lon:geo.lon });
     }
   });
 

@@ -69,8 +69,6 @@ proto.onMove = function(e) {
 };
 
 proto.onMoveEnd = function(e) {
-  this.noClick = true;
-
   if (this.noMoveEnd) { // moveend is also fired after zoom
     this.noMoveEnd = false;
     return;
@@ -127,13 +125,9 @@ proto.onViewReset = function() {
 };
 
 proto.onClick = function(e) {
-  if (this.noClick) {
-    this.noClick = false;
-    return;
-  }
   var id = HitAreas.getIdFromXY(e.containerPoint.x, e.containerPoint.y);
   if (id) {
-    onClick(id);
+    onClick({ feature:id, lat:e.latlng.lat, lon:e.latlng.lng });
   }
 };
 

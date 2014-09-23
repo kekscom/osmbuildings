@@ -3,8 +3,7 @@ var HitAreas = {
 
   render: function() {
     if (this._timer) {
-      clearTimeout(this._timer);
-      this._timer = null;
+      return;
     }
     var self = this;
     this._timer = setTimeout(function() {

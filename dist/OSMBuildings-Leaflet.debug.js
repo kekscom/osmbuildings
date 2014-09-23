@@ -1897,8 +1897,7 @@ var HitAreas = {
 
   render: function() {
     if (this._timer) {
-      clearTimeout(this._timer);
-      this._timer = null;
+      return;
     }
     var self = this;
     this._timer = setTimeout(function() {
@@ -2317,8 +2316,6 @@ proto.onMove = function(e) {
 };
 
 proto.onMoveEnd = function(e) {
-  this.noClick = true;
-
   if (this.noMoveEnd) { // moveend is also fired after zoom
     this.noMoveEnd = false;
     return;
@@ -2375,13 +2372,9 @@ proto.onViewReset = function() {
 };
 
 proto.onClick = function(e) {
-  if (this.noClick) {
-    this.noClick = false;
-    return;
-  }
   var id = HitAreas.getIdFromXY(e.containerPoint.x, e.containerPoint.y);
   if (id) {
-    onClick(id);
+    onClick({ feature:id, lat:e.latlng.lat, lon:e.latlng.lng });
   }
 };
 
