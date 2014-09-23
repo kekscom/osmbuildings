@@ -6,7 +6,7 @@ Everything is stabilizing now, entering beta state.
 
 **Example** http://osmbuildings.org/
 
-It's safe use the [ master branch](https://github.com/kekscom/osmbuildings/tree/master/dist/) for production.
+It's safe use the [master branch](https://github.com/kekscom/osmbuildings/tree/master/dist/) for production.
 
 For further information visit http://osmbuildings.org, follow [@osmbuildings](https://twitter.com/osmbuildings/) on Twitter or report issues [here on Github](https://github.com/kekscom/osmbuildings/issues/).
 
@@ -179,7 +179,7 @@ Callback receives a feature object as argument.</td>
 <tr>
 <td>click({Function})</td>
 <td>A callback wrapper to handle click events on features.<br>
-Callback receives a feature id as argument.</td>
+Callback receives an object { feature{number}, lat{float}, lon{float} } as argument.</td>
 </tr>
 
 <tr>

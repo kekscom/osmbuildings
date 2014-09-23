@@ -652,7 +652,7 @@ var GeoJSON = (function() {
 //****** file: variables.js ******
 
 var
-  VERSION      = '0.2.0b',
+  VERSION      = '0.2.1b',
   ATTRIBUTION  = '&copy; <a href="http://osmbuildings.org">OSM Buildings</a>',
 
   DATA_URL = 'http://data.osmbuildings.org/0.2/{k}/tile/{z}/{x}/{y}.json',

@@ -1,8 +1,17 @@
 # Changelog
 
+## 0.2.1b @ 2014-09-24
+
+**Features**
+
+- pyramidal buildiungs and roofs
+- buildings parts are a logical unit now (i.e. OSM relations)
+- explicitly injecting OSMBuildings class into global namespace [#66](https://github.com/kekscom/osmbuildings/issues/66)
+
+
 ## 0.2.0b @ 2014-09-04
 
-*From version 0.2.0 OSM Buildings is entering beta phase!*
+*From this version on, OSM Buildings is entering beta phase \o/*
 
 **Features**
 
