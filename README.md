@@ -179,7 +179,7 @@ Callback receives a feature object as argument.</td>
 <tr>
 <td>click({Function})</td>
 <td>A callback wrapper to handle click events on features.<br>
-Callback receives an object { feature{number}, lat{float}, lon{float} } as argument.</td>
+Callback receives an object { featureId{number,string}, lat{float}, lon{float} } as argument.</td>
 </tr>
 
 <tr>

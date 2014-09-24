@@ -637,7 +637,9 @@ var GeoJSON = (function() {
             item.id = feature.id || feature.properties.id;
           }
 
-          item.hitColor = HitAreas.toColor(feature.properties.relationId || item.id);
+          if (feature.properties.relationId) {
+            item.relationId = feature.properties.relationId;
+          }
 
           res.push(item); // TODO: clone base properties!
         }
@@ -894,8 +896,7 @@ var Cache = {
 
 var Data = {
 
-  currentItemsIndex: {}, // maintain a list of cached items in order to avoid duplicates on tile borders
-
+  loadedItems: {}, // maintain a list of cached items in order to avoid duplicates on tile borders
   items: [],
 
   getPixelFootprint: function(buffer) {
@@ -927,7 +928,8 @@ var Data = {
 
   resetItems: function() {
     this.items = [];
-    this.currentItemsIndex = {};
+    this.loadedItems = {};
+    HitAreas.reset();
   },
 
   addRenderItems: function(data, allAreNew) {
@@ -935,11 +937,11 @@ var Data = {
     for (var i = 0, il = data.length; i < il; i++) {
       item = data[i];
       id = item.id || [item.footprint[0], item.footprint[1], item.height, item.minHeight].join(',');
-      if (!this.currentItemsIndex[id]) {
+      if (!this.loadedItems[id]) {
         if ((scaledItem = this.scale(item))) {
           scaledItem.scale = allAreNew ? 0 : 1;
           this.items.push(scaledItem);
-          this.currentItemsIndex[id] = 1;
+          this.loadedItems[id] = 1;
         }
       }
     }
@@ -1004,7 +1006,10 @@ var Data = {
       }
     }
 
-    res.hitColor = item.hitColor;
+    if (item.roofColor) {
+      res.relationId = item.relationId;
+    }
+    res.hitColor = HitAreas.idToColor(item.relationId || item.id);
 
     res.roofHeight = isNaN(item.minHeight) ? 0 : item.roofHeight/zoomScale;
 
@@ -1895,6 +1900,12 @@ var Shadows = {
 
 var HitAreas = {
 
+  _idMapping: [null],
+
+  reset: function() {
+    this._idMapping = [null];
+  },
+
   render: function() {
     if (this._timer) {
       return;
@@ -1981,31 +1992,32 @@ var HitAreas = {
           }
       }
     }
-    this._data = this.context.getImageData(0, 0, WIDTH, HEIGHT).data;
+    this._imageData = this.context.getImageData(0, 0, WIDTH, HEIGHT).data;
   },
 
   getIdFromXY: function(x, y) {
-    if (!this._data) {
+    var imageData = this._imageData;
+    if (!imageData) {
       return;
     }
-    var index = 4*((y|0) * WIDTH + (x|0));
-    return this._data[index] | (this._data[index+1]<<8) | (this._data[index+2]<<16);
+    var pos = 4*((y|0) * WIDTH + (x|0));
+    var index = imageData[pos] | (imageData[pos+1]<<8) | (imageData[pos+2]<<16);
+    return this._idMapping[index];
   },
 
-  toColor: function(num) {
-    var r =  num       & 0xff;
-    var g = (num >>8)  & 0xff;
-    var b = (num >>16) & 0xff;
+  idToColor: function(id) {
+    var index = this._idMapping.indexOf(id);
+    if (index === -1) {
+      this._idMapping.push(id);
+      index = this._idMapping.length-1;
+    }
+    var r =  index       & 0xff;
+    var g = (index >>8)  & 0xff;
+    var b = (index >>16) & 0xff;
     return 'rgb('+ [r, g, b].join(',') +')';
-  },
-
-  _toNum: function(r, g, b) {
-    return r | (g<<8) | (b<<16);
   }
 };
 
-// TODO: offset after move
-// TODO: test openlayers
 
 //****** file: Debug.js ******
 
