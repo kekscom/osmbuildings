@@ -1,7 +1,6 @@
 var Data = {
 
-  currentItemsIndex: {}, // maintain a list of cached items in order to avoid duplicates on tile borders
-
+  loadedItems: {}, // maintain a list of cached items in order to avoid duplicates on tile borders
   items: [],
 
   getPixelFootprint: function(buffer) {
@@ -33,7 +32,8 @@ var Data = {
 
   resetItems: function() {
     this.items = [];
-    this.currentItemsIndex = {};
+    this.loadedItems = {};
+    HitAreas.reset();
   },
 
   addRenderItems: function(data, allAreNew) {
@@ -41,11 +41,11 @@ var Data = {
     for (var i = 0, il = data.length; i < il; i++) {
       item = data[i];
       id = item.id || [item.footprint[0], item.footprint[1], item.height, item.minHeight].join(',');
-      if (!this.currentItemsIndex[id]) {
+      if (!this.loadedItems[id]) {
         if ((scaledItem = this.scale(item))) {
           scaledItem.scale = allAreNew ? 0 : 1;
           this.items.push(scaledItem);
-          this.currentItemsIndex[id] = 1;
+          this.loadedItems[id] = 1;
         }
       }
     }
@@ -110,7 +110,10 @@ var Data = {
       }
     }
 
-    res.hitColor = item.hitColor;
+    if (item.roofColor) {
+      res.relationId = item.relationId;
+    }
+    res.hitColor = HitAreas.idToColor(item.relationId || item.id);
 
     res.roofHeight = isNaN(item.minHeight) ? 0 : item.roofHeight/zoomScale;
 

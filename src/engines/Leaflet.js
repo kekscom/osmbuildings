@@ -26,7 +26,7 @@ proto.onAdd = function(map) {
     zoomend:   this.onZoomEnd,
     resize:    this.onResize,
     viewreset: this.onViewReset,
-    mouseup:   this.onClick
+    click:     this.onClick
   }, this);
 
   if (map.options.zoomAnimation) {
@@ -53,7 +53,7 @@ proto.onRemove = function() {
     zoomend:   this.onZoomEnd,
     resize:    this.onResize,
     viewreset: this.onViewReset,
-    mouseup:   this.onClick
+    click:     this.onClick
   }, this);
 
   if (map.options.zoomAnimation) {

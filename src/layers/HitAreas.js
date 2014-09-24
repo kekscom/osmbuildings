@@ -1,6 +1,12 @@
 
 var HitAreas = {
 
+  _idMapping: [null],
+
+  reset: function() {
+    this._idMapping = [null];
+  },
+
   render: function() {
     if (this._timer) {
       return;
@@ -87,28 +93,28 @@ var HitAreas = {
           }
       }
     }
-    this._data = this.context.getImageData(0, 0, WIDTH, HEIGHT).data;
+    this._imageData = this.context.getImageData(0, 0, WIDTH, HEIGHT).data;
   },
 
   getIdFromXY: function(x, y) {
-    if (!this._data) {
+    var imageData = this._imageData;
+    if (!imageData) {
       return;
     }
-    var index = 4*((y|0) * WIDTH + (x|0));
-    return this._data[index] | (this._data[index+1]<<8) | (this._data[index+2]<<16);
+    var pos = 4*((y|0) * WIDTH + (x|0));
+    var index = imageData[pos] | (imageData[pos+1]<<8) | (imageData[pos+2]<<16);
+    return this._idMapping[index];
   },
 
-  toColor: function(num) {
-    var r =  num       & 0xff;
-    var g = (num >>8)  & 0xff;
-    var b = (num >>16) & 0xff;
+  idToColor: function(id) {
+    var index = this._idMapping.indexOf(id);
+    if (index === -1) {
+      this._idMapping.push(id);
+      index = this._idMapping.length-1;
+    }
+    var r =  index       & 0xff;
+    var g = (index >>8)  & 0xff;
+    var b = (index >>16) & 0xff;
     return 'rgb('+ [r, g, b].join(',') +')';
-  },
-
-  _toNum: function(r, g, b) {
-    return r | (g<<8) | (b<<16);
   }
 };
-
-// TODO: offset after move
-// TODO: test openlayers
