@@ -159,9 +159,12 @@ var Data = {
       maxY = ceil((ORIGIN_Y+HEIGHT)/zoomedTileSize),
       x, y;
 
+    var scope = this;
     for (y = minY; y <= maxY; y++) {
       for (x = minX; x <= maxX; x++) {
-        this.provider.getTile(x, y, tileZoom, this.addRenderItems, this);
+        this.provider.getTile(x, y, tileZoom, function(json) {
+          scope.addRenderItems(json);
+        });
       }
     }
   }

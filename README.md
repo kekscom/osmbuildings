@@ -4,7 +4,7 @@ OSM Buildings is a JavaScript library for visualizing OpenStreetMaps building ge
 
 Everything is stabilizing now, entering beta state.
 
-## Deperecation notice
+## Deprecation notice
 
 Former methods `loadData()`, `setData()`, `setStyle()`, `setDate()` are deprecated since v0.2.2
 Equivalent replacements are `load()`, `set()`, `style()`, `date()`.
@@ -175,13 +175,13 @@ Methods
 </tr>
 
 <tr>
-<td>each({Function}, {scope})</td>
+<td>each({Function})</td>
 <td>A callback wrapper to override each feature's properties on read. Return false in order to skip a particular feature.<br>
 Callback receives a feature object as argument.</td>
 </tr>
 
 <tr>
-<td>click({Function}, {scope})</td>
+<td>click({Function})</td>
 <td>A callback wrapper to handle click events on features.<br>
 Callback receives an object { featureId{number,string}, lat{float}, lon{float} } as argument.</td>
 </tr>
@@ -198,7 +198,7 @@ Interface of such provider is to be published.</td>
 </tr>
 
 <tr>
-<td>loadFeature(id, {Function}, {scope})</td>
+<td>getDetails(id, {Function})</td>
 <td>Convenience method to load additional feature information from data provider. Callback function receives a GeoJSON FeatureCollection.</td>
 </tr>
 

@@ -53,24 +53,26 @@ proto.screenshot = function(forceDownload) {
 
 var onEach = function() {};
 
-proto.each = function(handler, scope) {
+proto.each = function(handler) {
   onEach = function(payload) {
-    return handler.call(scope, payload);
+    return handler(payload);
   };
   return this;
 };
 
 var onClick = function() {};
 
-proto.click = function(handler, scope) {
+proto.click = function(handler) {
   onClick = function(payload) {
-    return handler.call(scope, payload);
+    return handler(payload);
   };
   return this;
 };
 
-proto.loadFeature = function(id, handler, scope) {
-  provider.loadFeature(id, handler, scope);
+proto.getDetails = function(id, handler) {
+  if (Data.provider) {
+    Data.provider.getFeature(id, handler);
+  }
   return this;
 };
 

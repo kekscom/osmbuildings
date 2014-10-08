@@ -5,12 +5,26 @@
 var BLDGS = (function() {
 
   var baseURL = 'http://data.osmbuildings.org/0.2/';
-  var cacheData = {};
 
-  function xhr(url, callback, scope) {
+  // http://mathiasbynens.be/notes/localstorage-pattern#comment-9
+  var storage;
+  try {
+    storage = localStorage;
+  } catch (ex) {
+    storage = (function() {
+      return {
+        getItem: function() {},
+        setItem: function() {}
+      };
+    }());
+  }
+
+  var cacheData = JSON.parse(storage.getItem('BLDGS') || '{}');
+
+  function xhr(url, callback) {
     if (cacheData[url]) {
-      if (typeof callback === 'function') {
-        callback.call(scope, cacheData[url].json);
+      if (callback) {
+        callback(cacheData[url].json);
       }
       return;
     }
@@ -30,7 +44,7 @@ var BLDGS = (function() {
           json = JSON.parse(req.responseText);
         } catch(ex) {}
         cacheData[url] = { json: json, time: Date.now() };
-        callback.call(scope, json);
+        callback(json);
       }
     };
 
@@ -43,30 +57,37 @@ var BLDGS = (function() {
   function BLDGS(options) {
     options = options || {};
 
-    baseURL +=  (options.key || 'anonymous');
+    baseURL += (options.key || 'anonymous');
 
     var maxAge = options.maxAge || 5*60*1000;
 
     setInterval(function() {
       var minTime = Date.now()-maxAge;
+      var newCacheData = {};
       for (var key in cacheData) {
-        if (cacheData[key].time < minTime) {
-          cacheData[key] = null;
+        if (cacheData[key].time >= minTime) {
+          newCacheData[key] = cacheData[key];
         }
       }
+      cacheData = newCacheData;
     }, maxAge);
   };
 
+//  // TODO: for current viewport or last n items only
+//  try {
+//    storage.setItem('BLDGS', JSON.stringify(cacheData));
+//  } catch(ex) {}
+
   var proto = BLDGS.prototype;
 
-  proto.getTile = function(x, y, zoom, callback, scope) {
+  proto.getTile = function(x, y, zoom, callback) {
     var url = baseURL +'/tile/'+ zoom +'/'+ x +'/'+ y +'.json';
-    xhr(url, callback, scope);
+    xhr(url, callback);
   };
 
-  proto.getFeature = function(id, callback, scope) {
+  proto.getFeature = function(id, callback) {
     var url = baseURL +'/feature/'+ id +'.json';
-    xhr(url, callback, scope);
+    xhr(url, callback);
   };
 
   return BLDGS;
