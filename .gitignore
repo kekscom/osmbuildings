@@ -1,5 +1,3 @@
-
 /engines
 /node_modules
-/server/config.php
-/src/scratch
+/lib/engines

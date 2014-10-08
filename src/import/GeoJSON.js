@@ -1,76 +1,116 @@
-// beware, it's not easy to use this standalone
-// dependencies to: makeClockwiseWinding()
+var GeoJSON = (function() {
 
-var readGeoJSON = function(collection) {
-    var i, il, j, jl,
-        res = [],
-        feature,
-        geometry, properties, coordinates,
-        wallColor, roofColor,
-        last,
-        height,
-        polygon, footprint, heightSum,
-        lat = 1, lon = 0, alt = 2,
-        item;
+  function getGeometries(geometry) {
+    var
+      i, il, polygon,
+      geometries = [], sub;
 
-    for (i = 0, il = collection.length; i < il; i++) {
-        feature = collection[i];
-        if (feature.type !== 'Feature') {
-            continue;
+    switch (geometry.type) {
+      case 'GeometryCollection':
+        geometries = [];
+        for (i = 0, il = geometry.geometries.length; i < il; i++) {
+          if ((sub = getGeometries(geometry.geometries[i]))) {
+            geometries.push.apply(geometries, sub);
+          }
         }
+        return geometries;
 
-        geometry = feature.geometry;
-        properties = feature.properties;
-
-        if (geometry.type === 'LineString') {
-            last = coordinates.length-1;
-            if (coordinates[0][0] === coordinates[last][0] && coordinates[0][1] === coordinates[last][1]) {
-                coordinates = geometry.coordinates;
-            }
+      case 'MultiPolygon':
+        geometries = [];
+        for (i = 0, il = geometry.coordinates.length; i < il; i++) {
+          if ((sub = getGeometries({ type: 'Polygon', coordinates: geometry.coordinates[i] }))) {
+            geometries.push.apply(geometries, sub);
+          }
         }
+        return geometries;
 
-        if (geometry.type === 'Polygon') {
-            coordinates = geometry.coordinates;
-        }
+      case 'Polygon':
+        polygon = geometry.coordinates;
+      break;
 
-        // just use the outer ring
-        if (geometry.type === 'MultiPolygon') {
-            coordinates = geometry.coordinates[0];
-        }
-
-        if (!coordinates) {
-            continue;
-        }
-
-        if (properties.color || properties.wallColor) {
-            wallColor = properties.color || properties.wallColor;
-        }
-
-        if (properties.roofColor) {
-            roofColor = properties.roofColor;
-        }
-
-        polygon   = coordinates[0];
-        footprint = [];
-        height    = properties.height;
-        heightSum = 0;
-        for (j = 0, jl = polygon.length; j < jl; j++) {
-            footprint.push(polygon[j][lat], polygon[j][lon]);
-            heightSum += height || polygon[j][alt] || 0;
-        }
-
-        // one item per coordinates ring (usually just one ring)
-        item = {
-            id:properties.id || (footprint[0] + ',' + footprint[1]),
-            footprint:makeClockwiseWinding(footprint)
-        };
-
-        if (heightSum)            item.height    = heightSum/polygon.length <<0;
-        if (properties.minHeight) item.minHeight = properties.minHeight;
-        if (wallColor)            item.wallColor = wallColor;
-        if (roofColor)            item.roofColor = roofColor;
-        res.push(item);
+      default: return [];
     }
 
+    var
+      j, jl,
+      p, lat = 1, lon = 0,
+      outer = [], inner = [];
+
+    p = polygon[0];
+    for (i = 0, il = p.length; i < il; i++) {
+      outer.push(p[i][lat], p[i][lon]);
+    }
+
+    for (i = 0, il = polygon.length-1; i < il; i++) {
+      p = polygon[i+1];
+      inner[i] = [];
+      for (j = 0, jl = p.length; j < jl; j++) {
+        inner[i].push(p[j][lat], p[j][lon]);
+      }
+    }
+
+    return [{
+      outer: outer,
+      inner: inner.length ? inner : null
+    }];
+  }
+
+  function clone(obj) {
+    var res = {};
+    for (var p in obj) {
+      if (obj.hasOwnProperty(p)) {
+        res[p] = obj[p];
+      }
+    }
     return res;
-};
+  }
+
+  return {
+    read: function(geojson) {
+      if (!geojson || geojson.type !== 'FeatureCollection') {
+        return [];
+      }
+
+      var
+        collection = geojson.features,
+        i, il, j, jl,
+        res = [],
+        feature,
+        geometries,
+        baseItem, item;
+
+      for (i = 0, il = collection.length; i < il; i++) {
+        feature = collection[i];
+
+        if (feature.type !== 'Feature' || onEach(feature) === false) {
+          continue;
+        }
+
+        baseItem = Import.alignProperties(feature.properties);
+        geometries = getGeometries(feature.geometry);
+
+        for (j = 0, jl = geometries.length; j < jl; j++) {
+          item = clone(baseItem);
+          item.footprint = geometries[j].outer;
+          if (item.shape === 'cone' || item.shape === 'cylinder') {
+            item.radius = Import.getRadius(item.footprint);
+          }
+          if (geometries[j].inner) {
+            item.holes = geometries[j].inner;
+          }
+          if (feature.id || feature.properties.id) {
+            item.id = feature.id || feature.properties.id;
+          }
+
+          if (feature.properties.relationId) {
+            item.relationId = feature.properties.relationId;
+          }
+
+          res.push(item); // TODO: clone base properties!
+        }
+      }
+
+      return res;
+    }
+  };
+}());

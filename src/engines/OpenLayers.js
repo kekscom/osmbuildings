@@ -1,112 +1,96 @@
-/**
- * basing on a pull request from Jérémy Judéaux (https://github.com/Volune)
- */
+// based on a pull request from Jérémy Judéaux (https://github.com/Volune)
 
-OpenLayers.Layer.Buildings = OpenLayers.Class(OpenLayers.Layer, {
+var parent = OpenLayers.Layer.prototype;
 
-    CLASS_NAME: 'OpenLayers.Layer.Buildings',
+var osmb = function(map) {
+  this.offset = { x:0, y:0 }; // cumulative cam offset during moveBy
 
-    name: 'OSM Buildings',
-    attribution: OSMBuildings.ATTRIBUTION,
+  parent.initialize.call(this, this.name, { projection:'EPSG:900913' });
+	map.addLayer(this);
+};
 
-    isBaseLayer: false,
-    alwaysInRange: true,
+var proto = osmb.prototype = new OpenLayers.Layer();
 
-    dxSum: 0, // for cumulative cam offset during moveBy
-    dySum: 0, // for cumulative cam offset during moveBy
+proto.name          = 'OSM Buildings';
+proto.attribution   = ATTRIBUTION;
+proto.isBaseLayer   = false;
+proto.alwaysInRange = true;
 
-    initialize: function(options) {
-        options = options || {};
-        options.projection = 'EPSG:900913';
-        OpenLayers.Layer.prototype.initialize.call(this, this.name, options);
-    },
+proto.setOrigin = function() {
+  var map = this.map,
+    origin = map.getLonLatFromPixel(new OpenLayers.Pixel(0, 0)),
+    res = map.resolution,
+    ext = this.maxExtent,
+    x = (origin.lon - ext.left) / res <<0,
+    y = (ext.top - origin.lat)  / res <<0;
+  setOrigin({ x:x, y:y });
+};
 
-    setOrigin: function() {
-        var origin = this.map.getLonLatFromPixel(new OpenLayers.Pixel(0, 0)),
-            res = this.map.resolution,
-            ext = this.maxExtent,
-            x = Math.round((origin.lon - ext.left) / res),
-            y = Math.round((ext.top - origin.lat) / res)
-        ;
-        this.osmb.setOrigin(x, y);
-    },
+proto.setMap = function(map) {
+  if (!this.map) {
+    parent.setMap.call(this, map);
+  }
+  Layers.appendTo(this.div);
+  setSize(map.size);
+  setZoom(map.zoom);
+  this.setOrigin();
 
-    setMap: function(map) {
-        if (!this.map) {
-            OpenLayers.Layer.prototype.setMap.call(this, map);
-        }
-        if (!this.osmb) {
-            this.osmb = new OSMBuildings();
-            this.container = this.osmb.appendTo(this.div);
-        }
-        this.osmb.setSize(this.map.size.w, this.map.size.h);
-        this.osmb.setZoom(this.map.zoom);
-        this.setOrigin();
-    },
-
-    removeMap: function(map) {
-        this.container.parentNode.removeChild(this.container);
-        OpenLayers.Layer.prototype.removeMap.call(this, map);
-    },
-
-    onMapResize: function() {
-        OpenLayers.Layer.prototype.onMapResize.call(this);
-        this.osmb.onResize({ width: this.map.size.w, height: this.map.size.h });
-    },
-
-    moveTo: function(bounds, zoomChanged, dragging) {
-        var result = OpenLayers.Layer.prototype.moveTo.call(this, bounds, zoomChanged, dragging);
-        if (!dragging) {
-            var
-                offsetLeft = parseInt(this.map.layerContainerDiv.style.left, 10),
-                offsetTop  = parseInt(this.map.layerContainerDiv.style.top, 10)
-            ;
-            this.div.style.left = -offsetLeft + 'px';
-            this.div.style.top  = -offsetTop  + 'px';
-        }
-
-        this.setOrigin();
-        this.dxSum = 0;
-        this.dySum = 0;
-        this.osmb.setCamOffset(this.dxSum, this.dySum);
-
-        if (zoomChanged) {
-            this.osmb.onZoomEnd({ zoom: this.map.zoom });
-        } else {
-            this.osmb.onMoveEnd();
-        }
-
-        return result;
-    },
-
-    moveByPx: function(dx, dy) {
-        this.dxSum += dx;
-        this.dySum += dy;
-        var result = OpenLayers.Layer.prototype.moveByPx.call(this, dx, dy);
-        this.osmb.setCamOffset(this.dxSum, this.dySum);
-        this.osmb.render();
-        return result;
-    },
-
-    // TODO: refactor these ugly bindings
-
-    setStyle: function(style)  {
-        this.osmb.setStyle(style);
-        return this;
-    },
-
-    setDate: function(date)  {
-        this.osmb.setDate(date);
-        return this;
-    },
-
-    load: function(url) {
-        this.osmb.loadData(url);
-        return this;
-    },
-
-    geoJSON: function(data) {
-        this.osmb.setData(data);
-        return this;
+  var layerProjection = this.projection;
+  map.events.register('click', map, function(e) {
+    var id = HitAreas.getIdFromXY(e.xy.x, e.xy.y);
+    if (id) {
+      var geo = map.getLonLatFromPixel(e.xy).transform(layerProjection, this.projection);
+      onClick({ feature:id, lat:geo.lat, lon:geo.lon });
     }
-});
+  });
+
+  Data.update();
+};
+
+proto.removeMap = function(map) {
+  Layers.remove();
+  parent.removeMap.call(this, map);
+  this.map = null;
+};
+
+proto.onMapResize = function() {
+  var map = this.map;
+  parent.onMapResize.call(this);
+  onResize({ width:map.size.w, height:map.size.h });
+};
+
+proto.moveTo = function(bounds, zoomChanged, isDragging) {
+  var
+    map = this.map,
+    res = parent.moveTo.call(this, bounds, zoomChanged, isDragging);
+
+  if (!isDragging) {
+    var
+      offsetLeft = parseInt(map.layerContainerDiv.style.left, 10),
+      offsetTop  = parseInt(map.layerContainerDiv.style.top,  10);
+
+    this.div.style.left = -offsetLeft + 'px';
+    this.div.style.top  = -offsetTop  + 'px';
+  }
+
+  this.setOrigin();
+  this.offset.x = 0;
+  this.offset.y = 0;
+  moveCam(this.offset);
+
+  if (zoomChanged) {
+    onZoomEnd({ zoom:map.zoom });
+  } else {
+    onMoveEnd();
+  }
+
+  return res;
+};
+
+proto.moveByPx = function(dx, dy) {
+  this.offset.x += dx;
+  this.offset.y += dy;
+  var res = parent.moveByPx.call(this, dx, dy);
+  moveCam(this.offset);
+  return res;
+};

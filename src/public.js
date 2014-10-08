@@ -1,36 +1,80 @@
-this.setStyle = function(style) {
-    setStyle(style);
+
+proto.style = function(style) {
+  style = style || {};
+  var color;
+  if ((color = style.color || style.wallColor)) {
+    WALL_COLOR = parseColor(color);
+    WALL_COLOR_STR = ''+ WALL_COLOR.alpha(ZOOM_FACTOR);
+
+    ALT_COLOR = WALL_COLOR.lightness(0.8);
+    ALT_COLOR_STR  = ''+ ALT_COLOR.alpha(ZOOM_FACTOR);
+
+    ROOF_COLOR = WALL_COLOR.lightness(1.2);
+    ROOF_COLOR_STR = ''+ ROOF_COLOR.alpha(ZOOM_FACTOR);
+  }
+
+  if (style.roofColor) {
+    ROOF_COLOR = parseColor(style.roofColor);
+    ROOF_COLOR_STR = ''+ ROOF_COLOR.alpha(ZOOM_FACTOR);
+  }
+
+  if (style.shadows !== undefined) {
+    Shadows.enabled = !!style.shadows;
+  }
+
+  Layers.render();
+
+  return this;
 };
 
-this.setCamOffset = function(x, y) {
-    camX = halfWidth + x;
-    camY = height    + y;
+proto.date = function(date) {
+  Shadows.date = date;
+  Shadows.render();
+  return this;
 };
 
-this.setMaxZoom = function(z) {
-    maxZoom = z;
+proto.load = function(url) {
+  Data.load(url);
+  return this;
 };
 
-this.setDate = function(date) {
-    Shadows.setDate(date);
+proto.set = function(data) {
+  Data.set(data);
+  return this;
 };
 
-this.appendTo = function(parentNode) {
-    return Layers.appendTo(parentNode);
+proto.screenshot = function(forceDownload) {
+  var dataURL = Layers.screenshot();
+  if (forceDownload) {
+    global.location.href = dataURL.replace('image/png', 'image/octet-stream');
+  }
+  return dataURL;
 };
 
-this.loadData = function(url) {
-    Data.load(url);
+var onEach = function() {};
+
+proto.each = function(handler) {
+  onEach = function(payload) {
+    return handler(payload);
+  };
+  return this;
 };
 
-this.setData = function(data) {
-    Data.set(data);
+var onClick = function() {};
+
+proto.click = function(handler) {
+  onClick = function(payload) {
+    return handler(payload);
+  };
+  return this;
 };
 
-this.onMoveEnd   = onMoveEnd;
-this.onZoomEnd   = onZoomEnd;
-this.onZoomStart = onZoomStart;
-this.setOrigin   = setOrigin;
-this.setSize     = setSize;
-this.setZoom     = setZoom;
-this.render      = render;
+proto.getDetails = function(id, handler) {
+  if (Data.provider) {
+    Data.provider.getFeature(id, handler);
+  }
+  return this;
+};
+
+osmb.VERSION     = VERSION;
+osmb.ATTRIBUTION = ATTRIBUTION;

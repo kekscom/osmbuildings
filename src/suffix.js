@@ -1,8 +1,4 @@
-    };
 
-    osmb.VERSION     = VERSION;
-    osmb.ATTRIBUTION = ATTRIBUTION;
+  global.OSMBuildings = osmb;
 
-    return osmb;
-
-}());
+}(this));

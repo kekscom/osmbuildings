@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>OSM Buildings - GeometryCollection</title>
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<style type="text/css">
+html, body {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+#map {
+  height: 100%;
+}
+</style>
+<link rel="stylesheet" href="leaflet-0.7/leaflet.css">
+<script src="leaflet-0.7/leaflet-src.js"></script>
+<script src="loader.js"></script>
+</head>
+
+<body>
+<div id="map"></div>
+
+<script>
+var map = new L.Map('map').setView([41.38913, 2.15237], 17); // Barcelona
+new L.TileLayer('http://otile1.mqcdn.com/tiles/1.0.0/map/{z}/{x}/{y}.jpg', { maxNativeZoom: 19, maxZoom: 21 }).addTo(map);
+
+var geojson = {
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "GeometryCollection",
+        "geometries": [
+          {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [2.186968,41.375494,15.6],
+
+                [2.186968,41.375550,15.6],
+                [2.187000,41.375550,15.6],
+                [2.187000,41.375494,15.6],
+
+                [2.186968,41.375494,15.6]
+              ]
+            ]
+          },
+          {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [2.14847384,41.38868632,14.64],
+                [2.14865896,41.38854185,14.64],
+                [2.14860789,41.38850473,14.64],
+                [2.14842277,41.38864919,14.64],
+                [2.14847384,41.38868632,14.64]
+              ]
+            ]
+          },
+          {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [2.14878898,41.3884495,14.63],
+                [2.14898132,41.38830202,14.63],
+                [2.14892979,41.3882639,14.63],
+                [2.14873745,41.38841137,14.63],
+                [2.14878898,41.3884495,14.63]
+              ]
+            ]
+          },
+          {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [2.14920671,41.38644355,4.83],
+                [2.14928551,41.38649998,4.83],
+                [2.14933748,41.38645875,4.83],
+                [2.14925867,41.38640232,4.83],
+                [2.14920671,41.38644355,4.83]
+              ]
+            ]
+          },
+          {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [2.15160741,41.38961876,25.97],
+                [2.15186677,41.38942205,25.97],
+                [2.15181986,41.38938694,25.97],
+                [2.15186359,41.38935384,25.97],
+                [2.15180779,41.38931218,25.97],
+                [2.15150471,41.38954198,25.97],
+                [2.15160741,41.38961876,25.97]
+              ]
+            ]
+          },
+          {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [2.18639927,41.38267192,45.7],
+                [2.18638138,41.38269674,45.7],
+                [2.18627108,41.38265156,45.7],
+                [2.18618513,41.38274454,45.7],
+                [2.18623011,41.3828007,45.7],
+                [2.1861808,41.38282314,45.7],
+                [2.18613122,41.38276127,45.7],
+                [2.18602067,41.38283165,45.7],
+                [2.18613938,41.38296976,45.7],
+                [2.18657545,41.3827572,45.7],
+                [2.18639927,41.38267192,45.7]
+              ]
+            ]
+          }
+        ]
+      },
+      "properties": {
+        color: '#ffcc00',
+        roofColor: '#ff0000'
+      }
+    }
+  ]
+};
+
+var osmb = new OSMBuildings(map).set(geojson);
+</script>
+</body>
+</html>

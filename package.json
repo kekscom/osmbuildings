@@ -2,7 +2,7 @@
   "name": "osmbuildings",
   "private": false,
   "description": "OSM Buildings",
-  "version": "0.1.8a",
+  "version": "0.2.0b",
   "homepage": "http://osmbuildings.org",
   "author": "@kekscom",
   "contributors": [
@@ -17,7 +17,7 @@
   "dependencies": {},
   "devDependencies": {
     "jshint": "~1.1.0",
-	"closure-compiler": "~0.2.0"
+	  "closure-compiler": "~0.2.0"
   },
   "optionalDependencies": {}
 }
