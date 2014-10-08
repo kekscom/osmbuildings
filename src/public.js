@@ -1,10 +1,4 @@
 
-// TODO: remove deprecation
-proto.setStyle = function(style) {
-  console.warn('OSM Buildings: .setStyle() will be deprecated soon. Use .style() instead.');
-  return this.style(style);
-};
-
 proto.style = function(style) {
   style = style || {};
   var color;
@@ -33,33 +27,15 @@ proto.style = function(style) {
   return this;
 };
 
-// TODO: remove deprecation
-proto.setDate = function(date) {
-  console.warn('OSM Buildings: .setDate() will be deprecated soon. Use .date() instead.');
-  return this.date(date);
-};
-
 proto.date = function(date) {
   Shadows.date = date;
   Shadows.render();
   return this;
 };
 
-// TODO: remove deprecation
-proto.loadData = function(url) {
-  console.warn('OSM Buildings: .loadData() will be deprecated soon. Use .load() instead.');
-  return this.load(url);
-};
-
 proto.load = function(url) {
   Data.load(url);
   return this;
-};
-
-// TODO: remove deprecation
-proto.setData = function(data) {
-  console.warn('OSM Buildings: .setData() will be deprecated soon. Use .data() instead.');
-  return this.set(data);
 };
 
 proto.set = function(data) {
@@ -90,6 +66,11 @@ proto.click = function(handler, scope) {
   onClick = function(payload) {
     return handler.call(scope, payload);
   };
+  return this;
+};
+
+proto.loadFeature = function(id, handler, scope) {
+  provider.loadFeature(id, handler, scope);
   return this;
 };
 
