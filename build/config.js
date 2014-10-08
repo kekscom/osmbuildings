@@ -20,7 +20,7 @@ exports.srcFiles = [
   srcPath + '/variables.js',
   srcPath + '/geometry.js',
   srcPath + '/functions.js',
-  srcPath + '/Cache.js',
+  srcPath + '/provider/BLDGS.js',
   srcPath + '/Data.js',
   srcPath + '/geometry/Block.js',
   srcPath + '/geometry/Cylinder.js',

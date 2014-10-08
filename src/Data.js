@@ -1,3 +1,4 @@
+
 var Data = {
 
   loadedItems: {}, // maintain a list of cached items in order to avoid duplicates on tile borders
@@ -21,15 +22,6 @@ var Data = {
     return footprint;
   },
 
-  createClosure: function(cacheKey) {
-    var self = this;
-    return function(data) {
-      var parsedData = GeoJSON.read(data);
-      Cache.add(parsedData, cacheKey);
-      self.addRenderItems(parsedData, true);
-    };
-  },
-
   resetItems: function() {
     this.items = [];
     this.loadedItems = {};
@@ -38,8 +30,9 @@ var Data = {
 
   addRenderItems: function(data, allAreNew) {
     var item, scaledItem, id;
-    for (var i = 0, il = data.length; i < il; i++) {
-      item = data[i];
+    var geojson = GeoJSON.read(data);
+    for (var i = 0, il = geojson.length; i < il; i++) {
+      item = geojson[i];
       id = item.id || [item.footprint[0], item.footprint[1], item.height, item.minHeight].join(',');
       if (!this.loadedItems[id]) {
         if ((scaledItem = this.scale(item))) {
@@ -131,12 +124,12 @@ var Data = {
   set: function(data) {
     this.isStatic = true;
     this.resetItems();
-    this._staticData = GeoJSON.read(data);
+    this._staticData = data;
     this.addRenderItems(this._staticData, true);
   },
 
-  load: function(url) {
-    this.url = template(url || DATA_URL, { k: DATA_KEY });
+  load: function(provider) {
+    this.provider = provider || new BLDGS({ key: DATA_KEY });
     this.update();
   },
 
@@ -152,7 +145,7 @@ var Data = {
       return;
     }
 
-    if (!this.url) {
+    if (!this.provider) {
       return;
     }
 
@@ -164,21 +157,12 @@ var Data = {
       minY = ORIGIN_Y/zoomedTileSize <<0,
       maxX = ceil((ORIGIN_X+WIDTH) /zoomedTileSize),
       maxY = ceil((ORIGIN_Y+HEIGHT)/zoomedTileSize),
-      x, y, coords,
-      cacheKey, parsedData;
+      x, y;
 
     for (y = minY; y <= maxY; y++) {
       for (x = minX; x <= maxX; x++) {
-        coords = { x: x, y: y, z: tileZoom };
-        cacheKey = x +','+ y;
-        if ((parsedData = Cache.get(cacheKey))) {
-          this.addRenderItems(parsedData);
-				} else {
-          xhr(template(this.url, coords), this.createClosure(cacheKey));
-        }
+        this.provider.getTile(x, y, tileZoom, this.addRenderItems, this);
       }
     }
-
-    Cache.purge();
   }
 };
