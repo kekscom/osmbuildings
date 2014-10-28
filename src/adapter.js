@@ -1,3 +1,4 @@
+
 function setOrigin(origin) {
   ORIGIN_X = origin.x;
   ORIGIN_Y = origin.y;
@@ -26,9 +27,10 @@ function setZoom(z) {
   ZOOM = z;
   MAP_SIZE = MAP_TILE_SIZE <<ZOOM;
 
-  var pxCenter = pixelToGeo(ORIGIN_X+CENTER_X, ORIGIN_Y+CENTER_Y);
-  // see http://wiki.openstreetmap.org/wiki/Zoom_levels
-  METERS_PER_PIXEL = Math.abs(40075040 * cos(pxCenter.latitude) / pow(2, ZOOM+8));
+  var center = pixelToGeo(ORIGIN_X+CENTER_X, ORIGIN_Y+CENTER_Y);
+  var a = geoToPixel(center.latitude, 0);
+  var b = geoToPixel(center.latitude, 1);
+  PIXEL_PER_DEG = b.x-a.x;
 
   ZOOM_FACTOR = pow(0.95, ZOOM-MIN_ZOOM);
 

@@ -72,7 +72,7 @@ var Data = {
       // TODO: drop footprint
       res.shape = item.shape;
       if (item.radius) {
-        res.radius = item.radius/METERS_PER_PIXEL;
+        res.radius = item.radius*PIXEL_PER_DEG;
       }
     }
 
@@ -90,7 +90,7 @@ var Data = {
     var color;
 
     if (item.wallColor) {
-      if ((color = parseColor(item.wallColor))) {
+      if ((color = Color.parse(item.wallColor))) {
         color = color.alpha(ZOOM_FACTOR);
         res.altColor  = ''+ color.lightness(0.8);
         res.wallColor = ''+ color;
@@ -98,12 +98,12 @@ var Data = {
     }
 
     if (item.roofColor) {
-      if ((color = parseColor(item.roofColor))) {
+      if ((color = Color.parse(item.roofColor))) {
         res.roofColor = ''+ color.alpha(ZOOM_FACTOR);
       }
     }
 
-    if (item.roofColor) {
+    if (item.relationId) {
       res.relationId = item.relationId;
     }
     res.hitColor = HitAreas.idToColor(item.relationId || item.id);

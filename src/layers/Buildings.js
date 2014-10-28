@@ -61,10 +61,11 @@ var Buildings = {
           radius = item.radius;
           Cylinder.draw(context, center, radius, radius, h, mh, wallColor, altColor, roofColor);
           if (item.roofShape === 'cone') {
-            Cylinder.draw(context, center, radius, 0, h+item.roofHeight, h, roofColor, ''+ parseColor(roofColor).lightness(0.9));
+            Cylinder.draw(context, center, radius, 0, h+item.roofHeight, h, roofColor, ''+ Color.parse(roofColor).lightness(0.9));
           }
           if (item.roofShape === 'dome') {
-            Cylinder.draw(context, center, radius, radius/2, h+item.roofHeight, h, roofColor, ''+ parseColor(roofColor).lightness(0.9));
+//            Cylinder.draw(context, center, radius, radius/2, h+item.roofHeight, h, roofColor, ''+ Color.parse(roofColor).lightness(0.9));
+Block.draw(context, footprint, item.holes, h, mh, wallColor, altColor, roofColor);
           }
         break;
 
@@ -83,7 +84,7 @@ var Buildings = {
         default:
           Block.draw(context, footprint, item.holes, h, mh, wallColor, altColor, roofColor);
           if (item.roofShape === 'pyramid') {
-            Pyramid.draw(context, footprint, item.center, h+item.roofHeight, h, roofColor, parseColor(roofColor).lightness(0.9));
+            Pyramid.draw(context, footprint, item.center, h+item.roofHeight, h, roofColor, Color.parse(roofColor).lightness(0.9));
           }
       }
     }

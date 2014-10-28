@@ -13,10 +13,9 @@ exports.VERSION = '0.2.1b';
 exports.srcFiles = [
   srcPath + '/prefix.js',
   srcPath + '/shortcuts.js',
-  srcPath + '/../lib/Color.js/Color.js',
+  srcPath + '/../node_modules/color/dist/Color.debug.js',
   srcPath + '/lib/SunPosition.js',
-  srcPath + '/Import.js',
-  srcPath + '/import/GeoJSON.js',
+  srcPath + '/GeoJSON.js',
   srcPath + '/variables.js',
   srcPath + '/geometry.js',
   srcPath + '/functions.js',

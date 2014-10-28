@@ -7,7 +7,6 @@ var
   PI         = Math.PI,
   HALF_PI    = PI/2,
   QUARTER_PI = PI/4,
-  RAD        = 180/PI,
 
   MAP_TILE_SIZE  = 256,    // map tile size in pixels
   DATA_TILE_SIZE = 0.0075, // data tile size in geo coordinates, smaller: less data to load but more requests
@@ -23,7 +22,7 @@ var
   CENTER_X = 0, CENTER_Y = 0,
   ORIGIN_X = 0, ORIGIN_Y = 0,
 
-  WALL_COLOR = parseColor('rgba(200, 190, 180)'),
+  WALL_COLOR = Color.parse('rgba(200, 190, 180)'),
   ALT_COLOR  = WALL_COLOR.lightness(0.8),
   ROOF_COLOR = WALL_COLOR.lightness(1.2),
 
@@ -31,7 +30,7 @@ var
   ALT_COLOR_STR  = ''+ ALT_COLOR,
   ROOF_COLOR_STR = ''+ ROOF_COLOR,
 
-  METERS_PER_PIXEL = 1,
+  PIXEL_PER_DEG = 0,
   ZOOM_FACTOR = 1,
 
   MAX_HEIGHT, // taller buildings will be cut to this

@@ -1,3 +1,4 @@
+
 function getDistance(p1, p2) {
   var
     dx = p1.x-p2.x,
@@ -79,13 +80,24 @@ function simplifyPolygon(buffer) {
   return newBuffer;
 }
 
-function getCenter(poly) {
+function getCenter(footprint) {
   var minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-  for (var i = 0, il = poly.length-3; i < il; i += 2) {
-    minX = min(minX, poly[i]);
-    maxX = max(maxX, poly[i]);
-    minY = min(minY, poly[i+1]);
-    maxY = max(maxY, poly[i+1]);
+  for (var i = 0, il = footprint.length-3; i < il; i += 2) {
+    minX = min(minX, footprint[i]);
+    maxX = max(maxX, footprint[i]);
+    minY = min(minY, footprint[i+1]);
+    maxY = max(maxY, footprint[i+1]);
   }
   return { x:minX+(maxX-minX)/2 <<0, y:minY+(maxY-minY)/2 <<0 };
+}
+
+var EARTH_RADIUS = 6378137;
+
+function getLonRadius(footprint) {
+  var minLon = 90, maxLon = -90;
+  for (var i = 0, il = footprint.length; i < il; i += 2) {
+    minLon = min(minLon, footprint[i+1]);
+    maxLon = max(maxLon, footprint[i+1]);
+  }
+  return (maxLon-minLon)/2;
 }

@@ -64,8 +64,11 @@ new L.TileLayer('http://otile1.mqcdn.com/tiles/1.0.0/map/{z}/{x}/{y}.jpg', { max
 var osmb = new OSMBuildings(map)
   .date(new Date(2014, 5, 15, 17, 30))
   .load()
-  .click(function(id) {
-    console.log('feature id clicked:', id);
+  .click(function(e) {
+    console.log('feature clicked:', e);
+    osmb.getDetails(e.feature, function(json) {
+      console.log('feature details:', json);
+    });
   });
 
 //INSERT INTO buildings (the_geom, height) SELECT the_geom, CAST(REPLACE(height, 'm', '') AS int) FROM map_polygon WHERE building IS NOT NULL;

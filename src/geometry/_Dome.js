@@ -75,15 +75,15 @@ debugMarker(apex);
     _p.x, _p.y);
 
 
-//      drawMeridian(c, r, _h, hfK, apex,  45/RAD);
-//      drawMeridian(c, r, _h, hfK, apex, 135/RAD);
+//      drawMeridian(c, r, _h, hfK, apex, rad(45));
+//      drawMeridian(c, r, _h, hfK, apex, rad(135));
 
   for (var i = 0; i <= 180; i+=30) {
-    drawMeridian(c, r, _h, hfK, apex, i*RAD);
+    drawMeridian(c, r, _h, hfK, apex, rad(i));
   }
 
 //      for (var i = 0; i <= 180; i+=30) {
-//        drawMeridian(c, r, _h, hfK, apex, i*RAD);
+//        drawMeridian(c, r, _h, hfK, apex, rad(i));
 //      }
 
 //      context.fill();

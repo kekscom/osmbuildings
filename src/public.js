@@ -3,7 +3,7 @@ proto.style = function(style) {
   style = style || {};
   var color;
   if ((color = style.color || style.wallColor)) {
-    WALL_COLOR = parseColor(color);
+    WALL_COLOR = Color.parse(color);
     WALL_COLOR_STR = ''+ WALL_COLOR.alpha(ZOOM_FACTOR);
 
     ALT_COLOR = WALL_COLOR.lightness(0.8);
@@ -14,7 +14,7 @@ proto.style = function(style) {
   }
 
   if (style.roofColor) {
-    ROOF_COLOR = parseColor(style.roofColor);
+    ROOF_COLOR = Color.parse(style.roofColor);
     ROOF_COLOR_STR = ''+ ROOF_COLOR.alpha(ZOOM_FACTOR);
   }
 
