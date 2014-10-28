@@ -52,277 +52,160 @@ var requestAnimFrame = (global.requestAnimationFrame && !IS_IOS && !IS_MSIE) ?
 
 
 
-//****** file: Color.js ******
+//****** file: Color.debug.js ******
 
-var parseColor = (function() {
+var Color = (function(window) {
 
-  var w3cColors = {
-    aliceblue:'#f0f8ff',
-    antiquewhite:'#faebd7',
-    aqua:'#00ffff',
-    aquamarine:'#7fffd4',
-    azure:'#f0ffff',
-    beige:'#f5f5dc',
-    bisque:'#ffe4c4',
-    black:'#000000',
-    blanchedalmond:'#ffebcd',
-    blue:'#0000ff',
-    blueviolet:'#8a2be2',
-    brown:'#a52a2a',
-    burlywood:'#deb887',
-    cadetblue:'#5f9ea0',
-    chartreuse:'#7fff00',
-    chocolate:'#d2691e',
-    coral:'#ff7f50',
-    cornflowerblue:'#6495ed',
-    cornsilk:'#fff8dc',
-    crimson:'#dc143c',
-    cyan:'#00ffff',
-    darkblue:'#00008b',
-    darkcyan:'#008b8b',
-    darkgoldenrod:'#b8860b',
-    darkgray:'#a9a9a9',
-    darkgreen:'#006400',
-    darkkhaki:'#bdb76b',
-    darkmagenta:'#8b008b',
-    darkolivegreen:'#556b2f',
-    darkorange:'#ff8c00',
-    darkorchid:'#9932cc',
-    darkred:'#8b0000',
-    darksalmon:'#e9967a',
-    darkseagreen:'#8fbc8f',
-    darkslateblue:'#483d8b',
-    darkslategray:'#2f4f4f',
-    darkturquoise:'#00ced1',
-    darkviolet:'#9400d3',
-    deeppink:'#ff1493',
-    deepskyblue:'#00bfff',
-    dimgray:'#696969',
-    dodgerblue:'#1e90ff',
-    firebrick:'#b22222',
-    floralwhite:'#fffaf0',
-    forestgreen:'#228b22',
-    fuchsia:'#ff00ff',
-    gainsboro:'#dcdcdc',
-    ghostwhite:'#f8f8ff',
-    gold:'#ffd700',
-    goldenrod:'#daa520',
-    gray:'#808080',
-    green:'#008000',
-    greenyellow:'#adff2f',
-    honeydew:'#f0fff0',
-    hotpink:'#ff69b4',
-    indianred :'#cd5c5c',
-    indigo :'#4b0082',
-    ivory:'#fffff0',
-    khaki:'#f0e68c',
-    lavender:'#e6e6fa',
-    lavenderblush:'#fff0f5',
-    lawngreen:'#7cfc00',
-    lemonchiffon:'#fffacd',
-    lightblue:'#add8e6',
-    lightcoral:'#f08080',
-    lightcyan:'#e0ffff',
-    lightgoldenrodyellow:'#fafad2',
-    lightgray:'#d3d3d3',
-    lightgreen:'#90ee90',
-    lightpink:'#ffb6c1',
-    lightsalmon:'#ffa07a',
-    lightseagreen:'#20b2aa',
-    lightskyblue:'#87cefa',
-    lightslategray:'#778899',
-    lightsteelblue:'#b0c4de',
-    lightyellow:'#ffffe0',
-    lime:'#00ff00',
-    limegreen:'#32cd32',
-    linen:'#faf0e6',
-    magenta:'#ff00ff',
-    maroon:'#800000',
-    mediumaquamarine:'#66cdaa',
-    mediumblue:'#0000cd',
-    mediumorchid:'#ba55d3',
-    mediumpurple:'#9370db',
-    mediumseagreen:'#3cb371',
-    mediumslateblue:'#7b68ee',
-    mediumspringgreen:'#00fa9a',
-    mediumturquoise:'#48d1cc',
-    mediumvioletred:'#c71585',
-    midnightblue:'#191970',
-    mintcream:'#f5fffa',
-    mistyrose:'#ffe4e1',
-    moccasin:'#ffe4b5',
-    navajowhite:'#ffdead',
-    navy:'#000080',
-    oldlace:'#fdf5e6',
-    olive:'#808000',
-    olivedrab:'#6b8e23',
-    orange:'#ffa500',
-    orangered:'#ff4500',
-    orchid:'#da70d6',
-    palegoldenrod:'#eee8aa',
-    palegreen:'#98fb98',
-    paleturquoise:'#afeeee',
-    palevioletred:'#db7093',
-    papayawhip:'#ffefd5',
-    peachpuff:'#ffdab9',
-    peru:'#cd853f',
-    pink:'#ffc0cb',
-    plum:'#dda0dd',
-    powderblue:'#b0e0e6',
-    purple:'#800080',
-    red:'#ff0000',
-    rosybrown:'#bc8f8f',
-    royalblue:'#4169e1',
-    saddlebrown:'#8b4513',
-    salmon:'#fa8072',
-    sandybrown:'#f4a460',
-    seagreen:'#2e8b57',
-    seashell:'#fff5ee',
-    sienna:'#a0522d',
-    silver:'#c0c0c0',
-    skyblue:'#87ceeb',
-    slateblue:'#6a5acd',
-    slategray:'#708090',
-    snow:'#fffafa',
-    springgreen:'#00ff7f',
-    steelblue:'#4682b4',
-    tan:'#d2b48c',
-    teal:'#008080',
-    thistle:'#d8bfd8',
-    tomato:'#ff6347',
-    turquoise:'#40e0d0',
-    violet:'#ee82ee',
-    wheat:'#f5deb3',
-    white:'#ffffff',
-    whitesmoke:'#f5f5f5',
-    yellow:'#ffff00',
-    yellowgreen:'#9acd32'
-  };
+var w3cColors = {
+  aqua:'#00ffff',
+  black:'#000000',
+  blue:'#0000ff',
+  fuchsia:'#ff00ff',
+  gray:'#808080',
+  grey:'#808080',
+  green:'#008000',
+  lime:'#00ff00',
+  maroon:'#800000',
+  navy:'#000080',
+  olive:'#808000',
+  orange:'#ffa500',
+  purple:'#800080',
+  red:'#ff0000',
+  silver:'#c0c0c0',
+  teal:'#008080',
+  white:'#ffffff',
+  yellow:'#ffff00'
+};
 
-  function hue2rgb(p, q, t) {
-    if (t < 0) t += 1;
-    if (t > 1) t -= 1;
-    if (t < 1/6) return p + (q-p) * 6 * t;
-    if (t < 1/2) return q;
-    if (t < 2/3) return p + (q-p) * (2/3 - t) * 6;
-    return p;
+function hue2rgb(p, q, t) {
+  if (t < 0) t += 1;
+  if (t > 1) t -= 1;
+  if (t < 1/6) return p + (q-p) * 6 * t;
+  if (t < 1/2) return q;
+  if (t < 2/3) return p + (q-p) * (2/3 - t) * 6;
+  return p;
+}
+
+function limit(v, max) {
+  return Math.min(max, Math.max(0, v));
+}
+
+var Color = function(h, s, l, a) {
+  this.H = h;
+  this.S = s;
+  this.L = l;
+  this.A = a;
+};
+
+/*
+ * str can be in any of these:
+ * #0099ff rgb(64, 128, 255) rgba(64, 128, 255, 0.5)
+ */
+Color.parse = function(str) {
+  var
+    r = 0, g = 0, b = 0, a = 1,
+    m;
+
+  str = (''+ str).toLowerCase();
+  str = w3cColors[str] || str;
+
+  if ((m = str.match(/^#(\w{2})(\w{2})(\w{2})$/))) {
+    r = parseInt(m[1], 16);
+    g = parseInt(m[2], 16);
+    b = parseInt(m[3], 16);
+} else if ((m = str.match(/rgba?\((\d+)\D+(\d+)\D+(\d+)(\D+([\d.]+))?\)/))) {
+    r = parseInt(m[1], 10);
+    g = parseInt(m[2], 10);
+    b = parseInt(m[3], 10);
+    a = m[4] ? parseFloat(m[5]) : 1;
+} else {
+  return;
   }
 
-  function limit(v, max) {
-    return Math.min(max, Math.max(0, v));
+  r /= 255;
+  g /= 255;
+  b /= 255;
+
+  var
+    max = Math.max(r, g, b),
+    min = Math.min(r, g, b),
+    h, s, l = (max+min) / 2,
+    d = max-min;
+
+  if (!d) {
+    h = s = 0; // achromatic
+  } else {
+    s = l > 0.5 ? d / (2-max-min) : d / (max+min);
+    switch (max) {
+      case r: h = (g-b) / d + (g < b ? 6 : 0); break;
+      case g: h = (b-r) / d + 2; break;
+      case b: h = (r-g) / d + 4; break;
+    }
+    h *= 60;
   }
 
-  var Color = function(h, s, l, a) {
-    this.H = h;
-    this.S = s;
-    this.L = l;
-    this.A = a;
-  };
+  return new Color(h, s, l, a);
+};
 
-  var proto = Color.prototype;
+Color.prototype = {
 
-  proto.toString = function() {
+  toRGBA: function() {
     var
       h = limit(this.H, 360),
       s = limit(this.S, 1),
       l = limit(this.L, 1),
-      a = limit(this.A, 1),
-      r, g, b;
+      rgba = { a:limit(this.A, 1) };
 
     // achromatic
     if (s === 0) {
-      r = l;
-      g = l;
-      b = l;
+      rgba.r = l;
+      rgba.g = l;
+      rgba.b = l;
     } else {
       var
         q = l < 0.5 ? l * (1+s) : l + s - l*s,
         p = 2 * l-q;
         h /= 360;
 
-      r = hue2rgb(p, q, h + 1/3);
-      g = hue2rgb(p, q, h);
-      b = hue2rgb(p, q, h - 1/3);
+      rgba.r = hue2rgb(p, q, h + 1/3);
+      rgba.g = hue2rgb(p, q, h);
+      rgba.b = hue2rgb(p, q, h - 1/3);
     }
 
-    r *= 255;
-    g *= 255;
-    b *= 255;
+    rgba.r *= 255;
+    rgba.g *= 255;
+    rgba.b *= 255;
 
-    if (a === 1) {
-      return '#' + ((1 <<24) + (r <<16) + (g <<8) + b).toString(16).slice(1, 7);
+    return rgba;
+  },
+
+  toString: function() {
+    var rgba = this.toRGBA();
+
+    if (rgba.a === 1) {
+      return '#' + ((1 <<24) + (rgba.r <<16) + (rgba.g <<8) + rgba.b).toString(16).slice(1, 7);
     }
-    return 'rgba(' + [Math.round(r), Math.round(g), Math.round(b), a.toFixed(2)].join(',') + ')';
-  };
+    return 'rgba(' + [Math.round(rgba.r), Math.round(rgba.g), Math.round(rgba.b), rgba.a.toFixed(2)].join(',') + ')';
+  },
 
-  proto.hue = function(h) {
+  hue: function(h) {
     return new Color(this.H*h, this.S, this.L, this.A);
-  };
+  },
 
-  proto.saturation = function(s) {
+  saturation: function(s) {
     return new Color(this.H, this.S*s, this.L, this.A);
-  };
+  },
 
-  proto.lightness = function(l) {
+  lightness: function(l) {
     return new Color(this.H, this.S, this.L*l, this.A);
-  };
+  },
 
-  proto.alpha = function(a) {
+  alpha: function(a) {
     return new Color(this.H, this.S, this.L, this.A*a);
-  };
+  }
+};
 
-  /*
-   * str can be in any of these:
-   * #0099ff rgb(64, 128, 255) rgba(64, 128, 255, 0.5)
-   */
-  return function(str) {
-    var
-      r = 0, g = 0, b = 0, a = 1,
-      m;
-
-    str = (''+ str).toLowerCase().replace('grey', 'gray');
-    str = w3cColors[str] || str;
-
-    if ((m = str.match(/^#(\w{2})(\w{2})(\w{2})$/))) {
-      r = parseInt(m[1], 16);
-      g = parseInt(m[2], 16);
-      b = parseInt(m[3], 16);
-    }
-
-    if ((m = str.match(/rgba?\((\d+)\D+(\d+)\D+(\d+)(\D+([\d.]+))?\)/))) {
-      r = parseInt(m[1], 10);
-      g = parseInt(m[2], 10);
-      b = parseInt(m[3], 10);
-      a = m[4] ? parseFloat(m[5]) : 1;
-    }
-
-    r /= 255;
-    g /= 255;
-    b /= 255;
-
-    var
-      max = Math.max(r, g, b),
-      min = Math.min(r, g, b),
-      h, s, l = (max+min) / 2,
-      d = max-min;
-
-    if (!d) {
-      h = s = 0; // achromatic
-    } else {
-      s = l > 0.5 ? d / (2-max-min) : d / (max+min);
-      switch (max) {
-        case r: h = (g-b) / d + (g < b ? 6 : 0); break;
-        case g: h = (b-r) / d + 2; break;
-        case b: h = (r-g) / d + 4; break;
-      }
-      h *= 60;
-    }
-
-    return new Color(h, s, l, a);
-  };
-
-}());
-
+return Color; }(this));
 
 //****** file: SunPosition.js ******
 
@@ -398,23 +281,14 @@ var getSunPosition = (function() {
 }());
 
 
-//****** file: Import.js ******
+//****** file: GeoJSON.js ******
 
-var Import = {
 
-  METERS_PER_LEVEL: 3,
+var GeoJSON = (function() {
 
-  getRadius: function(points) {
-    var minLat = 90, maxLat = -90;
-    for (var i = 0, il = points.length; i < il; i += 2) {
-      minLat = min(minLat, points[i]);
-      maxLat = max(maxLat, points[i]);
-    }
+  var METERS_PER_LEVEL = 3;
 
-    return (maxLat-minLat) / RAD * 6378137 / 2 <<0; // 6378137 = Earth radius
-  },
-
-  materialColors: {
+  var materialColors = {
     brick:'#cc7755',
     bronze:'#ffeecc',
     canvas:'#fff8f0',
@@ -432,9 +306,9 @@ var Import = {
     stone:'#996666',
     tar_paper:'#333333',
     wood:'#deb887'
-  },
+  };
 
-  baseMaterials: {
+  var baseMaterials = {
     asphalt:'tar_paper',
     bitumen:'tar_paper',
     block:'stone',
@@ -461,35 +335,34 @@ var Import = {
     thatch:'plants',
     tile:'roof_tiles',
     tiles:'roof_tiles'
-  },
-
+  };
   // cardboard
   // eternit
   // limestone
   // straw
 
-  getMaterialColor: function(str) {
+  function getMaterialColor(str) {
     str = str.toLowerCase();
     if (str[0] === '#') {
       return str;
     }
-    return this.materialColors[this.baseMaterials[str] || str] || null;
-  },
+    return materialColors[baseMaterials[str] || str] || null;
+  }
 
-  alignProperties: function(prop) {
+  function alignProperties(prop) {
     var item = {};
 
     prop = prop || {};
 
-    item.height    = prop.height    || (prop.levels   ? prop.levels  *this.METERS_PER_LEVEL : DEFAULT_HEIGHT);
-    item.minHeight = prop.minHeight || (prop.minLevel ? prop.minLevel*this.METERS_PER_LEVEL : 0);
+    item.height    = prop.height    || (prop.levels   ? prop.levels  *METERS_PER_LEVEL : DEFAULT_HEIGHT);
+    item.minHeight = prop.minHeight || (prop.minLevel ? prop.minLevel*METERS_PER_LEVEL : 0);
 
-    var wallColor = prop.material ? this.getMaterialColor(prop.material) : (prop.wallColor || prop.color);
+    var wallColor = prop.material ? getMaterialColor(prop.material) : (prop.wallColor || prop.color);
     if (wallColor) {
       item.wallColor = wallColor;
     }
 
-    var roofColor = prop.roofMaterial ? this.getMaterialColor(prop.roofMaterial) : prop.roofColor;
+    var roofColor = prop.roofMaterial ? getMaterialColor(prop.roofMaterial) : prop.roofColor;
     if (roofColor) {
       item.roofColor = roofColor;
     }
@@ -519,6 +392,15 @@ var Import = {
       break;
     }
 
+    switch (item.shape) {
+      case 'cone':
+      case 'cylinder':
+      case 'dome':
+      case 'sphere':
+        item.isRotational = true;
+      break;
+    }
+
     if (item.roofShape && prop.roofHeight) {
       item.roofHeight = prop.roofHeight;
       item.height = max(0, item.height-item.roofHeight);
@@ -528,12 +410,6 @@ var Import = {
 
     return item;
   }
-};
-
-
-//****** file: GeoJSON.js ******
-
-var GeoJSON = (function() {
 
   function getGeometries(geometry) {
     var
@@ -621,14 +497,14 @@ var GeoJSON = (function() {
           continue;
         }
 
-        baseItem = Import.alignProperties(feature.properties);
+        baseItem = alignProperties(feature.properties);
         geometries = getGeometries(feature.geometry);
 
         for (j = 0, jl = geometries.length; j < jl; j++) {
           item = clone(baseItem);
           item.footprint = geometries[j].outer;
-          if (item.shape === 'cone' || item.shape === 'cylinder') {
-            item.radius = Import.getRadius(item.footprint);
+          if (item.isRotational) {
+            item.radius = getLonRadius(item.footprint);
           }
           if (geometries[j].inner) {
             item.holes = geometries[j].inner;
@@ -657,13 +533,11 @@ var
   VERSION      = '0.2.1b',
   ATTRIBUTION  = '&copy; <a href="http://osmbuildings.org">OSM Buildings</a>',
 
-  DATA_URL = 'http://data.osmbuildings.org/0.2/{k}/tile/{z}/{x}/{y}.json',
   DATA_KEY = 'rkc8ywdl',
 
   PI         = Math.PI,
   HALF_PI    = PI/2,
   QUARTER_PI = PI/4,
-  RAD        = 180/PI,
 
   MAP_TILE_SIZE  = 256,    // map tile size in pixels
   DATA_TILE_SIZE = 0.0075, // data tile size in geo coordinates, smaller: less data to load but more requests
@@ -679,7 +553,7 @@ var
   CENTER_X = 0, CENTER_Y = 0,
   ORIGIN_X = 0, ORIGIN_Y = 0,
 
-  WALL_COLOR = parseColor('rgba(200, 190, 180)'),
+  WALL_COLOR = Color.parse('rgba(200, 190, 180)'),
   ALT_COLOR  = WALL_COLOR.lightness(0.8),
   ROOF_COLOR = WALL_COLOR.lightness(1.2),
 
@@ -687,7 +561,7 @@ var
   ALT_COLOR_STR  = ''+ ALT_COLOR,
   ROOF_COLOR_STR = ''+ ROOF_COLOR,
 
-  METERS_PER_PIXEL = 1,
+  PIXEL_PER_DEG = 0,
   ZOOM_FACTOR = 1,
 
   MAX_HEIGHT, // taller buildings will be cut to this
@@ -699,6 +573,7 @@ var
 
 
 //****** file: geometry.js ******
+
 
 function getDistance(p1, p2) {
   var
@@ -781,25 +656,45 @@ function simplifyPolygon(buffer) {
   return newBuffer;
 }
 
-function getCenter(poly) {
+function getCenter(footprint) {
   var minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-  for (var i = 0, il = poly.length-3; i < il; i += 2) {
-    minX = min(minX, poly[i]);
-    maxX = max(maxX, poly[i]);
-    minY = min(minY, poly[i+1]);
-    maxY = max(maxY, poly[i+1]);
+  for (var i = 0, il = footprint.length-3; i < il; i += 2) {
+    minX = min(minX, footprint[i]);
+    maxX = max(maxX, footprint[i]);
+    minY = min(minY, footprint[i+1]);
+    maxY = max(maxY, footprint[i+1]);
   }
   return { x:minX+(maxX-minX)/2 <<0, y:minY+(maxY-minY)/2 <<0 };
+}
+
+var EARTH_RADIUS = 6378137;
+
+function getLonRadius(footprint) {
+  var minLon = 90, maxLon = -90;
+  for (var i = 0, il = footprint.length; i < il; i += 2) {
+    minLon = min(minLon, footprint[i+1]);
+    maxLon = max(maxLon, footprint[i+1]);
+  }
+  return (maxLon-minLon)/2;
 }
 
 
 //****** file: functions.js ******
 
+
+function rad(deg) {
+  return deg * PI / 180;
+}
+
+function deg(rad) {
+  return rad / PI * 180;
+}
+
 function pixelToGeo(x, y) {
   var res = {};
   x /= MAP_SIZE;
   y /= MAP_SIZE;
-  res[LAT] = y <= 0  ? 90 : y >= 1 ? -90 : RAD * (2 * atan(exp(PI * (1 - 2*y))) - HALF_PI),
+  res[LAT] = y <= 0  ? 90 : y >= 1 ? -90 : deg(2 * atan(exp(PI * (1 - 2*y))) - HALF_PI),
   res[LON] = (x === 1 ?  1 : (x%1 + 1) % 1) * 360 - 180;
   return res;
 }
@@ -820,37 +715,6 @@ function fromRange(sVal, sMin, sMax, dMin, dMax) {
   return min(max(dMin + rel*range, dMin), dMax);
 }
 
-function template(str, param) {
-  return str.replace(/\{([\w_]+)\}/g, function(tag, key) {
-    return param[key] || tag;
-  });
-}
-
-function xhr(url, callback) {
-  var req = new XMLHttpRequest();
-
-  req.onreadystatechange = function() {
-    if (req.readyState !== 4) {
-      return;
-    }
-    if (!req.status || req.status < 200 || req.status > 299) {
-      return;
-    }
-    if (callback && req.responseText) {
-      var json;
-      try {
-        json = JSON.parse(req.responseText);
-      } catch(ex) {}
-      callback(json);
-    }
-  };
-
-  req.open('GET', url);
-  req.send(null);
-
-  return req;
-}
-
 function isVisible(polygon) {
    var
     maxX = WIDTH+ORIGIN_X,
@@ -866,33 +730,154 @@ function isVisible(polygon) {
 }
 
 
-//****** file: Cache.js ******
+//****** file: BLDGS.js ******
 
-var Cache = {
 
-  time: new Date(),
-  data: {},
+var BLDGS = (function() {
 
-  add: function(data, key) {
-    this.data[key] = { data:data, time:Date.now() };
-  },
+  var baseURL = 'http://data.osmbuildings.org/0.2/';
 
-  get: function(key) {
-    return this.data[key] && this.data[key].data;
-  },
+  var cacheData = {};
+  var cacheIndex = [];
+  var cacheSize = 0;
+  var maxCacheSize = 0;
 
-  purge: function() {
-    this.time.setMinutes(this.time.getMinutes()-5);
-    for (var key in this.data) {
-      if (this.data[key].time < this.time) {
-        delete this.data[key];
+//  // http://mathiasbynens.be/notes/localstorage-pattern#comment-9
+//  var storage;
+//  try {
+//    storage = localStorage;
+//  } catch (ex) {
+//    storage = (function() {
+//      return {
+//        getItem: function() {},
+//        setItem: function() {}
+//      };
+//    }());
+//  }
+//
+//  var cacheData = JSON.parse(storage.getItem('BLDGS') || '{}');
+
+  function xhr(url, callback) {
+    if (cacheData[url]) {
+      if (callback) {
+        callback(cacheData[url]);
+      }
+      return;
+    }
+
+    var req = new XMLHttpRequest();
+
+    req.onreadystatechange = function() {
+      if (req.readyState !== 4) {
+        return;
+      }
+      if (!req.status || req.status < 200 || req.status > 299) {
+        return;
+      }
+      if (callback && req.responseText) {
+        var json;
+        try {
+          json = JSON.parse(req.responseText);
+        } catch(ex) {}
+
+        cacheData[url] = json;
+        cacheIndex.push({ url: url, size: req.responseText.length });
+        cacheSize += req.responseText.length;
+
+        while (cacheSize > maxCacheSize) {
+          var item = cacheIndex.shift();
+          cacheSize -= item.size;
+          delete cacheData[item.url];
+        }
+
+//  try {
+//    storage.setItem('BLDGS', JSON.stringify(cacheData));
+//  } catch(ex) {}
+
+        callback(json);
+      }
+    };
+
+    req.open('GET', url);
+    req.send(null);
+
+    return req;
+  }
+
+  function getDistance(a, b) {
+    var dx = a.x-b.x, dy = a.y-b.y;
+    return dx*dx + dy*dy;
+  }
+
+  function BLDGS(options) {
+    options = options || {};
+    baseURL += (options.key || 'anonymous');
+    maxCacheSize = options.cacheSize || 1024*1024; // 1MB
+  }
+
+  BLDGS.TILE_SIZE = 256;
+  BLDGS.ATTRIBUTION = 'Data Service &copy; <a href="http://bld.gs">BLD.GS</a>';
+
+  var proto = BLDGS.prototype;
+
+  proto.getTile = function(x, y, zoom, callback) {
+    var url = baseURL +'/tile/'+ zoom +'/'+ x +'/'+ y +'.json';
+    return xhr(url, callback);
+  };
+
+  proto.getFeature = function(id, callback) {
+    var url = baseURL +'/feature/'+ id +'.json';
+    return xhr(url, callback);
+  };
+
+  proto.getBBox = function(bbox, callback) {
+    var url = baseURL +'/bbox.json?bbox='+ [bbox.n.toFixed(5),bbox.e.toFixed(5),bbox.s.toFixed(5),bbox.w.toFixed(5)].join(',');
+    return xhr(url, callback);
+  };
+
+  proto.getAllTiles = function(x, y, w, h, zoom, callback) {
+    var
+      tileSize = BLDGS.TILE_SIZE,
+      fixedZoom = 16,
+      realTileSize = zoom > fixedZoom ? tileSize <<(zoom-fixedZoom) : tileSize >>(fixedZoom-zoom),
+      minX = x/realTileSize <<0,
+      minY = y/realTileSize <<0,
+      maxX = Math.ceil((x+w)/realTileSize),
+      maxY = Math.ceil((y+h)/realTileSize),
+      tx, ty,
+      queue = [];
+
+    for (ty = minY; ty <= maxY; ty++) {
+      for (tx = minX; tx <= maxX; tx++) {
+        queue.push({ x:tx, y:ty, z:fixedZoom });
       }
     }
-  }
-};
+
+    var center = { x: x+(w-tileSize)/2, y: y+(h-tileSize)/2 };
+		queue.sort(function(a, b) {
+			return getDistance(a, center) - getDistance(b, center);
+		});
+
+		for (var i = 0, il = queue.length; i < il; i++) {
+      this.getTile(queue[i].x, queue[i].y, queue[i].z, callback);
+		}
+
+    return {
+      abort: function() {
+        for (var i = 0; i < queue.length; i++) {
+          queue[i].abort();
+        }
+      }
+    };
+  };
+
+  return BLDGS;
+
+}());
 
 
 //****** file: Data.js ******
+
 
 var Data = {
 
@@ -917,15 +902,6 @@ var Data = {
     return footprint;
   },
 
-  createClosure: function(cacheKey) {
-    var self = this;
-    return function(data) {
-      var parsedData = GeoJSON.read(data);
-      Cache.add(parsedData, cacheKey);
-      self.addRenderItems(parsedData, true);
-    };
-  },
-
   resetItems: function() {
     this.items = [];
     this.loadedItems = {};
@@ -934,8 +910,9 @@ var Data = {
 
   addRenderItems: function(data, allAreNew) {
     var item, scaledItem, id;
-    for (var i = 0, il = data.length; i < il; i++) {
-      item = data[i];
+    var geojson = GeoJSON.read(data);
+    for (var i = 0, il = geojson.length; i < il; i++) {
+      item = geojson[i];
       id = item.id || [item.footprint[0], item.footprint[1], item.height, item.minHeight].join(',');
       if (!this.loadedItems[id]) {
         if ((scaledItem = this.scale(item))) {
@@ -975,7 +952,7 @@ var Data = {
       // TODO: drop footprint
       res.shape = item.shape;
       if (item.radius) {
-        res.radius = item.radius/METERS_PER_PIXEL;
+        res.radius = item.radius*PIXEL_PER_DEG;
       }
     }
 
@@ -993,7 +970,7 @@ var Data = {
     var color;
 
     if (item.wallColor) {
-      if ((color = parseColor(item.wallColor))) {
+      if ((color = Color.parse(item.wallColor))) {
         color = color.alpha(ZOOM_FACTOR);
         res.altColor  = ''+ color.lightness(0.8);
         res.wallColor = ''+ color;
@@ -1001,12 +978,12 @@ var Data = {
     }
 
     if (item.roofColor) {
-      if ((color = parseColor(item.roofColor))) {
+      if ((color = Color.parse(item.roofColor))) {
         res.roofColor = ''+ color.alpha(ZOOM_FACTOR);
       }
     }
 
-    if (item.roofColor) {
+    if (item.relationId) {
       res.relationId = item.relationId;
     }
     res.hitColor = HitAreas.idToColor(item.relationId || item.id);
@@ -1027,12 +1004,12 @@ var Data = {
   set: function(data) {
     this.isStatic = true;
     this.resetItems();
-    this._staticData = GeoJSON.read(data);
+    this._staticData = data;
     this.addRenderItems(this._staticData, true);
   },
 
-  load: function(url) {
-    this.url = template(url || DATA_URL, { k: DATA_KEY });
+  load: function(provider) {
+    this.provider = provider || new BLDGS({ key: DATA_KEY });
     this.update();
   },
 
@@ -1048,7 +1025,7 @@ var Data = {
       return;
     }
 
-    if (!this.url) {
+    if (!this.provider) {
       return;
     }
 
@@ -1060,22 +1037,18 @@ var Data = {
       minY = ORIGIN_Y/zoomedTileSize <<0,
       maxX = ceil((ORIGIN_X+WIDTH) /zoomedTileSize),
       maxY = ceil((ORIGIN_Y+HEIGHT)/zoomedTileSize),
-      x, y, coords,
-      cacheKey, parsedData;
+      x, y;
+
+    var scope = this;
+    function callback(json) {
+      scope.addRenderItems(json);
+    }
 
     for (y = minY; y <= maxY; y++) {
       for (x = minX; x <= maxX; x++) {
-        coords = { x: x, y: y, z: tileZoom };
-        cacheKey = x +','+ y;
-        if ((parsedData = Cache.get(cacheKey))) {
-          this.addRenderItems(parsedData);
-				} else {
-          xhr(template(this.url, coords), this.createClosure(cacheKey));
-        }
+        this.provider.getTile(x, y, tileZoom, callback);
       }
     }
-
-    Cache.purge();
   }
 };
 
@@ -1665,10 +1638,10 @@ var Buildings = {
           radius = item.radius;
           Cylinder.draw(context, center, radius, radius, h, mh, wallColor, altColor, roofColor);
           if (item.roofShape === 'cone') {
-            Cylinder.draw(context, center, radius, 0, h+item.roofHeight, h, roofColor, ''+ parseColor(roofColor).lightness(0.9));
+            Cylinder.draw(context, center, radius, 0, h+item.roofHeight, h, roofColor, ''+ Color.parse(roofColor).lightness(0.9));
           }
           if (item.roofShape === 'dome') {
-            Cylinder.draw(context, center, radius, radius/2, h+item.roofHeight, h, roofColor, ''+ parseColor(roofColor).lightness(0.9));
+            Cylinder.draw(context, center, radius, radius/2, h+item.roofHeight, h, roofColor, ''+ Color.parse(roofColor).lightness(0.9));
           }
         break;
 
@@ -1687,7 +1660,7 @@ var Buildings = {
         default:
           Block.draw(context, footprint, item.holes, h, mh, wallColor, altColor, roofColor);
           if (item.roofShape === 'pyramid') {
-            Pyramid.draw(context, footprint, item.center, h+item.roofHeight, h, roofColor, parseColor(roofColor).lightness(0.9));
+            Pyramid.draw(context, footprint, item.center, h+item.roofHeight, h, roofColor, Color.parse(roofColor).lightness(0.9));
           }
       }
     }
@@ -2190,6 +2163,7 @@ Layers.init();
 
 //****** file: adapter.js ******
 
+
 function setOrigin(origin) {
   ORIGIN_X = origin.x;
   ORIGIN_Y = origin.y;
@@ -2218,9 +2192,10 @@ function setZoom(z) {
   ZOOM = z;
   MAP_SIZE = MAP_TILE_SIZE <<ZOOM;
 
-  var pxCenter = pixelToGeo(ORIGIN_X+CENTER_X, ORIGIN_Y+CENTER_Y);
-  // see http://wiki.openstreetmap.org/wiki/Zoom_levels
-  METERS_PER_PIXEL = Math.abs(40075040 * cos(pxCenter.latitude) / pow(2, ZOOM+8));
+  var center = pixelToGeo(ORIGIN_X+CENTER_X, ORIGIN_Y+CENTER_Y);
+  var a = geoToPixel(center.latitude, 0);
+  var b = geoToPixel(center.latitude, 1);
+  PIXEL_PER_DEG = b.x-a.x;
 
   ZOOM_FACTOR = pow(0.95, ZOOM-MIN_ZOOM);
 
@@ -2358,17 +2333,11 @@ proto.moveByPx = function(dx, dy) {
 //****** file: public.js ******
 
 
-// TODO: remove deprecation
-proto.setStyle = function(style) {
-  console.warn('OSM Buildings: .setStyle() will be deprecated soon. Use .style() instead.');
-  return this.style(style);
-};
-
 proto.style = function(style) {
   style = style || {};
   var color;
   if ((color = style.color || style.wallColor)) {
-    WALL_COLOR = parseColor(color);
+    WALL_COLOR = Color.parse(color);
     WALL_COLOR_STR = ''+ WALL_COLOR.alpha(ZOOM_FACTOR);
 
     ALT_COLOR = WALL_COLOR.lightness(0.8);
@@ -2379,7 +2348,7 @@ proto.style = function(style) {
   }
 
   if (style.roofColor) {
-    ROOF_COLOR = parseColor(style.roofColor);
+    ROOF_COLOR = Color.parse(style.roofColor);
     ROOF_COLOR_STR = ''+ ROOF_COLOR.alpha(ZOOM_FACTOR);
   }
 
@@ -2392,33 +2361,15 @@ proto.style = function(style) {
   return this;
 };
 
-// TODO: remove deprecation
-proto.setDate = function(date) {
-  console.warn('OSM Buildings: .setDate() will be deprecated soon. Use .date() instead.');
-  return this.date(date);
-};
-
 proto.date = function(date) {
   Shadows.date = date;
   Shadows.render();
   return this;
 };
 
-// TODO: remove deprecation
-proto.loadData = function(url) {
-  console.warn('OSM Buildings: .loadData() will be deprecated soon. Use .load() instead.');
-  return this.load(url);
-};
-
 proto.load = function(url) {
   Data.load(url);
   return this;
-};
-
-// TODO: remove deprecation
-proto.setData = function(data) {
-  console.warn('OSM Buildings: .setData() will be deprecated soon. Use .data() instead.');
-  return this.set(data);
 };
 
 proto.set = function(data) {
@@ -2436,19 +2387,26 @@ proto.screenshot = function(forceDownload) {
 
 var onEach = function() {};
 
-proto.each = function(handler, scope) {
+proto.each = function(handler) {
   onEach = function(payload) {
-    return handler.call(scope, payload);
+    return handler(payload);
   };
   return this;
 };
 
 var onClick = function() {};
 
-proto.click = function(handler, scope) {
+proto.click = function(handler) {
   onClick = function(payload) {
-    return handler.call(scope, payload);
+    return handler(payload);
   };
+  return this;
+};
+
+proto.getDetails = function(id, handler) {
+  if (Data.provider) {
+    Data.provider.getFeature(id, handler);
+  }
   return this;
 };
 

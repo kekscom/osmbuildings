@@ -160,11 +160,13 @@ var Data = {
       x, y;
 
     var scope = this;
+    function callback(json) {
+      scope.addRenderItems(json);
+    }
+
     for (y = minY; y <= maxY; y++) {
       for (x = minX; x <= maxX; x++) {
-        this.provider.getTile(x, y, tileZoom, function(json) {
-          scope.addRenderItems(json);
-        });
+        this.provider.getTile(x, y, tileZoom, callback);
       }
     }
   }

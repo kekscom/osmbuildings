@@ -62,7 +62,7 @@ var GeoJSON = (function() {
       return str;
     }
     return materialColors[baseMaterials[str] || str] || null;
-  };
+  }
 
   function alignProperties(prop) {
     var item = {};
@@ -124,7 +124,7 @@ var GeoJSON = (function() {
     }
 
     return item;
-  };
+  }
 
   function getGeometries(geometry) {
     var
