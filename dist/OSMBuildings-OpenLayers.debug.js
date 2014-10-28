@@ -368,15 +368,16 @@ var GeoJSON = (function() {
     }
 
     switch (prop.shape) {
-      case 'cone':
       case 'cylinder':
+      case 'cone':
       case 'dome':
-      case 'pyramid':
+      case 'sphere':
         item.shape = prop.shape;
+        item.isRotational = true;
       break;
 
-      case 'sphere':
-        item.shape = 'cylinder';
+      case 'pyramid':
+        item.shape = prop.shape;
       break;
     }
 
@@ -384,20 +385,12 @@ var GeoJSON = (function() {
       case 'cone':
       case 'dome':
         item.roofShape = prop.roofShape;
-        item.shape = 'cylinder';
+        item.isRotational = true;
+        // TODO: check, whether building is almost cylindrically mapped
       break;
 
       case 'pyramid':
         item.roofShape = prop.roofShape;
-      break;
-    }
-
-    switch (item.shape) {
-      case 'cone':
-      case 'cylinder':
-      case 'dome':
-      case 'sphere':
-        item.isRotational = true;
       break;
     }
 
@@ -948,12 +941,14 @@ var Data = {
     }
     res.center = getCenter(res.footprint);
 
+    if ((item.shape || item.roofShape) && item.radius) {
+      res.radius = item.radius*PIXEL_PER_DEG;
+    }
     if (item.shape) {
-      // TODO: drop footprint
       res.shape = item.shape;
-      if (item.radius) {
-        res.radius = item.radius*PIXEL_PER_DEG;
-      }
+    }
+    if (item.roofShape) {
+      res.roofShape = item.roofShape;
     }
 
     if (item.holes) {
@@ -992,10 +987,6 @@ var Data = {
 
     if (res.height+res.roofHeight <= res.minHeight) {
       return;
-    }
-
-    if (item.roofShape) {
-      res.roofShape = item.roofShape;
     }
 
     return res;
@@ -1599,8 +1590,7 @@ var Buildings = {
       sortCam = { x:CAM_X+ORIGIN_X, y:CAM_Y+ORIGIN_Y },
       footprint,
       wallColor, altColor, roofColor,
-      dataItems = Data.items,
-      center, radius;
+      dataItems = Data.items;
 
     dataItems.sort(function(a, b) {
       return (a.minHeight-b.minHeight) || getDistance(b.center, sortCam) - getDistance(a.center, sortCam) || (b.height-a.height);
@@ -1633,35 +1623,18 @@ var Buildings = {
       context.strokeStyle = altColor;
 
       switch (item.shape) {
-        case 'cylinder':
-          center = item.center;
-          radius = item.radius;
-          Cylinder.draw(context, center, radius, radius, h, mh, wallColor, altColor, roofColor);
-          if (item.roofShape === 'cone') {
-            Cylinder.draw(context, center, radius, 0, h+item.roofHeight, h, roofColor, ''+ Color.parse(roofColor).lightness(0.9));
-          }
-          if (item.roofShape === 'dome') {
-            Cylinder.draw(context, center, radius, radius/2, h+item.roofHeight, h, roofColor, ''+ Color.parse(roofColor).lightness(0.9));
-          }
-        break;
+        case 'cylinder': Cylinder.draw(context, item.center, item.radius, item.radius, h, mh, wallColor, altColor, roofColor); break;
+        case 'cone':     Cylinder.draw(context, item.center, item.radius, 0, h, mh, wallColor, altColor);                      break;
+        case 'dome':     Cylinder.draw(context, item.center, item.radius, item.radius/2, h, mh, wallColor, altColor);          break;
+        case 'sphere':   Cylinder.draw(context, item.center, item.radius, item.radius, h, mh, wallColor, altColor, roofColor); break;
+        case 'pyramid':  Pyramid.draw(context, footprint, item.center, h, mh, wallColor, altColor);                            break;
+        default:         Block.draw(context, footprint, item.holes, h, mh, wallColor, altColor, roofColor);
+      }
 
-        case 'cone':
-          Cylinder.draw(context, item.center, item.radius, 0, h, mh, wallColor, altColor);
-        break;
-
-        case 'pyramid':
-          Pyramid.draw(context, footprint, item.center, h, mh, wallColor, altColor);
-        break;
-
-        case 'dome':
-          Cylinder.draw(context, item.center, item.radius, item.radius/2, h, mh, wallColor, altColor);
-        break;
-
-        default:
-          Block.draw(context, footprint, item.holes, h, mh, wallColor, altColor, roofColor);
-          if (item.roofShape === 'pyramid') {
-            Pyramid.draw(context, footprint, item.center, h+item.roofHeight, h, roofColor, Color.parse(roofColor).lightness(0.9));
-          }
+      switch (item.roofShape) {
+        case 'cone':    Cylinder.draw(context, item.center, item.radius, 0, h+item.roofHeight, h, roofColor, ''+ Color.parse(roofColor).lightness(0.9));             break;
+        case 'dome':    Cylinder.draw(context, item.center, item.radius, item.radius/2, h+item.roofHeight, h, roofColor, ''+ Color.parse(roofColor).lightness(0.9)); break;
+        case 'pyramid': Pyramid.draw(context, footprint, item.center, h+item.roofHeight, h, roofColor, Color.parse(roofColor).lightness(0.9));                       break;
       }
     }
   }
@@ -1709,10 +1682,12 @@ var Simplified = {
       context.strokeStyle = item.altColor  || ALT_COLOR_STR;
       context.fillStyle   = item.roofColor || ROOF_COLOR_STR;
 
-      if (item.shape === 'cylinder' || item.shape === 'cone' || item.shape === 'dome') {
-        Cylinder.simplified(context, item.center, item.radius);
-      } else {
-        Block.simplified(context, footprint, item.holes);
+      switch (item.shape) {
+        case 'cylinder':
+        case 'cone':
+        case 'dome':
+        case 'sphere': Cylinder.simplified(context, item.center, item.radius);  break;
+        default: Block.simplified(context, footprint, item.holes);
       }
     }
   }
@@ -1768,8 +1743,7 @@ var Shadows = {
       item,
       h, mh,
       footprint,
-      dataItems = Data.items,
-      center, radius;
+      dataItems = Data.items;
 
     context.canvas.style.opacity = alpha / (ZOOM_FACTOR * 2);
     context.shadowColor = this.blurColor;
@@ -1795,35 +1769,18 @@ var Shadows = {
       }
 
       switch (item.shape) {
-        case 'cylinder':
-          center = item.center;
-          radius = item.radius;
-          Cylinder.shadow(context, center, radius, radius, h, mh);
-          if (item.roofShape === 'cone') {
-            Cylinder.shadow(context, center, radius, 0, h+item.roofHeight, h);
-          }
-          if (item.roofShape === 'dome') {
-            Cylinder.shadow(context, center, radius, radius/2, h+item.roofHeight, h);
-          }
-        break;
+        case 'cylinder': Cylinder.shadow(context, item.center, item.radius, item.radius, h, mh);   break;
+        case 'cone':     Cylinder.shadow(context, item.center, item.radius, 0, h, mh);             break;
+        case 'dome':     Cylinder.shadow(context, item.center, item.radius, item.radius/2, h, mh); break;
+        case 'sphere':   Cylinder.shadow(context, item.center, item.radius, item.radius, h, mh);   break;
+        case 'pyramid':  Pyramid.shadow(context, footprint, item.center, h, mh);                   break;
+        default:         Block.shadow(context, footprint, item.holes, h, mh);
+      }
 
-        case 'cone':
-          Cylinder.shadow(context, item.center, item.radius, 0, h, mh);
-        break;
-
-        case 'pyramid':
-          Pyramid.shadow(context, footprint, item.center, h, mh);
-        break;
-
-        case 'dome':
-          Cylinder.shadow(context, item.center, item.radius, item.radius/2, h, mh);
-        break;
-
-        default:
-          Block.shadow(context, footprint, item.holes, h, mh);
-          if (item.roofShape === 'pyramid') {
-            Pyramid.shadow(context, footprint, item.center, h+item.roofHeight, h);
-          }
+      switch (item.roofShape) {
+        case 'cone':    Cylinder.shadow(context, item.center, item.radius, 0, h+item.roofHeight, h);             break;
+        case 'dome':    Cylinder.shadow(context, item.center, item.radius, item.radius/2, h+item.roofHeight, h); break;
+        case 'pyramid': Pyramid.shadow(context, footprint, item.center, h+item.roofHeight, h);                   break;
       }
     }
 
@@ -1906,8 +1863,7 @@ var HitAreas = {
       sortCam = { x:CAM_X+ORIGIN_X, y:CAM_Y+ORIGIN_Y },
       footprint,
       color,
-      dataItems = Data.items,
-      center, radius;
+      dataItems = Data.items;
 
     dataItems.sort(function(a, b) {
       return (a.minHeight-b.minHeight) || getDistance(b.center, sortCam) - getDistance(a.center, sortCam) || (b.height-a.height);
@@ -1934,37 +1890,21 @@ var HitAreas = {
       }
 
       switch (item.shape) {
-        case 'cylinder':
-          center = item.center;
-          radius = item.radius;
-          Cylinder.hitArea(context, center, radius, radius, h, mh, color);
-          if (item.roofShape === 'cone') {
-            Cylinder.hitArea(context, center, radius, 0, h+item.roofHeight, h, color);
-          }
-          if (item.roofShape === 'dome') {
-            Cylinder.hitArea(context, center, radius, radius/2, h+item.roofHeight, h, color);
-          }
-        break;
+        case 'cylinder': Cylinder.hitArea(context, item.center, item.radius, item.radius, h, mh, color);   break;
+        case 'cone':     Cylinder.hitArea(context, item.center, item.radius, 0, h, mh, color);             break;
+        case 'dome':     Cylinder.hitArea(context, item.center, item.radius, item.radius/2, h, mh, color); break;
+        case 'sphere':   Cylinder.hitArea(context, item.center, item.radius, item.radius, h, mh, color);   break;
+        case 'pyramid':  Pyramid.hitArea(context, footprint, item.center, h, mh, color);                   break;
+        default:         Block.hitArea(context, footprint, item.holes, h, mh, color);
+      }
 
-        case 'cone':
-          Cylinder.hitArea(context, item.center, item.radius, 0, h, mh, color);
-        break;
-
-        case 'pyramid':
-          Pyramid.hitArea(context, footprint, item.center, h, mh, color);
-        break;
-
-        case 'dome':
-          Cylinder.hitArea(context, item.center, item.radius, item.radius/2, h, mh, color);
-        break;
-
-        default:
-          Block.hitArea(context, footprint, item.holes, h, mh, color);
-          if (item.roofShape === 'dome') {
-            Pyramid.hitArea(context, footprint, item.center, h+item.roofHeight, h, color);
-          }
+      switch (item.roofShape) {
+        case 'cone':    Cylinder.hitArea(context, item.center, item.radius, 0, h+item.roofHeight, h, color);             break;
+        case 'dome':    Cylinder.hitArea(context, item.center, item.radius, item.radius/2, h+item.roofHeight, h, color); break;
+        case 'pyramid': Pyramid.hitArea(context, footprint, item.center, h+item.roofHeight, h, color);                   break;
       }
     }
+
     this._imageData = this.context.getImageData(0, 0, WIDTH, HEIGHT).data;
   },
 

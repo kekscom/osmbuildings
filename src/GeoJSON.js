@@ -83,15 +83,16 @@ var GeoJSON = (function() {
     }
 
     switch (prop.shape) {
-      case 'cone':
       case 'cylinder':
+      case 'cone':
       case 'dome':
-      case 'pyramid':
+      case 'sphere':
         item.shape = prop.shape;
+        item.isRotational = true;
       break;
 
-      case 'sphere':
-        item.shape = 'cylinder';
+      case 'pyramid':
+        item.shape = prop.shape;
       break;
     }
 
@@ -99,20 +100,12 @@ var GeoJSON = (function() {
       case 'cone':
       case 'dome':
         item.roofShape = prop.roofShape;
-        item.shape = 'cylinder';
+        item.isRotational = true;
+        // TODO: check, whether building is almost cylindrically mapped
       break;
 
       case 'pyramid':
         item.roofShape = prop.roofShape;
-      break;
-    }
-
-    switch (item.shape) {
-      case 'cone':
-      case 'cylinder':
-      case 'dome':
-      case 'sphere':
-        item.isRotational = true;
       break;
     }
 

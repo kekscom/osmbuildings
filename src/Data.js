@@ -68,12 +68,14 @@ var Data = {
     }
     res.center = getCenter(res.footprint);
 
+    if ((item.shape || item.roofShape) && item.radius) {
+      res.radius = item.radius*PIXEL_PER_DEG;
+    }
     if (item.shape) {
-      // TODO: drop footprint
       res.shape = item.shape;
-      if (item.radius) {
-        res.radius = item.radius*PIXEL_PER_DEG;
-      }
+    }
+    if (item.roofShape) {
+      res.roofShape = item.roofShape;
     }
 
     if (item.holes) {
@@ -112,10 +114,6 @@ var Data = {
 
     if (res.height+res.roofHeight <= res.minHeight) {
       return;
-    }
-
-    if (item.roofShape) {
-      res.roofShape = item.roofShape;
     }
 
     return res;
