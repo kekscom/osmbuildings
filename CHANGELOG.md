@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.2.2b @ 2014-11-25
+
+**Features**
+
+- auto detection for circles
+- building data provider added
+- loadFeature() method added
+
+**Fixes**
+
+- several fixes for radius handling
+- several click-hit issues fixed
+
+
 ## 0.2.1b @ 2014-09-24
 
 **Features**

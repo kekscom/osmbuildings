@@ -1,5 +1,5 @@
 var
-  VERSION      = /*<version=*/'0.1.9a'/*>*/,
+  VERSION      = /*<version=*/'0.2.2b'/*>*/,
   ATTRIBUTION  = '&copy; <a href="http://osmbuildings.org">OSM Buildings</a>',
 
   DATA_KEY = 'rkc8ywdl',

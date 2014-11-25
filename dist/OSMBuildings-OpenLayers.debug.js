@@ -1,6 +1,6 @@
 /**
  * Copyright (C) 2014 OSM Buildings, Jan Marsch
- * A leightweight JavaScript library for visualizing building geometry on interactive maps.
+ * A JavaScript library for visualizing building geometry on interactive maps.
  * @osmbuildings, http://osmbuildings.org
  */
 //****** file: prefix.js ******
@@ -523,7 +523,7 @@ var GeoJSON = (function() {
 //****** file: variables.js ******
 
 var
-  VERSION      = '0.2.1b',
+  VERSION      = '0.2.2b',
   ATTRIBUTION  = '&copy; <a href="http://osmbuildings.org">OSM Buildings</a>',
 
   DATA_KEY = 'rkc8ywdl',
