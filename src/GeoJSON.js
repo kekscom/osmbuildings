@@ -101,7 +101,6 @@ var GeoJSON = (function() {
       case 'dome':
         item.roofShape = prop.roofShape;
         item.isRotational = true;
-        // TODO: check, whether building is almost cylindrically mapped
       break;
 
       case 'pyramid':
@@ -212,8 +211,9 @@ var GeoJSON = (function() {
           item = clone(baseItem);
           item.footprint = geometries[j].outer;
           if (item.isRotational) {
-            item.radius = getLonRadius(item.footprint);
+            item.radius = getLonDelta(item.footprint);
           }
+
           if (geometries[j].inner) {
             item.holes = geometries[j].inner;
           }

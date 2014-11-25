@@ -77,6 +77,11 @@ var Data = {
     if (item.roofShape) {
       res.roofShape = item.roofShape;
     }
+//  if (item.isRotational) {
+//  if ((res.roofShape === 'cone' || res.roofShape === 'dome') && !res.shape && isCircular(res.footprint)) {
+    if (!res.shape && isCircular(res.footprint)) {
+      res.shape = 'cylinder';
+    }
 
     if (item.holes) {
       res.holes = [];

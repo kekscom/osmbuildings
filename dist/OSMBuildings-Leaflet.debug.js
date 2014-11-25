@@ -386,7 +386,6 @@ var GeoJSON = (function() {
       case 'dome':
         item.roofShape = prop.roofShape;
         item.isRotational = true;
-        // TODO: check, whether building is almost cylindrically mapped
       break;
 
       case 'pyramid':
@@ -497,8 +496,9 @@ var GeoJSON = (function() {
           item = clone(baseItem);
           item.footprint = geometries[j].outer;
           if (item.isRotational) {
-            item.radius = getLonRadius(item.footprint);
+            item.radius = getLonDelta(item.footprint);
           }
+
           if (geometries[j].inner) {
             item.holes = geometries[j].inner;
           }
@@ -573,6 +573,45 @@ function getDistance(p1, p2) {
     dx = p1.x-p2.x,
     dy = p1.y-p2.y;
   return dx*dx + dy*dy;
+}
+
+function isCircular(polygon) {
+  var length = polygon.length;
+  if (length < 16) {
+    return false;
+  }
+
+  var i;
+
+  var minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+  for (i = 0; i < length-1; i+=2) {
+    minX = Math.min(minX, polygon[i]);
+    maxX = Math.max(maxX, polygon[i]);
+    minY = Math.min(minY, polygon[i+1]);
+    maxY = Math.max(maxY, polygon[i+1]);
+  }
+
+  var
+    width = maxX-minX,
+    height = (maxY-minY),
+    ratio = width/height;
+  if (ratio < 0.8 || ratio > 1.2) {
+    return false;
+  }
+
+  var
+    center = { x:minX+width/2, y:minY+height/2 },
+    radius = (width+height)/4,
+    sqRadius = radius*radius;
+
+  for (i = 0; i < length-1; i+=2) {
+    var dist = getDistance({ x:polygon[i], y:polygon[i+1] }, center);
+    if (dist/sqRadius < 0.8 || dist/sqRadius > 1.2) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 function getSquareSegmentDistance(px, py, p1x, p1y, p2x, p2y) {
@@ -662,8 +701,8 @@ function getCenter(footprint) {
 
 var EARTH_RADIUS = 6378137;
 
-function getLonRadius(footprint) {
-  var minLon = 90, maxLon = -90;
+function getLonDelta(footprint) {
+  var minLon = 180, maxLon = -180;
   for (var i = 0, il = footprint.length; i < il; i += 2) {
     minLon = min(minLon, footprint[i+1]);
     maxLon = max(maxLon, footprint[i+1]);
@@ -949,6 +988,11 @@ var Data = {
     }
     if (item.roofShape) {
       res.roofShape = item.roofShape;
+    }
+//  if (item.isRotational) {
+//  if ((res.roofShape === 'cone' || res.roofShape === 'dome') && !res.shape && isCircular(res.footprint)) {
+    if (!res.shape && isCircular(res.footprint)) {
+      res.shape = 'cylinder';
     }
 
     if (item.holes) {
