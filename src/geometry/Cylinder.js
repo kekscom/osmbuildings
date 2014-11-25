@@ -12,7 +12,7 @@ var Cylinder = {
 
     if (minHeight) {
       c = Buildings.project(c, minScale);
-      radius = radius*scale;
+      radius = radius*minScale;
     }
 
     // common tangents for ground and roof circle
@@ -93,7 +93,7 @@ var Cylinder = {
 
     if (minHeight) {
       c = Buildings.project(c, minScale);
-      radius = radius*scale;
+      radius = radius*minScale;
     }
 
     // common tangents for ground and roof circle

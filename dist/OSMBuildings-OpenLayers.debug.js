@@ -595,7 +595,8 @@ function isCircular(polygon) {
     width = maxX-minX,
     height = (maxY-minY),
     ratio = width/height;
-  if (ratio < 0.8 || ratio > 1.2) {
+
+  if (ratio < 0.85 || ratio > 1.15) {
     return false;
   }
 
@@ -980,7 +981,7 @@ var Data = {
     }
     res.center = getCenter(res.footprint);
 
-    if ((item.shape || item.roofShape) && item.radius) {
+    if (item.radius) {
       res.radius = item.radius*PIXEL_PER_DEG;
     }
     if (item.shape) {
@@ -989,9 +990,7 @@ var Data = {
     if (item.roofShape) {
       res.roofShape = item.roofShape;
     }
-//  if (item.isRotational) {
-//  if ((res.roofShape === 'cone' || res.roofShape === 'dome') && !res.shape && isCircular(res.footprint)) {
-    if (!res.shape && isCircular(res.footprint)) {
+    if ((res.roofShape === 'cone' || res.roofShape === 'dome') && !res.shape && isCircular(res.footprint)) {
       res.shape = 'cylinder';
     }
 
@@ -1325,7 +1324,7 @@ var Cylinder = {
 
     if (minHeight) {
       c = Buildings.project(c, minScale);
-      radius = radius*scale;
+      radius = radius*minScale;
     }
 
     // common tangents for ground and roof circle
@@ -1406,7 +1405,7 @@ var Cylinder = {
 
     if (minHeight) {
       c = Buildings.project(c, minScale);
-      radius = radius*scale;
+      radius = radius*minScale;
     }
 
     // common tangents for ground and roof circle

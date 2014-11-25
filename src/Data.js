@@ -68,7 +68,7 @@ var Data = {
     }
     res.center = getCenter(res.footprint);
 
-    if ((item.shape || item.roofShape) && item.radius) {
+    if (item.radius) {
       res.radius = item.radius*PIXEL_PER_DEG;
     }
     if (item.shape) {
@@ -77,9 +77,7 @@ var Data = {
     if (item.roofShape) {
       res.roofShape = item.roofShape;
     }
-//  if (item.isRotational) {
-//  if ((res.roofShape === 'cone' || res.roofShape === 'dome') && !res.shape && isCircular(res.footprint)) {
-    if (!res.shape && isCircular(res.footprint)) {
+    if ((res.roofShape === 'cone' || res.roofShape === 'dome') && !res.shape && isCircular(res.footprint)) {
       res.shape = 'cylinder';
     }
 

@@ -26,7 +26,8 @@ function isCircular(polygon) {
     width = maxX-minX,
     height = (maxY-minY),
     ratio = width/height;
-  if (ratio < 0.8 || ratio > 1.2) {
+
+  if (ratio < 0.85 || ratio > 1.15) {
     return false;
   }
 
