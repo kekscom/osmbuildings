@@ -4,9 +4,7 @@
 
 **Features**
 
-- auto detection for circles
-- building data provider added
-- loadFeature() method added
+- detection for circular objects
 
 **Fixes**
 
@@ -18,7 +16,7 @@
 
 **Features**
 
-- pyramidal buildiungs and roofs
+- pyramidal buildungs and roofs
 - buildings parts are a logical unit now (i.e. OSM relations)
 - explicitly injecting OSMBuildings class into global namespace [#66](https://github.com/kekscom/osmbuildings/issues/66)
 
