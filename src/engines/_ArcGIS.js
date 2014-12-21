@@ -123,7 +123,7 @@ dojo.declare('agsjs.layers.BuildingsLayer', esri.layers.Layer, {
 
        this._element = element;
        this._container = this._osmb.appendTo(element);
-       this._osmb.setSize(map.width, map.height);
+       this._osmb.setSize(map);
        // calc orgins
        //9241483,13264618
        if (map.layerIds.length == 0 || !map.getLayer(map.layerIds[0]).tileInfo) {
@@ -177,12 +177,12 @@ dojo.declare('agsjs.layers.BuildingsLayer', esri.layers.Layer, {
        var x = Math.round((topLeft.x - this._tileInfo.origin.x) / resolution);
        var y = Math.round((this._tileInfo.origin.y - topLeft.y) / resolution);
        this._osmb.setOrigin(x+(dx||0), y+(dy||0));
-       this._osmb.setSize(this._map.width, this._map.height);
+       this._osmb.setSize(this._map);
 
    },
    _onResize: function(extent, width, height) {
        if (this._osmb) {
-           this._osmb.setSize(width,height );
+           this._osmb.setSize({ width:width, height:height });
            Layers.render();
        }
    },

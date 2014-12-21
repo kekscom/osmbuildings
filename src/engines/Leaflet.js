@@ -13,7 +13,7 @@ proto.onAdd = function(map) {
   var
     off = this.getOffset(),
     po = map.getPixelOrigin();
-  setSize({ w:map._size.x, h:map._size.y });
+  setSize({ width:map._size.x, height:map._size.y });
   setOrigin({ x:po.x-off.x, y:po.y-off.y });
   setZoom(map._zoom);
 
@@ -83,7 +83,7 @@ proto.onMoveEnd = function(e) {
   Layers.setPosition(-off.x, -off.y);
   moveCam({ x:0, y:0 });
 
-  setSize({ w:map._size.x, h:map._size.y }); // in case this is triggered by resize
+  setSize({ width:map._size.x, height:map._size.y }); // in case this is triggered by resize
   setOrigin({ x:po.x-off.x, y:po.y-off.y });
   onMoveEnd(e);
 };

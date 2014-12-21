@@ -77,7 +77,7 @@ var Data = {
     if (item.roofShape) {
       res.roofShape = item.roofShape;
     }
-    if ((res.roofShape === 'cone' || res.roofShape === 'dome') && !res.shape && isCircular(res.footprint)) {
+    if ((res.roofShape === 'cone' || res.roofShape === 'dome') && !res.shape && isRotational(res.footprint)) {
       res.shape = 'cylinder';
     }
 

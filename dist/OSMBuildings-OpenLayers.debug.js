@@ -38,10 +38,6 @@ var
   Int32Array = Int32Array || Array,
   Uint8Array = Uint8Array || Array;
 
-if (!global.console) {
-  global.console = {};
-}
-
 var IS_IOS = /iP(ad|hone|od)/g.test(navigator.userAgent);
 var IS_MSIE = !!~navigator.userAgent.indexOf('Trident');
 
@@ -575,7 +571,7 @@ function getDistance(p1, p2) {
   return dx*dx + dy*dy;
 }
 
-function isCircular(polygon) {
+function isRotational(polygon) {
   var length = polygon.length;
   if (length < 16) {
     return false;
@@ -990,7 +986,7 @@ var Data = {
     if (item.roofShape) {
       res.roofShape = item.roofShape;
     }
-    if ((res.roofShape === 'cone' || res.roofShape === 'dome') && !res.shape && isCircular(res.footprint)) {
+    if ((res.roofShape === 'cone' || res.roofShape === 'dome') && !res.shape && isRotational(res.footprint)) {
       res.shape = 'cylinder';
     }
 
@@ -2159,8 +2155,8 @@ function moveCam(offset) {
 }
 
 function setSize(size) {
-  WIDTH  = size.w;
-  HEIGHT = size.h;
+  WIDTH  = size.width;
+  HEIGHT = size.height;
   CENTER_X = WIDTH /2 <<0;
   CENTER_Y = HEIGHT/2 <<0;
 
@@ -2188,7 +2184,7 @@ function setZoom(z) {
 }
 
 function onResize(e) {
-  setSize(e.width, e.height);
+  setSize(e);
   Layers.render();
   Data.update();
 }
@@ -2248,7 +2244,7 @@ proto.setMap = function(map) {
     parent.setMap.call(this, map);
   }
   Layers.appendTo(this.div);
-  setSize(map.size);
+  setSize({ width:map.size.w, height:map.size.h });
   setZoom(map.zoom);
   this.setOrigin();
 

@@ -11,8 +11,8 @@ function moveCam(offset) {
 }
 
 function setSize(size) {
-  WIDTH  = size.w;
-  HEIGHT = size.h;
+  WIDTH  = size.width;
+  HEIGHT = size.height;
   CENTER_X = WIDTH /2 <<0;
   CENTER_Y = HEIGHT/2 <<0;
 
@@ -40,7 +40,7 @@ function setZoom(z) {
 }
 
 function onResize(e) {
-  setSize(e.width, e.height);
+  setSize(e);
   Layers.render();
   Data.update();
 }

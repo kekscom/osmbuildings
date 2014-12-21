@@ -59,7 +59,7 @@ map.on('moveend zoomend', function() {
 restoreMapState();
 
 new L.TileLayer('http://otile1.mqcdn.com/tiles/1.0.0/map/{z}/{x}/{y}.jpg', { maxNativeZoom: 19, maxZoom: 21 }).addTo(map);
-//new L.TileLayer('http://{s}.tiles.mapbox.com/v3/osmbuildings.gm744p3p/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+//new L.TileLayer('http://{s}.tiles.mapbox.com/v3/osmbuildings.kbpalbpk/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
 
 var osmb = new OSMBuildings(map)
   .date(new Date(2014, 5, 15, 17, 30))

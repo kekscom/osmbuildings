@@ -31,7 +31,7 @@ proto.setMap = function(map) {
     parent.setMap.call(this, map);
   }
   Layers.appendTo(this.div);
-  setSize(map.size);
+  setSize({ width:map.size.w, height:map.size.h });
   setZoom(map.zoom);
   this.setOrigin();
 
