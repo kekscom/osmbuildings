@@ -113,7 +113,7 @@ var Data = {
     }
     res.hitColor = HitAreas.idToColor(item.relationId || item.id);
 
-    res.roofHeight = isNaN(item.minHeight) ? 0 : item.roofHeight/zoomScale;
+    res.roofHeight = isNaN(item.roofHeight) ? 0 : item.roofHeight/zoomScale;
 
     if (res.height+res.roofHeight <= res.minHeight) {
       return;

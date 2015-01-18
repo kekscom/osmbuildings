@@ -52,6 +52,7 @@ var requestAnimFrame = (global.requestAnimationFrame && !IS_IOS && !IS_MSIE) ?
 
 var Color = (function(window) {
 
+
 var w3cColors = {
   aqua:'#00ffff',
   black:'#000000',
@@ -150,7 +151,7 @@ Color.prototype = {
       h = limit(this.H, 360),
       s = limit(this.S, 1),
       l = limit(this.L, 1),
-      rgba = { a:limit(this.A, 1) };
+      rgba = { a: limit(this.A, 1) };
 
     // achromatic
     if (s === 0) {
@@ -168,11 +169,12 @@ Color.prototype = {
       rgba.b = hue2rgb(p, q, h - 1/3);
     }
 
-    rgba.r *= 255;
-    rgba.g *= 255;
-    rgba.b *= 255;
-
-    return rgba;
+    return {
+      r: Math.round(rgba.r*255),
+      g: Math.round(rgba.g*255),
+      b: Math.round(rgba.b*255),
+      a: rgba.a
+    };
   },
 
   toString: function() {
@@ -181,7 +183,7 @@ Color.prototype = {
     if (rgba.a === 1) {
       return '#' + ((1 <<24) + (rgba.r <<16) + (rgba.g <<8) + rgba.b).toString(16).slice(1, 7);
     }
-    return 'rgba(' + [Math.round(rgba.r), Math.round(rgba.g), Math.round(rgba.b), rgba.a.toFixed(2)].join(',') + ')';
+    return 'rgba(' + [rgba.r, rgba.g, rgba.b, rgba.a.toFixed(2)].join(',') + ')';
   },
 
   hue: function(h) {
@@ -1022,7 +1024,7 @@ var Data = {
     }
     res.hitColor = HitAreas.idToColor(item.relationId || item.id);
 
-    res.roofHeight = isNaN(item.minHeight) ? 0 : item.roofHeight/zoomScale;
+    res.roofHeight = isNaN(item.roofHeight) ? 0 : item.roofHeight/zoomScale;
 
     if (res.height+res.roofHeight <= res.minHeight) {
       return;
