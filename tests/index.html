@@ -62,7 +62,7 @@ new L.TileLayer('http://otile1.mqcdn.com/tiles/1.0.0/map/{z}/{x}/{y}.jpg', { max
 //new L.TileLayer('http://{s}.tiles.mapbox.com/v3/osmbuildings.kbpalbpk/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
 
 var osmb = new OSMBuildings(map)
-  .date(new Date(2014, 5, 15, 17, 30))
+  .date(new Date(2015, 5, 15, 17, 30))
   .load()
   .click(function(e) {
     console.log('feature clicked:', e);
