@@ -1,8 +1,17 @@
+
+function rad(deg) {
+  return deg * PI / 180;
+}
+
+function deg(rad) {
+  return rad / PI * 180;
+}
+
 function pixelToGeo(x, y) {
   var res = {};
   x /= MAP_SIZE;
   y /= MAP_SIZE;
-  res[LAT] = y <= 0  ? 90 : y >= 1 ? -90 : RAD * (2 * atan(exp(PI * (1 - 2*y))) - HALF_PI),
+  res[LAT] = y <= 0  ? 90 : y >= 1 ? -90 : deg(2 * atan(exp(PI * (1 - 2*y))) - HALF_PI),
   res[LON] = (x === 1 ?  1 : (x%1 + 1) % 1) * 360 - 180;
   return res;
 }
@@ -21,37 +30,6 @@ function fromRange(sVal, sMin, sMax, dMin, dMax) {
   var rel = (sVal-sMin) / (sMax-sMin),
     range = dMax-dMin;
   return min(max(dMin + rel*range, dMin), dMax);
-}
-
-function template(str, param) {
-  return str.replace(/\{([\w_]+)\}/g, function(tag, key) {
-    return param[key] || tag;
-  });
-}
-
-function xhr(url, callback) {
-  var req = new XMLHttpRequest();
-
-  req.onreadystatechange = function() {
-    if (req.readyState !== 4) {
-      return;
-    }
-    if (!req.status || req.status < 200 || req.status > 299) {
-      return;
-    }
-    if (callback && req.responseText) {
-      var json;
-      try {
-        json = JSON.parse(req.responseText);
-      } catch(ex) {}
-      callback(json);
-    }
-  };
-
-  req.open('GET', url);
-  req.send(null);
-
-  return req;
 }
 
 function isVisible(polygon) {

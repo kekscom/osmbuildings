@@ -4,9 +4,15 @@ OSM Buildings is a JavaScript library for visualizing OpenStreetMaps building ge
 
 Everything is stabilizing now, entering beta state.
 
+## Deprecation notice
+
+Former methods `loadData()`, `setData()`, `setStyle()`, `setDate()` are deprecated since v0.2.2
+Equivalent replacements are `load()`, `set()`, `style()`, `date()`.
+
+
 **Example** http://osmbuildings.org/
 
-It's safe use the [ master branch](https://github.com/kekscom/osmbuildings/tree/master/dist/) for production.
+It's safe use the [master branch](https://github.com/kekscom/osmbuildings/tree/master/dist/) for production.
 
 For further information visit http://osmbuildings.org, follow [@osmbuildings](https://twitter.com/osmbuildings/) on Twitter or report issues [here on Github](https://github.com/kekscom/osmbuildings/issues/).
 
@@ -160,14 +166,12 @@ Methods
 
 <tr>
 <td>style({Object})</td>
-<td>Set default styles. See below for details.<br>
-*Former variant `setStyle()` is subject to deprecation.*</td>
+<td>Set default styles. See below for details.</td>
 </tr>
 
 <tr>
-<td>date(new Date(2014, 15, 1, 10, 30)))</td>
-<td>Set date/time for shadow projection.<br>
-*Former variant `setDate()` is subject to deprecation.*</td>
+<td>date(new Date(2015, 15, 1, 10, 30)))</td>
+<td>Set date/time for shadow projection.</td>
 </tr>
 
 <tr>
@@ -179,20 +183,23 @@ Callback receives a feature object as argument.</td>
 <tr>
 <td>click({Function})</td>
 <td>A callback wrapper to handle click events on features.<br>
-Callback receives a feature id as argument.</td>
+Callback receives an object { featureId{number,string}, lat{float}, lon{float} } as argument.</td>
 </tr>
 
 <tr>
 <td>set({GeoJSON FeatureCollection})</td>
-<td>Just add GeoJSON data to your map.<br>
-*Former variant `setData()` is subject to deprecation.*</td>
+<td>Just add GeoJSON data to your map.</td>
 </tr>
 
 <tr>
-<td>load({String})</td>
-<td>Without parameter, it loads data tiles from OpenStreetMaps. You don't need to care for tehe details anymore.
-As an alternative, pass an URL to any other GeoJSON TMS service.<br>
-*Former variant `load()` is subject to deprecation.*</td>
+<td>load({Provider})</td>
+<td>Without parameter, it loads OpenStreetMap data tiles via an OSM Buildings proxy. This proxy enables transparent data filtering and caching.
+Interface of such provider is to be published.</td>
+</tr>
+
+<tr>
+<td>getDetails(id, {Function})</td>
+<td>Convenience method to load additional feature information from data provider. Callback function receives a GeoJSON FeatureCollection.</td>
 </tr>
 
 <tr>

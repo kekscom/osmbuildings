@@ -3,24 +3,23 @@ var srcPath = '../src';
 var dstPath = '../dist';
 
 exports.COPYRIGHT = '/**\n' +
-                    ' * Copyright (C) 2014 OSM Buildings, Jan Marsch\n' +
-                    ' * A leightweight JavaScript library for visualizing building geometry on interactive maps.\n' +
+                    ' * Copyright (C) 2015 OSM Buildings, Jan Marsch\n' +
+                    ' * A JavaScript library for visualizing building geometry on interactive maps.\n' +
                     ' * @osmbuildings, http://osmbuildings.org\n' +
                     ' */\n';
 
-exports.VERSION = '0.2.0b';
+exports.VERSION = '0.2.2b';
 
 exports.srcFiles = [
   srcPath + '/prefix.js',
   srcPath + '/shortcuts.js',
-  srcPath + '/../lib/Color.js/Color.js',
+  srcPath + '/../node_modules/color/dist/Color.debug.js',
   srcPath + '/lib/SunPosition.js',
-  srcPath + '/Import.js',
-  srcPath + '/import/GeoJSON.js',
+  srcPath + '/GeoJSON.js',
   srcPath + '/variables.js',
   srcPath + '/geometry.js',
   srcPath + '/functions.js',
-  srcPath + '/Cache.js',
+  srcPath + '/provider/BLDGS.js',
   srcPath + '/Data.js',
   srcPath + '/geometry/Block.js',
   srcPath + '/geometry/Cylinder.js',

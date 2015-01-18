@@ -13,7 +13,7 @@ proto.onAdd = function(map) {
   var
     off = this.getOffset(),
     po = map.getPixelOrigin();
-  setSize({ w:map._size.x, h:map._size.y });
+  setSize({ width:map._size.x, height:map._size.y });
   setOrigin({ x:po.x-off.x, y:po.y-off.y });
   setZoom(map._zoom);
 
@@ -26,7 +26,7 @@ proto.onAdd = function(map) {
     zoomend:   this.onZoomEnd,
     resize:    this.onResize,
     viewreset: this.onViewReset,
-    mouseup:   this.onClick
+    click:     this.onClick
   }, this);
 
   if (map.options.zoomAnimation) {
@@ -53,7 +53,7 @@ proto.onRemove = function() {
     zoomend:   this.onZoomEnd,
     resize:    this.onResize,
     viewreset: this.onViewReset,
-    mouseup:   this.onClick
+    click:     this.onClick
   }, this);
 
   if (map.options.zoomAnimation) {
@@ -69,8 +69,6 @@ proto.onMove = function(e) {
 };
 
 proto.onMoveEnd = function(e) {
-  this.noClick = true;
-
   if (this.noMoveEnd) { // moveend is also fired after zoom
     this.noMoveEnd = false;
     return;
@@ -85,7 +83,7 @@ proto.onMoveEnd = function(e) {
   Layers.setPosition(-off.x, -off.y);
   moveCam({ x:0, y:0 });
 
-  setSize({ w:map._size.x, h:map._size.y }); // in case this is triggered by resize
+  setSize({ width:map._size.x, height:map._size.y }); // in case this is triggered by resize
   setOrigin({ x:po.x-off.x, y:po.y-off.y });
   onMoveEnd(e);
 };
@@ -127,13 +125,9 @@ proto.onViewReset = function() {
 };
 
 proto.onClick = function(e) {
-  if (this.noClick) {
-    this.noClick = false;
-    return;
-  }
   var id = HitAreas.getIdFromXY(e.containerPoint.x, e.containerPoint.y);
   if (id) {
-    onClick(id);
+    onClick({ feature:id, lat:e.latlng.lat, lon:e.latlng.lng });
   }
 };
 

@@ -1,7 +1,7 @@
+
 var Data = {
 
-  currentItemsIndex: {}, // maintain a list of cached items in order to avoid duplicates on tile borders
-
+  loadedItems: {}, // maintain a list of cached items in order to avoid duplicates on tile borders
   items: [],
 
   getPixelFootprint: function(buffer) {
@@ -22,30 +22,23 @@ var Data = {
     return footprint;
   },
 
-  createClosure: function(cacheKey) {
-    var self = this;
-    return function(data) {
-      var parsedData = GeoJSON.read(data);
-      Cache.add(parsedData, cacheKey);
-      self.addRenderItems(parsedData, true);
-    };
-  },
-
   resetItems: function() {
     this.items = [];
-    this.currentItemsIndex = {};
+    this.loadedItems = {};
+    HitAreas.reset();
   },
 
   addRenderItems: function(data, allAreNew) {
     var item, scaledItem, id;
-    for (var i = 0, il = data.length; i < il; i++) {
-      item = data[i];
+    var geojson = GeoJSON.read(data);
+    for (var i = 0, il = geojson.length; i < il; i++) {
+      item = geojson[i];
       id = item.id || [item.footprint[0], item.footprint[1], item.height, item.minHeight].join(',');
-      if (!this.currentItemsIndex[id]) {
+      if (!this.loadedItems[id]) {
         if ((scaledItem = this.scale(item))) {
           scaledItem.scale = allAreNew ? 0 : 1;
           this.items.push(scaledItem);
-          this.currentItemsIndex[id] = 1;
+          this.loadedItems[id] = 1;
         }
       }
     }
@@ -60,7 +53,6 @@ var Data = {
 
     if (item.id) {
       res.id = item.id;
-      res.hitColor = HitAreas.toColor(item.id);
     }
 
     res.height = min(item.height/zoomScale, MAX_HEIGHT);
@@ -76,12 +68,17 @@ var Data = {
     }
     res.center = getCenter(res.footprint);
 
+    if (item.radius) {
+      res.radius = item.radius*PIXEL_PER_DEG;
+    }
     if (item.shape) {
-      // TODO: drop footprint
       res.shape = item.shape;
-      if (item.radius) {
-        res.radius = item.radius/METERS_PER_PIXEL;
-      }
+    }
+    if (item.roofShape) {
+      res.roofShape = item.roofShape;
+    }
+    if ((res.roofShape === 'cone' || res.roofShape === 'dome') && !res.shape && isRotational(res.footprint)) {
+      res.shape = 'cylinder';
     }
 
     if (item.holes) {
@@ -98,7 +95,7 @@ var Data = {
     var color;
 
     if (item.wallColor) {
-      if ((color = parseColor(item.wallColor))) {
+      if ((color = Color.parse(item.wallColor))) {
         color = color.alpha(ZOOM_FACTOR);
         res.altColor  = ''+ color.lightness(0.8);
         res.wallColor = ''+ color;
@@ -106,21 +103,20 @@ var Data = {
     }
 
     if (item.roofColor) {
-      if ((color = parseColor(item.roofColor))) {
+      if ((color = Color.parse(item.roofColor))) {
         res.roofColor = ''+ color.alpha(ZOOM_FACTOR);
       }
     }
 
-    if (item.roofHeight) {
-      res.roofHeight = item.roofHeight/zoomScale;
+    if (item.relationId) {
+      res.relationId = item.relationId;
     }
+    res.hitColor = HitAreas.idToColor(item.relationId || item.id);
+
+    res.roofHeight = isNaN(item.roofHeight) ? 0 : item.roofHeight/zoomScale;
 
     if (res.height+res.roofHeight <= res.minHeight) {
       return;
-    }
-
-    if (item.roofShape) {
-      res.roofShape = item.roofShape;
     }
 
     return res;
@@ -129,12 +125,12 @@ var Data = {
   set: function(data) {
     this.isStatic = true;
     this.resetItems();
-    this._staticData = GeoJSON.read(data);
+    this._staticData = data;
     this.addRenderItems(this._staticData, true);
   },
 
-  load: function(url) {
-    this.url = template(url || DATA_URL, { k: DATA_KEY });
+  load: function(provider) {
+    this.provider = provider || new BLDGS({ key: DATA_KEY });
     this.update();
   },
 
@@ -150,7 +146,7 @@ var Data = {
       return;
     }
 
-    if (!this.url) {
+    if (!this.provider) {
       return;
     }
 
@@ -162,21 +158,17 @@ var Data = {
       minY = ORIGIN_Y/zoomedTileSize <<0,
       maxX = ceil((ORIGIN_X+WIDTH) /zoomedTileSize),
       maxY = ceil((ORIGIN_Y+HEIGHT)/zoomedTileSize),
-      x, y, coords,
-      cacheKey, parsedData;
+      x, y;
+
+    var scope = this;
+    function callback(json) {
+      scope.addRenderItems(json);
+    }
 
     for (y = minY; y <= maxY; y++) {
       for (x = minX; x <= maxX; x++) {
-        coords = { x: x, y: y, z: tileZoom };
-        cacheKey = x +','+ y;
-        if ((parsedData = Cache.get(cacheKey))) {
-          this.addRenderItems(parsedData);
-				} else {
-          xhr(template(this.url, coords), this.createClosure(cacheKey));
-        }
+        this.provider.getTile(x, y, tileZoom, callback);
       }
     }
-
-    Cache.purge();
   }
 };

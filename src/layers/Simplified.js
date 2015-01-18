@@ -37,10 +37,12 @@ var Simplified = {
       context.strokeStyle = item.altColor  || ALT_COLOR_STR;
       context.fillStyle   = item.roofColor || ROOF_COLOR_STR;
 
-      if (item.shape === 'cylinder' || item.shape === 'cone' || item.shape === 'dome') {
-        Cylinder.simplified(context, item.center, item.radius);
-      } else {
-        Block.simplified(context, footprint, item.holes);
+      switch (item.shape) {
+        case 'cylinder':
+        case 'cone':
+        case 'dome':
+        case 'sphere': Cylinder.simplified(context, item.center, item.radius);  break;
+        default: Block.simplified(context, footprint, item.holes);
       }
     }
   }

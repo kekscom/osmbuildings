@@ -24,10 +24,6 @@ var
   Int32Array = Int32Array || Array,
   Uint8Array = Uint8Array || Array;
 
-if (!global.console) {
-  global.console = {};
-}
-
 var IS_IOS = /iP(ad|hone|od)/g.test(navigator.userAgent);
 var IS_MSIE = !!~navigator.userAgent.indexOf('Trident');
 

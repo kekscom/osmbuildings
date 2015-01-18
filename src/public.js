@@ -1,15 +1,9 @@
 
-// TODO: remove deprecation
-proto.setStyle = function(style) {
-  console.warn('OSM Buildings: .setStyle() will be deprecated soon. Use .style() instead.');
-  return this.style(style);
-};
-
 proto.style = function(style) {
   style = style || {};
   var color;
   if ((color = style.color || style.wallColor)) {
-    WALL_COLOR = parseColor(color);
+    WALL_COLOR = Color.parse(color);
     WALL_COLOR_STR = ''+ WALL_COLOR.alpha(ZOOM_FACTOR);
 
     ALT_COLOR = WALL_COLOR.lightness(0.8);
@@ -20,7 +14,7 @@ proto.style = function(style) {
   }
 
   if (style.roofColor) {
-    ROOF_COLOR = parseColor(style.roofColor);
+    ROOF_COLOR = Color.parse(style.roofColor);
     ROOF_COLOR_STR = ''+ ROOF_COLOR.alpha(ZOOM_FACTOR);
   }
 
@@ -33,33 +27,15 @@ proto.style = function(style) {
   return this;
 };
 
-// TODO: remove deprecation
-proto.setDate = function(date) {
-  console.warn('OSM Buildings: .setDate() will be deprecated soon. Use .date() instead.');
-  return this.date(date);
-};
-
 proto.date = function(date) {
   Shadows.date = date;
   Shadows.render();
   return this;
 };
 
-// TODO: remove deprecation
-proto.loadData = function(url) {
-  console.warn('OSM Buildings: .loadData() will be deprecated soon. Use .load() instead.');
-  return this.load(url);
-};
-
 proto.load = function(url) {
   Data.load(url);
   return this;
-};
-
-// TODO: remove deprecation
-proto.setData = function(data) {
-  console.warn('OSM Buildings: .setData() will be deprecated soon. Use .data() instead.');
-  return this.set(data);
 };
 
 proto.set = function(data) {
@@ -77,19 +53,26 @@ proto.screenshot = function(forceDownload) {
 
 var onEach = function() {};
 
-proto.each = function(handler, scope) {
+proto.each = function(handler) {
   onEach = function(payload) {
-    return handler.call(scope, payload);
+    return handler(payload);
   };
   return this;
 };
 
 var onClick = function() {};
 
-proto.click = function(handler, scope) {
+proto.click = function(handler) {
   onClick = function(payload) {
-    return handler.call(scope, payload);
+    return handler(payload);
   };
+  return this;
+};
+
+proto.getDetails = function(id, handler) {
+  if (Data.provider) {
+    Data.provider.getFeature(id, handler);
+  }
   return this;
 };
 

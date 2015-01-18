@@ -37,11 +37,12 @@ map.setCenter(
   ),
   17
 );
+
 new OSMBuildings(map)
-  .date(new Date(2014, 5, 15, 17, 30))
+  .date(new Date(2015, 5, 15, 17, 30))
   .load()
-  .click(function(id) {
-    console.log('feature id clicked:', id);
+  .click(function(e) {
+    console.log('CLICK', e);
   });
 </script>
 </body>

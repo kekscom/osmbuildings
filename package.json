@@ -16,8 +16,8 @@
   "scripts": {},
   "dependencies": {},
   "devDependencies": {
+    "Color": "git+https://github.com/kekscom/Color.js",
     "jshint": "~1.1.0",
-    "wru": "~0.2.4",
 	  "closure-compiler": "~0.2.0"
   },
   "optionalDependencies": {}
