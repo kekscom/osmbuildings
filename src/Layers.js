@@ -30,7 +30,7 @@ function fadeIn() {
 
 var Layers = {
 
-  container: doc.createElement('DIV'),
+  container: document.createElement('DIV'),
   items: [],
 
   init: function() {
@@ -59,7 +59,7 @@ var Layers = {
   },
 
   createContext: function(container) {
-    var canvas = doc.createElement('CANVAS');
+    var canvas = document.createElement('CANVAS');
     canvas.style.webkitTransform = 'translate3d(0,0,0)'; // turn on hw acceleration
     canvas.style.imageRendering  = 'optimizeSpeed';
     canvas.style.position = 'absolute';
@@ -99,7 +99,7 @@ var Layers = {
 
   screenshot: function() {
     var
-      canvas = doc.createElement('CANVAS'),
+      canvas = document.createElement('CANVAS'),
       context = canvas.getContext('2d'),
       i, il,
       item;

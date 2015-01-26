@@ -14,9 +14,7 @@ var
   ceil = m.ceil,
   floor = m.floor,
   round = m.round,
-  pow = m.pow,
-  doc = document;
-
+  pow = m.pow;
 
 // polyfills
 
