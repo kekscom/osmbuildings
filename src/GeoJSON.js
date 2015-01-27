@@ -197,6 +197,10 @@ var GeoJSON = (function() {
         geometries,
         baseItem, item;
 
+      if (collection == undefined)
+      {	return[]; }
+
+
       for (i = 0, il = collection.length; i < il; i++) {
         feature = collection[i];
 
