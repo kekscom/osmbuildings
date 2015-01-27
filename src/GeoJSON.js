@@ -69,8 +69,8 @@ var GeoJSON = (function() {
 
     prop = prop || {};
 
-    item.height    = prop.height    || (prop.levels   ? prop.levels  *METERS_PER_LEVEL : DEFAULT_HEIGHT);
-    item.minHeight = prop.minHeight || (prop.minLevel ? prop.minLevel*METERS_PER_LEVEL : 0);
+     item.height    = prop.height*1    || (prop.levels*1   ? prop.levels*1  *METERS_PER_LEVEL : DEFAULT_HEIGHT);
+    item.minHeight = prop.minHeight*1 || (prop.minLevel*1 ? prop.minLevel*METERS_PER_LEVEL : 0);
 
     var wallColor = prop.material ? getMaterialColor(prop.material) : (prop.wallColor || prop.color);
     if (wallColor) {
