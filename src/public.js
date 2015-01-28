@@ -43,14 +43,6 @@ proto.set = function(data) {
   return this;
 };
 
-proto.screenshot = function(forceDownload) {
-  var dataURL = Layers.screenshot();
-  if (forceDownload) {
-    global.location.href = dataURL.replace('image/png', 'image/octet-stream');
-  }
-  return dataURL;
-};
-
 var onEach = function() {};
 
 proto.each = function(handler) {

@@ -2108,39 +2108,6 @@ var Layers = {
     }
   },
 
-  screenshot: function() {
-    var
-      canvas = document.createElement('CANVAS'),
-      context = canvas.getContext('2d'),
-      i, il,
-      item;
-
-    canvas.width  = WIDTH;
-    canvas.height = HEIGHT;
-
-    // end fade in
-    clearInterval(animTimer);
-    animTimer = null;
-
-    var dataItems = Data.items;
-    for (i = 0, il = dataItems.length; i < il; i++) {
-      dataItems[i].scale = 1;
-    }
-
-    this.render(true);
-
-    for (i = 0, il = this.items.length; i < il; i++) {
-      item = this.items[i];
-      if (item.style.opacity !== '') {
-        context.globalAlpha = parseFloat(item.style.opacity);
-      }
-      context.drawImage(item, 0, 0);
-      context.globalAlpha = 1;
-    }
-
-    return canvas.toDataURL('image/png');
-  },
-
   // usually called after move: container jumps by move delta, cam is reset
   setPosition: function(x, y) {
     this.container.style.left = x +'px';
@@ -2405,14 +2372,6 @@ proto.load = function(url) {
 proto.set = function(data) {
   Data.set(data);
   return this;
-};
-
-proto.screenshot = function(forceDownload) {
-  var dataURL = Layers.screenshot();
-  if (forceDownload) {
-    global.location.href = dataURL.replace('image/png', 'image/octet-stream');
-  }
-  return dataURL;
 };
 
 var onEach = function() {};

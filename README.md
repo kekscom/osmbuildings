@@ -4,10 +4,13 @@ OSM Buildings is a JavaScript library for visualizing OpenStreetMaps building ge
 
 Everything is stabilizing now, entering beta state.
 
-## Deprecation notice
+## Deprecated methods and their replacements
 
-Former methods `loadData()`, `setData()`, `setStyle()`, `setDate()` are deprecated since v0.2.2
-Equivalent replacements are `load()`, `set()`, `style()`, `date()`.
+  - `loadData()` => `load()`
+  - `setData()` => `data()`
+  - `setStyle()` => `style()`
+  - `setDate()` => `date()`
+  - `screenshot()` => no replacement
 
 
 **Example** http://osmbuildings.org/
@@ -56,6 +59,7 @@ var geoJSON = {
   "type": "FeatureCollection",
   "features": [{
     "type": "Feature",
+    "id": 134,
     "geometry": {
       "type": "Polygon",
       "coordinates": [[
@@ -200,11 +204,6 @@ Interface of such provider is to be published.</td>
 <tr>
 <td>getDetails(id, {Function})</td>
 <td>Convenience method to load additional feature information from data provider. Callback function receives a GeoJSON FeatureCollection.</td>
-</tr>
-
-<tr>
-<td>screenshot({Boolean})</td>
-<td>Creates a screenshot of all visible OSM Buildings content and returns it as data URL. Parameter indicates, whether browser should display the image directly.</td>
 </tr>
 </table>
 
