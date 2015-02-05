@@ -2,6 +2,12 @@
 var BLDGS = (function() {
 
   var baseURL = 'http://data.osmbuildings.org/0.2/';
+  //var baseURL = 'http://ec2-54-93-84-172.eu-central-1.compute.amazonaws.com/0.2/'; // SMALL
+  //var baseURL = 'http://ec2-54-93-72-52.eu-central-1.compute.amazonaws.com/0.2/'; // LARGE
+  //var baseURL = 'http://localhost:8000/0.2/';
+  //var baseURL = 'http://a.tiles.markware.net/rkc8ywdl/';
+
+
 
   var cacheData = {};
   var cacheIndex = [];
