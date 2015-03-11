@@ -1,49 +1,2420 @@
-(function(ca){function S(b,a){var c=b.x-a.x,d=b.y-a.y;return c*c+d*d}function va(b){var a=b.length;if(16>a)return!1;var c,d=Infinity,f=-Infinity,g=Infinity,k=-Infinity;for(c=0;c<a-1;c+=2)d=Math.min(d,b[c]),f=Math.max(f,b[c]),g=Math.min(g,b[c+1]),k=Math.max(k,b[c+1]);c=f-d;k-=g;f=c/k;if(0.85>f||1.15<f)return!1;d={x:d+c/2,y:g+k/2};c=(c+k)/4;g=c*c;for(c=0;c<a-1;c+=2)if(k=S({x:b[c],y:b[c+1]},d),0.8>k/g||1.2<k/g)return!1;return!0}function ja(b,a){var c={};b/=T;a/=T;var d=wa,f;f=0>=a?90:1<=a?-90:(2*xa(ya(E*
-(1-2*a)))-J)/E*180;c[d]=f;c[za]=360*(1===b?1:(b%1+1)%1)-180;return c}function da(b,a){var c=U(1,K(0,0.5-Aa(ka(Ba+J*b/180))/E/2));return{x:(a/360+0.5)*T<<0,y:c*T<<0}}function V(b){for(var a=F+q,c=B+n,d=0,f=b.length-3;d<f;d+=2)if(b[d]>q&&b[d]<a&&b[d+1]>n&&b[d+1]<c)return!0;return!1}function Ca(){$||($=setInterval(function(){for(var b=C.items,a=!1,c=0,d=b.length;c<d;c++)1>b[c].scale&&(b[c].scale+=0.1,1<b[c].scale&&(b[c].scale=1),a=!0);A.render();a||(clearInterval($),$=null)},33))}function ea(b){M=W+
-b.x;N=B+b.y;A.render(!0)}function la(b){F=b.width;B=b.height;W=F/2<<0;fa=B/2<<0;M=W;N=B;A.setSize(F,B);ga=s-50}function ma(b){x=b;T=Da<<x;b=ja(q+W,n+fa);var a=da(b.latitude,0);na=da(b.latitude,1).x-a.x;D=oa(0.95,x-G);ha=""+H.alpha(D);aa=""+ba.alpha(D);X=""+O.alpha(D)}var v=Math,ya=v.exp,Aa=v.log,Ea=v.sin,Fa=v.cos,ka=v.tan,xa=v.atan,P=v.atan2,U=v.min,K=v.max,pa=v.sqrt,qa=v.ceil,oa=v.pow,ra=ra||Array,sa=sa||Array,v=/iP(ad|hone|od)/g.test(navigator.userAgent),p=!!~navigator.userAgent.indexOf("Trident"),
-Ga=!ca.requestAnimationFrame||v||p?function(b){b()}:ca.requestAnimationFrame,I=function(b){function a(a,b,c){0>c&&(c+=1);1<c&&(c-=1);return c<1/6?a+6*(b-a)*c:0.5>c?b:c<2/3?a+(b-a)*(2/3-c)*6:a}var c={aqua:"#00ffff",black:"#000000",blue:"#0000ff",fuchsia:"#ff00ff",gray:"#808080",grey:"#808080",green:"#008000",lime:"#00ff00",maroon:"#800000",navy:"#000080",olive:"#808000",orange:"#ffa500",purple:"#800080",red:"#ff0000",silver:"#c0c0c0",teal:"#008080",white:"#ffffff",yellow:"#ffff00"},d=function(a,b,
-c,d){this.H=a;this.S=b;this.L=c;this.A=d};d.parse=function(a){var b=0,d=0,e=0,h=1,l;a=(""+a).toLowerCase();a=c[a]||a;if(l=a.match(/^#(\w{2})(\w{2})(\w{2})$/))b=parseInt(l[1],16),d=parseInt(l[2],16),e=parseInt(l[3],16);else if(l=a.match(/rgba?\((\d+)\D+(\d+)\D+(\d+)(\D+([\d.]+))?\)/))b=parseInt(l[1],10),d=parseInt(l[2],10),e=parseInt(l[3],10),h=l[4]?parseFloat(l[5]):1;else return;return this.fromRGBA(b,d,e,h)};d.fromRGBA=function(a,b,c,e){"object"===typeof a?(b=a.g/255,c=a.b/255,e=a.a,a=a.r/255):(a/=
-255,b/=255,c/=255);var h=Math.max(a,b,c),l=Math.min(a,b,c),m,u=(h+l)/2,y=h-l;if(y){l=0.5<u?y/(2-h-l):y/(h+l);switch(h){case a:m=(b-c)/y+(b<c?6:0);break;case b:m=(c-a)/y+2;break;case c:m=(a-b)/y+4}m*=60}else m=l=0;return new d(m,l,u,e)};d.prototype={toRGBA:function(){var b=Math.min(360,Math.max(0,this.H)),c=Math.min(1,Math.max(0,this.S)),d=Math.min(1,Math.max(0,this.L)),e=Math.min(1,Math.max(0,this.A)),h;if(0===c)b=h=c=d;else{var l=0.5>d?d*(1+c):d+c-d*c,d=2*d-l,b=b/360,c=a(d,l,b+1/3);h=a(d,l,b);b=
-a(d,l,b-1/3)}return{r:Math.round(255*c),g:Math.round(255*h),b:Math.round(255*b),a:e}},toString:function(){var a=this.toRGBA();return 1===a.a?"#"+(16777216+(a.r<<16)+(a.g<<8)+a.b).toString(16).slice(1,7):"rgba("+[a.r,a.g,a.b,a.a.toFixed(2)].join()+")"},hue:function(a){return new d(this.H*a,this.S,this.L,this.A)},saturation:function(a){return new d(this.H,this.S*a,this.L,this.A)},lightness:function(a){return new d(this.H,this.S,this.L*a,this.A)},alpha:function(a){return new d(this.H,this.S,this.L,this.A*
-a)}};return d}(this),Ha=function(){var b=Math,a=b.PI,c=b.sin,d=b.cos,f=b.tan,g=b.asin,k=b.atan2,e=a/180,h=23.4397*e;return function(b,m,u){u=e*-u;m*=e;b=b.valueOf()/864E5-0.5+2440588-2451545;var y=e*(357.5291+0.98560028*b),w;w=e*(1.9148*c(y)+0.02*c(2*y)+3E-4*c(3*y));w=y+w+102.9372*e+a;y=g(c(0)*d(h)+d(0)*c(h)*c(w));w=k(c(w)*d(h)-f(0)*c(h),d(w));b=e*(280.16+360.9856235*b)-u-w;u=g(c(m)*c(y)+d(m)*d(y)*d(b));m=k(c(b),d(b)*c(m)-f(y)*d(m));return{altitude:u,azimuth:m-a/2}}}(),Ja=function(){function b(a){a=
-a.toLowerCase();return"#"===a[0]?a:c[d[a]||a]||null}function a(b){var c,d,e=[],h;switch(b.type){case "GeometryCollection":e=[];c=0;for(d=b.geometries.length;c<d;c++)(h=a(b.geometries[c]))&&e.push.apply(e,h);return e;case "MultiPolygon":e=[];c=0;for(d=b.coordinates.length;c<d;c++)(h=a({type:"Polygon",coordinates:b.coordinates[c]}))&&e.push.apply(e,h);return e;case "Polygon":b=b.coordinates;break;default:return[]}var l,m=[],u=[];l=b[0];c=0;for(d=l.length;c<d;c++)m.push(l[c][1],l[c][0]);c=0;for(d=b.length-
-1;c<d;c++)for(l=b[c+1],u[c]=[],e=0,h=l.length;e<h;e++)u[c].push(l[e][1],l[e][0]);return[{outer:m,inner:u.length?u:null}]}var c={brick:"#cc7755",bronze:"#ffeecc",canvas:"#fff8f0",concrete:"#999999",copper:"#a0e0d0",glass:"#e8f8f8",gold:"#ffcc00",plants:"#009933",metal:"#aaaaaa",panel:"#fff8f0",plaster:"#999999",roof_tiles:"#f08060",silver:"#cccccc",slate:"#666666",stone:"#996666",tar_paper:"#333333",wood:"#deb887"},d={asphalt:"tar_paper",bitumen:"tar_paper",block:"stone",bricks:"brick",glas:"glass",
-glassfront:"glass",grass:"plants",masonry:"stone",granite:"stone",panels:"panel",paving_stones:"stone",plastered:"plaster",rooftiles:"roof_tiles",roofingfelt:"tar_paper",sandstone:"stone",sheet:"canvas",sheets:"canvas",shingle:"tar_paper",shingles:"tar_paper",slates:"slate",steel:"metal",tar:"tar_paper",tent:"canvas",thatch:"plants",tile:"roof_tiles",tiles:"roof_tiles"};return{read:function(c){if(!c||"FeatureCollection"!==c.type)return[];c=c.features;var d,k,e,h,l=[],m,u,y,w;d=0;for(k=c.length;d<
-k;d++)if(m=c[d],"Feature"===m.type&&!1!==ta(m)){e=m.properties;h={};e=e||{};h.height=e.height||(e.levels?3*e.levels:Ia);h.minHeight=e.minHeight||(e.minLevel?3*e.minLevel:0);if(u=e.material?b(e.material):e.wallColor||e.color)h.wallColor=u;if(u=e.roofMaterial?b(e.roofMaterial):e.roofColor)h.roofColor=u;switch(e.shape){case "cylinder":case "cone":case "dome":case "sphere":h.shape=e.shape;h.isRotational=!0;break;case "pyramid":h.shape=e.shape}switch(e.roofShape){case "cone":case "dome":h.roofShape=e.roofShape;
-h.isRotational=!0;break;case "pyramid":h.roofShape=e.roofShape}h.roofShape&&e.roofHeight?(h.roofHeight=e.roofHeight,h.height=K(0,h.height-h.roofHeight)):h.roofHeight=0;y=h;u=a(m.geometry);e=0;for(h=u.length;e<h;e++){w=y;var q={},n=void 0;for(n in w)w.hasOwnProperty(n)&&(q[n]=w[n]);w=q;w.footprint=u[e].outer;if(w.isRotational){for(var q=w,n=w.footprint,s=180,p=-180,t=0,r=n.length;t<r;t+=2)s=U(s,n[t+1]),p=K(p,n[t+1]);q.radius=(p-s)/2}u[e].inner&&(w.holes=u[e].inner);if(m.id||m.properties.id)w.id=m.id||
-m.properties.id;m.properties.relationId&&(w.relationId=m.properties.relationId);l.push(w)}}return l}}}(),E=Math.PI,J=E/2,Ba=E/4,Da=256,x,T,G=15,wa="latitude",za="longitude",F=0,B=0,W=0,fa=0,q=0,n=0,H=I.parse("rgba(200, 190, 180)"),ba=H.lightness(0.8),O=H.lightness(1.2),ha=""+H,aa=""+ba,X=""+O,na=0,D=1,ga,Ia=5,M,N,s=450,Q,Ka=function(){function b(a,b){if(f[a])b&&b(f[a]);else{var c=new XMLHttpRequest;c.onreadystatechange=function(){if(4===c.readyState&&c.status&&!(200>c.status||299<c.status)&&b&&c.responseText){var d;
-try{d=JSON.parse(c.responseText)}catch(h){}f[a]=d;g.push({url:a,size:c.responseText.length});for(k+=c.responseText.length;k>e;){var n=g.shift();k-=n.size;delete f[n.url]}b(d)}};c.open("GET",a);c.send(null);return c}}function a(a,b){var c=a.x-b.x,d=a.y-b.y;return c*c+d*d}function c(a){a=a||{};d+=a.key||"anonymous";e=a.cacheSize||1048576}var d="http://data.osmbuildings.org/0.2/",f={},g=[],k=0,e=0;c.TILE_SIZE=256;c.ATTRIBUTION='Data Service &copy; <a href="http://bld.gs">BLD.GS</a>';var h=c.prototype;
-h.getTile=function(a,c,e,f){return b(d+"/tile/"+e+"/"+a+"/"+c+".json",f)};h.getFeature=function(a,c){return b(d+"/feature/"+a+".json",c)};h.getBBox=function(a,c){var e=d+"/bbox.json?bbox="+[a.n.toFixed(5),a.e.toFixed(5),a.s.toFixed(5),a.w.toFixed(5)].join();return b(e,c)};h.getAllTiles=function(b,d,e,f,g,k){var h=c.TILE_SIZE,n=16<g?h<<g-16:h>>16-g;g=b/n<<0;var q=d/n<<0,s=Math.ceil((b+e)/n),n=Math.ceil((d+f)/n),t,p=[];for(t=q;t<=n;t++)for(q=g;q<=s;q++)p.push({x:q,y:t,z:16});var r={x:b+(e-h)/2,y:d+
-(f-h)/2};p.sort(function(b,c){return a(b,r)-a(c,r)});b=0;for(d=p.length;b<d;b++)this.getTile(p[b].x,p[b].y,p[b].z,k);return{abort:function(){for(var a=0;a<p.length;a++)p[a].abort()}}};return c}(),C={loadedItems:{},items:[],getPixelFootprint:function(b){for(var a=new ra(b.length),c,d=0,f=b.length-1;d<f;d+=2)c=da(b[d],b[d+1]),a[d]=c.x,a[d+1]=c.y;b=a;a=b.length/2;c=new sa(a);var d=0,f=a-1,g,k,e,h,l=[],m=[],u=[];for(c[d]=c[f]=1;f;){k=0;for(g=d+1;g<f;g++){e=b[2*g];var n=b[2*g+1],q=b[2*d],p=b[2*d+1],s=
-b[2*f],t=b[2*f+1],r=s-q,v=t-p,x=void 0;if(0!==r||0!==v)x=((e-q)*r+(n-p)*v)/(r*r+v*v),1<x?(q=s,p=t):0<x&&(q+=r*x,p+=v*x);r=e-q;v=n-p;e=r*r+v*v;e>k&&(h=g,k=e)}2<k&&(c[h]=1,l.push(d),m.push(h),l.push(h),m.push(f));d=l.pop();f=m.pop()}for(g=0;g<a;g++)c[g]&&u.push(b[2*g],b[2*g+1]);a=u;if(!(8>a.length))return a},resetItems:function(){this.items=[];this.loadedItems={};Y.reset()},addRenderItems:function(b,a){for(var c,d,f,g=Ja.read(b),k=0,e=g.length;k<e;k++)c=g[k],f=c.id||[c.footprint[0],c.footprint[1],c.height,
-c.minHeight].join(),!this.loadedItems[f]&&(d=this.scale(c))&&(d.scale=a?0:1,this.items.push(d),this.loadedItems[f]=1);Ca()},scale:function(b){var a={},c=6/oa(2,x-G);b.id&&(a.id=b.id);a.height=U(b.height/c,ga);a.minHeight=isNaN(b.minHeight)?0:b.minHeight/c;if(!(a.minHeight>ga)&&(a.footprint=this.getPixelFootprint(b.footprint),a.footprint)){for(var d=a.footprint,f=Infinity,g=-Infinity,k=Infinity,e=-Infinity,h=0,l=d.length-3;h<l;h+=2)f=U(f,d[h]),g=K(g,d[h]),k=U(k,d[h+1]),e=K(e,d[h+1]);a.center={x:f+
-(g-f)/2<<0,y:k+(e-k)/2<<0};b.radius&&(a.radius=b.radius*na);b.shape&&(a.shape=b.shape);b.roofShape&&(a.roofShape=b.roofShape);"cone"!==a.roofShape&&"dome"!==a.roofShape||a.shape||!va(a.footprint)||(a.shape="cylinder");if(b.holes){a.holes=[];for(var m,d=0,f=b.holes.length;d<f;d++)(m=this.getPixelFootprint(b.holes[d]))&&a.holes.push(m)}var n;b.wallColor&&(n=I.parse(b.wallColor))&&(n=n.alpha(D),a.altColor=""+n.lightness(0.8),a.wallColor=""+n);b.roofColor&&(n=I.parse(b.roofColor))&&(a.roofColor=""+n.alpha(D));
-b.relationId&&(a.relationId=b.relationId);a.hitColor=Y.idToColor(b.relationId||b.id);a.roofHeight=isNaN(b.roofHeight)?0:b.roofHeight/c;if(!(a.height+a.roofHeight<=a.minHeight))return a}},set:function(b){this.isStatic=!0;this.resetItems();this._staticData=b;this.addRenderItems(this._staticData,!0)},load:function(b){this.provider=b||new Ka({key:"rkc8ywdl"});this.update()},update:function(){function b(a){k.addRenderItems(a)}this.resetItems();if(!(x<G))if(this.isStatic&&this._staticData)this.addRenderItems(this._staticData);
-else if(this.provider){var a=16<x?256<<x-16:256>>16-x,c=q/a<<0,d=n/a<<0,f=qa((q+F)/a),a=qa((n+B)/a),g,k=this;for(g=d;g<=a;g++)for(d=c;d<=f;d++)this.provider.getTile(d,g,16,b)}}},Z={draw:function(b,a,c,d,f,g,k,e){var h,l=this._extrude(b,a,d,f,g,k),m=[];if(c)for(a=0,h=c.length;a<h;a++)m[a]=this._extrude(b,c[a],d,f,g,k);b.fillStyle=e;b.beginPath();this._ring(b,l);if(c)for(a=0,h=m.length;a<h;a++)this._ring(b,m[a]);b.closePath();b.stroke();b.fill()},_extrude:function(b,a,c,d,f,g){c=s/(s-c);for(var k=s/
-(s-d),e={x:0,y:0},h={x:0,y:0},l,m,u=[],p=0,r=a.length-3;p<r;p+=2)e.x=a[p]-q,e.y=a[p+1]-n,h.x=a[p+2]-q,h.y=a[p+3]-n,l=t.project(e,c),m=t.project(h,c),d&&(e=t.project(e,k),h=t.project(h,k)),(h.x-e.x)*(l.y-e.y)>(l.x-e.x)*(h.y-e.y)&&(b.fillStyle=e.x<h.x&&e.y<h.y||e.x>h.x&&e.y>h.y?g:f,b.beginPath(),this._ring(b,[h.x,h.y,e.x,e.y,l.x,l.y,m.x,m.y]),b.closePath(),b.fill()),u[p]=l.x,u[p+1]=l.y;return u},_ring:function(b,a){b.moveTo(a[0],a[1]);for(var c=2,d=a.length-1;c<d;c+=2)b.lineTo(a[c],a[c+1])},simplified:function(b,
-a,c){b.beginPath();this._ringAbs(b,a);if(c){a=0;for(var d=c.length;a<d;a++)this._ringAbs(b,c[a])}b.closePath();b.stroke();b.fill()},_ringAbs:function(b,a){b.moveTo(a[0]-q,a[1]-n);for(var c=2,d=a.length-1;c<d;c+=2)b.lineTo(a[c]-q,a[c+1]-n)},shadow:function(b,a,c,d,f){for(var g=null,k={x:0,y:0},e={x:0,y:0},h,l,m=0,p=a.length-3;m<p;m+=2)k.x=a[m]-q,k.y=a[m+1]-n,e.x=a[m+2]-q,e.y=a[m+3]-n,h=z.project(k,d),l=z.project(e,d),f&&(k=z.project(k,f),e=z.project(e,f)),(e.x-k.x)*(h.y-k.y)>(h.x-k.x)*(e.y-k.y)?(1===
-g&&b.lineTo(k.x,k.y),g=0,m||b.moveTo(k.x,k.y),b.lineTo(e.x,e.y)):(0===g&&b.lineTo(h.x,h.y),g=1,m||b.moveTo(h.x,h.y),b.lineTo(l.x,l.y));if(c)for(m=0,p=c.length;m<p;m++)this._ringAbs(b,c[m])},shadowMask:function(b,a,c){this._ringAbs(b,a);if(c){a=0;for(var d=c.length;a<d;a++)this._ringAbs(b,c[a])}},hitArea:function(b,a,c,d,f,g){c=null;var k={x:0,y:0},e={x:0,y:0};d=s/(s-d);var h=s/(s-f),l;b.fillStyle=g;b.beginPath();for(var m=0,p=a.length-3;m<p;m+=2)k.x=a[m]-q,k.y=a[m+1]-n,e.x=a[m+2]-q,e.y=a[m+3]-n,g=
-t.project(k,d),l=t.project(e,d),f&&(k=t.project(k,h),e=t.project(e,h)),(e.x-k.x)*(g.y-k.y)>(g.x-k.x)*(e.y-k.y)?(1===c&&b.lineTo(k.x,k.y),c=0,m||b.moveTo(k.x,k.y),b.lineTo(e.x,e.y)):(0===c&&b.lineTo(g.x,g.y),c=1,m||b.moveTo(g.x,g.y),b.lineTo(l.x,l.y));b.closePath();b.fill()}},r={draw:function(b,a,c,d,f,g,k,e,h){a={x:a.x-q,y:a.y-n};var l=s/(s-f),m=s/(s-g);f=t.project(a,l);d*=l;g&&(a=t.project(a,m),c*=m);(l=this._tangents(a,c,f,d))?(g=P(l[0].y1-a.y,l[0].x1-a.x),l=P(l[1].y1-a.y,l[1].x1-a.x)):(g=1.5*E,
-l=1.5*E);b.fillStyle=k;b.beginPath();b.arc(f.x,f.y,d,J,g,!0);b.arc(a.x,a.y,c,g,J);b.closePath();b.fill();b.fillStyle=e;b.beginPath();b.arc(f.x,f.y,d,l,J,!0);b.arc(a.x,a.y,c,J,l);b.closePath();b.fill();b.fillStyle=h;this._circle(b,f,d)},simplified:function(b,a,c){this._circle(b,{x:a.x-q,y:a.y-n},c)},shadow:function(b,a,c,d,f,g){a={x:a.x-q,y:a.y-n};f=z.project(a,f);var k;g&&(a=z.project(a,g));var e=this._tangents(a,c,f,d);e?(g=P(e[0].y1-a.y,e[0].x1-a.x),k=P(e[1].y1-a.y,e[1].x1-a.x),b.moveTo(e[1].x2,
-e[1].y2),b.arc(f.x,f.y,d,k,g),b.arc(a.x,a.y,c,g,k)):(b.moveTo(a.x+c,a.y),b.arc(a.x,a.y,c,0,2*E))},shadowMask:function(b,a,c){var d=a.x-q;a=a.y-n;b.moveTo(d+c,a);b.arc(d,a,c,0,2*E)},hitArea:function(b,a,c,d,f,g,k){a={x:a.x-q,y:a.y-n};var e=s/(s-f),h=s/(s-g);f=t.project(a,e);d*=e;g&&(a=t.project(a,h),c*=h);g=this._tangents(a,c,f,d);b.fillStyle=k;b.beginPath();g?(k=P(g[0].y1-a.y,g[0].x1-a.x),e=P(g[1].y1-a.y,g[1].x1-a.x),b.moveTo(g[1].x2,g[1].y2),b.arc(f.x,f.y,d,e,k),b.arc(a.x,a.y,c,k,e)):(b.moveTo(a.x+
-c,a.y),b.arc(a.x,a.y,c,0,2*E));b.closePath();b.fill()},_circle:function(b,a,c){b.beginPath();b.arc(a.x,a.y,c,0,2*E);b.stroke();b.fill()},_tangents:function(b,a,c,d){var f=b.x-c.x,g=b.y-c.y,k=a-d,e=f*f+g*g;if(!(e<=k*k)){var e=pa(e),f=-f/e,g=-g/e,k=k/e,e=[],h,l,m;h=pa(K(0,1-k*k));for(var n=1;-1<=n;n-=2)l=f*k-n*h*g,m=g*k+n*h*f,e.push({x1:b.x+a*l<<0,y1:b.y+a*m<<0,x2:c.x+d*l<<0,y2:c.y+d*m<<0});return e}}},R={draw:function(b,a,c,d,f,g,k){var e=s/(s-f);c=t.project({x:c.x-q,y:c.y-n},s/(s-d));d={x:0,y:0};
-for(var h={x:0,y:0},l=0,m=a.length-3;l<m;l+=2)d.x=a[l]-q,d.y=a[l+1]-n,h.x=a[l+2]-q,h.y=a[l+3]-n,f&&(d=t.project(d,e),h=t.project(h,e)),(h.x-d.x)*(c.y-d.y)>(c.x-d.x)*(h.y-d.y)&&(b.fillStyle=d.x<h.x&&d.y<h.y||d.x>h.x&&d.y>h.y?k:g,b.beginPath(),this._triangle(b,d,h,c),b.closePath(),b.fill())},_triangle:function(b,a,c,d){b.moveTo(a.x,a.y);b.lineTo(c.x,c.y);b.lineTo(d.x,d.y)},_ring:function(b,a){b.moveTo(a[0]-q,a[1]-n);for(var c=2,d=a.length-1;c<d;c+=2)b.lineTo(a[c]-q,a[c+1]-n)},shadow:function(b,a,c,
-d,f){var g={x:0,y:0},k={x:0,y:0};c=z.project({x:c.x-q,y:c.y-n},d);d=0;for(var e=a.length-3;d<e;d+=2)g.x=a[d]-q,g.y=a[d+1]-n,k.x=a[d+2]-q,k.y=a[d+3]-n,f&&(g=z.project(g,f),k=z.project(k,f)),(k.x-g.x)*(c.y-g.y)>(c.x-g.x)*(k.y-g.y)&&this._triangle(b,g,k,c)},shadowMask:function(b,a){this._ring(b,a)},hitArea:function(b,a,c,d,f,g){var k=s/(s-f);c=t.project({x:c.x-q,y:c.y-n},s/(s-d));d={x:0,y:0};var e={x:0,y:0};b.fillStyle=g;b.beginPath();g=0;for(var h=a.length-3;g<h;g+=2)d.x=a[g]-q,d.y=a[g+1]-n,e.x=a[g+
-2]-q,e.y=a[g+3]-n,f&&(d=t.project(d,k),e=t.project(e,k)),(e.x-d.x)*(c.y-d.y)>(c.x-d.x)*(e.y-d.y)&&this._triangle(b,d,e,c);b.closePath();b.fill()}},t={project:function(b,a){return{x:(b.x-M)*a+M<<0,y:(b.y-N)*a+N<<0}},render:function(){var b=this.context;b.clearRect(0,0,F,B);if(!(x<G||Q)){var a,c,d,f={x:M+q,y:N+n},g,k,e,h,l=C.items;l.sort(function(a,b){return a.minHeight-b.minHeight||S(b.center,f)-S(a.center,f)||b.height-a.height});for(var m=0,p=l.length;m<p;m++)if(a=l[m],!ia.isSimple(a)&&(g=a.footprint,
-V(g))){c=1>a.scale?a.height*a.scale:a.height;d=0;a.minHeight&&(d=1>a.scale?a.minHeight*a.scale:a.minHeight);k=a.wallColor||ha;e=a.altColor||aa;h=a.roofColor||X;b.strokeStyle=e;switch(a.shape){case "cylinder":r.draw(b,a.center,a.radius,a.radius,c,d,k,e,h);break;case "cone":r.draw(b,a.center,a.radius,0,c,d,k,e);break;case "dome":r.draw(b,a.center,a.radius,a.radius/2,c,d,k,e);break;case "sphere":r.draw(b,a.center,a.radius,a.radius,c,d,k,e,h);break;case "pyramid":R.draw(b,g,a.center,c,d,k,e);break;default:Z.draw(b,
-g,a.holes,c,d,k,e,h)}switch(a.roofShape){case "cone":r.draw(b,a.center,a.radius,0,c+a.roofHeight,c,h,""+I.parse(h).lightness(0.9));break;case "dome":r.draw(b,a.center,a.radius,a.radius/2,c+a.roofHeight,c,h,""+I.parse(h).lightness(0.9));break;case "pyramid":R.draw(b,g,a.center,c+a.roofHeight,c,h,I.parse(h).lightness(0.9))}}}}},ia={maxZoom:G+2,maxHeight:5,isSimple:function(b){return x<=this.maxZoom&&b.height+b.roofHeight<this.maxHeight},render:function(){var b=this.context;b.clearRect(0,0,F,B);if(!(x<
-G||Q||x>this.maxZoom))for(var a,c,d=C.items,f=0,g=d.length;f<g;f++)if(a=d[f],!(a.height>=this.maxHeight)&&(c=a.footprint,V(c)))switch(b.strokeStyle=a.altColor||aa,b.fillStyle=a.roofColor||X,a.shape){case "cylinder":case "cone":case "dome":case "sphere":r.simplified(b,a.center,a.radius);break;default:Z.simplified(b,c,a.holes)}}},z={enabled:!0,color:"#666666",blurColor:"#000000",blurSize:15,date:new Date,direction:{x:0,y:0},project:function(b,a){return{x:b.x+this.direction.x*a,y:b.y+this.direction.y*
-a}},render:function(){var b=this.context,a,c,d;b.clearRect(0,0,F,B);if(!(!this.enabled||x<G||Q||(a=ja(W+q,fa+n),a=Ha(this.date,a.latitude,a.longitude),0>=a.altitude))){c=1/ka(a.altitude);d=5>c?0.75:1/c*5;this.direction.x=Fa(a.azimuth)*c;this.direction.y=Ea(a.azimuth)*c;var f,g,k,e;a=C.items;b.canvas.style.opacity=d/(2*D);b.shadowColor=this.blurColor;b.shadowBlur=D/2*this.blurSize;b.fillStyle=this.color;b.beginPath();d=0;for(c=a.length;d<c;d++)if(f=a[d],e=f.footprint,V(e)){g=1>f.scale?f.height*f.scale:
-f.height;k=0;f.minHeight&&(k=1>f.scale?f.minHeight*f.scale:f.minHeight);switch(f.shape){case "cylinder":r.shadow(b,f.center,f.radius,f.radius,g,k);break;case "cone":r.shadow(b,f.center,f.radius,0,g,k);break;case "dome":r.shadow(b,f.center,f.radius,f.radius/2,g,k);break;case "sphere":r.shadow(b,f.center,f.radius,f.radius,g,k);break;case "pyramid":R.shadow(b,e,f.center,g,k);break;default:Z.shadow(b,e,f.holes,g,k)}switch(f.roofShape){case "cone":r.shadow(b,f.center,f.radius,0,g+f.roofHeight,g);break;
-case "dome":r.shadow(b,f.center,f.radius,f.radius/2,g+f.roofHeight,g);break;case "pyramid":R.shadow(b,e,f.center,g+f.roofHeight,g)}}b.closePath();b.fill();b.shadowBlur=null;b.globalCompositeOperation="destination-out";b.beginPath();d=0;for(c=a.length;d<c;d++)if(f=a[d],e=f.footprint,V(e)&&!f.minHeight)switch(f.shape){case "cylinder":case "cone":case "dome":r.shadowMask(b,f.center,f.radius);break;default:Z.shadowMask(b,e,f.holes)}b.fillStyle="#00ff00";b.fill();b.globalCompositeOperation="source-over"}}},
-Y={_idMapping:[null],reset:function(){this._idMapping=[null]},render:function(){if(!this._timer){var b=this;this._timer=setTimeout(function(){b._timer=null;b._render()},500)}},_render:function(){var b=this.context;b.clearRect(0,0,F,B);if(!(x<G||Q)){var a,c,d,f={x:M+q,y:N+n},g,k,e=C.items;e.sort(function(a,b){return a.minHeight-b.minHeight||S(b.center,f)-S(a.center,f)||b.height-a.height});for(var h=0,l=e.length;h<l;h++)if(a=e[h],k=a.hitColor)if(g=a.footprint,V(g)){c=a.height;d=0;a.minHeight&&(d=a.minHeight);
-switch(a.shape){case "cylinder":r.hitArea(b,a.center,a.radius,a.radius,c,d,k);break;case "cone":r.hitArea(b,a.center,a.radius,0,c,d,k);break;case "dome":r.hitArea(b,a.center,a.radius,a.radius/2,c,d,k);break;case "sphere":r.hitArea(b,a.center,a.radius,a.radius,c,d,k);break;case "pyramid":R.hitArea(b,g,a.center,c,d,k);break;default:Z.hitArea(b,g,a.holes,c,d,k)}switch(a.roofShape){case "cone":r.hitArea(b,a.center,a.radius,0,c+a.roofHeight,c,k);break;case "dome":r.hitArea(b,a.center,a.radius,a.radius/
-2,c+a.roofHeight,c,k);break;case "pyramid":R.hitArea(b,g,a.center,c+a.roofHeight,c,k)}}this._imageData=this.context.getImageData(0,0,F,B).data}},getIdFromXY:function(b,a){var c=this._imageData;if(c){var d=4*((a|0)*F+(b|0));return this._idMapping[c[d]|c[d+1]<<8|c[d+2]<<16]}},idToColor:function(b){var a=this._idMapping.indexOf(b);-1===a&&(this._idMapping.push(b),a=this._idMapping.length-1);return"rgb("+[a&255,a>>8&255,a>>16&255].join()+")"}},$,A={container:document.createElement("DIV"),items:[],init:function(){this.container.style.pointerEvents=
-"none";this.container.style.position="absolute";this.container.style.left=0;this.container.style.top=0;z.context=this.createContext(this.container);ia.context=this.createContext(this.container);t.context=this.createContext(this.container);Y.context=this.createContext()},render:function(b){Ga(function(){b||(z.render(),ia.render(),Y.render());t.render()})},createContext:function(b){var a=document.createElement("CANVAS");a.style.webkitTransform="translate3d(0,0,0)";a.style.imageRendering="optimizeSpeed";
-a.style.position="absolute";a.style.left=0;a.style.top=0;var c=a.getContext("2d");c.lineCap="round";c.lineJoin="round";c.lineWidth=1;c.mozImageSmoothingEnabled=!1;c.webkitImageSmoothingEnabled=!1;this.items.push(a);b&&b.appendChild(a);return c},appendTo:function(b){b.appendChild(this.container)},remove:function(){this.container.parentNode.removeChild(this.container)},setSize:function(b,a){for(var c=0,d=this.items.length;c<d;c++)this.items[c].width=b,this.items[c].height=a},setPosition:function(b,
-a){this.container.style.left=b+"px";this.container.style.top=a+"px"}};A.init();v=function(b){this.offset={x:0,y:0};b.addLayer(this)};p=v.prototype=L.Layer?new L.Layer:{};p.onAdd=function(b){this.map=b;A.appendTo(b._panes.overlayPane);var a=this.getOffset(),c=b.getPixelOrigin();la({width:b._size.x,height:b._size.y});var d=c.y-a.y;q=c.x-a.x;n=d;ma(b._zoom);A.setPosition(-a.x,-a.y);b.on({move:this.onMove,moveend:this.onMoveEnd,zoomstart:this.onZoomStart,zoomend:this.onZoomEnd,resize:this.onResize,viewreset:this.onViewReset,
-click:this.onClick},this);if(b.options.zoomAnimation)b.on("zoomanim",this.onZoom,this);b.attributionControl&&b.attributionControl.addAttribution('&copy; <a href="http://osmbuildings.org">OSM Buildings</a>');C.update()};p.onRemove=function(){var b=this.map;b.attributionControl&&b.attributionControl.removeAttribution('&copy; <a href="http://osmbuildings.org">OSM Buildings</a>');b.off({move:this.onMove,moveend:this.onMoveEnd,zoomstart:this.onZoomStart,zoomend:this.onZoomEnd,resize:this.onResize,viewreset:this.onViewReset,
-click:this.onClick},this);b.options.zoomAnimation&&b.off("zoomanim",this.onZoom,this);A.remove()};p.onMove=function(b){b=this.getOffset();ea({x:this.offset.x-b.x,y:this.offset.y-b.y})};p.onMoveEnd=function(b){if(this.noMoveEnd)this.noMoveEnd=!1;else{var a=this.map;b=this.getOffset();var c=a.getPixelOrigin();this.offset=b;A.setPosition(-b.x,-b.y);ea({x:0,y:0});la({width:a._size.x,height:a._size.y});a=c.y-b.y;q=c.x-b.x;n=a;A.render();C.update()}};p.onZoomStart=function(b){Q=!0;A.render()};p.onZoom=
-function(b){};p.onZoomEnd=function(b){b=this.map;var a=this.getOffset(),c=b.getPixelOrigin(),d=c.y-a.y;q=c.x-a.x;n=d;b=b._zoom;Q=!1;ma(b);C.update();A.render();this.noMoveEnd=!0};p.onResize=function(){};p.onViewReset=function(){var b=this.getOffset();this.offset=b;A.setPosition(-b.x,-b.y);ea({x:0,y:0})};p.onClick=function(b){var a=Y.getIdFromXY(b.containerPoint.x,b.containerPoint.y);a&&ua({feature:a,lat:b.latlng.lat,lon:b.latlng.lng})};p.getOffset=function(){return L.DomUtil.getPosition(this.map._mapPane)};
-p.style=function(b){b=b||{};var a;if(a=b.color||b.wallColor)H=I.parse(a),ha=""+H.alpha(D),ba=H.lightness(0.8),aa=""+ba.alpha(D),O=H.lightness(1.2),X=""+O.alpha(D);b.roofColor&&(O=I.parse(b.roofColor),X=""+O.alpha(D));void 0!==b.shadows&&(z.enabled=!!b.shadows);A.render();return this};p.date=function(b){z.date=b;z.render();return this};p.load=function(b){C.load(b);return this};p.set=function(b){C.set(b);return this};var ta=function(){};p.each=function(b){ta=function(a){return b(a)};return this};var ua=
-function(){};p.click=function(b){ua=function(a){return b(a)};return this};p.getDetails=function(b,a){C.provider&&C.provider.getFeature(b,a);return this};v.VERSION="0.2.2b";v.ATTRIBUTION='&copy; <a href="http://osmbuildings.org">OSM Buildings</a>';ca.OSMBuildings=v})(this);
+/**
+ * Copyright (C) 2015 OSM Buildings, Jan Marsch
+ * A JavaScript library for visualizing building geometry on interactive maps.
+ * @osmbuildings, http://osmbuildings.org
+ */
+//****** file: prefix.js ******
+
+(function(global) {
+
+  'use strict';
+
+
+//****** file: shortcuts.js ******
+
+// object access shortcuts
+var
+  m = Math,
+  exp = m.exp,
+  log = m.log,
+  sin = m.sin,
+  cos = m.cos,
+  tan = m.tan,
+  atan = m.atan,
+  atan2 = m.atan2,
+  min = m.min,
+  max = m.max,
+  sqrt = m.sqrt,
+  ceil = m.ceil,
+  floor = m.floor,
+  round = m.round,
+  pow = m.pow;
+
+// polyfills
+
+var
+  Int32Array = Int32Array || Array,
+  Uint8Array = Uint8Array || Array;
+
+var IS_IOS = /iP(ad|hone|od)/g.test(navigator.userAgent);
+var IS_MSIE = !!~navigator.userAgent.indexOf('Trident');
+
+var requestAnimFrame = (global.requestAnimationFrame && !IS_IOS && !IS_MSIE) ?
+  global.requestAnimationFrame : function(callback) {
+    callback();
+  };
+
+
+
+//****** file: Color.debug.js ******
+
+var Color = (function(window) {
+
+
+var w3cColors = {
+  aqua:'#00ffff',
+  black:'#000000',
+  blue:'#0000ff',
+  fuchsia:'#ff00ff',
+  gray:'#808080',
+  grey:'#808080',
+  green:'#008000',
+  lime:'#00ff00',
+  maroon:'#800000',
+  navy:'#000080',
+  olive:'#808000',
+  orange:'#ffa500',
+  purple:'#800080',
+  red:'#ff0000',
+  silver:'#c0c0c0',
+  teal:'#008080',
+  white:'#ffffff',
+  yellow:'#ffff00'
+};
+
+function hue2rgb(p, q, t) {
+  if (t < 0) t += 1;
+  if (t > 1) t -= 1;
+  if (t < 1/6) return p + (q-p) * 6 * t;
+  if (t < 1/2) return q;
+  if (t < 2/3) return p + (q-p) * (2/3 - t) * 6;
+  return p;
+}
+
+function clamp(v, max) {
+  return Math.min(max, Math.max(0, v));
+}
+
+var Color = function(h, s, l, a) {
+  this.H = h;
+  this.S = s;
+  this.L = l;
+  this.A = a;
+};
+
+/*
+ * str can be in any of these:
+ * #0099ff rgb(64, 128, 255) rgba(64, 128, 255, 0.5)
+ */
+Color.parse = function(str) {
+  var
+    r = 0, g = 0, b = 0, a = 1,
+    m;
+
+  str = (''+ str).toLowerCase();
+  str = w3cColors[str] || str;
+
+  if ((m = str.match(/^#(\w{2})(\w{2})(\w{2})$/))) {
+    r = parseInt(m[1], 16);
+    g = parseInt(m[2], 16);
+    b = parseInt(m[3], 16);
+  } else if ((m = str.match(/rgba?\((\d+)\D+(\d+)\D+(\d+)(\D+([\d.]+))?\)/))) {
+    r = parseInt(m[1], 10);
+    g = parseInt(m[2], 10);
+    b = parseInt(m[3], 10);
+    a = m[4] ? parseFloat(m[5]) : 1;
+  } else {
+    return;
+  }
+
+  return this.fromRGBA(r, g, b, a);
+};
+
+Color.fromRGBA = function(r, g, b, a) {
+  if (typeof r === 'object') {
+    g = r.g / 255;
+    b = r.b / 255;
+    a = r.a;
+    r = r.r / 255;
+  } else {
+    r /= 255;
+    g /= 255;
+    b /= 255;
+  }
+
+  var
+    max = Math.max(r, g, b),
+    min = Math.min(r, g, b),
+    h, s, l = (max+min) / 2,
+    d = max-min;
+
+  if (!d) {
+    h = s = 0; // achromatic
+  } else {
+    s = l > 0.5 ? d / (2-max-min) : d / (max+min);
+    switch (max) {
+      case r: h = (g-b) / d + (g < b ? 6 : 0); break;
+      case g: h = (b-r) / d + 2; break;
+      case b: h = (r-g) / d + 4; break;
+    }
+    h *= 60;
+  }
+
+  return new Color(h, s, l, a);
+};
+
+Color.prototype = {
+
+  toRGBA: function() {
+    var
+      h = clamp(this.H, 360),
+      s = clamp(this.S, 1),
+      l = clamp(this.L, 1),
+      rgba = { a: clamp(this.A, 1) };
+
+    // achromatic
+    if (s === 0) {
+      rgba.r = l;
+      rgba.g = l;
+      rgba.b = l;
+    } else {
+      var
+        q = l < 0.5 ? l * (1+s) : l + s - l*s,
+        p = 2 * l-q;
+        h /= 360;
+
+      rgba.r = hue2rgb(p, q, h + 1/3);
+      rgba.g = hue2rgb(p, q, h);
+      rgba.b = hue2rgb(p, q, h - 1/3);
+    }
+
+    return {
+      r: Math.round(rgba.r*255),
+      g: Math.round(rgba.g*255),
+      b: Math.round(rgba.b*255),
+      a: rgba.a
+    };
+  },
+
+  toString: function() {
+    var rgba = this.toRGBA();
+
+    if (rgba.a === 1) {
+      return '#' + ((1 <<24) + (rgba.r <<16) + (rgba.g <<8) + rgba.b).toString(16).slice(1, 7);
+    }
+    return 'rgba(' + [rgba.r, rgba.g, rgba.b, rgba.a.toFixed(2)].join(',') + ')';
+  },
+
+  hue: function(h) {
+    return new Color(this.H*h, this.S, this.L, this.A);
+  },
+
+  saturation: function(s) {
+    return new Color(this.H, this.S*s, this.L, this.A);
+  },
+
+  lightness: function(l) {
+    return new Color(this.H, this.S, this.L*l, this.A);
+  },
+
+  alpha: function(a) {
+    return new Color(this.H, this.S, this.L, this.A*a);
+  }
+};
+
+return Color; }(this));
+
+//****** file: SunPosition.js ******
+
+// calculations are based on http://aa.quae.nl/en/reken/zonpositie.html
+// code credits to Vladimir Agafonkin (@mourner)
+
+var getSunPosition = (function() {
+
+    var m = Math,
+      PI = m.PI,
+      sin = m.sin,
+      cos = m.cos,
+      tan = m.tan,
+      asin = m.asin,
+      atan = m.atan2;
+
+    var rad = PI/180,
+      dayMs = 1000*60*60*24,
+      J1970 = 2440588,
+      J2000 = 2451545,
+      e = rad*23.4397; // obliquity of the Earth
+
+    function toJulian(date) {
+      return date.valueOf()/dayMs - 0.5+J1970;
+    }
+    function toDays(date) {
+      return toJulian(date)-J2000;
+    }
+    function getRightAscension(l, b) {
+      return atan(sin(l)*cos(e) - tan(b)*sin(e), cos(l));
+    }
+    function getDeclination(l, b) {
+      return asin(sin(b)*cos(e) + cos(b)*sin(e)*sin(l));
+    }
+    function getAzimuth(H, phi, dec) {
+      return atan(sin(H), cos(H)*sin(phi) - tan(dec)*cos(phi));
+    }
+    function getAltitude(H, phi, dec) {
+      return asin(sin(phi)*sin(dec) + cos(phi)*cos(dec)*cos(H));
+    }
+    function getSiderealTime(d, lw) {
+      return rad * (280.16 + 360.9856235*d) - lw;
+    }
+    function getSolarMeanAnomaly(d) {
+      return rad * (357.5291 + 0.98560028*d);
+    }
+    function getEquationOfCenter(M) {
+      return rad * (1.9148*sin(M) + 0.0200 * sin(2*M) + 0.0003 * sin(3*M));
+    }
+    function getEclipticLongitude(M, C) {
+      var P = rad*102.9372; // perihelion of the Earth
+      return M+C+P+PI;
+    }
+
+    return function getSunPosition(date, lat, lon) {
+      var lw = rad*-lon,
+        phi = rad*lat,
+        d = toDays(date),
+        M = getSolarMeanAnomaly(d),
+        C = getEquationOfCenter(M),
+        L = getEclipticLongitude(M, C),
+        D = getDeclination(L, 0),
+        A = getRightAscension(L, 0),
+        t = getSiderealTime(d, lw),
+        H = t-A;
+
+      return {
+        altitude: getAltitude(H, phi, D),
+        azimuth: getAzimuth(H, phi, D) - PI/2 // origin: north
+      };
+    };
+
+}());
+
+
+//****** file: GeoJSON.js ******
+
+
+var GeoJSON = (function() {
+
+  var METERS_PER_LEVEL = 3;
+
+  var materialColors = {
+    brick:'#cc7755',
+    bronze:'#ffeecc',
+    canvas:'#fff8f0',
+    concrete:'#999999',
+    copper:'#a0e0d0',
+    glass:'#e8f8f8',
+    gold:'#ffcc00',
+    plants:'#009933',
+    metal:'#aaaaaa',
+    panel:'#fff8f0',
+    plaster:'#999999',
+    roof_tiles:'#f08060',
+    silver:'#cccccc',
+    slate:'#666666',
+    stone:'#996666',
+    tar_paper:'#333333',
+    wood:'#deb887'
+  };
+
+  var baseMaterials = {
+    asphalt:'tar_paper',
+    bitumen:'tar_paper',
+    block:'stone',
+    bricks:'brick',
+    glas:'glass',
+    glassfront:'glass',
+    grass:'plants',
+    masonry:'stone',
+    granite:'stone',
+    panels:'panel',
+    paving_stones:'stone',
+    plastered:'plaster',
+    rooftiles:'roof_tiles',
+    roofingfelt:'tar_paper',
+    sandstone:'stone',
+    sheet:'canvas',
+    sheets:'canvas',
+    shingle:'tar_paper',
+    shingles:'tar_paper',
+    slates:'slate',
+    steel:'metal',
+    tar:'tar_paper',
+    tent:'canvas',
+    thatch:'plants',
+    tile:'roof_tiles',
+    tiles:'roof_tiles'
+  };
+  // cardboard
+  // eternit
+  // limestone
+  // straw
+
+  function getMaterialColor(str) {
+    str = str.toLowerCase();
+    if (str[0] === '#') {
+      return str;
+    }
+    return materialColors[baseMaterials[str] || str] || null;
+  }
+
+  function alignProperties(prop) {
+    var item = {};
+
+    prop = prop || {};
+
+    item.height    = prop.height    || (prop.levels   ? prop.levels  *METERS_PER_LEVEL : DEFAULT_HEIGHT);
+    item.minHeight = prop.minHeight || (prop.minLevel ? prop.minLevel*METERS_PER_LEVEL : 0);
+
+    var wallColor = prop.material ? getMaterialColor(prop.material) : (prop.wallColor || prop.color);
+    if (wallColor) {
+      item.wallColor = wallColor;
+    }
+
+    var roofColor = prop.roofMaterial ? getMaterialColor(prop.roofMaterial) : prop.roofColor;
+    if (roofColor) {
+      item.roofColor = roofColor;
+    }
+
+    switch (prop.shape) {
+      case 'cylinder':
+      case 'cone':
+      case 'dome':
+      case 'sphere':
+        item.shape = prop.shape;
+        item.isRotational = true;
+      break;
+
+      case 'pyramid':
+        item.shape = prop.shape;
+      break;
+    }
+
+    switch (prop.roofShape) {
+      case 'cone':
+      case 'dome':
+        item.roofShape = prop.roofShape;
+        item.isRotational = true;
+      break;
+
+      case 'pyramid':
+        item.roofShape = prop.roofShape;
+      break;
+    }
+
+    if (item.roofShape && prop.roofHeight) {
+      item.roofHeight = prop.roofHeight;
+      item.height = max(0, item.height-item.roofHeight);
+    } else {
+      item.roofHeight = 0;
+    }
+
+    return item;
+  }
+
+  function getGeometries(geometry) {
+    var
+      i, il, polygon,
+      geometries = [], sub;
+
+    switch (geometry.type) {
+      case 'GeometryCollection':
+        geometries = [];
+        for (i = 0, il = geometry.geometries.length; i < il; i++) {
+          if ((sub = getGeometries(geometry.geometries[i]))) {
+            geometries.push.apply(geometries, sub);
+          }
+        }
+        return geometries;
+
+      case 'MultiPolygon':
+        geometries = [];
+        for (i = 0, il = geometry.coordinates.length; i < il; i++) {
+          if ((sub = getGeometries({ type: 'Polygon', coordinates: geometry.coordinates[i] }))) {
+            geometries.push.apply(geometries, sub);
+          }
+        }
+        return geometries;
+
+      case 'Polygon':
+        polygon = geometry.coordinates;
+      break;
+
+      default: return [];
+    }
+
+    var
+      j, jl,
+      p, lat = 1, lon = 0,
+      outer = [], inner = [];
+
+    p = polygon[0];
+    for (i = 0, il = p.length; i < il; i++) {
+      outer.push(p[i][lat], p[i][lon]);
+    }
+
+    for (i = 0, il = polygon.length-1; i < il; i++) {
+      p = polygon[i+1];
+      inner[i] = [];
+      for (j = 0, jl = p.length; j < jl; j++) {
+        inner[i].push(p[j][lat], p[j][lon]);
+      }
+    }
+
+    return [{
+      outer: outer,
+      inner: inner.length ? inner : null
+    }];
+  }
+
+  function clone(obj) {
+    var res = {};
+    for (var p in obj) {
+      if (obj.hasOwnProperty(p)) {
+        res[p] = obj[p];
+      }
+    }
+    return res;
+  }
+
+  return {
+    read: function(geojson) {
+      if (!geojson || geojson.type !== 'FeatureCollection') {
+        return [];
+      }
+
+      var
+        collection = geojson.features,
+        i, il, j, jl,
+        res = [],
+        feature,
+        geometries,
+        baseItem, item;
+
+      for (i = 0, il = collection.length; i < il; i++) {
+        feature = collection[i];
+
+        if (feature.type !== 'Feature' || onEach(feature) === false) {
+          continue;
+        }
+
+        baseItem = alignProperties(feature.properties);
+        geometries = getGeometries(feature.geometry);
+
+        for (j = 0, jl = geometries.length; j < jl; j++) {
+          item = clone(baseItem);
+          item.footprint = geometries[j].outer;
+          if (item.isRotational) {
+            item.radius = getLonDelta(item.footprint);
+          }
+
+          if (geometries[j].inner) {
+            item.holes = geometries[j].inner;
+          }
+          if (feature.id || feature.properties.id) {
+            item.id = feature.id || feature.properties.id;
+          }
+
+          if (feature.properties.relationId) {
+            item.relationId = feature.properties.relationId;
+          }
+
+          res.push(item); // TODO: clone base properties!
+        }
+      }
+
+      return res;
+    }
+  };
+}());
+
+
+//****** file: variables.js ******
+
+var
+  VERSION      = '0.2.2b',
+  ATTRIBUTION  = '&copy; <a href="http://osmbuildings.org">OSM Buildings</a>',
+
+  DATA_KEY = 'rkc8ywdl',
+
+  PI         = Math.PI,
+  HALF_PI    = PI/2,
+  QUARTER_PI = PI/4,
+
+  MAP_TILE_SIZE  = 256,    // map tile size in pixels
+  DATA_TILE_SIZE = 0.0075, // data tile size in geo coordinates, smaller: less data to load but more requests
+  ZOOM, MAP_SIZE,
+
+  MIN_ZOOM = 15,
+
+  LAT = 'latitude', LON = 'longitude',
+
+  TRUE = true, FALSE = false,
+
+  WIDTH = 0, HEIGHT = 0,
+  CENTER_X = 0, CENTER_Y = 0,
+  ORIGIN_X = 0, ORIGIN_Y = 0,
+
+  WALL_COLOR = Color.parse('rgba(200, 190, 180)'),
+  ALT_COLOR  = WALL_COLOR.lightness(0.8),
+  ROOF_COLOR = WALL_COLOR.lightness(1.2),
+
+  WALL_COLOR_STR = ''+ WALL_COLOR,
+  ALT_COLOR_STR  = ''+ ALT_COLOR,
+  ROOF_COLOR_STR = ''+ ROOF_COLOR,
+
+  PIXEL_PER_DEG = 0,
+  ZOOM_FACTOR = 1,
+
+  MAX_HEIGHT, // taller buildings will be cut to this
+  DEFAULT_HEIGHT = 5,
+
+  CAM_X, CAM_Y, CAM_Z = 450,
+
+  isZooming;
+
+
+//****** file: geometry.js ******
+
+
+function getDistance(p1, p2) {
+  var
+    dx = p1.x-p2.x,
+    dy = p1.y-p2.y;
+  return dx*dx + dy*dy;
+}
+
+function isRotational(polygon) {
+  var length = polygon.length;
+  if (length < 16) {
+    return false;
+  }
+
+  var i;
+
+  var minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+  for (i = 0; i < length-1; i+=2) {
+    minX = Math.min(minX, polygon[i]);
+    maxX = Math.max(maxX, polygon[i]);
+    minY = Math.min(minY, polygon[i+1]);
+    maxY = Math.max(maxY, polygon[i+1]);
+  }
+
+  var
+    width = maxX-minX,
+    height = (maxY-minY),
+    ratio = width/height;
+
+  if (ratio < 0.85 || ratio > 1.15) {
+    return false;
+  }
+
+  var
+    center = { x:minX+width/2, y:minY+height/2 },
+    radius = (width+height)/4,
+    sqRadius = radius*radius;
+
+  for (i = 0; i < length-1; i+=2) {
+    var dist = getDistance({ x:polygon[i], y:polygon[i+1] }, center);
+    if (dist/sqRadius < 0.8 || dist/sqRadius > 1.2) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+function getSquareSegmentDistance(px, py, p1x, p1y, p2x, p2y) {
+  var
+    dx = p2x-p1x,
+    dy = p2y-p1y,
+    t;
+  if (dx !== 0 || dy !== 0) {
+    t = ((px-p1x) * dx + (py-p1y) * dy) / (dx*dx + dy*dy);
+    if (t > 1) {
+      p1x = p2x;
+      p1y = p2y;
+    } else if (t > 0) {
+      p1x += dx*t;
+      p1y += dy*t;
+    }
+  }
+  dx = px-p1x;
+  dy = py-p1y;
+  return dx*dx + dy*dy;
+}
+
+function simplifyPolygon(buffer) {
+  var
+    sqTolerance = 2,
+    len = buffer.length/2,
+    markers = new Uint8Array(len),
+
+    first = 0, last = len-1,
+
+    i,
+    maxSqDist,
+    sqDist,
+    index,
+    firstStack = [], lastStack  = [],
+    newBuffer  = [];
+
+  markers[first] = markers[last] = 1;
+
+  while (last) {
+    maxSqDist = 0;
+    for (i = first+1; i < last; i++) {
+      sqDist = getSquareSegmentDistance(
+        buffer[i    *2], buffer[i    *2 + 1],
+        buffer[first*2], buffer[first*2 + 1],
+        buffer[last *2], buffer[last *2 + 1]
+      );
+      if (sqDist > maxSqDist) {
+        index = i;
+        maxSqDist = sqDist;
+      }
+    }
+
+    if (maxSqDist > sqTolerance) {
+      markers[index] = 1;
+
+      firstStack.push(first);
+      lastStack.push(index);
+
+      firstStack.push(index);
+      lastStack.push(last);
+    }
+
+    first = firstStack.pop();
+    last = lastStack.pop();
+  }
+
+  for (i = 0; i < len; i++) {
+    if (markers[i]) {
+      newBuffer.push(buffer[i*2], buffer[i*2 + 1]);
+    }
+  }
+
+  return newBuffer;
+}
+
+function getCenter(footprint) {
+  var minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+  for (var i = 0, il = footprint.length-3; i < il; i += 2) {
+    minX = min(minX, footprint[i]);
+    maxX = max(maxX, footprint[i]);
+    minY = min(minY, footprint[i+1]);
+    maxY = max(maxY, footprint[i+1]);
+  }
+  return { x:minX+(maxX-minX)/2 <<0, y:minY+(maxY-minY)/2 <<0 };
+}
+
+var EARTH_RADIUS = 6378137;
+
+function getLonDelta(footprint) {
+  var minLon = 180, maxLon = -180;
+  for (var i = 0, il = footprint.length; i < il; i += 2) {
+    minLon = min(minLon, footprint[i+1]);
+    maxLon = max(maxLon, footprint[i+1]);
+  }
+  return (maxLon-minLon)/2;
+}
+
+
+//****** file: functions.js ******
+
+
+function rad(deg) {
+  return deg * PI / 180;
+}
+
+function deg(rad) {
+  return rad / PI * 180;
+}
+
+function pixelToGeo(x, y) {
+  var res = {};
+  x /= MAP_SIZE;
+  y /= MAP_SIZE;
+  res[LAT] = y <= 0  ? 90 : y >= 1 ? -90 : deg(2 * atan(exp(PI * (1 - 2*y))) - HALF_PI);
+  res[LON] = (x === 1 ?  1 : (x%1 + 1) % 1) * 360 - 180;
+  return res;
+}
+
+function geoToPixel(lat, lon) {
+  var
+    latitude = min(1, max(0, 0.5 - (log(tan(QUARTER_PI + HALF_PI * lat / 180)) / PI) / 2)),
+    longitude = lon/360 + 0.5;
+  return {
+    x: longitude*MAP_SIZE <<0,
+    y: latitude *MAP_SIZE <<0
+  };
+}
+
+function fromRange(sVal, sMin, sMax, dMin, dMax) {
+  sVal = min(max(sVal, sMin), sMax);
+  var rel = (sVal-sMin) / (sMax-sMin),
+    range = dMax-dMin;
+  return min(max(dMin + rel*range, dMin), dMax);
+}
+
+function isVisible(polygon) {
+   var
+    maxX = WIDTH+ORIGIN_X,
+    maxY = HEIGHT+ORIGIN_Y;
+
+  // TODO: checking footprint is sufficient for visibility - NOT VALID FOR SHADOWS!
+  for (var i = 0, il = polygon.length-3; i < il; i+=2) {
+    if (polygon[i] > ORIGIN_X && polygon[i] < maxX && polygon[i+1] > ORIGIN_Y && polygon[i+1] < maxY) {
+      return true;
+    }
+  }
+  return false;
+}
+
+
+//****** file: BLDGS.js ******
+
+
+var BLDGS = (function() {
+
+  var baseURL = 'http://data.osmbuildings.org/0.2/';
+  //var baseURL = 'http://ec2-54-93-84-172.eu-central-1.compute.amazonaws.com/0.2/'; // SMALL
+  //var baseURL = 'http://ec2-54-93-72-52.eu-central-1.compute.amazonaws.com/0.2/'; // LARGE
+  //var baseURL = 'http://localhost:8000/0.2/';
+  //var baseURL = 'http://a.tiles.markware.net/rkc8ywdl/';
+
+
+
+  var cacheData = {};
+  var cacheIndex = [];
+  var cacheSize = 0;
+  var maxCacheSize = 0;
+
+//  // http://mathiasbynens.be/notes/localstorage-pattern#comment-9
+//  var storage;
+//  try {
+//    storage = localStorage;
+//  } catch (ex) {
+//    storage = (function() {
+//      return {
+//        getItem: function() {},
+//        setItem: function() {}
+//      };
+//    }());
+//  }
+//
+//  var cacheData = JSON.parse(storage.getItem('BLDGS') || '{}');
+
+  function xhr(url, callback) {
+    if (cacheData[url]) {
+      if (callback) {
+        callback(cacheData[url]);
+      }
+      return;
+    }
+
+    var req = new XMLHttpRequest();
+
+    req.onreadystatechange = function() {
+      if (req.readyState !== 4) {
+        return;
+      }
+      if (!req.status || req.status < 200 || req.status > 299) {
+        return;
+      }
+      if (callback && req.responseText) {
+        var json;
+        try {
+          json = JSON.parse(req.responseText);
+        } catch(ex) {}
+
+        cacheData[url] = json;
+        cacheIndex.push({ url: url, size: req.responseText.length });
+        cacheSize += req.responseText.length;
+
+        while (cacheSize > maxCacheSize) {
+          var item = cacheIndex.shift();
+          cacheSize -= item.size;
+          delete cacheData[item.url];
+        }
+
+//  try {
+//    storage.setItem('BLDGS', JSON.stringify(cacheData));
+//  } catch(ex) {}
+
+        callback(json);
+      }
+    };
+
+    req.open('GET', url);
+    req.send(null);
+
+    return req;
+  }
+
+  function getDistance(a, b) {
+    var dx = a.x-b.x, dy = a.y-b.y;
+    return dx*dx + dy*dy;
+  }
+
+  function BLDGS(options) {
+    options = options || {};
+    baseURL += (options.key || 'anonymous');
+    maxCacheSize = options.cacheSize || 1024*1024; // 1MB
+  }
+
+  BLDGS.TILE_SIZE = 256;
+  BLDGS.ATTRIBUTION = 'Data Service &copy; <a href="http://bld.gs">BLD.GS</a>';
+
+  var proto = BLDGS.prototype;
+
+  proto.getTile = function(x, y, zoom, callback) {
+    var url = baseURL +'/tile/'+ zoom +'/'+ x +'/'+ y +'.json';
+    return xhr(url, callback);
+  };
+
+  proto.getFeature = function(id, callback) {
+    var url = baseURL +'/feature/'+ id +'.json';
+    return xhr(url, callback);
+  };
+
+  proto.getBBox = function(bbox, callback) {
+    var url = baseURL +'/bbox.json?bbox='+ [bbox.n.toFixed(5),bbox.e.toFixed(5),bbox.s.toFixed(5),bbox.w.toFixed(5)].join(',');
+    return xhr(url, callback);
+  };
+
+  proto.getAllTiles = function(x, y, w, h, zoom, callback) {
+    var
+      tileSize = BLDGS.TILE_SIZE,
+      fixedZoom = 16,
+      realTileSize = zoom > fixedZoom ? tileSize <<(zoom-fixedZoom) : tileSize >>(fixedZoom-zoom),
+      minX = x/realTileSize <<0,
+      minY = y/realTileSize <<0,
+      maxX = Math.ceil((x+w)/realTileSize),
+      maxY = Math.ceil((y+h)/realTileSize),
+      tx, ty,
+      queue = [];
+
+    for (ty = minY; ty <= maxY; ty++) {
+      for (tx = minX; tx <= maxX; tx++) {
+        queue.push({ x:tx, y:ty, z:fixedZoom });
+      }
+    }
+
+    var center = { x: x+(w-tileSize)/2, y: y+(h-tileSize)/2 };
+		queue.sort(function(a, b) {
+			return getDistance(a, center) - getDistance(b, center);
+		});
+
+		for (var i = 0, il = queue.length; i < il; i++) {
+      this.getTile(queue[i].x, queue[i].y, queue[i].z, callback);
+		}
+
+    return {
+      abort: function() {
+        for (var i = 0; i < queue.length; i++) {
+          queue[i].abort();
+        }
+      }
+    };
+  };
+
+  return BLDGS;
+
+}());
+
+
+//****** file: Data.js ******
+
+
+var Data = {
+
+  loadedItems: {}, // maintain a list of cached items in order to avoid duplicates on tile borders
+  items: [],
+
+  getPixelFootprint: function(buffer) {
+    var footprint = new Int32Array(buffer.length),
+      px;
+
+    for (var i = 0, il = buffer.length-1; i < il; i+=2) {
+      px = geoToPixel(buffer[i], buffer[i+1]);
+      footprint[i]   = px.x;
+      footprint[i+1] = px.y;
+    }
+
+    footprint = simplifyPolygon(footprint);
+    if (footprint.length < 8) { // 3 points & end==start (*2)
+      return;
+    }
+
+    return footprint;
+  },
+
+  resetItems: function() {
+    this.items = [];
+    this.loadedItems = {};
+    HitAreas.reset();
+  },
+
+  addRenderItems: function(data, allAreNew) {
+    var item, scaledItem, id;
+    var geojson = GeoJSON.read(data);
+    for (var i = 0, il = geojson.length; i < il; i++) {
+      item = geojson[i];
+      id = item.id || [item.footprint[0], item.footprint[1], item.height, item.minHeight].join(',');
+      if (!this.loadedItems[id]) {
+        if ((scaledItem = this.scale(item))) {
+          scaledItem.scale = allAreNew ? 0 : 1;
+          this.items.push(scaledItem);
+          this.loadedItems[id] = 1;
+        }
+      }
+    }
+    fadeIn();
+  },
+
+  scale: function(item) {
+    var
+      res = {},
+      // TODO: calculate this on zoom change only
+      zoomScale = 6 / pow(2, ZOOM-MIN_ZOOM); // TODO: consider using HEIGHT / (global.devicePixelRatio || 1)
+
+    if (item.id) {
+      res.id = item.id;
+    }
+
+    res.height = min(item.height/zoomScale, MAX_HEIGHT);
+
+    res.minHeight = isNaN(item.minHeight) ? 0 : item.minHeight / zoomScale;
+    if (res.minHeight > MAX_HEIGHT) {
+      return;
+    }
+
+    res.footprint = this.getPixelFootprint(item.footprint);
+    if (!res.footprint) {
+      return;
+    }
+    res.center = getCenter(res.footprint);
+
+    if (item.radius) {
+      res.radius = item.radius*PIXEL_PER_DEG;
+    }
+    if (item.shape) {
+      res.shape = item.shape;
+    }
+    if (item.roofShape) {
+      res.roofShape = item.roofShape;
+    }
+    if ((res.roofShape === 'cone' || res.roofShape === 'dome') && !res.shape && isRotational(res.footprint)) {
+      res.shape = 'cylinder';
+    }
+
+    if (item.holes) {
+      res.holes = [];
+      var innerFootprint;
+      for (var i = 0, il = item.holes.length; i < il; i++) {
+        // TODO: simplify
+        if ((innerFootprint = this.getPixelFootprint(item.holes[i]))) {
+          res.holes.push(innerFootprint);
+        }
+      }
+    }
+
+    var color;
+
+    if (item.wallColor) {
+      if ((color = Color.parse(item.wallColor))) {
+        color = color.alpha(ZOOM_FACTOR);
+        res.altColor  = ''+ color.lightness(0.8);
+        res.wallColor = ''+ color;
+      }
+    }
+
+    if (item.roofColor) {
+      if ((color = Color.parse(item.roofColor))) {
+        res.roofColor = ''+ color.alpha(ZOOM_FACTOR);
+      }
+    }
+
+    if (item.relationId) {
+      res.relationId = item.relationId;
+    }
+    res.hitColor = HitAreas.idToColor(item.relationId || item.id);
+
+    res.roofHeight = isNaN(item.roofHeight) ? 0 : item.roofHeight/zoomScale;
+
+    if (res.height+res.roofHeight <= res.minHeight) {
+      return;
+    }
+
+    return res;
+  },
+
+  set: function(data) {
+    this.isStatic = true;
+    this.resetItems();
+    this._staticData = data;
+    this.addRenderItems(this._staticData, true);
+  },
+
+  load: function(provider) {
+    this.provider = provider || new BLDGS({ key: DATA_KEY });
+    this.update();
+  },
+
+  update: function() {
+    this.resetItems();
+
+    if (ZOOM < MIN_ZOOM) {
+      return;
+    }
+
+    if (this.isStatic && this._staticData) {
+      this.addRenderItems(this._staticData);
+      return;
+    }
+
+    if (!this.provider) {
+      return;
+    }
+
+    var
+      tileZoom = 16,
+      tileSize = 256,
+      zoomedTileSize = ZOOM > tileZoom ? tileSize <<(ZOOM-tileZoom) : tileSize >>(tileZoom-ZOOM),
+      minX = ORIGIN_X/zoomedTileSize <<0,
+      minY = ORIGIN_Y/zoomedTileSize <<0,
+      maxX = ceil((ORIGIN_X+WIDTH) /zoomedTileSize),
+      maxY = ceil((ORIGIN_Y+HEIGHT)/zoomedTileSize),
+      x, y;
+
+    var scope = this;
+    function callback(json) {
+      scope.addRenderItems(json);
+    }
+
+    for (y = minY; y <= maxY; y++) {
+      for (x = minX; x <= maxX; x++) {
+        this.provider.getTile(x, y, tileZoom, callback);
+      }
+    }
+  }
+};
+
+
+//****** file: Block.js ******
+
+var Block = {
+
+  draw: function(context, polygon, innerPolygons, height, minHeight, color, altColor, roofColor) {
+    var
+      i, il,
+      roof = this._extrude(context, polygon, height, minHeight, color, altColor),
+      innerRoofs = [];
+
+    if (innerPolygons) {
+      for (i = 0, il = innerPolygons.length; i < il; i++) {
+        innerRoofs[i] = this._extrude(context, innerPolygons[i], height, minHeight, color, altColor);
+      }
+    }
+
+    context.fillStyle = roofColor;
+
+    context.beginPath();
+    this._ring(context, roof);
+    if (innerPolygons) {
+      for (i = 0, il = innerRoofs.length; i < il; i++) {
+        this._ring(context, innerRoofs[i]);
+      }
+    }
+    context.closePath();
+    context.stroke();
+    context.fill();
+  },
+
+  _extrude: function(context, polygon, height, minHeight, color, altColor) {
+    var
+      scale = CAM_Z / (CAM_Z-height),
+      minScale = CAM_Z / (CAM_Z-minHeight),
+      a = { x:0, y:0 },
+      b = { x:0, y:0 },
+      _a, _b,
+      roof = [];
+
+    for (var i = 0, il = polygon.length-3; i < il; i += 2) {
+      a.x = polygon[i  ]-ORIGIN_X;
+      a.y = polygon[i+1]-ORIGIN_Y;
+      b.x = polygon[i+2]-ORIGIN_X;
+      b.y = polygon[i+3]-ORIGIN_Y;
+
+      _a = Buildings.project(a, scale);
+      _b = Buildings.project(b, scale);
+
+      if (minHeight) {
+        a = Buildings.project(a, minScale);
+        b = Buildings.project(b, minScale);
+      }
+
+      // backface culling check
+      if ((b.x-a.x) * (_a.y-a.y) > (_a.x-a.x) * (b.y-a.y)) {
+        // depending on direction, set wall shading
+        if ((a.x < b.x && a.y < b.y) || (a.x > b.x && a.y > b.y)) {
+          context.fillStyle = altColor;
+        } else {
+          context.fillStyle = color;
+        }
+
+        context.beginPath();
+        this._ring(context, [
+           b.x,  b.y,
+           a.x,  a.y,
+          _a.x, _a.y,
+          _b.x, _b.y
+        ]);
+        context.closePath();
+        context.fill();
+      }
+
+      roof[i]   = _a.x;
+      roof[i+1] = _a.y;
+    }
+
+    return roof;
+  },
+
+  _ring: function(context, polygon) {
+    context.moveTo(polygon[0], polygon[1]);
+    for (var i = 2, il = polygon.length-1; i < il; i += 2) {
+      context.lineTo(polygon[i], polygon[i+1]);
+    }
+  },
+
+  simplified: function(context, polygon, innerPolygons) {
+    context.beginPath();
+    this._ringAbs(context, polygon);
+    if (innerPolygons) {
+      for (var i = 0, il = innerPolygons.length; i < il; i++) {
+        this._ringAbs(context, innerPolygons[i]);
+      }
+    }
+    context.closePath();
+    context.stroke();
+    context.fill();
+  },
+
+  _ringAbs: function(context, polygon) {
+    context.moveTo(polygon[0]-ORIGIN_X, polygon[1]-ORIGIN_Y);
+    for (var i = 2, il = polygon.length-1; i < il; i += 2) {
+      context.lineTo(polygon[i]-ORIGIN_X, polygon[i+1]-ORIGIN_Y);
+    }
+  },
+
+  shadow: function(context, polygon, innerPolygons, height, minHeight) {
+    var
+      mode = null,
+      a = { x:0, y:0 },
+      b = { x:0, y:0 },
+      _a, _b;
+
+    for (var i = 0, il = polygon.length-3; i < il; i += 2) {
+      a.x = polygon[i  ]-ORIGIN_X;
+      a.y = polygon[i+1]-ORIGIN_Y;
+      b.x = polygon[i+2]-ORIGIN_X;
+      b.y = polygon[i+3]-ORIGIN_Y;
+
+      _a = Shadows.project(a, height);
+      _b = Shadows.project(b, height);
+
+      if (minHeight) {
+        a = Shadows.project(a, minHeight);
+        b = Shadows.project(b, minHeight);
+      }
+
+      // mode 0: floor edges, mode 1: roof edges
+      if ((b.x-a.x) * (_a.y-a.y) > (_a.x-a.x) * (b.y-a.y)) {
+        if (mode === 1) {
+          context.lineTo(a.x, a.y);
+        }
+        mode = 0;
+        if (!i) {
+          context.moveTo(a.x, a.y);
+        }
+        context.lineTo(b.x, b.y);
+      } else {
+        if (mode === 0) {
+          context.lineTo(_a.x, _a.y);
+        }
+        mode = 1;
+        if (!i) {
+          context.moveTo(_a.x, _a.y);
+        }
+        context.lineTo(_b.x, _b.y);
+      }
+    }
+
+    if (innerPolygons) {
+      for (i = 0, il = innerPolygons.length; i < il; i++) {
+        this._ringAbs(context, innerPolygons[i]);
+      }
+    }
+  },
+
+  shadowMask: function(context, polygon, innerPolygons) {
+    this._ringAbs(context, polygon);
+    if (innerPolygons) {
+      for (var i = 0, il = innerPolygons.length; i < il; i++) {
+        this._ringAbs(context, innerPolygons[i]);
+      }
+    }
+  },
+
+  hitArea: function(context, polygon, innerPolygons, height, minHeight, color) {
+    var
+      mode = null,
+      a = { x:0, y:0 },
+      b = { x:0, y:0 },
+      scale = CAM_Z / (CAM_Z-height),
+      minScale = CAM_Z / (CAM_Z-minHeight),
+      _a, _b;
+
+    context.fillStyle = color;
+    context.beginPath();
+
+    for (var i = 0, il = polygon.length-3; i < il; i += 2) {
+      a.x = polygon[i  ]-ORIGIN_X;
+      a.y = polygon[i+1]-ORIGIN_Y;
+      b.x = polygon[i+2]-ORIGIN_X;
+      b.y = polygon[i+3]-ORIGIN_Y;
+
+      _a = Buildings.project(a, scale);
+      _b = Buildings.project(b, scale);
+
+      if (minHeight) {
+        a = Buildings.project(a, minScale);
+        b = Buildings.project(b, minScale);
+      }
+
+      // mode 0: floor edges, mode 1: roof edges
+      if ((b.x-a.x) * (_a.y-a.y) > (_a.x-a.x) * (b.y-a.y)) {
+        if (mode === 1) { // mode is initially undefined
+          context.lineTo(a.x, a.y);
+        }
+        mode = 0;
+        if (!i) {
+          context.moveTo(a.x, a.y);
+        }
+        context.lineTo(b.x, b.y);
+      } else {
+        if (mode === 0) { // mode is initially undefined
+          context.lineTo(_a.x, _a.y);
+        }
+        mode = 1;
+        if (!i) {
+          context.moveTo(_a.x, _a.y);
+        }
+        context.lineTo(_b.x, _b.y);
+      }
+    }
+
+    context.closePath();
+    context.fill();
+  }
+
+};
+
+
+//****** file: Cylinder.js ******
+
+var Cylinder = {
+
+  draw: function(context, center, radius, topRadius, height, minHeight, color, altColor, roofColor) {
+    var
+      c = { x:center.x-ORIGIN_X, y:center.y-ORIGIN_Y },
+      scale = CAM_Z / (CAM_Z-height),
+      minScale = CAM_Z / (CAM_Z-minHeight),
+      apex = Buildings.project(c, scale),
+      a1, a2;
+
+    topRadius *= scale;
+
+    if (minHeight) {
+      c = Buildings.project(c, minScale);
+      radius = radius*minScale;
+    }
+
+    // common tangents for ground and roof circle
+    var tangents = this._tangents(c, radius, apex, topRadius);
+
+    // no tangents? top circle is inside bottom circle
+    if (!tangents) {
+      a1 = 1.5*PI;
+      a2 = 1.5*PI;
+    } else {
+      a1 = atan2(tangents[0].y1-c.y, tangents[0].x1-c.x);
+      a2 = atan2(tangents[1].y1-c.y, tangents[1].x1-c.x);
+    }
+
+    context.fillStyle = color;
+    context.beginPath();
+    context.arc(apex.x, apex.y, topRadius, HALF_PI, a1, true);
+    context.arc(c.x, c.y, radius, a1, HALF_PI);
+    context.closePath();
+    context.fill();
+
+    context.fillStyle = altColor;
+    context.beginPath();
+    context.arc(apex.x, apex.y, topRadius, a2, HALF_PI, true);
+    context.arc(c.x, c.y, radius, HALF_PI, a2);
+    context.closePath();
+    context.fill();
+
+    context.fillStyle = roofColor;
+    this._circle(context, apex, topRadius);
+  },
+
+  simplified: function(context, center, radius) {
+    this._circle(context, { x:center.x-ORIGIN_X, y:center.y-ORIGIN_Y }, radius);
+  },
+
+  shadow: function(context, center, radius, topRadius, height, minHeight) {
+    var
+      c = { x:center.x-ORIGIN_X, y:center.y-ORIGIN_Y },
+      apex = Shadows.project(c, height),
+      p1, p2;
+
+    if (minHeight) {
+      c = Shadows.project(c, minHeight);
+    }
+
+    // common tangents for ground and roof circle
+    var tangents = this._tangents(c, radius, apex, topRadius);
+
+    // TODO: no tangents? roof overlaps everything near cam position
+    if (tangents) {
+      p1 = atan2(tangents[0].y1-c.y, tangents[0].x1-c.x);
+      p2 = atan2(tangents[1].y1-c.y, tangents[1].x1-c.x);
+      context.moveTo(tangents[1].x2, tangents[1].y2);
+      context.arc(apex.x, apex.y, topRadius, p2, p1);
+      context.arc(c.x, c.y, radius, p1, p2);
+    } else {
+      context.moveTo(c.x+radius, c.y);
+      context.arc(c.x, c.y, radius, 0, 2*PI);
+    }
+  },
+
+  shadowMask: function(context, center, radius) {
+    var c = { x:center.x-ORIGIN_X, y:center.y-ORIGIN_Y };
+    context.moveTo(c.x+radius, c.y);
+    context.arc(c.x, c.y, radius, 0, PI*2);
+  },
+
+  hitArea: function(context, center, radius, topRadius, height, minHeight, color) {
+    var
+      c = { x:center.x-ORIGIN_X, y:center.y-ORIGIN_Y },
+      scale = CAM_Z / (CAM_Z-height),
+      minScale = CAM_Z / (CAM_Z-minHeight),
+      apex = Buildings.project(c, scale),
+      p1, p2;
+
+    topRadius *= scale;
+
+    if (minHeight) {
+      c = Buildings.project(c, minScale);
+      radius = radius*minScale;
+    }
+
+    // common tangents for ground and roof circle
+    var tangents = this._tangents(c, radius, apex, topRadius);
+
+    context.fillStyle = color;
+    context.beginPath();
+
+    // TODO: no tangents? roof overlaps everything near cam position
+    if (tangents) {
+      p1 = atan2(tangents[0].y1-c.y, tangents[0].x1-c.x);
+      p2 = atan2(tangents[1].y1-c.y, tangents[1].x1-c.x);
+      context.moveTo(tangents[1].x2, tangents[1].y2);
+      context.arc(apex.x, apex.y, topRadius, p2, p1);
+      context.arc(c.x, c.y, radius, p1, p2);
+    } else {
+      context.moveTo(c.x+radius, c.y);
+      context.arc(c.x, c.y, radius, 0, 2*PI);
+    }
+
+    context.closePath();
+    context.fill();
+  },
+
+  _circle: function(context, center, radius) {
+    context.beginPath();
+    context.arc(center.x, center.y, radius, 0, PI*2);
+    context.stroke();
+    context.fill();
+  },
+
+    // http://en.wikibooks.org/wiki/Algorithm_Implementation/Geometry/Tangents_between_two_circles
+  _tangents: function(c1, r1, c2, r2) {
+    var
+      dx = c1.x-c2.x,
+      dy = c1.y-c2.y,
+      dr = r1-r2,
+      sqdist = (dx*dx) + (dy*dy);
+
+    if (sqdist <= dr*dr) {
+      return;
+    }
+
+    var dist = sqrt(sqdist),
+      vx = -dx/dist,
+      vy = -dy/dist,
+      c  =  dr/dist,
+      res = [],
+      h, nx, ny;
+
+    // Let A, B be the centers, and C, D be points at which the tangent
+    // touches first and second circle, and n be the normal vector to it.
+    //
+    // We have the system:
+    //   n * n = 1    (n is a unit vector)
+    //   C = A + r1 * n
+    //   D = B + r2 * n
+    //   n * CD = 0   (common orthogonality)
+    //
+    // n * CD = n * (AB + r2*n - r1*n) = AB*n - (r1 -/+ r2) = 0,  <=>
+    // AB * n = (r1 -/+ r2), <=>
+    // v * n = (r1 -/+ r2) / d,  where v = AB/|AB| = AB/d
+    // This is a linear equation in unknown vector n.
+    // Now we're just intersecting a line with a circle: v*n=c, n*n=1
+
+    h = sqrt(max(0, 1 - c*c));
+    for (var sign = 1; sign >= -1; sign -= 2) {
+      nx = vx*c - sign*h*vy;
+      ny = vy*c + sign*h*vx;
+      res.push({
+        x1: c1.x + r1*nx <<0,
+        y1: c1.y + r1*ny <<0,
+        x2: c2.x + r2*nx <<0,
+        y2: c2.y + r2*ny <<0
+      });
+    }
+
+    return res;
+  }
+};
+
+
+//****** file: Pyramid.js ******
+
+var Pyramid = {
+
+  draw: function(context, polygon, center, height, minHeight, color, altColor) {
+    var
+      c = { x:center.x-ORIGIN_X, y:center.y-ORIGIN_Y },
+      scale = CAM_Z / (CAM_Z-height),
+      minScale = CAM_Z / (CAM_Z-minHeight),
+      apex = Buildings.project(c, scale),
+      a = { x:0, y:0 },
+      b = { x:0, y:0 };
+
+    for (var i = 0, il = polygon.length-3; i < il; i += 2) {
+      a.x = polygon[i  ]-ORIGIN_X;
+      a.y = polygon[i+1]-ORIGIN_Y;
+      b.x = polygon[i+2]-ORIGIN_X;
+      b.y = polygon[i+3]-ORIGIN_Y;
+
+      if (minHeight) {
+        a = Buildings.project(a, minScale);
+        b = Buildings.project(b, minScale);
+      }
+
+      // backface culling check
+      if ((b.x-a.x) * (apex.y-a.y) > (apex.x-a.x) * (b.y-a.y)) {
+        // depending on direction, set shading
+        if ((a.x < b.x && a.y < b.y) || (a.x > b.x && a.y > b.y)) {
+          context.fillStyle = altColor;
+        } else {
+          context.fillStyle = color;
+        }
+
+        context.beginPath();
+        this._triangle(context, a, b, apex);
+        context.closePath();
+        context.fill();
+      }
+    }
+  },
+
+  _triangle: function(context, a, b, c) {
+    context.moveTo(a.x, a.y);
+    context.lineTo(b.x, b.y);
+    context.lineTo(c.x, c.y);
+  },
+
+  _ring: function(context, polygon) {
+    context.moveTo(polygon[0]-ORIGIN_X, polygon[1]-ORIGIN_Y);
+    for (var i = 2, il = polygon.length-1; i < il; i += 2) {
+      context.lineTo(polygon[i]-ORIGIN_X, polygon[i+1]-ORIGIN_Y);
+    }
+  },
+
+  shadow: function(context, polygon, center, height, minHeight) {
+    var
+      a = { x:0, y:0 },
+      b = { x:0, y:0 },
+      c = { x:center.x-ORIGIN_X, y:center.y-ORIGIN_Y },
+      apex = Shadows.project(c, height);
+
+    for (var i = 0, il = polygon.length-3; i < il; i += 2) {
+      a.x = polygon[i  ]-ORIGIN_X;
+      a.y = polygon[i+1]-ORIGIN_Y;
+      b.x = polygon[i+2]-ORIGIN_X;
+      b.y = polygon[i+3]-ORIGIN_Y;
+
+      if (minHeight) {
+        a = Shadows.project(a, minHeight);
+        b = Shadows.project(b, minHeight);
+      }
+
+      // backface culling check
+      if ((b.x-a.x) * (apex.y-a.y) > (apex.x-a.x) * (b.y-a.y)) {
+        // depending on direction, set shading
+        this._triangle(context, a, b, apex);
+      }
+    }
+  },
+
+  shadowMask: function(context, polygon) {
+    this._ring(context, polygon);
+  },
+
+  hitArea: function(context, polygon, center, height, minHeight, color) {
+    var
+      c = { x:center.x-ORIGIN_X, y:center.y-ORIGIN_Y },
+      scale = CAM_Z / (CAM_Z-height),
+      minScale = CAM_Z / (CAM_Z-minHeight),
+      apex = Buildings.project(c, scale),
+      a = { x:0, y:0 },
+      b = { x:0, y:0 };
+
+    context.fillStyle = color;
+    context.beginPath();
+
+    for (var i = 0, il = polygon.length-3; i < il; i += 2) {
+      a.x = polygon[i  ]-ORIGIN_X;
+      a.y = polygon[i+1]-ORIGIN_Y;
+      b.x = polygon[i+2]-ORIGIN_X;
+      b.y = polygon[i+3]-ORIGIN_Y;
+
+      if (minHeight) {
+        a = Buildings.project(a, minScale);
+        b = Buildings.project(b, minScale);
+      }
+
+      // backface culling check
+      if ((b.x-a.x) * (apex.y-a.y) > (apex.x-a.x) * (b.y-a.y)) {
+        this._triangle(context, a, b, apex);
+      }
+    }
+
+    context.closePath();
+    context.fill();
+  }
+};
+
+
+//****** file: Buildings.js ******
+
+var Buildings = {
+
+  project: function(p, m) {
+    return {
+      x: (p.x-CAM_X) * m + CAM_X <<0,
+      y: (p.y-CAM_Y) * m + CAM_Y <<0
+    };
+  },
+
+  render: function() {
+    var context = this.context;
+    context.clearRect(0, 0, WIDTH, HEIGHT);
+
+    // show on high zoom levels only and avoid rendering during zoom
+    if (ZOOM < MIN_ZOOM || isZooming) {
+      return;
+    }
+
+    var
+      item,
+      h, mh,
+      sortCam = { x:CAM_X+ORIGIN_X, y:CAM_Y+ORIGIN_Y },
+      footprint,
+      wallColor, altColor, roofColor,
+      dataItems = Data.items;
+
+    dataItems.sort(function(a, b) {
+      return (a.minHeight-b.minHeight) || getDistance(b.center, sortCam) - getDistance(a.center, sortCam) || (b.height-a.height);
+    });
+
+    for (var i = 0, il = dataItems.length; i < il; i++) {
+      item = dataItems[i];
+
+      if (Simplified.isSimple(item)) {
+        continue;
+      }
+
+      footprint = item.footprint;
+
+      if (!isVisible(footprint)) {
+        continue;
+      }
+
+      // when fading in, use a dynamic height
+      h = item.scale < 1 ? item.height*item.scale : item.height;
+
+      mh = 0;
+      if (item.minHeight) {
+        mh = item.scale < 1 ? item.minHeight*item.scale : item.minHeight;
+      }
+
+      wallColor = item.wallColor || WALL_COLOR_STR;
+      altColor  = item.altColor  || ALT_COLOR_STR;
+      roofColor = item.roofColor || ROOF_COLOR_STR;
+      context.strokeStyle = altColor;
+
+      switch (item.shape) {
+        case 'cylinder': Cylinder.draw(context, item.center, item.radius, item.radius, h, mh, wallColor, altColor, roofColor); break;
+        case 'cone':     Cylinder.draw(context, item.center, item.radius, 0, h, mh, wallColor, altColor);                      break;
+        case 'dome':     Cylinder.draw(context, item.center, item.radius, item.radius/2, h, mh, wallColor, altColor);          break;
+        case 'sphere':   Cylinder.draw(context, item.center, item.radius, item.radius, h, mh, wallColor, altColor, roofColor); break;
+        case 'pyramid':  Pyramid.draw(context, footprint, item.center, h, mh, wallColor, altColor);                            break;
+        default:         Block.draw(context, footprint, item.holes, h, mh, wallColor, altColor, roofColor);
+      }
+
+      switch (item.roofShape) {
+        case 'cone':    Cylinder.draw(context, item.center, item.radius, 0, h+item.roofHeight, h, roofColor, ''+ Color.parse(roofColor).lightness(0.9));             break;
+        case 'dome':    Cylinder.draw(context, item.center, item.radius, item.radius/2, h+item.roofHeight, h, roofColor, ''+ Color.parse(roofColor).lightness(0.9)); break;
+        case 'pyramid': Pyramid.draw(context, footprint, item.center, h+item.roofHeight, h, roofColor, Color.parse(roofColor).lightness(0.9));                       break;
+      }
+    }
+  }
+};
+
+
+//****** file: Simplified.js ******
+
+var Simplified = {
+
+  maxZoom: MIN_ZOOM+2,
+  maxHeight: 5,
+
+  isSimple: function(item) {
+    return (ZOOM <= this.maxZoom && item.height+item.roofHeight < this.maxHeight);
+  },
+
+  render: function() {
+    var context = this.context;
+    context.clearRect(0, 0, WIDTH, HEIGHT);
+
+    // show on high zoom levels only and avoid rendering during zoom
+    if (ZOOM < MIN_ZOOM || isZooming || ZOOM > this.maxZoom) {
+      return;
+    }
+
+    var
+      item,
+      footprint,
+      dataItems = Data.items;
+
+    for (var i = 0, il = dataItems.length; i < il; i++) {
+      item = dataItems[i];
+
+      if (item.height >= this.maxHeight) {
+        continue;
+      }
+
+      footprint = item.footprint;
+
+      if (!isVisible(footprint)) {
+        continue;
+      }
+
+      context.strokeStyle = item.altColor  || ALT_COLOR_STR;
+      context.fillStyle   = item.roofColor || ROOF_COLOR_STR;
+
+      switch (item.shape) {
+        case 'cylinder':
+        case 'cone':
+        case 'dome':
+        case 'sphere': Cylinder.simplified(context, item.center, item.radius);  break;
+        default: Block.simplified(context, footprint, item.holes);
+      }
+    }
+  }
+};
+
+
+//****** file: Shadows.js ******
+
+var Shadows = {
+
+  enabled: true,
+  color: '#666666',
+  blurColor: '#000000',
+  blurSize: 15,
+  date: new Date(),
+  direction: { x:0, y:0 },
+
+  project: function(p, h) {
+    return {
+      x: p.x + this.direction.x*h,
+      y: p.y + this.direction.y*h
+    };
+  },
+
+  render: function() {
+    var
+      context = this.context,
+      screenCenter, sun, length, alpha;
+
+    context.clearRect(0, 0, WIDTH, HEIGHT);
+
+    // show on high zoom levels only and avoid rendering during zoom
+    if (!this.enabled || ZOOM < MIN_ZOOM || isZooming) {
+      return;
+    }
+
+    // TODO: calculate this just on demand
+    screenCenter = pixelToGeo(CENTER_X+ORIGIN_X, CENTER_Y+ORIGIN_Y);
+    sun = getSunPosition(this.date, screenCenter.latitude, screenCenter.longitude);
+
+    if (sun.altitude <= 0) {
+      return;
+    }
+
+    length = 1 / tan(sun.altitude);
+    alpha = length < 5 ? 0.75 : 1/length*5;
+
+    this.direction.x = cos(sun.azimuth) * length;
+    this.direction.y = sin(sun.azimuth) * length;
+
+    var
+      i, il,
+      item,
+      h, mh,
+      footprint,
+      dataItems = Data.items;
+
+    context.canvas.style.opacity = alpha / (ZOOM_FACTOR * 2);
+    context.shadowColor = this.blurColor;
+    context.shadowBlur = this.blurSize * (ZOOM_FACTOR / 2);
+    context.fillStyle = this.color;
+    context.beginPath();
+
+    for (i = 0, il = dataItems.length; i < il; i++) {
+      item = dataItems[i];
+
+      footprint = item.footprint;
+
+      if (!isVisible(footprint)) {
+        continue;
+      }
+
+      // when fading in, use a dynamic height
+      h = item.scale < 1 ? item.height*item.scale : item.height;
+
+      mh = 0;
+      if (item.minHeight) {
+        mh = item.scale < 1 ? item.minHeight*item.scale : item.minHeight;
+      }
+
+      switch (item.shape) {
+        case 'cylinder': Cylinder.shadow(context, item.center, item.radius, item.radius, h, mh);   break;
+        case 'cone':     Cylinder.shadow(context, item.center, item.radius, 0, h, mh);             break;
+        case 'dome':     Cylinder.shadow(context, item.center, item.radius, item.radius/2, h, mh); break;
+        case 'sphere':   Cylinder.shadow(context, item.center, item.radius, item.radius, h, mh);   break;
+        case 'pyramid':  Pyramid.shadow(context, footprint, item.center, h, mh);                   break;
+        default:         Block.shadow(context, footprint, item.holes, h, mh);
+      }
+
+      switch (item.roofShape) {
+        case 'cone':    Cylinder.shadow(context, item.center, item.radius, 0, h+item.roofHeight, h);             break;
+        case 'dome':    Cylinder.shadow(context, item.center, item.radius, item.radius/2, h+item.roofHeight, h); break;
+        case 'pyramid': Pyramid.shadow(context, footprint, item.center, h+item.roofHeight, h);                   break;
+      }
+    }
+
+    context.closePath();
+    context.fill();
+
+    context.shadowBlur = null;
+
+    // now draw all the footprints as negative clipping mask
+    context.globalCompositeOperation = 'destination-out';
+    context.beginPath();
+
+    for (i = 0, il = dataItems.length; i < il; i++) {
+      item = dataItems[i];
+
+      footprint = item.footprint;
+
+      if (!isVisible(footprint)) {
+        continue;
+      }
+
+      // if object is hovered, there is no need to clip it's footprint
+      if (item.minHeight) {
+        continue;
+      }
+
+      switch (item.shape) {
+        case 'cylinder':
+        case 'cone':
+        case 'dome':
+          Cylinder.shadowMask(context, item.center, item.radius);
+        break;
+        default:
+          Block.shadowMask(context, footprint, item.holes);
+      }
+    }
+
+    context.fillStyle = '#00ff00';
+    context.fill();
+    context.globalCompositeOperation = 'source-over';
+  }
+};
+
+
+//****** file: HitAreas.js ******
+
+
+var HitAreas = {
+
+  _idMapping: [null],
+
+  reset: function() {
+    this._idMapping = [null];
+  },
+
+  render: function() {
+    if (this._timer) {
+      return;
+    }
+    var self = this;
+    this._timer = setTimeout(function() {
+      self._timer = null;
+      self._render();
+    }, 500);
+  },
+
+  _render: function() {
+    var context = this.context;
+
+    context.clearRect(0, 0, WIDTH, HEIGHT);
+
+    // show on high zoom levels only and avoid rendering during zoom
+    if (ZOOM < MIN_ZOOM || isZooming) {
+      return;
+    }
+
+    var
+      item,
+      h, mh,
+      sortCam = { x:CAM_X+ORIGIN_X, y:CAM_Y+ORIGIN_Y },
+      footprint,
+      color,
+      dataItems = Data.items;
+
+    dataItems.sort(function(a, b) {
+      return (a.minHeight-b.minHeight) || getDistance(b.center, sortCam) - getDistance(a.center, sortCam) || (b.height-a.height);
+    });
+
+    for (var i = 0, il = dataItems.length; i < il; i++) {
+      item = dataItems[i];
+
+      if (!(color = item.hitColor)) {
+        continue;
+      }
+
+      footprint = item.footprint;
+
+      if (!isVisible(footprint)) {
+        continue;
+      }
+
+      h = item.height;
+
+      mh = 0;
+      if (item.minHeight) {
+        mh = item.minHeight;
+      }
+
+      switch (item.shape) {
+        case 'cylinder': Cylinder.hitArea(context, item.center, item.radius, item.radius, h, mh, color);   break;
+        case 'cone':     Cylinder.hitArea(context, item.center, item.radius, 0, h, mh, color);             break;
+        case 'dome':     Cylinder.hitArea(context, item.center, item.radius, item.radius/2, h, mh, color); break;
+        case 'sphere':   Cylinder.hitArea(context, item.center, item.radius, item.radius, h, mh, color);   break;
+        case 'pyramid':  Pyramid.hitArea(context, footprint, item.center, h, mh, color);                   break;
+        default:         Block.hitArea(context, footprint, item.holes, h, mh, color);
+      }
+
+      switch (item.roofShape) {
+        case 'cone':    Cylinder.hitArea(context, item.center, item.radius, 0, h+item.roofHeight, h, color);             break;
+        case 'dome':    Cylinder.hitArea(context, item.center, item.radius, item.radius/2, h+item.roofHeight, h, color); break;
+        case 'pyramid': Pyramid.hitArea(context, footprint, item.center, h+item.roofHeight, h, color);                   break;
+      }
+    }
+
+    this._imageData = this.context.getImageData(0, 0, WIDTH, HEIGHT).data;
+  },
+
+  getIdFromXY: function(x, y) {
+    var imageData = this._imageData;
+    if (!imageData) {
+      return;
+    }
+    var pos = 4*((y|0) * WIDTH + (x|0));
+    var index = imageData[pos] | (imageData[pos+1]<<8) | (imageData[pos+2]<<16);
+    return this._idMapping[index];
+  },
+
+  idToColor: function(id) {
+    var index = this._idMapping.indexOf(id);
+    if (index === -1) {
+      this._idMapping.push(id);
+      index = this._idMapping.length-1;
+    }
+    var r =  index       & 0xff;
+    var g = (index >>8)  & 0xff;
+    var b = (index >>16) & 0xff;
+    return 'rgb('+ [r, g, b].join(',') +')';
+  }
+};
+
+
+//****** file: Debug.js ******
+
+var Debug = {
+
+  point: function(x, y, color, size) {
+    var context = this.context;
+    context.fillStyle = color || '#ffcc00';
+    context.beginPath();
+    context.arc(x, y, size || 3, 0, 2*PI);
+    context.closePath();
+    context.fill();
+  },
+
+  line: function(ax, ay, bx, by, color) {
+    var context = this.context;
+    context.strokeStyle = color || '#ffcc00';
+    context.beginPath();
+    context.moveTo(ax, ay);
+    context.lineTo(bx, by);
+    context.closePath();
+    context.stroke();
+  }
+};
+
+
+//****** file: Layers.js ******
+
+var animTimer;
+
+function fadeIn() {
+  if (animTimer) {
+    return;
+  }
+
+  animTimer = setInterval(function() {
+    var dataItems = Data.items,
+      isNeeded = false;
+
+    for (var i = 0, il = dataItems.length; i < il; i++) {
+      if (dataItems[i].scale < 1) {
+        dataItems[i].scale += 0.5*0.2; // amount*easing
+        if (dataItems[i].scale > 1) {
+          dataItems[i].scale = 1;
+        }
+        isNeeded = true;
+      }
+    }
+
+    Layers.render();
+
+    if (!isNeeded) {
+      clearInterval(animTimer);
+      animTimer = null;
+    }
+  }, 33);
+}
+
+var Layers = {
+
+  container: document.createElement('DIV'),
+  items: [],
+
+  init: function() {
+    this.container.style.pointerEvents = 'none';
+    this.container.style.position = 'absolute';
+    this.container.style.left = 0;
+    this.container.style.top  = 0;
+
+    // TODO: improve this to .setContext(context)
+    Shadows.context    = this.createContext(this.container);
+    Simplified.context = this.createContext(this.container);
+    Buildings.context  = this.createContext(this.container);
+    HitAreas.context   = this.createContext();
+//    Debug.context      = this.createContext(this.container);
+  },
+
+  render: function(quick) {
+    requestAnimFrame(function() {
+      if (!quick) {
+        Shadows.render();
+        Simplified.render();
+        HitAreas.render();
+      }
+      Buildings.render();
+    });
+  },
+
+  createContext: function(container) {
+    var canvas = document.createElement('CANVAS');
+    canvas.style.webkitTransform = 'translate3d(0,0,0)'; // turn on hw acceleration
+    canvas.style.imageRendering  = 'optimizeSpeed';
+    canvas.style.position = 'absolute';
+    canvas.style.left = 0;
+    canvas.style.top  = 0;
+
+    var context = canvas.getContext('2d');
+    context.lineCap   = 'round';
+    context.lineJoin  = 'round';
+    context.lineWidth = 1;
+
+    context.mozImageSmoothingEnabled    = false;
+    context.webkitImageSmoothingEnabled = false;
+
+    this.items.push(canvas);
+    if (container) {
+      container.appendChild(canvas);
+    }
+
+    return context;
+  },
+
+  appendTo: function(parentNode) {
+    parentNode.appendChild(this.container);
+  },
+
+  remove: function() {
+    this.container.parentNode.removeChild(this.container);
+  },
+
+  setSize: function(width, height) {
+    for (var i = 0, il = this.items.length; i < il; i++) {
+      this.items[i].width  = width;
+      this.items[i].height = height;
+    }
+  },
+
+  // usually called after move: container jumps by move delta, cam is reset
+  setPosition: function(x, y) {
+    this.container.style.left = x +'px';
+    this.container.style.top  = y +'px';
+  }
+};
+
+Layers.init();
+
+
+//****** file: adapter.js ******
+
+
+function setOrigin(origin) {
+  ORIGIN_X = origin.x;
+  ORIGIN_Y = origin.y;
+}
+
+function moveCam(offset) {
+  CAM_X = CENTER_X + offset.x;
+  CAM_Y = HEIGHT   + offset.y;
+  Layers.render(true);
+}
+
+function setSize(size) {
+  WIDTH  = size.width;
+  HEIGHT = size.height;
+  CENTER_X = WIDTH /2 <<0;
+  CENTER_Y = HEIGHT/2 <<0;
+
+  CAM_X = CENTER_X;
+  CAM_Y = HEIGHT;
+
+  Layers.setSize(WIDTH, HEIGHT);
+  MAX_HEIGHT = CAM_Z-50;
+}
+
+function setZoom(z) {
+  ZOOM = z;
+  MAP_SIZE = MAP_TILE_SIZE <<ZOOM;
+
+  var center = pixelToGeo(ORIGIN_X+CENTER_X, ORIGIN_Y+CENTER_Y);
+  var a = geoToPixel(center.latitude, 0);
+  var b = geoToPixel(center.latitude, 1);
+  PIXEL_PER_DEG = b.x-a.x;
+
+  ZOOM_FACTOR = pow(0.95, ZOOM-MIN_ZOOM);
+
+  WALL_COLOR_STR = ''+ WALL_COLOR.alpha(ZOOM_FACTOR);
+  ALT_COLOR_STR  = ''+ ALT_COLOR.alpha( ZOOM_FACTOR);
+  ROOF_COLOR_STR = ''+ ROOF_COLOR.alpha(ZOOM_FACTOR);
+}
+
+function onResize(e) {
+  setSize(e);
+  Layers.render();
+  Data.update();
+}
+
+function onMoveEnd(e) {
+  Layers.render();
+  Data.update(); // => fadeIn() => Layers.render()
+}
+
+function onZoomStart() {
+  isZooming = true;
+// effectively clears because of isZooming flag
+// TODO: introduce explicit clear()
+  Layers.render();
+}
+
+function onZoomEnd(e) {
+  isZooming = false;
+  setZoom(e.zoom);
+  Data.update(); // => fadeIn()
+  Layers.render();
+}
+
+
+//****** file: Leaflet.js ******
+
+
+var osmb = function(map) {
+  this.offset = { x:0, y:0 };
+	map.addLayer(this);
+};
+
+var proto = osmb.prototype = L.Layer ? new L.Layer() : {};
+
+proto.onAdd = function(map) {
+  this.map = map;
+  Layers.appendTo(map._panes.overlayPane);
+
+  var
+    off = this.getOffset(),
+    po = map.getPixelOrigin();
+  setSize({ width:map._size.x, height:map._size.y });
+  setOrigin({ x:po.x-off.x, y:po.y-off.y });
+  setZoom(map._zoom);
+
+  Layers.setPosition(-off.x, -off.y);
+
+  map.on({
+    move:      this.onMove,
+    moveend:   this.onMoveEnd,
+    zoomstart: this.onZoomStart,
+    zoomend:   this.onZoomEnd,
+    resize:    this.onResize,
+    viewreset: this.onViewReset,
+    click:     this.onClick
+  }, this);
+
+  if (map.options.zoomAnimation) {
+    map.on('zoomanim', this.onZoom, this);
+  }
+
+  if (map.attributionControl) {
+    map.attributionControl.addAttribution(ATTRIBUTION);
+  }
+
+  Data.update();
+};
+
+proto.onRemove = function() {
+  var map = this.map;
+  if (map.attributionControl) {
+    map.attributionControl.removeAttribution(ATTRIBUTION);
+  }
+
+  map.off({
+    move:      this.onMove,
+    moveend:   this.onMoveEnd,
+    zoomstart: this.onZoomStart,
+    zoomend:   this.onZoomEnd,
+    resize:    this.onResize,
+    viewreset: this.onViewReset,
+    click:     this.onClick
+  }, this);
+
+  if (map.options.zoomAnimation) {
+    map.off('zoomanim', this.onZoom, this);
+  }
+  Layers.remove();
+  map = null;
+};
+
+proto.onMove = function(e) {
+  var off = this.getOffset();
+  moveCam({ x:this.offset.x-off.x, y:this.offset.y-off.y });
+};
+
+proto.onMoveEnd = function(e) {
+  if (this.noMoveEnd) { // moveend is also fired after zoom
+    this.noMoveEnd = false;
+    return;
+  }
+
+  var
+    map = this.map,
+    off = this.getOffset(),
+    po = map.getPixelOrigin();
+
+  this.offset = off;
+  Layers.setPosition(-off.x, -off.y);
+  moveCam({ x:0, y:0 });
+
+  setSize({ width:map._size.x, height:map._size.y }); // in case this is triggered by resize
+  setOrigin({ x:po.x-off.x, y:po.y-off.y });
+  onMoveEnd(e);
+};
+
+proto.onZoomStart = function(e) {
+  onZoomStart(e);
+};
+
+proto.onZoom = function(e) {
+//    var map = this.map,
+//        scale = map.getZoomScale(e.zoom),
+//        offset = map._getCenterOffset(e.center).divideBy(1 - 1/scale),
+//        viewportPos = map.containerPointToLayerPoint(map.getSize().multiplyBy(-1)),
+//        origin = viewportPos.add(offset).round();
+//
+//    this.container.style[L.DomUtil.TRANSFORM] = L.DomUtil.getTranslateString((origin.multiplyBy(-1).add(this.getOffset().multiplyBy(-1)).multiplyBy(scale).add(origin))) + ' scale(' + scale + ') ';
+//    isZooming = true;
+};
+
+proto.onZoomEnd = function(e) {
+  var
+    map = this.map,
+    off = this.getOffset(),
+    po = map.getPixelOrigin();
+
+  setOrigin({ x:po.x-off.x, y:po.y-off.y });
+  onZoomEnd({ zoom:map._zoom });
+  this.noMoveEnd = true;
+};
+
+proto.onResize = function() {};
+
+proto.onViewReset = function() {
+  var off = this.getOffset();
+
+  this.offset = off;
+  Layers.setPosition(-off.x, -off.y);
+  moveCam({ x:0, y:0 });
+};
+
+proto.onClick = function(e) {
+  var id = HitAreas.getIdFromXY(e.containerPoint.x, e.containerPoint.y);
+  if (id) {
+    onClick({ feature:id, lat:e.latlng.lat, lon:e.latlng.lng });
+  }
+};
+
+proto.getOffset = function() {
+  return L.DomUtil.getPosition(this.map._mapPane);
+};
+
+
+//****** file: public.js ******
+
+
+proto.style = function(style) {
+  style = style || {};
+  var color;
+  if ((color = style.color || style.wallColor)) {
+    WALL_COLOR = Color.parse(color);
+    WALL_COLOR_STR = ''+ WALL_COLOR.alpha(ZOOM_FACTOR);
+
+    ALT_COLOR = WALL_COLOR.lightness(0.8);
+    ALT_COLOR_STR  = ''+ ALT_COLOR.alpha(ZOOM_FACTOR);
+
+    ROOF_COLOR = WALL_COLOR.lightness(1.2);
+    ROOF_COLOR_STR = ''+ ROOF_COLOR.alpha(ZOOM_FACTOR);
+  }
+
+  if (style.roofColor) {
+    ROOF_COLOR = Color.parse(style.roofColor);
+    ROOF_COLOR_STR = ''+ ROOF_COLOR.alpha(ZOOM_FACTOR);
+  }
+
+  if (style.shadows !== undefined) {
+    Shadows.enabled = !!style.shadows;
+  }
+
+  Layers.render();
+
+  return this;
+};
+
+proto.date = function(date) {
+  Shadows.date = date;
+  Shadows.render();
+  return this;
+};
+
+proto.load = function(url) {
+  Data.load(url);
+  return this;
+};
+
+proto.set = function(data) {
+  Data.set(data);
+  return this;
+};
+
+var onEach = function() {};
+
+proto.each = function(handler) {
+  onEach = function(payload) {
+    return handler(payload);
+  };
+  return this;
+};
+
+var onClick = function() {};
+
+proto.click = function(handler) {
+  onClick = function(payload) {
+    return handler(payload);
+  };
+  return this;
+};
+
+proto.getDetails = function(id, handler) {
+  if (Data.provider) {
+    Data.provider.getFeature(id, handler);
+  }
+  return this;
+};
+
+osmb.VERSION     = VERSION;
+osmb.ATTRIBUTION = ATTRIBUTION;
+
+
+//****** file: suffix.js ******
+
+
+  global.OSMBuildings = osmb;
+
+}(this));
+
+

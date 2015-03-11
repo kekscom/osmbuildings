@@ -61,12 +61,5 @@ proto.click = function(handler) {
   return this;
 };
 
-proto.getDetails = function(id, handler) {
-  if (Data.provider) {
-    Data.provider.getFeature(id, handler);
-  }
-  return this;
-};
-
 osmb.VERSION     = VERSION;
 osmb.ATTRIBUTION = ATTRIBUTION;

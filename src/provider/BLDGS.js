@@ -1,33 +1,17 @@
 
 var BLDGS = (function() {
 
-  var baseURL = 'http://data.osmbuildings.org/0.2/';
+  var baseURL = 'http://{s}data.osmbuildings.org/0.2/{k}/tile/{z}/{x}/{y}.json';
+
   //var baseURL = 'http://ec2-54-93-84-172.eu-central-1.compute.amazonaws.com/0.2/'; // SMALL
   //var baseURL = 'http://ec2-54-93-72-52.eu-central-1.compute.amazonaws.com/0.2/'; // LARGE
   //var baseURL = 'http://localhost:8000/0.2/';
   //var baseURL = 'http://a.tiles.markware.net/rkc8ywdl/';
 
-
-
   var cacheData = {};
   var cacheIndex = [];
   var cacheSize = 0;
   var maxCacheSize = 0;
-
-//  // http://mathiasbynens.be/notes/localstorage-pattern#comment-9
-//  var storage;
-//  try {
-//    storage = localStorage;
-//  } catch (ex) {
-//    storage = (function() {
-//      return {
-//        getItem: function() {},
-//        setItem: function() {}
-//      };
-//    }());
-//  }
-//
-//  var cacheData = JSON.parse(storage.getItem('BLDGS') || '{}');
 
   function xhr(url, callback) {
     if (cacheData[url]) {
@@ -83,7 +67,13 @@ var BLDGS = (function() {
 
   function BLDGS(options) {
     options = options || {};
-    baseURL += (options.key || 'anonymous');
+
+    if (options.tileSrc) {
+      this.tileSrc = options.tileSrc;
+    } else {
+      this.tileSrc = baseURL.replace('{s}', '').replace('{k}', (options.key || 'anonymous'));
+    }
+
     maxCacheSize = options.cacheSize || 1024*1024; // 1MB
   }
 
@@ -93,17 +83,7 @@ var BLDGS = (function() {
   var proto = BLDGS.prototype;
 
   proto.getTile = function(x, y, zoom, callback) {
-    var url = baseURL +'/tile/'+ zoom +'/'+ x +'/'+ y +'.json';
-    return xhr(url, callback);
-  };
-
-  proto.getFeature = function(id, callback) {
-    var url = baseURL +'/feature/'+ id +'.json';
-    return xhr(url, callback);
-  };
-
-  proto.getBBox = function(bbox, callback) {
-    var url = baseURL +'/bbox.json?bbox='+ [bbox.n.toFixed(5),bbox.e.toFixed(5),bbox.s.toFixed(5),bbox.w.toFixed(5)].join(',');
+    var url = this.tileSrc.replace('{x}', x).replace('{y}', y).replace('{z}', zoom);
     return xhr(url, callback);
   };
 

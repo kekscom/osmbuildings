@@ -734,13 +734,14 @@ function pixelToGeo(x, y) {
   var res = {};
   x /= MAP_SIZE;
   y /= MAP_SIZE;
-  res[LAT] = y <= 0  ? 90 : y >= 1 ? -90 : deg(2 * atan(exp(PI * (1 - 2*y))) - HALF_PI),
+  res[LAT] = y <= 0  ? 90 : y >= 1 ? -90 : deg(2 * atan(exp(PI * (1 - 2*y))) - HALF_PI);
   res[LON] = (x === 1 ?  1 : (x%1 + 1) % 1) * 360 - 180;
   return res;
 }
 
 function geoToPixel(lat, lon) {
-  var latitude  = min(1, max(0, 0.5 - (log(tan(QUARTER_PI + HALF_PI * lat / 180)) / PI) / 2)),
+  var
+    latitude = min(1, max(0, 0.5 - (log(tan(QUARTER_PI + HALF_PI * lat / 180)) / PI) / 2)),
     longitude = lon/360 + 0.5;
   return {
     x: longitude*MAP_SIZE <<0,
@@ -776,6 +777,12 @@ function isVisible(polygon) {
 var BLDGS = (function() {
 
   var baseURL = 'http://data.osmbuildings.org/0.2/';
+  //var baseURL = 'http://ec2-54-93-84-172.eu-central-1.compute.amazonaws.com/0.2/'; // SMALL
+  //var baseURL = 'http://ec2-54-93-72-52.eu-central-1.compute.amazonaws.com/0.2/'; // LARGE
+  //var baseURL = 'http://localhost:8000/0.2/';
+  //var baseURL = 'http://a.tiles.markware.net/rkc8ywdl/';
+
+
 
   var cacheData = {};
   var cacheIndex = [];
