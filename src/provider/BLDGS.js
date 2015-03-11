@@ -69,9 +69,9 @@ var BLDGS = (function() {
     options = options || {};
 
     if (options.tileSrc) {
-      this.tileSrc = options.tileSrc;
+      this.src = options.src;
     } else {
-      this.tileSrc = baseURL.replace('{s}', '').replace('{k}', (options.key || 'anonymous'));
+      this.src = baseURL.replace('{s}', '').replace('{k}', (options.key || 'anonymous'));
     }
 
     maxCacheSize = options.cacheSize || 1024*1024; // 1MB

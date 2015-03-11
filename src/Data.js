@@ -130,7 +130,13 @@ var Data = {
   },
 
   load: function(provider) {
-    this.provider = provider || new BLDGS({ key: DATA_KEY });
+    if (typeof provider === 'string') {
+      this.provider = new BLDGS({ key:DATA_KEY, src:provider });
+    } else if (typeof provider === 'object') {
+      this.provider = provider;
+    } else {
+      this.provider = new BLDGS({ key:DATA_KEY });
+    }
     this.update();
   },
 
