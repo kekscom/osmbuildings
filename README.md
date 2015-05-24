@@ -1,4 +1,4 @@
-<img src="http://osmbuildings.org/logo.png"/>
+<img src="http://osmbuildings.org/logo.svg" width="100" height="88">
 
 OSM Buildings is a JavaScript library for visualizing OpenStreetMaps building geometry on interactive maps.
 
