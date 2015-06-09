@@ -77,6 +77,7 @@ var BLDGS = (function() {
 
   function BLDGS(options) {
     options = options || {};
+    baseURL = options.baseURL || baseURL;
     baseURL += (options.key || 'anonymous');
     maxCacheSize = options.cacheSize || 1024*1024; // 1MB
   }
