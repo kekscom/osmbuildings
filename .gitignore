@@ -1,3 +1,4 @@
-/engines
-/node_modules
-/lib/engines
+/engines/
+/node_modules/
+/lib/engines/
+/.idea/

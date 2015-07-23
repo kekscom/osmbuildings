@@ -356,6 +356,37 @@ var GeoJSON = (function() {
     return materialColors[baseMaterials[str] || str] || null;
   }
 
+  var WINDING_CLOCKWISE = 'CW';
+  var WINDING_COUNTER_CLOCKWISE = 'CCW';
+
+  // detect winding direction: clockwise or counter clockwise
+  function getWinding(points) {
+    var x1, y1, x2, y2,
+      a = 0,
+      i, il;
+    for (i = 0, il = points.length-3; i < il; i += 2) {
+      x1 = points[i];
+      y1 = points[i+1];
+      x2 = points[i+2];
+      y2 = points[i+3];
+      a += x1*y2 - x2*y1;
+    }
+    return (a/2) > 0 ? WINDING_CLOCKWISE : WINDING_COUNTER_CLOCKWISE;
+  }
+
+  // enforce a polygon winding direcetion. Needed for proper backface culling.
+  function makeWinding(points, direction) {
+    var winding = getWinding(points);
+    if (winding === direction) {
+      return points;
+    }
+    var revPoints = [];
+    for (var i = points.length-2; i >= 0; i -= 2) {
+      revPoints.push(points[i], points[i+1]);
+    }
+    return revPoints;
+  }
+
   function alignProperties(prop) {
     var item = {};
 
@@ -533,7 +564,7 @@ var
   VERSION      = '0.2.2b',
   ATTRIBUTION  = '&copy; <a href="http://osmbuildings.org">OSM Buildings</a>',
 
-  DATA_KEY = 'rkc8ywdl',
+  DATA_SRC = 'http://{s}.data.osmbuildings.org/0.2/{k}/tile/{z}/{x}/{y}.json',
 
   PI         = Math.PI,
   HALF_PI    = PI/2,
@@ -771,38 +802,15 @@ function isVisible(polygon) {
 }
 
 
-//****** file: BLDGS.js ******
+//****** file: Request.js ******
 
 
-var BLDGS = (function() {
-
-  var baseURL = 'http://data.osmbuildings.org/0.2/';
-  //var baseURL = 'http://ec2-54-93-84-172.eu-central-1.compute.amazonaws.com/0.2/'; // SMALL
-  //var baseURL = 'http://ec2-54-93-72-52.eu-central-1.compute.amazonaws.com/0.2/'; // LARGE
-  //var baseURL = 'http://localhost:8000/0.2/';
-  //var baseURL = 'http://a.tiles.markware.net/rkc8ywdl/';
-
-
+var Request = (function() {
 
   var cacheData = {};
   var cacheIndex = [];
   var cacheSize = 0;
-  var maxCacheSize = 0;
-
-//  // http://mathiasbynens.be/notes/localstorage-pattern#comment-9
-//  var storage;
-//  try {
-//    storage = localStorage;
-//  } catch (ex) {
-//    storage = (function() {
-//      return {
-//        getItem: function() {},
-//        setItem: function() {}
-//      };
-//    }());
-//  }
-//
-//  var cacheData = JSON.parse(storage.getItem('BLDGS') || '{}');
+  var maxCacheSize = 1024*1024 * 5; // 5MB
 
   function xhr(url, callback) {
     if (cacheData[url]) {
@@ -822,26 +830,19 @@ var BLDGS = (function() {
         return;
       }
       if (callback && req.responseText) {
-        var json;
-        try {
-          json = JSON.parse(req.responseText);
-        } catch(ex) {}
+        var responseText = req.responseText;
 
-        cacheData[url] = json;
-        cacheIndex.push({ url: url, size: req.responseText.length });
-        cacheSize += req.responseText.length;
+        cacheData[url] = responseText;
+        cacheIndex.push({ url: url, size: responseText.length });
+        cacheSize += responseText.length;
+
+        callback(responseText);
 
         while (cacheSize > maxCacheSize) {
           var item = cacheIndex.shift();
           cacheSize -= item.size;
           delete cacheData[item.url];
         }
-
-//  try {
-//    storage.setItem('BLDGS', JSON.stringify(cacheData));
-//  } catch(ex) {}
-
-        callback(json);
       }
     };
 
@@ -851,74 +852,17 @@ var BLDGS = (function() {
     return req;
   }
 
-  function getDistance(a, b) {
-    var dx = a.x-b.x, dy = a.y-b.y;
-    return dx*dx + dy*dy;
-  }
-
-  function BLDGS(options) {
-    options = options || {};
-    baseURL += (options.key || 'anonymous');
-    maxCacheSize = options.cacheSize || 1024*1024; // 1MB
-  }
-
-  BLDGS.TILE_SIZE = 256;
-  BLDGS.ATTRIBUTION = 'Data Service &copy; <a href="http://bld.gs">BLD.GS</a>';
-
-  var proto = BLDGS.prototype;
-
-  proto.getTile = function(x, y, zoom, callback) {
-    var url = baseURL +'/tile/'+ zoom +'/'+ x +'/'+ y +'.json';
-    return xhr(url, callback);
-  };
-
-  proto.getFeature = function(id, callback) {
-    var url = baseURL +'/feature/'+ id +'.json';
-    return xhr(url, callback);
-  };
-
-  proto.getBBox = function(bbox, callback) {
-    var url = baseURL +'/bbox.json?bbox='+ [bbox.n.toFixed(5),bbox.e.toFixed(5),bbox.s.toFixed(5),bbox.w.toFixed(5)].join(',');
-    return xhr(url, callback);
-  };
-
-  proto.getAllTiles = function(x, y, w, h, zoom, callback) {
-    var
-      tileSize = BLDGS.TILE_SIZE,
-      fixedZoom = 16,
-      realTileSize = zoom > fixedZoom ? tileSize <<(zoom-fixedZoom) : tileSize >>(fixedZoom-zoom),
-      minX = x/realTileSize <<0,
-      minY = y/realTileSize <<0,
-      maxX = Math.ceil((x+w)/realTileSize),
-      maxY = Math.ceil((y+h)/realTileSize),
-      tx, ty,
-      queue = [];
-
-    for (ty = minY; ty <= maxY; ty++) {
-      for (tx = minX; tx <= maxX; tx++) {
-        queue.push({ x:tx, y:ty, z:fixedZoom });
-      }
+  return {
+    loadJSON: function(url, callback) {
+      return xhr(url, function(responseText) {
+        var json;
+        try {
+          json = JSON.parse(responseText);
+        } catch(ex) {}
+        callback(json);
+      });
     }
-
-    var center = { x: x+(w-tileSize)/2, y: y+(h-tileSize)/2 };
-		queue.sort(function(a, b) {
-			return getDistance(a, center) - getDistance(b, center);
-		});
-
-		for (var i = 0, il = queue.length; i < il; i++) {
-      this.getTile(queue[i].x, queue[i].y, queue[i].z, callback);
-		}
-
-    return {
-      abort: function() {
-        for (var i = 0; i < queue.length; i++) {
-          queue[i].abort();
-        }
-      }
-    };
   };
-
-  return BLDGS;
 
 }());
 
@@ -1056,8 +1000,8 @@ var Data = {
     this.addRenderItems(this._staticData, true);
   },
 
-  load: function(provider) {
-    this.provider = provider || new BLDGS({ key: DATA_KEY });
+  load: function(src, key) {
+    this.src = src || DATA_SRC.replace('{k}', (key || 'anonymous'));
     this.update();
   },
 
@@ -1073,7 +1017,7 @@ var Data = {
       return;
     }
 
-    if (!this.provider) {
+    if (!this.src) {
       return;
     }
 
@@ -1094,9 +1038,15 @@ var Data = {
 
     for (y = minY; y <= maxY; y++) {
       for (x = minX; x <= maxX; x++) {
-        this.provider.getTile(x, y, tileZoom, callback);
+        this.loadTile(x, y, tileZoom, callback);
       }
     }
+  },
+  
+  loadTile: function(x, y, zoom, callback) {
+    var s = 'abcd'[(x+y) % 4];
+    var url = this.src.replace('{s}', s).replace('{x}', x).replace('{y}', y).replace('{z}', zoom);
+    return Request.loadJSON(url, callback);
   }
 };
 
@@ -2078,8 +2028,8 @@ var Layers = {
 
   createContext: function(container) {
     var canvas = document.createElement('CANVAS');
-    canvas.style.webkitTransform = 'translate3d(0,0,0)'; // turn on hw acceleration
-    canvas.style.imageRendering  = 'optimizeSpeed';
+    canvas.style.transform = 'translate3d(0, 0, 0)'; // turn on hw acceleration
+    canvas.style.imageRendering = 'optimizeSpeed';
     canvas.style.position = 'absolute';
     canvas.style.left = 0;
     canvas.style.top  = 0;
@@ -2088,9 +2038,7 @@ var Layers = {
     context.lineCap   = 'round';
     context.lineJoin  = 'round';
     context.lineWidth = 1;
-
-    context.mozImageSmoothingEnabled    = false;
-    context.webkitImageSmoothingEnabled = false;
+    context.imageSmoothingEnabled = false;
 
     this.items.push(canvas);
     if (container) {
@@ -2396,13 +2344,6 @@ proto.click = function(handler) {
   onClick = function(payload) {
     return handler(payload);
   };
-  return this;
-};
-
-proto.getDetails = function(id, handler) {
-  if (Data.provider) {
-    Data.provider.getFeature(id, handler);
-  }
   return this;
 };
 

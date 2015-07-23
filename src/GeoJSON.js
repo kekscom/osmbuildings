@@ -64,6 +64,37 @@ var GeoJSON = (function() {
     return materialColors[baseMaterials[str] || str] || null;
   }
 
+  var WINDING_CLOCKWISE = 'CW';
+  var WINDING_COUNTER_CLOCKWISE = 'CCW';
+
+  // detect winding direction: clockwise or counter clockwise
+  function getWinding(points) {
+    var x1, y1, x2, y2,
+      a = 0,
+      i, il;
+    for (i = 0, il = points.length-3; i < il; i += 2) {
+      x1 = points[i];
+      y1 = points[i+1];
+      x2 = points[i+2];
+      y2 = points[i+3];
+      a += x1*y2 - x2*y1;
+    }
+    return (a/2) > 0 ? WINDING_CLOCKWISE : WINDING_COUNTER_CLOCKWISE;
+  }
+
+  // enforce a polygon winding direcetion. Needed for proper backface culling.
+  function makeWinding(points, direction) {
+    var winding = getWinding(points);
+    if (winding === direction) {
+      return points;
+    }
+    var revPoints = [];
+    for (var i = points.length-2; i >= 0; i -= 2) {
+      revPoints.push(points[i], points[i+1]);
+    }
+    return revPoints;
+  }
+
   function alignProperties(prop) {
     var item = {};
 
