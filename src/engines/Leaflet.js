@@ -1,10 +1,19 @@
 
 var osmb = function(map) {
   this.offset = { x:0, y:0 };
-	map.addLayer(this);
+  if (map) {
+	  map.addLayer(this);
+  }
 };
 
 var proto = osmb.prototype = L.Layer ? new L.Layer() : {};
+
+proto.addTo = function(map) {
+  if (map) {
+	  map.addLayer(this);
+  }
+  return this;
+};
 
 proto.onAdd = function(map) {
   this.map = map;
