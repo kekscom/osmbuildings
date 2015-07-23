@@ -1,6 +1,6 @@
 <img src="http://osmbuildings.org/logo.png"/>
 
-OSM Buildings is a JavaScript library for visualizing OpenStreetMaps building geometry on interactive maps.
+OSM Buildings is a JavaScript library for visualizing OpenStreetMap building geometry on interactive maps.
 
 Everything is stabilizing now, entering beta state.
 
@@ -11,7 +11,7 @@ Everything is stabilizing now, entering beta state.
   - `setStyle()` => `style()`
   - `setDate()` => `date()`
   - `screenshot()` => no replacement
-
+  - `getDetails()` => no replacement
 
 **Example** http://osmbuildings.org/
 
@@ -199,11 +199,6 @@ Callback receives an object { featureId{number,string}, lat{float}, lon{float} }
 <td>load({Provider})</td>
 <td>Without parameter, it loads OpenStreetMap data tiles via an OSM Buildings proxy. This proxy enables transparent data filtering and caching.
 Interface of such provider is to be published.</td>
-</tr>
-
-<tr>
-<td>getDetails(id, {Function})</td>
-<td>Convenience method to load additional feature information from data provider. Callback function receives a GeoJSON FeatureCollection.</td>
 </tr>
 </table>
 

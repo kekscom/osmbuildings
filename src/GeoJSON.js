@@ -189,6 +189,7 @@ var GeoJSON = (function() {
     for (i = 0, il = p.length; i < il; i++) {
       outer.push(p[i][lat], p[i][lon]);
     }
+    outer = makeWinding(outer, WINDING_CLOCKWISE);
 
     for (i = 0, il = polygon.length-1; i < il; i++) {
       p = polygon[i+1];
@@ -196,6 +197,7 @@ var GeoJSON = (function() {
       for (j = 0, jl = p.length; j < jl; j++) {
         inner[i].push(p[j][lat], p[j][lon]);
       }
+      inner[i] = makeWinding(inner[i], WINDING_COUNTER_CLOCKWISE);
     }
 
     return [{
