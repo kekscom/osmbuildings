@@ -2157,9 +2157,7 @@ var osmb = function(map) {
 var proto = osmb.prototype = L.Layer ? new L.Layer() : {};
 
 proto.addTo = function(map) {
-  if (map) {
-	  map.addLayer(this);
-  }
+  map.addLayer(this);
   return this;
 };
 
@@ -2341,7 +2339,6 @@ proto.set = function(data) {
 };
 
 var onEach = function() {};
-
 proto.each = function(handler) {
   onEach = function(payload) {
     return handler(payload);

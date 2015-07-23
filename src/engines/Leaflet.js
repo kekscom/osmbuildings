@@ -9,9 +9,7 @@ var osmb = function(map) {
 var proto = osmb.prototype = L.Layer ? new L.Layer() : {};
 
 proto.addTo = function(map) {
-  if (map) {
-	  map.addLayer(this);
-  }
+  map.addLayer(this);
   return this;
 };
 

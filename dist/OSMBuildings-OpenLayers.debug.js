@@ -2167,6 +2167,11 @@ proto.attribution   = ATTRIBUTION;
 proto.isBaseLayer   = false;
 proto.alwaysInRange = true;
 
+proto.addTo = function(map) {
+  this.setMap(map);
+  return this;
+};
+
 proto.setOrigin = function() {
   var map = this.map,
     origin = map.getLonLatFromPixel(new OpenLayers.Pixel(0, 0)),
@@ -2295,7 +2300,6 @@ proto.set = function(data) {
 };
 
 var onEach = function() {};
-
 proto.each = function(handler) {
   onEach = function(payload) {
     return handler(payload);
