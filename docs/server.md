@@ -7,14 +7,18 @@ Before hitting us with heavy load, please get in touch at support@osmbuildings.o
 
 The built in default server URL schema is `http://{s}.data.osmbuildings.org/0.2/{k}/tile/{z}/{x}/{y}.json`
 
-The placeholder and adressing schema is described here:
+Placeholder and adressing schema is described here:
 http://wiki.osgeo.org/wiki/Tile_Map_Service_Specification#Tile_Resources
 
 `{s}` in our case stands for a subdomain (a,b,c,d) to extend the number of browser requests per domain.
 
+## Data Source ##
+
 We are pulling OpenStreetMap data from Overpass API (http://overpass-turbo.eu/).
 That way we are very flexible in terms of querying and data freshness.
 For retrieving building data, we convert TMS adressed tiles to geographic bounding boxes (projection EPSG 4326) and opted for a JSON formatted response.
+
+## GeoJSON Properties ##
 
 OSM Buildings Server does a lot of alignments, optimizations and caching and finally returns GeoJSON.
 The result is fully compatible but has a few conventions, see below.
@@ -70,3 +74,9 @@ The result is fully compatible but has a few conventions, see below.
 <td>roof:height</td>
 </tr>
 </table>
+
+## Sample Implementation ##
+
+Code by Michael Meier (michael.meier@fau.de)
+
+http://git.rrze.uni-erlangen.de/gitweb/?p=osmrrze.git;a=blob;f=scripts/osmbuildings-json-generator.pl
