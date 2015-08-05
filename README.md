@@ -2,11 +2,13 @@
 
 OSM Buildings is a JavaScript library for visualizing OpenStreetMap building geometry on interactive maps.
 
-**Example** http://osmbuildings.org/
+Example: http://osmbuildings.org/
 
-**For the new WebGL version, check out https://github.com/OSMBuildings/OSMBuildings
-All versions will eventually land over there.**
+The new WebGL version is located here: https://github.com/OSMBuildings/OSMBuildings
+All variants of OSM Buildings will eventually land over there.
 
+There is also documentation of OSM Buildings Server side:
+https://github.com/kekscom/osmbuildings/blob/master/docs/server.md
 
 ## Deprecated methods and their replacements
 
