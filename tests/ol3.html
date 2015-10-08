@@ -38,10 +38,11 @@ var map = new ol.Map({
   }),
   target: 'map',
   view: new ol.View({
-    center: [0, 0],
-    zoom: 2
+    center: ol.proj.transform([13.33522, 52.50440], 'EPSG:4326', 'EPSG:3857'),
+    zoom: 16
   })
 });
+
 
 var osm = new OSMBuildings(map);
 osm.date(new Date(2015, 5, 15, 17, 30))
