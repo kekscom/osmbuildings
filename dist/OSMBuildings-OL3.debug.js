@@ -2181,7 +2181,7 @@ proto.setOrigin = function() {
                                                                             
 proto.setMap = function(map) {
   var scope = this;
-  Layers.appendTo(document.getElementById(map.get("target")));
+  Layers.appendTo(document.getElementById(map.get('target').id));
   setSize({ width:map.getSize()[0], height:map.getSize()[1] });
 
   var layerProjection = this.map.getView().getProjection();
