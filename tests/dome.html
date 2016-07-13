@@ -6,7 +6,7 @@
 </head>
 
 <body>
-<canvas width="800" height="800">
+<canvas width="1200" height="800">
 
 <script>
 var context = document.querySelector('CANVAS').getContext('2d');
@@ -30,195 +30,248 @@ var Debug = {
   }
 };
 
-function unitVector(a, b) {
-  var
-    dx = a.x-b.x,
-    dy = a.y-b.y,
-    length = Math.sqrt(dx*dx + dy*dy);
+//function unitVector(a, b) {
+//  var
+//    dx = a.x-b.x,
+//    dy = a.y-b.y,
+//    length = Math.sqrt(dx*dx + dy*dy);
+//  return {
+//    x: dx/length,
+//    y: dy/length
+//  };
+//}
+
+
+function vAdd(a, b) {
   return {
-    x: dx/length,
-    y: dy/length
+    x: a.x+b.x,
+    y: a.y+b.y
   };
 }
 
-function rotation(p, c, a) {
-  var ms = Math.sin(a), mc = Math.cos(a);
-  p.x -= c.x;
-  p.y -= c.y;
+function vSub(a, b) {
   return {
-    x: p.x* mc + p.y*ms + c.x,
-    y: p.x*-ms + p.y*mc + c.y
+    x: a.x-b.x,
+    y: a.y-b.y
   };
 }
+
+function vScale(a, f) {
+  return {
+    x: a.x*f,
+    y: a.y*f
+  };
+}
+
+function getLineIntersection(seg1, seg2) {
+//  if (this.a.equals(seg2.a) || this.a.equals(seg2[.b) || this.b.equals(seg2.a) || this.b.equals(seg2.b)) {
+//    return null;
+//  }
+debugger
+  var d1 = vSub(seg1.b, seg1.a);
+  var d2 = vSub(seg2.b, seg2.a);
+
+  //calculate dot product;
+  //if dot product is (approximately) 0, the lines are parallel
+  var denom = d1.y*d2.x - d1.x*d2.y;
+  if (Math.abs(denom) < 1e-10) {
+    return null;
+  }
+
+  //calculate vector for connection between this[0] and seg2[0]
+  var amc = vSub(seg2.a, seg1.a);
+
+  //calculate t so that intersection is at this[0]+t*v
+  var t = (amc.y*d2.x - amc.x*d2.y)/denom;
+  if (t<0 || t>1) {
+    return null;
+  }
+
+  //calculate s so that intersection is at seg2[0]+t*q
+  var s = (amc.y*d1.x - amc.x*d1.y)/denom;
+  if (s<0 || s>1) {
+    return null;
+  }
+
+  return vAdd(seg1.a, vScale(d1, t));
+}
+
+
+
+// @see http://mathworld.wolfram.com/Line-LineIntersection.html
+// @returns the intersection point of the given lines.
+// @returns undefined if the lines do not intersect.
+function getLineIntersection2(v1, v2, v3, v4) {
+  var tolerance = 0.000001;
+
+  var a = det2(v1.x - v2.x, v1.y - v2.y, v3.x - v4.x, v3.y - v4.y);
+  if (Math.abs(a) < tolerance) return;
+
+  var d1 = det2(v1.x, v1.y, v2.x, v2.y);
+  var d2 = det2(v3.x, v3.y, v4.x, v4.y);
+  var x = det2(d1, v1.x - v2.x, d2, v3.x - v4.x) / a;
+  var y = det2(d1, v1.y - v2.y, d2, v3.y - v4.y) / a;
+
+  return { x:x, y:y };
+}
+
+// Returns the determinant of the 2x2 matrix defined as
+// | x1 x2 |
+// | y1 y2 |
+function det2(x1, x2, y1, y2) {
+  return x1 * y2 - y1 * x2;
+}
+
+
+
+
+
+
+
 
 var KAPPA = 0.5522847498;
 
-function halfCircle(c, v, r, h) {
+function drawHorizon(center, vp, radius, height) {
 
-  var _r = r * CAM_Z / (CAM_Z-h);
+  var t = getTangents(center, radius, { x:CAM_X, y:CAM_Y }, 0);
+  if (t === undefined) {
+    return;
+  }
 
-  var cv = c.y-v.y;
+  Debug.point(t[0].x1, t[0].y1, 'red', 2);
+  Debug.point(t[1].x1, t[1].y1, 'red', 2);
+
+
+var dx = CAM_X-vp.x;
+var dy = CAM_Y-vp.y;
+Debug.line(vp.x+dy, vp.y-dx, vp.x, vp.y);
+Debug.line(CAM_X, CAM_Y, t[1].x1, t[1].y1);
+
+var i = getLineIntersection2({ x:vp.x+dy, y:vp.y-dx }, { x:vp.x, y:vp.y }, { x:CAM_X, y:CAM_Y }, { x:t[1].x1, y:t[1].y1 });
+Debug.point(i.x, i.y, 'blue');
+
+
+var dix = i.x-vp.x;
+var diy = i.y-vp.y;
+Debug.point(vp.x+dix*KAPPA, vp.y+diy*KAPPA, 'pink');
+
+
+var tix = i.x-t[1].x1;
+var tiy = i.y-t[1].y1;
+Debug.point(t[1].x1+tix*KAPPA, t[1].y1+tiy*KAPPA, 'pink');
+
+
+context.strokeStyle = '#ff0000';
+context.beginPath();
+context.moveTo(t[1].x1, t[1].y1);
+context.bezierCurveTo(t[1].x1+tix*KAPPA, t[1].y1+tiy*KAPPA, vp.x+dix*KAPPA, vp.y+diy*KAPPA, vp.x, vp.y);
+context.stroke();
+
+
+
+  //  var apex = project(center, height);
+//
+//  var p1 = { x:t[0].x1, y:(center.y-t[0].y1);
+//  var p1 = center.x-t[0].x1;
+//
+//
+//  var
+//      a = rotatePoint({ x:center.x, y:center.y-radius }, center, angle),
+//      b = project(center, height); // apex
+//
+//    var
+//      p1 = project(a, height*KAPPA),
+//      p2 = project(rotatePoint({ x:center.x, y:center.y-radius*KAPPA }, center, angle), height);
+//
+//    context.moveTo(a.x, a.y);
+//    context.bezierCurveTo(p1.x, p1.y, p2.x, p2.y, b.x, b.y);
+//  }
+//
+
+
+
+
+
+
+  return;
+
+  var _r = radius * CAM_Z / (CAM_Z-height);
+  var cv = center.y-vp.y;
 
   context.strokeStyle = '#ff0000';
   context.beginPath();
-  context.moveTo(c.x-r, c.y);
+  context.moveTo(center.x-radius, center.y);
   context.bezierCurveTo(
-    c.x - r, c.y - cv*KAPPA * h/cv,
-    v.x - _r*KAPPA*1.2, v.y,
-    v.x, v.y
+    center.x - radius, center.y - cv*KAPPA * height/cv,
+    vp.x - _r*KAPPA*1.2, vp.y,
+    vp.x, vp.y
   );
   context.stroke();
 
   context.beginPath();
-  context.moveTo(c.x+r, c.y);
+  context.moveTo(center.x+radius, center.y);
   context.bezierCurveTo(
-    c.x + r, c.y - cv*KAPPA * h/cv,
-    v.x + _r*KAPPA*1.2, v.y,
-    v.x, v.y
+    center.x + radius, center.y - cv*KAPPA * height/cv,
+    vp.x + _r*KAPPA*1.2, vp.y,
+    vp.x, vp.y
   );
   context.stroke();
 }
 
 
-function dome(c, r, h, minHeight) {
-  context.strokeStyle = '#666666';
+//*****************************************************************************
+//*****************************************************************************
+//*****************************************************************************
 
-  if (!h) {
-    h = r;
-  }
-
-  minHeight = minHeight || 0;
-
-  if (minHeight) {
-    c = project(c, CAM_Z / (CAM_Z-minHeight));
-    r *= CAM_Z / (CAM_Z-minHeight);
-  }
-
-  drawCircle(c, r, true);
-
-context.beginPath();
-var _h = CAM_Z / (CAM_Z-h);
-var hfK = CAM_Z / (CAM_Z-(h*KAPPA));
-var apex = project(c, _h);
-for (var i = 0; i < 180; i+=5) {
-  drawMeridian(c, r, _h, hfK, apex, i*RAD);
-}
-context.stroke();
-  var v = getVanishingPoint(c, r, h, minHeight);
-
-halfCircle(c, v, r, h);
-/***
-  var angle = Math.atan((CAM_X-c.x)/(CAM_Y-c.y));
-
-  context.beginPath();
-  context.moveTo(c.x, c.y+r);
-  context.bezierCurveTo(
-    c1.x, c1.x,
-    c2.x, c2.x,
-    v.x, v.y
-  );
-  context.stroke();
-
-  context.beginPath();
-  context.moveTo(c.x, c.y+r);
-  context.bezierCurveTo(
-    c1.x, c1.x,
-    c2.x, c2.x,
-    v.x, v.y
-  );
-  context.stroke();
-***/
-
-return;
-
-  var angle = MAth.atan((CAM_X-c.x)/(CAM_Y-c.y));
-  var scale = CAM_Z / (CAM_Z-v.y);
-
-  var  p1h = rotation({ x:c.x-r, y:v.x }, c, angle);
-  var _p1h = project(p1h, scale);
-
-  var  p2h = rotation({ x:c.x+r, y:v.x }, c, angle);
-  var _p2h = project(p2h, scale);
-
-
-
-
-
-
-  var  ct1 = rotation({ x:t1.x, y:t1.y-KAPPA }, t1, angle);
-  var _ct1 = project(ct1, scale);
-
-  var  ct2 = rotation({ x:t2.x+r, y:t2.y-KAPPA }, t2, angle);
-  var _ct2 = project(ct2, scale);
-
-
-
-
-
-
-  context.beginPath();
-
-  context.moveTo(p1v.x, p1v.y);
-  context.bezierCurveTo(
-    p1v.x + (_p1h.x-p1v.x) * KAPPA,
-    p1v.y + (_p1h.y-p1v.y) * KAPPA,
-    _p.x + (_p1h.x-_p.x) * KAPPA,
-    _p.y + (_p1h.y-_p.y) * KAPPA,
-    _p.x, _p.y);
-
-  context.moveTo(p2v.x, p2v.y);
-  context.bezierCurveTo(
-    p2v.x + (_p2h.x-p2v.x) * KAPPA,
-    p2v.y + (_p2h.y-p2v.y) * KAPPA,
-    _p.x + (_p2h.x-_p.x) * KAPPA,
-    _p.y + (_p2h.y-_p.y) * KAPPA,
-    _p.x, _p.y);
-
-//context.fill();
-  context.stroke();
-
-
-Debug.point(v.x, v.y, 'blue');
-Debug.point(t1.x, t1.y, 'red');
-Debug.point(t2.x, t2.y, 'green');
-
+function project(p, z) {
+  var m = CAM_Z / (CAM_Z-z);
+  return {
+    x: (p.x-CAM_X) * m + CAM_X <<0,
+    y: (p.y-CAM_Y) * m + CAM_Y <<0
+  };
 }
 
-function drawMeridian(c, r, _h, hfK, apex, angle) {
-  drawHalfMeridian(c, r, _h, hfK, apex, angle);
-  drawHalfMeridian(c, r, _h, hfK, apex, angle + Math.PI);
+function rotatePoint(point, center, angle) {
+  var sin = Math.sin(angle), cos = Math.cos(angle);
+  point.x -= center.x;
+  point.y -= center.y;
+  return {
+    x: point.x* cos + point.y*sin + center.x,
+    y: point.x*-sin + point.y*cos + center.y
+  };
 }
 
-function drawHalfMeridian(c, r, _h, hfK, apex, angle) {
+function drawCircle(center, radius) {
+  context.beginPath();
+  context.arc(center.x, center.y, radius, 0, Math.PI*2);
+  context.stroke();
+}
+
+function drawMeridianPart(center, radius, height, angle) {
   var
-    p1 = rotation({ x:c.x, y:c.y-r },     c, angle),
-    p2 = rotation({ x:c.x, y:c.y-r*KAPPA }, c, angle),
-    _p1 = project(p1, hfK),
-    _p2 = project(p2, _h);
-  context.moveTo(p1.x, p1.y);
-  context.bezierCurveTo(_p1.x, _p1.y, _p2.x, _p2.y, apex.x, apex.y);
+    a = rotatePoint({ x:center.x, y:center.y-radius }, center, angle),
+    b = project(center, height); // apex
+
+  var
+    p1 = project(a, height*KAPPA),
+    p2 = project(rotatePoint({ x:center.x, y:center.y-radius*KAPPA }, center, angle), height);
+
+  context.moveTo(a.x, a.y);
+  context.bezierCurveTo(p1.x, p1.y, p2.x, p2.y, b.x, b.y);
 }
 
-
-
-
-
-
-
-
-// VERTICAL TANGENT POINTS ON SPHERE:
-// side view at scenario:
-// sphere at c.x,c.y & radius => circle at c.y,minHeight
-// cam  at CAM_X/CAM_Y/CAM_Z => point  at CAM_Y/CAM_Z
-function getVanishingPoint(c, r, h, minHeight) {
+// (vertical?) tangent points on sphere:
+// side view (parallel to center/camera):
+// ellipsoid with radius,height at center => ellipse at center.y,minHeight
+// camera at CAM => point at CAM_Y/CAM_Z
+function getVanishingPoint(center, radius, height, minHeight) {
   var
-    dx = CAM_X-c.x,
-    dy = CAM_Y-c.y,
-    d = Math.sqrt(dx*dx + dy*dy),
-    v = getEllipseTangent(r, h, d, CAM_Z-minHeight),
-    p = rotation({ x:c.x, y:c.y+v.x }, c, Math.atan(dx/dy));
-
-  return project(p, CAM_Z / (CAM_Z-v.y));
+    dx = CAM_X-center.x,
+    dy = CAM_Y-center.y,
+    dist = Math.sqrt(dx*dx + dy*dy),
+    v = getEllipseTangent(radius, height, dist, CAM_Z-minHeight),
+    p = rotatePoint({ x:center.x, y:center.y+v.x }, center, Math.atan(dx/dy));
+  return project(p, v.y);
 }
 
 function getEllipseTangent(a, b, x, y) {
@@ -233,8 +286,41 @@ function getEllipseTangent(a, b, x, y) {
   };
 }
 
+function drawDome(center, radius, height, minHeight) {
+  var perspectiveScale;
+
+  if (!height) {
+    height = radius;
+  }
+
+  minHeight = minHeight || 0;
+
+  if (minHeight) {
+    center = project(center, minHeight);
+    radius *= (CAM_Z / (CAM_Z-minHeight));
+  }
+
+  context.strokeStyle = '#cc9999';
+  drawCircle(center, radius, true);
+
+  context.beginPath();
+  for (var i = 0; i < 180; i+=15) {
+    var angle = i*Math.PI/180;
+    drawMeridianPart(center, radius, height, angle);
+    drawMeridianPart(center, radius, height, angle + Math.PI);
+  }
+  context.stroke();
+
+  var vp = getVanishingPoint(center, radius, height, minHeight);
+  drawHorizon(center, vp, radius, height);
+
+  Debug.point(vp.x, vp.y, 'green', 2);
+}
+
+//*****************************************************************************
+
 var RAD = Math.PI/180;
-var WIDTH = 800;
+var WIDTH = 1200;
 var HEIGHT = 800;
 var CAM_X = WIDTH/2;
 var CAM_Y = HEIGHT;
@@ -242,24 +328,13 @@ var CAM_Z = 450;
 
 document.addEventListener('mousemove', function(e) {
   context.clearRect(0, 0, WIDTH, HEIGHT);
-  dome({ x:400, y:e.y }, 100, 100, 0);
+  drawDome({ x:e.x, y:e.y }, 100, 150, 0);
   console.log(e.x, e.y);
 });
 
+//*****************************************************************************
 
-function drawCircle(center, radius) {
-  context.beginPath();
-  context.arc(center.x, center.y, radius, 0, Math.PI*2);
-  context.stroke();
-//  context.fill();
-}
 
-function project(p, m) {
-  return {
-    x: (p.x-CAM_X) * m + CAM_X <<0,
-    y: (p.y-CAM_Y) * m + CAM_Y <<0
-  };
-}
 
 function getTangents(c1, r1, c2, r2) {
   var
