@@ -1,0 +1,23 @@
+{
+  "name": "osmbuildings",
+  "version": "0.2.1",
+  "homepage": "https://github.com/kekscom/osmbuildings",
+  "authors": [
+    "Jan Marsch (jama@keks.com)"
+  ],
+  "description": "OSM Buildings is a JavaScript library for visualizing OpenStreetMaps building geometry on interactive maps.",
+  "main": "dist/OSMBuildings-Leaflet.js",
+  "keywords": [
+    "osm",
+    "javascript",
+    "maps"
+  ],
+  "license": "BSD",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
