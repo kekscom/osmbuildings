@@ -3,9 +3,9 @@ var srcPath = '../src';
 var dstPath = '../dist';
 
 exports.COPYRIGHT = '/**\n' +
-                    ' * Copyright (C) 2015 OSM Buildings, Jan Marsch\n' +
+                    ' * Copyright (C) 2017 OSM Buildings, Jan Marsch\n' +
                     ' * A JavaScript library for visualizing building geometry on interactive maps.\n' +
-                    ' * @osmbuildings, http://osmbuildings.org\n' +
+                    ' * @osmbuildings, https://osmbuildings.org\n' +
                     ' */\n';
 
 exports.VERSION = '0.2.2b';

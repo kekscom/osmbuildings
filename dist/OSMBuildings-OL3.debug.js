@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2015 OSM Buildings, Jan Marsch
+ * Copyright (C) 2017 OSM Buildings, Jan Marsch
  * A JavaScript library for visualizing building geometry on interactive maps.
  * @osmbuildings, http://osmbuildings.org
  */

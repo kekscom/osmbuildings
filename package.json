@@ -2,8 +2,8 @@
   "name": "osmbuildings",
   "private": false,
   "description": "OSM Buildings",
-  "version": "0.2.0b",
-  "homepage": "http://osmbuildings.org",
+  "version": "0.2.1",
+  "homepage": "https://osmbuildings.org",
   "author": "@kekscom",
   "contributors": [
     "Jan Marsch <jama@keks.com>"

@@ -1,8 +1,8 @@
 var
   VERSION      = /*<version=*/'0.2.3b'/*>*/,
-  ATTRIBUTION  = '&copy; <a href="http://osmbuildings.org">OSM Buildings</a>',
+  ATTRIBUTION  = '&copy; <a href="https://osmbuildings.org">OSM Buildings</a>',
 
-  DATA_SRC = 'http://{s}.data.osmbuildings.org/0.2/{k}/tile/{z}/{x}/{y}.json',
+  DATA_SRC = 'https://{s}.data.osmbuildings.org/0.2/{k}/tile/{z}/{x}/{y}.json',
 
   PI         = Math.PI,
   HALF_PI    = PI/2,
