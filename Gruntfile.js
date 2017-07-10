@@ -18,16 +18,20 @@ module.exports = function(grunt) {
     },
 
     jshint: {
-      all:[
-        'dist/OSMBuildings-Leaflet.debug.js'
+      all: [
+        'dist/OSMBuildings-Leaflet.debug.js',
+        'dist/OSMBuildings-OpenLayers.debug.js'
       ]
     },
 
     uglify: {
-      app: {
+      app: [{
         src: 'dist/OSMBuildings-Leaflet.debug.js',
         dest: 'dist/OSMBuildings-Leaflet.js'
-      }
+      }, {
+        src: 'dist/OSMBuildings-OpenLayers.debug.js',
+        dest: 'dist/OSMBuildings-OpenLayers.js'
+      }]
     }
   });
 
