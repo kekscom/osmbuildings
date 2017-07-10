@@ -18,8 +18,8 @@ html, body {
 </style>
 <link rel="stylesheet" href="leaflet-0.8/leaflet.css">
 <script src="leaflet-0.8/leaflet-src.js"></script>
-<script src="State.js"></script>
-<script src="loader.js"></script>
+<script src="tests/State.js"></script>
+<script src="tests/loader.js"></script>
 </head>
 
 <body>
@@ -46,11 +46,7 @@ function saveMapState() {
 }
 
 var map = new L.Map('map').setView([52.52179, 13.39503], 18); // Berlin Bodemuseum
-//var map = new L.Map('map').setView([52.50557, 13.33451], 17); // Berlin Ku'Damm
-//var map = new L.Map('map').setView([52.52079, 13.40882], 16); // Berlin Fernsehturm
-//var map = new L.Map('map').setView([51.48286534876508, 11.96986734867096], 19); // Halle
 //var map = new L.Map('map').setView([37.78923, -122.40597], 16); // SF
-//var map = new L.Map('map').setView([48.86083, 2.33565], 18); // Louvre, Paris
 
 map.on('moveend zoomend', function() {
   saveMapState()
@@ -70,7 +66,6 @@ osmb.addTo(map)
   .click(function(e) {
     console.log('feature clicked:', e);
   });
-
 
 // GeoJSON
 //map.setView([52.52179, 13.39503], 18); // Berlin Bodemuseum
