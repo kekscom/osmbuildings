@@ -46,8 +46,8 @@ html, body {
 <script>
 var map = new L.Map('map').setView([52.52179, 13.39503], 18); // Berlin Bodemuseum
 
-new L.TileLayer('http://{s}.tiles.mapbox.com/v3/osmbuildings.kbpalbpk/{z}/{x}/{y}.png', { maxNativeZoom: 19, maxZoom: 21 }).addTo(map);
-var now = new Date(2015, 4, 10, 8, 0);
+new L.TileLayer('https://{s}.tiles.mapbox.com/v3/osmbuildings.kbpalbpk/{z}/{x}/{y}.png', { maxNativeZoom: 19, maxZoom: 21 }).addTo(map);
+var now = new Date(2017, 4, 10, 8, 0);
 var osmb = new OSMBuildings(map).date(now).load();
 
 function changeDate() {

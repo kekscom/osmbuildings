@@ -3,9 +3,9 @@ var srcPath = '../src';
 var dstPath = '../dist';
 
 exports.COPYRIGHT = '/**\n' +
-                    ' * Copyright (C) 2015 OSM Buildings, Jan Marsch\n' +
+                    ' * Copyright (C) 2017 OSM Buildings, Jan Marsch\n' +
                     ' * A JavaScript library for visualizing building geometry on interactive maps.\n' +
-                    ' * @osmbuildings, http://osmbuildings.org\n' +
+                    ' * @osmbuildings, https://osmbuildings.org\n' +
                     ' */\n';
 
 exports.VERSION = '0.2.2b';
@@ -19,7 +19,7 @@ exports.srcFiles = [
   srcPath + '/variables.js',
   srcPath + '/geometry.js',
   srcPath + '/functions.js',
-  srcPath + '/provider/BLDGS.js',
+  srcPath + '/Request.js',
   srcPath + '/Data.js',
   srcPath + '/geometry/Block.js',
   srcPath + '/geometry/Cylinder.js',
@@ -42,12 +42,12 @@ exports.dstFiles = {
   gzipped:  dstPath + '/OSMBuildings-{engine}.js.gz'
 };
 
-exports.engines = ['Leaflet', 'OpenLayers'];
+exports.engines = ['Leaflet', 'OpenLayers', 'OL3'];
 
 exports.jshint = {
 	"browser": true,
 	"node": true,
-	"predef": ["L", "OpenLayers"],
+	"predef": ["L", "OpenLayers", 'ol'],
 //"unused": true,
 
 	"debug": false,

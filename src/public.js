@@ -44,7 +44,6 @@ proto.set = function(data) {
 };
 
 var onEach = function() {};
-
 proto.each = function(handler) {
   onEach = function(payload) {
     return handler(payload);
@@ -58,13 +57,6 @@ proto.click = function(handler) {
   onClick = function(payload) {
     return handler(payload);
   };
-  return this;
-};
-
-proto.getDetails = function(id, handler) {
-  if (Data.provider) {
-    Data.provider.getFeature(id, handler);
-  }
   return this;
 };
 

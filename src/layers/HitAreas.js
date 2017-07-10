@@ -76,7 +76,10 @@ var HitAreas = {
       }
     }
 
-    this._imageData = this.context.getImageData(0, 0, WIDTH, HEIGHT).data;
+    // otherwise fails on size 0
+    if (WIDTH && HEIGHT) {
+      this._imageData = this.context.getImageData(0, 0, WIDTH, HEIGHT).data;
+    }
   },
 
   getIdFromXY: function(x, y) {

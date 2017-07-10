@@ -17,7 +17,8 @@ function pixelToGeo(x, y) {
 }
 
 function geoToPixel(lat, lon) {
-  var latitude  = min(1, max(0, 0.5 - (log(tan(QUARTER_PI + HALF_PI * lat / 180)) / PI) / 2)),
+  var
+    latitude = min(1, max(0, 0.5 - (log(tan(QUARTER_PI + HALF_PI * lat / 180)) / PI) / 2)),
     longitude = lon/360 + 0.5;
   return {
     x: longitude*MAP_SIZE <<0,

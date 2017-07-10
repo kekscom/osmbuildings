@@ -1,7 +1,7 @@
 
 var BLDGS = (function() {
 
-  var baseURL = 'http://data.osmbuildings.org/0.2/';
+  var baseURL = 'https://data.osmbuildings.org/0.2/';
 
   var cacheData = {};
   var cacheIndex = [];
@@ -77,12 +77,13 @@ var BLDGS = (function() {
 
   function BLDGS(options) {
     options = options || {};
+    baseURL = options.baseURL || baseURL;
     baseURL += (options.key || 'anonymous');
     maxCacheSize = options.cacheSize || 1024*1024; // 1MB
   }
 
   BLDGS.TILE_SIZE = 256;
-  BLDGS.ATTRIBUTION = 'Data Service &copy; <a href="http://bld.gs">BLD.GS</a>';
+  BLDGS.ATTRIBUTION = 'Data Service &copy; <a href="https://bld.gs">BLD.GS</a>';
 
   var proto = BLDGS.prototype;
 

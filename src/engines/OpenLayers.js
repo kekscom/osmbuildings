@@ -3,10 +3,13 @@
 var parent = OpenLayers.Layer.prototype;
 
 var osmb = function(map) {
-  this.offset = { x:0, y:0 }; // cumulative cam offset during moveBy
+  this.offset = { x:0, y:0 }; // cumulative cam offset during moveBy()
 
   parent.initialize.call(this, this.name, { projection:'EPSG:900913' });
-	map.addLayer(this);
+
+  if (map) {
+	  map.addLayer(this);
+  }
 };
 
 var proto = osmb.prototype = new OpenLayers.Layer();
@@ -15,6 +18,11 @@ proto.name          = 'OSM Buildings';
 proto.attribution   = ATTRIBUTION;
 proto.isBaseLayer   = false;
 proto.alwaysInRange = true;
+
+proto.addTo = function(map) {
+  this.setMap(map);
+  return this;
+};
 
 proto.setOrigin = function() {
   var map = this.map,

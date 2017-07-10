@@ -60,8 +60,8 @@ var Layers = {
 
   createContext: function(container) {
     var canvas = document.createElement('CANVAS');
-    canvas.style.webkitTransform = 'translate3d(0,0,0)'; // turn on hw acceleration
-    canvas.style.imageRendering  = 'optimizeSpeed';
+    canvas.style.transform = 'translate3d(0, 0, 0)'; // turn on hw acceleration
+    canvas.style.imageRendering = 'optimizeSpeed';
     canvas.style.position = 'absolute';
     canvas.style.left = 0;
     canvas.style.top  = 0;
@@ -70,9 +70,7 @@ var Layers = {
     context.lineCap   = 'round';
     context.lineJoin  = 'round';
     context.lineWidth = 1;
-
-    context.mozImageSmoothingEnabled    = false;
-    context.webkitImageSmoothingEnabled = false;
+    context.imageSmoothingEnabled = false;
 
     this.items.push(canvas);
     if (container) {

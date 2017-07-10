@@ -1,8 +1,14 @@
-<img src="http://osmbuildings.org/logo.png"/>
+<img src="https://osmbuildings.org/logo.svg" width="100" height="88">
 
-OSM Buildings is a JavaScript library for visualizing OpenStreetMaps building geometry on interactive maps.
+OSM Buildings is a JavaScript library for visualizing OpenStreetMap building geometry on interactive maps.
 
-Everything is stabilizing now, entering beta state.
+Example: https://osmbuildings.org/
+
+The new WebGL version is located here: https://github.com/OSMBuildings/OSMBuildings
+All variants of OSM Buildings will eventually land over there.
+
+There is also documentation of OSM Buildings Server side:
+https://github.com/kekscom/osmbuildings/blob/master/docs/server.md
 
 ## Deprecated methods and their replacements
 
@@ -11,13 +17,13 @@ Everything is stabilizing now, entering beta state.
   - `setStyle()` => `style()`
   - `setDate()` => `date()`
   - `screenshot()` => no replacement
+  - `getDetails()` => no replacement
 
-
-**Example** http://osmbuildings.org/
+**Example** https://osmbuildings.org/
 
 It's safe use the [master branch](https://github.com/kekscom/osmbuildings/tree/master/dist/) for production.
 
-For further information visit http://osmbuildings.org, follow [@osmbuildings](https://twitter.com/osmbuildings/) on Twitter or report issues [here on Github](https://github.com/kekscom/osmbuildings/issues/).
+For further information visit https://osmbuildings.org, follow [@osmbuildings](https://twitter.com/osmbuildings/) on Twitter or report issues [here on Github](https://github.com/kekscom/osmbuildings/issues/).
 
 
 ## Documentation
@@ -35,12 +41,12 @@ Link Leaflet and OSM Buildings files in your HTML head section.
 ~~~
 
 Initialize the map engine and add a map tile layer.<br>
-Position is set to Berlin at zoom level 17, I'm using MapBox tiles here.
+Position is set to Berlin at zoom level 17, I'm using Mapbox tiles here.
 
 ~~~ javascript
 var map = new L.Map('map').setView([52.52020, 13.37570], 17);
-new L.TileLayer('http://{s}.tiles.mapbox.com/v3/<YOUR KEY HERE>/{z}/{x}/{y}.png',
-  { attribution: 'Map tiles &copy; <a href="http://mapbox.com">MapBox</a>', maxZoom: 17 }).addTo(map);
+new L.TileLayer('https://{s}.tiles.mapbox.com/v3/<YOUR KEY HERE>/{z}/{x}/{y}.png',
+  { attribution: 'Map tiles &copy; <a href="https://mapbox.com">Mapbox</a>', maxZoom: 17 }).addTo(map);
 ~~~
 
 Add the buildings layer.
@@ -174,7 +180,7 @@ Methods
 </tr>
 
 <tr>
-<td>date(new Date(2015, 15, 1, 10, 30)))</td>
+<td>date(new Date(2017, 15, 1, 10, 30)))</td>
 <td>Set date/time for shadow projection.</td>
 </tr>
 
@@ -199,11 +205,6 @@ Callback receives an object { featureId{number,string}, lat{float}, lon{float} }
 <td>load({Provider})</td>
 <td>Without parameter, it loads OpenStreetMap data tiles via an OSM Buildings proxy. This proxy enables transparent data filtering and caching.
 Interface of such provider is to be published.</td>
-</tr>
-
-<tr>
-<td>getDetails(id, {Function})</td>
-<td>Convenience method to load additional feature information from data provider. Callback function receives a GeoJSON FeatureCollection.</td>
 </tr>
 </table>
 

@@ -129,8 +129,8 @@ var Data = {
     this.addRenderItems(this._staticData, true);
   },
 
-  load: function(provider) {
-    this.provider = provider || new BLDGS({ key: DATA_KEY });
+  load: function(src, key) {
+    this.src = src || DATA_SRC.replace('{k}', (key || 'anonymous'));
     this.update();
   },
 
@@ -146,7 +146,7 @@ var Data = {
       return;
     }
 
-    if (!this.provider) {
+    if (!this.src) {
       return;
     }
 
@@ -167,8 +167,14 @@ var Data = {
 
     for (y = minY; y <= maxY; y++) {
       for (x = minX; x <= maxX; x++) {
-        this.provider.getTile(x, y, tileZoom, callback);
+        this.loadTile(x, y, tileZoom, callback);
       }
     }
+  },
+  
+  loadTile: function(x, y, zoom, callback) {
+    var s = 'abcd'[(x+y) % 4];
+    var url = this.src.replace('{s}', s).replace('{x}', x).replace('{y}', y).replace('{z}', zoom);
+    return Request.loadJSON(url, callback);
   }
 };
