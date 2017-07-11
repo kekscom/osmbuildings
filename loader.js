@@ -1,3 +1,4 @@
+
 function loadFile(url) {
   var xhr = new XMLHttpRequest();
   xhr.open('GET', url, false);
@@ -14,17 +15,15 @@ function loadFile(url) {
   return xhr.responseText;
 }
 
-var exports = {};
-eval(loadFile('files.js'));
-var srcFiles = exports;
+var config = JSON.parse(loadFile('files.json'));
 
-var file, str, js = '';
-for (var i = 0; i < srcFiles.length; i++) {
-  file = srcFiles[i].replace('{engine}', 'Leaflet');
-  str = loadFile(file);
+var exports = {};
+var js = '';
+config.js.map(function(file) {
+  file = file.replace('{engine}', 'Leaflet');
   js += '//****** file: ' + file + ' ******\n\n';
-  js += str + '\n\n';
-}
+  js += loadFile(file) + '\n\n';
+});
 
 try {
   eval(js);

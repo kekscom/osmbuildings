@@ -1,17 +1,6 @@
-/**
- * Copyright (C) 2017 OSM Buildings, Jan Marsch
- * A JavaScript library for visualizing building geometry on interactive maps.
- * @osmbuildings, https://osmbuildings.org
- */
-//****** file: prefix.js ******
-
 (function(global) {
 
   'use strict';
-
-
-//****** file: shortcuts.js ******
-
 // object access shortcuts
 var
   m = Math,
@@ -43,10 +32,6 @@ var requestAnimFrame = (global.requestAnimationFrame && !IS_IOS && !IS_MSIE) ?
   global.requestAnimationFrame : function(callback) {
     callback();
   };
-
-
-
-//****** file: Color.debug.js ******
 
 var Color = (function() {
 var w3cColors = {
@@ -371,10 +356,6 @@ return Color;
 }());
 
 if (typeof module === 'object') { module.exports = Color; }
-
-
-//****** file: SunPosition.js ******
-
 // calculations are based on http://aa.quae.nl/en/reken/zonpositie.html
 // code credits to Vladimir Agafonkin (@mourner)
 
@@ -445,10 +426,6 @@ var getSunPosition = (function() {
     };
 
 }());
-
-
-//****** file: GeoJSON.js ******
-
 
 var GeoJSON = (function() {
 
@@ -717,12 +694,8 @@ var GeoJSON = (function() {
     }
   };
 }());
-
-
-//****** file: variables.js ******
-
 var
-  VERSION      = '0.2.2b',
+  VERSION      = /*<version=*/'0.2.3b'/*>*/,
   ATTRIBUTION  = '&copy; <a href="https://osmbuildings.org">OSM Buildings</a>',
 
   DATA_SRC = 'https://{s}.data.osmbuildings.org/0.2/{k}/tile/{z}/{x}/{y}.json',
@@ -762,10 +735,6 @@ var
   CAM_X, CAM_Y, CAM_Z = 450,
 
   isZooming;
-
-
-//****** file: geometry.js ******
-
 
 function getDistance(p1, p2) {
   var
@@ -910,10 +879,6 @@ function getLonDelta(footprint) {
   return (maxLon-minLon)/2;
 }
 
-
-//****** file: functions.js ******
-
-
 function rad(deg) {
   return deg * PI / 180;
 }
@@ -961,10 +926,6 @@ function isVisible(polygon) {
   }
   return false;
 }
-
-
-//****** file: Request.js ******
-
 
 var Request = (function() {
 
@@ -1026,10 +987,6 @@ var Request = (function() {
   };
 
 }());
-
-
-//****** file: Data.js ******
-
 
 var Data = {
 
@@ -1210,10 +1167,6 @@ var Data = {
     return Request.loadJSON(url, callback);
   }
 };
-
-
-//****** file: Block.js ******
-
 var Block = {
 
   draw: function(context, polygon, innerPolygons, height, minHeight, color, altColor, roofColor) {
@@ -1431,10 +1384,6 @@ var Block = {
   }
 
 };
-
-
-//****** file: Cylinder.js ******
-
 var Cylinder = {
 
   draw: function(context, center, radius, topRadius, height, minHeight, color, altColor, roofColor) {
@@ -1611,10 +1560,6 @@ var Cylinder = {
     return res;
   }
 };
-
-
-//****** file: Pyramid.js ******
-
 var Pyramid = {
 
   draw: function(context, polygon, center, height, minHeight, color, altColor) {
@@ -1730,10 +1675,6 @@ var Pyramid = {
     context.fill();
   }
 };
-
-
-//****** file: Buildings.js ******
-
 var Buildings = {
 
   project: function(p, m) {
@@ -1807,10 +1748,6 @@ var Buildings = {
     }
   }
 };
-
-
-//****** file: Simplified.js ******
-
 var Simplified = {
 
   maxZoom: MIN_ZOOM+2,
@@ -1860,10 +1797,6 @@ var Simplified = {
     }
   }
 };
-
-
-//****** file: Shadows.js ******
-
 var Shadows = {
 
   enabled: true,
@@ -1992,10 +1925,6 @@ var Shadows = {
   }
 };
 
-
-//****** file: HitAreas.js ******
-
-
 var HitAreas = {
 
   _idMapping: [null],
@@ -2101,10 +2030,6 @@ var HitAreas = {
     return 'rgb('+ [r, g, b].join(',') +')';
   }
 };
-
-
-//****** file: Debug.js ******
-
 var Debug = {
 
   point: function(x, y, color, size) {
@@ -2126,10 +2051,6 @@ var Debug = {
     context.stroke();
   }
 };
-
-
-//****** file: Layers.js ******
-
 var animTimer;
 
 function fadeIn() {
@@ -2236,10 +2157,6 @@ var Layers = {
 
 Layers.init();
 
-
-//****** file: adapter.js ******
-
-
 function setOrigin(origin) {
   ORIGIN_X = origin.x;
   ORIGIN_Y = origin.y;
@@ -2304,10 +2221,6 @@ function onZoomEnd(e) {
   Data.update(); // => fadeIn()
   Layers.render();
 }
-
-
-//****** file: OpenLayers.js ******
-
 // based on a pull request from Jérémy Judéaux (https://github.com/Volune)
 
 var parent = OpenLayers.Layer.prototype;
@@ -2413,10 +2326,6 @@ proto.moveByPx = function(dx, dy) {
   return res;
 };
 
-
-//****** file: public.js ******
-
-
 proto.style = function(style) {
   style = style || {};
   var color;
@@ -2481,12 +2390,6 @@ proto.click = function(handler) {
 osmb.VERSION     = VERSION;
 osmb.ATTRIBUTION = ATTRIBUTION;
 
-
-//****** file: suffix.js ******
-
-
   global.OSMBuildings = osmb;
 
 }(this));
-
-
