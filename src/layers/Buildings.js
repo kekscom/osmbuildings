@@ -6,6 +6,10 @@ var Buildings = {
     this.context = context;
   },
 
+  clear: function() {
+    this.context.clearRect(0, 0, WIDTH, HEIGHT);
+  },
+
   setOpacity: function(opacity) {
     this.context.canvas.style.opacity = opacity;
   },
@@ -18,15 +22,10 @@ var Buildings = {
   },
 
   render: function() {
-    var context = this.context;
-    context.clearRect(0, 0, WIDTH, HEIGHT);
-
-    // show on high zoom levels only and avoid rendering during zoom
-    if (ZOOM < MIN_ZOOM || isZooming) {
-      return;
-    }
-
+    this.clear();
+    
     var
+      context = this.context,
       item,
       h, mh,
       sortCam = { x:CAM_X+ORIGIN_X, y:CAM_Y+ORIGIN_Y },

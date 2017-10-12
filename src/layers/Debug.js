@@ -6,8 +6,11 @@ var Debug = {
     this.context = context;
   },
 
-  setOpacity: function(opacity) {
+  clear: function() {
+    this.context.clearRect(0, 0, WIDTH, HEIGHT);
   },
+
+  setOpacity: function(opacity) {},
 
   point: function(x, y, color, size) {
     var context = this.context;

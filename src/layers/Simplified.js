@@ -9,6 +9,10 @@ var Simplified = {
     this.context = context;
   },
 
+  clear: function() {
+    this.context.clearRect(0, 0, WIDTH, HEIGHT);
+  },
+
   setOpacity: function(opacity) {
     this.context.canvas.style.opacity = opacity;
   },
@@ -18,11 +22,12 @@ var Simplified = {
   },
 
   render: function() {
+    this.clear();
+    
     var context = this.context;
-    context.clearRect(0, 0, WIDTH, HEIGHT);
 
     // show on high zoom levels only and avoid rendering during zoom
-    if (ZOOM < MIN_ZOOM || isZooming || ZOOM > Simplified.MAX_ZOOM) {
+    if (ZOOM > Simplified.MAX_ZOOM) {
       return;
     }
 

@@ -18,10 +18,6 @@ proto.style = function(style) {
     ROOF_COLOR_STR = ''+ ROOF_COLOR;
   }
 
-  if (style.shadows !== undefined) {
-    Shadows.enabled = !!style.shadows;
-  }
-
   Layers.render();
 
   return this;

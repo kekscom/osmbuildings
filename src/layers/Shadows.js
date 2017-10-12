@@ -1,7 +1,6 @@
 var Shadows = {
 
   context: null,
-  enabled: true,
   color: '#666666',
   blurColor: '#000000',
   date: new Date(),
@@ -10,6 +9,10 @@ var Shadows = {
 
   init: function(context) {
     this.context = context;
+  },
+
+  clear: function() {
+    this.context.clearRect(0, 0, WIDTH, HEIGHT);
   },
 
   setOpacity: function(opacity) {
@@ -24,16 +27,12 @@ var Shadows = {
   },
 
   render: function() {
+    this.clear();
+    
     var
       context = this.context,
-      screenCenter, sun, length, alpha;
-
-    context.clearRect(0, 0, WIDTH, HEIGHT);
-
-    // show on high zoom levels only and avoid rendering during zoom
-    if (!this.enabled || ZOOM < MIN_ZOOM || isZooming) {
-      return;
-    }
+      screenCenter,
+      sun, length, alpha;
 
     // TODO: calculate this just on demand
     screenCenter = pixelToGeo(CENTER_X+ORIGIN_X, CENTER_Y+ORIGIN_Y);

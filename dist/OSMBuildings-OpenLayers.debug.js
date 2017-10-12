@@ -712,8 +712,6 @@ var
 
   LAT = 'latitude', LON = 'longitude',
 
-  TRUE = true, FALSE = false,
-
   WIDTH = 0, HEIGHT = 0,
   CENTER_X = 0, CENTER_Y = 0,
   ORIGIN_X = 0, ORIGIN_Y = 0,
@@ -727,7 +725,6 @@ var
   ROOF_COLOR_STR = ''+ ROOF_COLOR,
 
   PIXEL_PER_DEG = 0,
-  ZOOM_FACTOR = 1,
 
   MAX_HEIGHT, // taller buildings will be cut to this
   DEFAULT_HEIGHT = 5,
@@ -1319,15 +1316,6 @@ var Block = {
     }
   },
 
-  shadowMask: function(context, polygon, innerPolygons) {
-    this._ringAbs(context, polygon);
-    if (innerPolygons) {
-      for (var i = 0, il = innerPolygons.length; i < il; i++) {
-        this._ringAbs(context, innerPolygons[i]);
-      }
-    }
-  },
-
   hitArea: function(context, polygon, innerPolygons, height, minHeight, color) {
     var
       mode = null,
@@ -1456,12 +1444,6 @@ var Cylinder = {
       context.moveTo(c.x+radius, c.y);
       context.arc(c.x, c.y, radius, 0, 2*PI);
     }
-  },
-
-  shadowMask: function(context, center, radius) {
-    var c = { x:center.x-ORIGIN_X, y:center.y-ORIGIN_Y };
-    context.moveTo(c.x+radius, c.y);
-    context.arc(c.x, c.y, radius, 0, PI*2);
   },
 
   hitArea: function(context, center, radius, topRadius, height, minHeight, color) {
@@ -1634,10 +1616,6 @@ var Pyramid = {
     }
   },
 
-  shadowMask: function(context, polygon) {
-    this._ring(context, polygon);
-  },
-
   hitArea: function(context, polygon, center, height, minHeight, color) {
     var
       c = { x:center.x-ORIGIN_X, y:center.y-ORIGIN_Y },
@@ -1671,7 +1649,145 @@ var Pyramid = {
     context.fill();
   }
 };
+var animTimer;
+
+function fadeIn() {
+  if (animTimer) {
+    return;
+  }
+
+  animTimer = setInterval(function() {
+    var dataItems = Data.items,
+      isNeeded = false;
+
+    for (var i = 0, il = dataItems.length; i < il; i++) {
+      if (dataItems[i].scale < 1) {
+        dataItems[i].scale += 0.5*0.2; // amount*easing
+        if (dataItems[i].scale > 1) {
+          dataItems[i].scale = 1;
+        }
+        isNeeded = true;
+      }
+    }
+
+    Layers.render();
+
+    if (!isNeeded) {
+      clearInterval(animTimer);
+      animTimer = null;
+    }
+  }, 33);
+}
+
+var Layers = {
+
+  container: document.createElement('DIV'),
+  items: [],
+
+  init: function() {
+    this.container.style.pointerEvents = 'none';
+    this.container.style.position = 'absolute';
+    this.container.style.left = 0;
+    this.container.style.top  = 0;
+
+    // TODO: improve this to .setContext(context)
+    Shadows.init(this.createContext(this.container));
+    Simplified.init(this.createContext(this.container));
+    Buildings.init(this.createContext(this.container));
+    HitAreas.init(this.createContext());
+//  Debug.init(this.createContext(this.container));
+  },
+
+  setOpacity: function(opacity) {
+    Shadows.setOpacity(opacity);
+    Simplified.setOpacity(opacity);
+    Buildings.setOpacity(opacity);
+    HitAreas.setOpacity(opacity);
+//  Debug.setOpacity(opacity);
+  },
+
+  render: function(quick) {
+    // show on high zoom levels only and avoid rendering during zoom
+    if (ZOOM < MIN_ZOOM || isZooming) {
+      return;
+    }
+
+    requestAnimFrame(function() {
+      if (!quick) {
+        Shadows.clear();
+        Shadows.render();
+
+        Simplified.clear();
+        Simplified.render();
+
+        // TODO: do this on demand
+        HitAreas.render();
+      }
+
+      Buildings.clear();
+      Buildings.render();
+    });
+  },
+
+  createContext: function(container) {
+    var canvas = document.createElement('CANVAS');
+    canvas.style.transform = 'translate3d(0, 0, 0)'; // turn on hw acceleration
+    canvas.style.imageRendering = 'optimizeSpeed';
+    canvas.style.position = 'absolute';
+    canvas.style.left = 0;
+    canvas.style.top  = 0;
+
+    var context = canvas.getContext('2d');
+    context.lineCap   = 'round';
+    context.lineJoin  = 'round';
+    context.lineWidth = 1;
+    context.imageSmoothingEnabled = false;
+
+    this.items.push(canvas);
+    if (container) {
+      container.appendChild(canvas);
+    }
+
+    return context;
+  },
+
+  appendTo: function(parentNode) {
+    parentNode.appendChild(this.container);
+  },
+
+  remove: function() {
+    this.container.parentNode.removeChild(this.container);
+  },
+
+  setSize: function(width, height) {
+    for (var i = 0, il = this.items.length; i < il; i++) {
+      this.items[i].width  = width;
+      this.items[i].height = height;
+    }
+  },
+
+  // usually called after move: container jumps by move delta, cam is reset
+  setPosition: function(x, y) {
+    this.container.style.left = x +'px';
+    this.container.style.top  = y +'px';
+  }
+};
+
 var Buildings = {
+
+  context: null,
+
+  init: function(context) {
+    this.context = context;
+  },
+
+  clear: function() {
+    this.context.clearRect(0, 0, WIDTH, HEIGHT);
+  },
+
+  setOpacity: function(opacity) {
+    this.context.canvas.style.opacity = opacity;
+  },
 
   project: function(p, m) {
     return {
@@ -1682,13 +1798,6 @@ var Buildings = {
 
   render: function() {
     var context = this.context;
-    context.clearRect(0, 0, WIDTH, HEIGHT);
-    context.canvas.style.opacity = ZOOM_FACTOR;
-
-    // show on high zoom levels only and avoid rendering during zoom
-    if (ZOOM < MIN_ZOOM || isZooming) {
-      return;
-    }
 
     var
       item,
@@ -1747,20 +1856,32 @@ var Buildings = {
 };
 var Simplified = {
 
-  maxZoom: MIN_ZOOM+2,
-  maxHeight: 5,
+  context: null,
+
+  MAX_ZOOM: 16, // max zoom where buildings could render simplified
+  MAX_HEIGHT: 5, // max building height in order to be simple
+
+  init: function(context) {
+    this.context = context;
+  },
+
+  clear: function() {
+    this.context.clearRect(0, 0, WIDTH, HEIGHT);
+  },
+
+  setOpacity: function(opacity) {
+    this.context.canvas.style.opacity = opacity;
+  },
 
   isSimple: function(item) {
-    return (ZOOM <= this.maxZoom && item.height+item.roofHeight < this.maxHeight);
+    return (ZOOM <= Simplified.MAX_ZOOM && item.height+item.roofHeight < Simplified.MAX_HEIGHT);
   },
 
   render: function() {
     var context = this.context;
-    context.clearRect(0, 0, WIDTH, HEIGHT);
-    context.canvas.style.opacity = ZOOM_FACTOR;
 
     // show on high zoom levels only and avoid rendering during zoom
-    if (ZOOM < MIN_ZOOM || isZooming || ZOOM > this.maxZoom) {
+    if (ZOOM > Simplified.MAX_ZOOM) {
       return;
     }
 
@@ -1772,7 +1893,7 @@ var Simplified = {
     for (var i = 0, il = dataItems.length; i < il; i++) {
       item = dataItems[i];
 
-      if (item.height >= this.maxHeight) {
+      if (item.height >= Simplified.MAX_HEIGHT) {
         continue;
       }
 
@@ -1797,12 +1918,24 @@ var Simplified = {
 };
 var Shadows = {
 
-  enabled: true,
+  context: null,
   color: '#666666',
   blurColor: '#000000',
-  blurSize: 15,
   date: new Date(),
   direction: { x:0, y:0 },
+  opacity: 1,
+
+  init: function(context) {
+    this.context = context;
+  },
+
+  clear: function() {
+    this.context.clearRect(0, 0, WIDTH, HEIGHT);
+  },
+
+  setOpacity: function(opacity) {
+    this.opacity = opacity;
+  },
 
   project: function(p, h) {
     return {
@@ -1815,13 +1948,6 @@ var Shadows = {
     var
       context = this.context,
       screenCenter, sun, length, alpha;
-
-    context.clearRect(0, 0, WIDTH, HEIGHT);
-
-    // show on high zoom levels only and avoid rendering during zoom
-    if (!this.enabled || ZOOM < MIN_ZOOM || isZooming) {
-      return;
-    }
 
     // TODO: calculate this just on demand
     screenCenter = pixelToGeo(CENTER_X+ORIGIN_X, CENTER_Y+ORIGIN_Y);
@@ -1844,9 +1970,8 @@ var Shadows = {
       footprint,
       dataItems = Data.items;
 
-    context.canvas.style.opacity = alpha / (ZOOM_FACTOR * 2);
+    context.canvas.style.opacity = alpha / (this.opacity * 2);
     context.shadowColor = this.blurColor;
-    context.shadowBlur = this.blurSize * (ZOOM_FACTOR / 2);
     context.fillStyle = this.color;
     context.beginPath();
 
@@ -1885,45 +2010,20 @@ var Shadows = {
 
     context.closePath();
     context.fill();
-
-    context.shadowBlur = null;
-
-    // now draw all the footprints as negative clipping mask
-    context.globalCompositeOperation = 'destination-out';
-    context.beginPath();
-
-    for (i = 0, il = dataItems.length; i < il; i++) {
-      item = dataItems[i];
-
-      footprint = item.footprint;
-
-      if (!isVisible(footprint)) {
-        continue;
-      }
-
-      // if object is hovered, there is no need to clip it's footprint
-      if (item.minHeight) {
-        continue;
-      }
-
-      switch (item.shape) {
-        case 'cylinder':
-        case 'cone':
-        case 'dome':
-          Cylinder.shadowMask(context, item.center, item.radius);
-        break;
-        default:
-          Block.shadowMask(context, footprint, item.holes);
-      }
-    }
-
-    context.fillStyle = '#00ff00';
-    context.fill();
-    context.globalCompositeOperation = 'source-over';
   }
 };
 
 var HitAreas = {
+
+  context: null,
+
+  init: function(context) {
+    this.context = context;
+  },
+
+  setOpacity: function(opacity) {},
+
+  clear: function() {},
 
   _idMapping: [null],
 
@@ -1946,11 +2046,6 @@ var HitAreas = {
     var context = this.context;
 
     context.clearRect(0, 0, WIDTH, HEIGHT);
-
-    // show on high zoom levels only and avoid rendering during zoom
-    if (ZOOM < MIN_ZOOM || isZooming) {
-      return;
-    }
 
     var
       item,
@@ -2030,6 +2125,18 @@ var HitAreas = {
 };
 var Debug = {
 
+  context: null,
+
+  init: function(context) {
+    this.context = context;
+  },
+
+  clear: function() {
+    this.context.clearRect(0, 0, WIDTH, HEIGHT);
+  },
+
+  setOpacity: function(opacity) {},
+
   point: function(x, y, color, size) {
     var context = this.context;
     context.fillStyle = color || '#ffcc00';
@@ -2049,111 +2156,6 @@ var Debug = {
     context.stroke();
   }
 };
-var animTimer;
-
-function fadeIn() {
-  if (animTimer) {
-    return;
-  }
-
-  animTimer = setInterval(function() {
-    var dataItems = Data.items,
-      isNeeded = false;
-
-    for (var i = 0, il = dataItems.length; i < il; i++) {
-      if (dataItems[i].scale < 1) {
-        dataItems[i].scale += 0.5*0.2; // amount*easing
-        if (dataItems[i].scale > 1) {
-          dataItems[i].scale = 1;
-        }
-        isNeeded = true;
-      }
-    }
-
-    Layers.render();
-
-    if (!isNeeded) {
-      clearInterval(animTimer);
-      animTimer = null;
-    }
-  }, 33);
-}
-
-var Layers = {
-
-  container: document.createElement('DIV'),
-  items: [],
-
-  init: function() {
-    this.container.style.pointerEvents = 'none';
-    this.container.style.position = 'absolute';
-    this.container.style.left = 0;
-    this.container.style.top  = 0;
-
-    // TODO: improve this to .setContext(context)
-    Shadows.context    = this.createContext(this.container);
-    Simplified.context = this.createContext(this.container);
-    Buildings.context  = this.createContext(this.container);
-    HitAreas.context   = this.createContext();
-//    Debug.context      = this.createContext(this.container);
-  },
-
-  render: function(quick) {
-    requestAnimFrame(function() {
-      if (!quick) {
-        Shadows.render();
-        Simplified.render();
-        HitAreas.render();
-      }
-      Buildings.render();
-    });
-  },
-
-  createContext: function(container) {
-    var canvas = document.createElement('CANVAS');
-    canvas.style.transform = 'translate3d(0, 0, 0)'; // turn on hw acceleration
-    canvas.style.imageRendering = 'optimizeSpeed';
-    canvas.style.position = 'absolute';
-    canvas.style.left = 0;
-    canvas.style.top  = 0;
-
-    var context = canvas.getContext('2d');
-    context.lineCap   = 'round';
-    context.lineJoin  = 'round';
-    context.lineWidth = 1;
-    context.imageSmoothingEnabled = false;
-
-    this.items.push(canvas);
-    if (container) {
-      container.appendChild(canvas);
-    }
-
-    return context;
-  },
-
-  appendTo: function(parentNode) {
-    parentNode.appendChild(this.container);
-  },
-
-  remove: function() {
-    this.container.parentNode.removeChild(this.container);
-  },
-
-  setSize: function(width, height) {
-    for (var i = 0, il = this.items.length; i < il; i++) {
-      this.items[i].width  = width;
-      this.items[i].height = height;
-    }
-  },
-
-  // usually called after move: container jumps by move delta, cam is reset
-  setPosition: function(x, y) {
-    this.container.style.left = x +'px';
-    this.container.style.top  = y +'px';
-  }
-};
-
-Layers.init();
 
 function setOrigin(origin) {
   ORIGIN_X = origin.x;
@@ -2188,7 +2190,7 @@ function setZoom(z) {
   var b = geoToPixel(center.latitude, 1);
   PIXEL_PER_DEG = b.x-a.x;
 
-  ZOOM_FACTOR = pow(0.95, ZOOM-MIN_ZOOM);
+  Layers.setOpacity(Math.pow(0.95, ZOOM-MIN_ZOOM));
 
   WALL_COLOR_STR = ''+ WALL_COLOR;
   ALT_COLOR_STR  = ''+ ALT_COLOR;
@@ -2225,9 +2227,10 @@ var parent = OpenLayers.Layer.prototype;
 
 var osmb = function(map) {
   this.offset = { x:0, y:0 }; // cumulative cam offset during moveBy()
-
+  
   parent.initialize.call(this, this.name, { projection:'EPSG:900913' });
 
+  Layers.init();
   if (map) {
 	  map.addLayer(this);
   }
@@ -2341,10 +2344,6 @@ proto.style = function(style) {
   if (style.roofColor) {
     ROOF_COLOR = Color.parse(style.roofColor);
     ROOF_COLOR_STR = ''+ ROOF_COLOR;
-  }
-
-  if (style.shadows !== undefined) {
-    Shadows.enabled = !!style.shadows;
   }
 
   Layers.render();
