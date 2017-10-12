@@ -22,7 +22,6 @@ var Block = {
       }
     }
     context.closePath();
-    context.stroke();
     context.fill();
   },
 
@@ -92,7 +91,6 @@ var Block = {
       }
     }
     context.closePath();
-    context.stroke();
     context.fill();
   },
 

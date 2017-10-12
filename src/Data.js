@@ -96,7 +96,6 @@ var Data = {
 
     if (item.wallColor) {
       if ((color = Color.parse(item.wallColor))) {
-        color = color.alpha(ZOOM_FACTOR);
         res.altColor  = ''+ color.lightness(0.8);
         res.wallColor = ''+ color;
       }
@@ -104,7 +103,7 @@ var Data = {
 
     if (item.roofColor) {
       if ((color = Color.parse(item.roofColor))) {
-        res.roofColor = ''+ color.alpha(ZOOM_FACTOR);
+        res.roofColor = ''+ color;
       }
     }
 

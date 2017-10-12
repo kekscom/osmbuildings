@@ -34,9 +34,9 @@ function setZoom(z) {
 
   ZOOM_FACTOR = pow(0.95, ZOOM-MIN_ZOOM);
 
-  WALL_COLOR_STR = ''+ WALL_COLOR.alpha(ZOOM_FACTOR);
-  ALT_COLOR_STR  = ''+ ALT_COLOR.alpha( ZOOM_FACTOR);
-  ROOF_COLOR_STR = ''+ ROOF_COLOR.alpha(ZOOM_FACTOR);
+  WALL_COLOR_STR = ''+ WALL_COLOR;
+  ALT_COLOR_STR  = ''+ ALT_COLOR;
+  ROOF_COLOR_STR = ''+ ROOF_COLOR;
 }
 
 function onResize(e) {

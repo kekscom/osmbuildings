@@ -121,7 +121,6 @@ var Cylinder = {
   _circle: function(context, center, radius) {
     context.beginPath();
     context.arc(center.x, center.y, radius, 0, PI*2);
-    context.stroke();
     context.fill();
   },
 
