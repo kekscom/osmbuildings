@@ -1085,7 +1085,6 @@ var Data = {
 
     if (item.wallColor) {
       if ((color = Color.parse(item.wallColor))) {
-        color = color.alpha(ZOOM_FACTOR);
         res.altColor  = ''+ color.lightness(0.8);
         res.wallColor = ''+ color;
       }
@@ -1093,7 +1092,7 @@ var Data = {
 
     if (item.roofColor) {
       if ((color = Color.parse(item.roofColor))) {
-        res.roofColor = ''+ color.alpha(ZOOM_FACTOR);
+        res.roofColor = ''+ color;
       }
     }
 
@@ -1191,7 +1190,6 @@ var Block = {
       }
     }
     context.closePath();
-    context.stroke();
     context.fill();
   },
 
@@ -1261,7 +1259,6 @@ var Block = {
       }
     }
     context.closePath();
-    context.stroke();
     context.fill();
   },
 
@@ -1507,7 +1504,6 @@ var Cylinder = {
   _circle: function(context, center, radius) {
     context.beginPath();
     context.arc(center.x, center.y, radius, 0, PI*2);
-    context.stroke();
     context.fill();
   },
 
@@ -1687,6 +1683,7 @@ var Buildings = {
   render: function() {
     var context = this.context;
     context.clearRect(0, 0, WIDTH, HEIGHT);
+    context.canvas.style.opacity = ZOOM_FACTOR;
 
     // show on high zoom levels only and avoid rendering during zoom
     if (ZOOM < MIN_ZOOM || isZooming) {
@@ -1760,6 +1757,7 @@ var Simplified = {
   render: function() {
     var context = this.context;
     context.clearRect(0, 0, WIDTH, HEIGHT);
+    context.canvas.style.opacity = ZOOM_FACTOR;
 
     // show on high zoom levels only and avoid rendering during zoom
     if (ZOOM < MIN_ZOOM || isZooming || ZOOM > this.maxZoom) {
@@ -2192,9 +2190,9 @@ function setZoom(z) {
 
   ZOOM_FACTOR = pow(0.95, ZOOM-MIN_ZOOM);
 
-  WALL_COLOR_STR = ''+ WALL_COLOR.alpha(ZOOM_FACTOR);
-  ALT_COLOR_STR  = ''+ ALT_COLOR.alpha( ZOOM_FACTOR);
-  ROOF_COLOR_STR = ''+ ROOF_COLOR.alpha(ZOOM_FACTOR);
+  WALL_COLOR_STR = ''+ WALL_COLOR;
+  ALT_COLOR_STR  = ''+ ALT_COLOR;
+  ROOF_COLOR_STR = ''+ ROOF_COLOR;
 }
 
 function onResize(e) {
@@ -2331,18 +2329,18 @@ proto.style = function(style) {
   var color;
   if ((color = style.color || style.wallColor)) {
     WALL_COLOR = Color.parse(color);
-    WALL_COLOR_STR = ''+ WALL_COLOR.alpha(ZOOM_FACTOR);
+    WALL_COLOR_STR = ''+ WALL_COLOR;
 
     ALT_COLOR = WALL_COLOR.lightness(0.8);
-    ALT_COLOR_STR  = ''+ ALT_COLOR.alpha(ZOOM_FACTOR);
+    ALT_COLOR_STR  = ''+ ALT_COLOR;
 
     ROOF_COLOR = WALL_COLOR.lightness(1.2);
-    ROOF_COLOR_STR = ''+ ROOF_COLOR.alpha(ZOOM_FACTOR);
+    ROOF_COLOR_STR = ''+ ROOF_COLOR;
   }
 
   if (style.roofColor) {
     ROOF_COLOR = Color.parse(style.roofColor);
-    ROOF_COLOR_STR = ''+ ROOF_COLOR.alpha(ZOOM_FACTOR);
+    ROOF_COLOR_STR = ''+ ROOF_COLOR;
   }
 
   if (style.shadows !== undefined) {

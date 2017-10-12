@@ -1,5 +1,14 @@
 var Debug = {
 
+  context: null,
+
+  init: function(context) {
+    this.context = context;
+  },
+
+  setOpacity: function(opacity) {
+  },
+
   point: function(x, y, color, size) {
     var context = this.context;
     context.fillStyle = color || '#ffcc00';

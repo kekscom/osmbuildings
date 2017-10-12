@@ -1,5 +1,15 @@
 var Buildings = {
 
+  context: null,
+
+  init: function(context) {
+    this.context = context;
+  },
+
+  setOpacity: function(opacity) {
+    this.context.canvas.style.opacity = opacity;
+  },
+
   project: function(p, m) {
     return {
       x: (p.x-CAM_X) * m + CAM_X <<0,
@@ -10,7 +20,6 @@ var Buildings = {
   render: function() {
     var context = this.context;
     context.clearRect(0, 0, WIDTH, HEIGHT);
-    context.canvas.style.opacity = ZOOM_FACTOR;
 
     // show on high zoom levels only and avoid rendering during zoom
     if (ZOOM < MIN_ZOOM || isZooming) {

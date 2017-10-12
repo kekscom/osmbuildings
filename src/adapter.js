@@ -32,7 +32,7 @@ function setZoom(z) {
   var b = geoToPixel(center.latitude, 1);
   PIXEL_PER_DEG = b.x-a.x;
 
-  ZOOM_FACTOR = pow(0.95, ZOOM-MIN_ZOOM);
+  Layers.setOpacity(Math.pow(0.95, ZOOM-MIN_ZOOM));
 
   WALL_COLOR_STR = ''+ WALL_COLOR;
   ALT_COLOR_STR  = ''+ ALT_COLOR;

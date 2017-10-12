@@ -1,6 +1,15 @@
 
 var HitAreas = {
 
+  context: null,
+
+  init: function(context) {
+    this.context = context;
+  },
+
+  setOpacity: function(opacity) {
+  },
+
   _idMapping: [null],
 
   reset: function() {

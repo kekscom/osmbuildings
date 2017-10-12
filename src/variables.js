@@ -31,7 +31,6 @@ var
   ROOF_COLOR_STR = ''+ ROOF_COLOR,
 
   PIXEL_PER_DEG = 0,
-  ZOOM_FACTOR = 1,
 
   MAX_HEIGHT, // taller buildings will be cut to this
   DEFAULT_HEIGHT = 5,

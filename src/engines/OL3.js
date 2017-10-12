@@ -2,6 +2,7 @@
 var osmb = function(map) {
   this.map = map;
   this.maxExtent = [ -20037508.34, -20037508.34, 20037508.34, 20037508.34]; // MaxExtent of layer
+  Layers.init();
   try {
     this.setMap(map);
     map.addLayer(this);

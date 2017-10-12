@@ -1,6 +1,7 @@
 
 var osmb = function(map) {
   this.offset = { x:0, y:0 };
+  Layers.init();
   if (map) {
 	  map.addLayer(this);
   }

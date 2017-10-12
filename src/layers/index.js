@@ -40,11 +40,19 @@ var Layers = {
     this.container.style.top  = 0;
 
     // TODO: improve this to .setContext(context)
-    Shadows.context    = this.createContext(this.container);
-    Simplified.context = this.createContext(this.container);
-    Buildings.context  = this.createContext(this.container);
-    HitAreas.context   = this.createContext();
-//    Debug.context      = this.createContext(this.container);
+    Shadows.init(this.createContext(this.container));
+    Simplified.init(this.createContext(this.container));
+    Buildings.init(this.createContext(this.container));
+    HitAreas.init(this.createContext());
+//  Debug.init(this.createContext(this.container));
+  },
+
+  setOpacity: function(opacity) {
+    Shadows.setOpacity(opacity);
+    Simplified.setOpacity(opacity);
+    Buildings.setOpacity(opacity);
+    HitAreas.setOpacity(opacity);
+//  Debug.setOpacity(opacity);
   },
 
   render: function(quick) {
@@ -102,4 +110,3 @@ var Layers = {
   }
 };
 
-Layers.init();

@@ -1,11 +1,21 @@
 var Shadows = {
 
+  context: null,
   enabled: true,
   color: '#666666',
   blurColor: '#000000',
   blurSize: 15,
   date: new Date(),
   direction: { x:0, y:0 },
+  opacity: 1,
+
+  init: function(context) {
+    this.context = context;
+  },
+
+  setOpacity: function(opacity) {
+    this.opacity = opacity;
+  },
 
   project: function(p, h) {
     return {
@@ -47,9 +57,9 @@ var Shadows = {
       footprint,
       dataItems = Data.items;
 
-    context.canvas.style.opacity = alpha / (ZOOM_FACTOR * 2);
+    context.canvas.style.opacity = alpha / (this.opacity * 2);
     context.shadowColor = this.blurColor;
-    context.shadowBlur = this.blurSize * (ZOOM_FACTOR / 2);
+    context.shadowBlur = this.blurSize * (this.opacity / 2);
     context.fillStyle = this.color;
     context.beginPath();
 

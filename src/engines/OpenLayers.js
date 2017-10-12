@@ -4,9 +4,10 @@ var parent = OpenLayers.Layer.prototype;
 
 var osmb = function(map) {
   this.offset = { x:0, y:0 }; // cumulative cam offset during moveBy()
-
+  
   parent.initialize.call(this, this.name, { projection:'EPSG:900913' });
 
+  Layers.init();
   if (map) {
 	  map.addLayer(this);
   }
