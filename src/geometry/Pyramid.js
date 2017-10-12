@@ -76,10 +76,6 @@ var Pyramid = {
     }
   },
 
-  shadowMask: function(context, polygon) {
-    this._ring(context, polygon);
-  },
-
   hitArea: function(context, polygon, center, height, minHeight, color) {
     var
       c = { x:center.x-ORIGIN_X, y:center.y-ORIGIN_Y },

@@ -2,7 +2,7 @@ var Simplified = {
 
   context: null,
 
-  MAX_ZOOM: 17, // max zoom where buildings could render simplified
+  MAX_ZOOM: 16, // max zoom where buildings could render simplified
   MAX_HEIGHT: 5, // max building height in order to be simple
 
   init: function(context) {

@@ -30,7 +30,7 @@ function dome(c, r, h, minHeight) {
   }
 
 // radialGradient(c, r, roofColorAlpha)
-  drawCircle(c, r, TRUE);
+  drawCircle(c, r, true);
 
   var _h = CAM_Z / (CAM_Z-h),
   hfK = CAM_Z / (CAM_Z-(h*KAPPA));

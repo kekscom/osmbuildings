@@ -4,7 +4,6 @@ var Shadows = {
   enabled: true,
   color: '#666666',
   blurColor: '#000000',
-  blurSize: 15,
   date: new Date(),
   direction: { x:0, y:0 },
   opacity: 1,
@@ -59,7 +58,6 @@ var Shadows = {
 
     context.canvas.style.opacity = alpha / (this.opacity * 2);
     context.shadowColor = this.blurColor;
-    context.shadowBlur = this.blurSize * (this.opacity / 2);
     context.fillStyle = this.color;
     context.beginPath();
 
@@ -98,40 +96,5 @@ var Shadows = {
 
     context.closePath();
     context.fill();
-
-    context.shadowBlur = null;
-
-    // now draw all the footprints as negative clipping mask
-    context.globalCompositeOperation = 'destination-out';
-    context.beginPath();
-
-    for (i = 0, il = dataItems.length; i < il; i++) {
-      item = dataItems[i];
-
-      footprint = item.footprint;
-
-      if (!isVisible(footprint)) {
-        continue;
-      }
-
-      // if object is hovered, there is no need to clip it's footprint
-      if (item.minHeight) {
-        continue;
-      }
-
-      switch (item.shape) {
-        case 'cylinder':
-        case 'cone':
-        case 'dome':
-          Cylinder.shadowMask(context, item.center, item.radius);
-        break;
-        default:
-          Block.shadowMask(context, footprint, item.holes);
-      }
-    }
-
-    context.fillStyle = '#00ff00';
-    context.fill();
-    context.globalCompositeOperation = 'source-over';
   }
 };

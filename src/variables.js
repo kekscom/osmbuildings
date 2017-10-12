@@ -16,8 +16,6 @@ var
 
   LAT = 'latitude', LON = 'longitude',
 
-  TRUE = true, FALSE = false,
-
   WIDTH = 0, HEIGHT = 0,
   CENTER_X = 0, CENTER_Y = 0,
   ORIGIN_X = 0, ORIGIN_Y = 0,

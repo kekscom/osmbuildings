@@ -151,15 +151,6 @@ var Block = {
     }
   },
 
-  shadowMask: function(context, polygon, innerPolygons) {
-    this._ringAbs(context, polygon);
-    if (innerPolygons) {
-      for (var i = 0, il = innerPolygons.length; i < il; i++) {
-        this._ringAbs(context, innerPolygons[i]);
-      }
-    }
-  },
-
   hitArea: function(context, polygon, innerPolygons, height, minHeight, color) {
     var
       mode = null,

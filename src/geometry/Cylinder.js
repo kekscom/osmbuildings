@@ -75,12 +75,6 @@ var Cylinder = {
     }
   },
 
-  shadowMask: function(context, center, radius) {
-    var c = { x:center.x-ORIGIN_X, y:center.y-ORIGIN_Y };
-    context.moveTo(c.x+radius, c.y);
-    context.arc(c.x, c.y, radius, 0, PI*2);
-  },
-
   hitArea: function(context, center, radius, topRadius, height, minHeight, color) {
     var
       c = { x:center.x-ORIGIN_X, y:center.y-ORIGIN_Y },
