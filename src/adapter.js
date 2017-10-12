@@ -51,14 +51,14 @@ function onMoveEnd(e) {
 }
 
 function onZoomStart() {
-  isZooming = true;
-// effectively clears because of isZooming flag
+  IS_ZOOMING = true;
+// effectively clears because of IS_ZOOMING flag
 // TODO: introduce explicit clear()
   Layers.render();
 }
 
 function onZoomEnd(e) {
-  isZooming = false;
+  IS_ZOOMING = false;
   setZoom(e.zoom);
   Data.update(); // => fadeIn()
   Layers.render();

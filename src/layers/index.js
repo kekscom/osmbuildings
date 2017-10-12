@@ -39,12 +39,11 @@ var Layers = {
     this.container.style.left = 0;
     this.container.style.top  = 0;
 
-    // TODO: improve this to .setContext(context)
+    // TODO: improve this
     Shadows.init(this.createContext(this.container));
     Simplified.init(this.createContext(this.container));
     Buildings.init(this.createContext(this.container));
     HitAreas.init(this.createContext());
-    Debug.init(this.createContext(this.container));
   },
 
   clear: function() {
@@ -52,7 +51,6 @@ var Layers = {
     Simplified.clear();
     Buildings.clear();
     HitAreas.clear();
-    Debug.clear();
   },
 
   setOpacity: function(opacity) {
@@ -60,12 +58,11 @@ var Layers = {
     Simplified.setOpacity(opacity);
     Buildings.setOpacity(opacity);
     HitAreas.setOpacity(opacity);
-    Debug.setOpacity(opacity);
   },
 
   render: function(quick) {
     // show on high zoom levels only and avoid rendering during zoom
-    if (ZOOM < MIN_ZOOM || isZooming) {
+    if (ZOOM < MIN_ZOOM || IS_ZOOMING) {
       this.clear();
       return;
     }
@@ -74,7 +71,7 @@ var Layers = {
       if (!quick) {
         Shadows.render();
         Simplified.render();
-        HitAreas.render(); // TODO: do this on demand
+        //HitAreas.render(); // TODO: do this on demand
       }
       Buildings.render();
     });

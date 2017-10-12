@@ -98,10 +98,24 @@ proto.onMoveEnd = function(e) {
 
 proto.onZoomStart = function(e) {
   onZoomStart(e);
+  // document.querySelector('.leaflet-proxy').appendChild(Layers.container);
 };
 
 proto.onZoom = function(e) {
-//    var map = this.map,
+  // var
+  //   prop = DomUtil.TRANSFORM,
+  //   transform = this._proxy.style[prop];
+  //
+  // DomUtil.setTransform(this._proxy, this.project(e.center, e.zoom), this.getZoomScale(e.zoom, 1));
+  //
+  // // workaround for case when transform is the same and so transitionend event is not fired
+  // if (transform === this._proxy.style[prop] && this._animatingZoom) {
+  //   this._onZoomTransitionEnd();
+  // }
+
+
+// OLD?
+  //    var map = this.map,
 //        scale = map.getZoomScale(e.zoom),
 //        offset = map._getCenterOffset(e.center).divideBy(1 - 1/scale),
 //        viewportPos = map.containerPointToLayerPoint(map.getSize().multiplyBy(-1)),

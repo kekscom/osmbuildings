@@ -18,7 +18,7 @@
     "src/layers/Simplified.js",
     "src/layers/Shadows.js",
     "src/layers/HitAreas.js",
-    "src/layers/Debug.js",
+    "src/Debug.js",
     "src/adapter.js",
     "src/engines/{engine}.js",
     "src/public.js",
