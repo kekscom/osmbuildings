@@ -731,7 +731,7 @@ var
 
   CAM_X, CAM_Y, CAM_Z = 450,
 
-  isZooming;
+  IS_ZOOMING;
 
 function getDistance(p1, p2) {
   var
@@ -1690,12 +1690,18 @@ var Layers = {
     this.container.style.left = 0;
     this.container.style.top  = 0;
 
-    // TODO: improve this to .setContext(context)
+    // TODO: improve this
     Shadows.init(this.createContext(this.container));
     Simplified.init(this.createContext(this.container));
     Buildings.init(this.createContext(this.container));
     HitAreas.init(this.createContext());
-//  Debug.init(this.createContext(this.container));
+  },
+
+  clear: function() {
+    Shadows.clear();
+    Simplified.clear();
+    Buildings.clear();
+    HitAreas.clear();
   },
 
   setOpacity: function(opacity) {
@@ -1703,28 +1709,21 @@ var Layers = {
     Simplified.setOpacity(opacity);
     Buildings.setOpacity(opacity);
     HitAreas.setOpacity(opacity);
-//  Debug.setOpacity(opacity);
   },
 
   render: function(quick) {
     // show on high zoom levels only and avoid rendering during zoom
-    if (ZOOM < MIN_ZOOM || isZooming) {
+    if (ZOOM < MIN_ZOOM || IS_ZOOMING) {
+      this.clear();
       return;
     }
 
     requestAnimFrame(function() {
       if (!quick) {
-        Shadows.clear();
         Shadows.render();
-
-        Simplified.clear();
         Simplified.render();
-
-        // TODO: do this on demand
-        HitAreas.render();
+        //HitAreas.render(); // TODO: do this on demand
       }
-
-      Buildings.clear();
       Buildings.render();
     });
   },
@@ -1797,9 +1796,10 @@ var Buildings = {
   },
 
   render: function() {
-    var context = this.context;
-
+    this.clear();
+    
     var
+      context = this.context,
       item,
       h, mh,
       sortCam = { x:CAM_X+ORIGIN_X, y:CAM_Y+ORIGIN_Y },
@@ -1878,6 +1878,8 @@ var Simplified = {
   },
 
   render: function() {
+    this.clear();
+    
     var context = this.context;
 
     // show on high zoom levels only and avoid rendering during zoom
@@ -1945,9 +1947,12 @@ var Shadows = {
   },
 
   render: function() {
+    this.clear();
+    
     var
       context = this.context,
-      screenCenter, sun, length, alpha;
+      screenCenter,
+      sun, length, alpha;
 
     // TODO: calculate this just on demand
     screenCenter = pixelToGeo(CENTER_X+ORIGIN_X, CENTER_Y+ORIGIN_Y);
@@ -2043,11 +2048,10 @@ var HitAreas = {
   },
 
   _render: function() {
-    var context = this.context;
-
-    context.clearRect(0, 0, WIDTH, HEIGHT);
-
+    this.clear();
+    
     var
+      context = this.context,
       item,
       h, mh,
       sortCam = { x:CAM_X+ORIGIN_X, y:CAM_Y+ORIGIN_Y },
@@ -2125,18 +2129,6 @@ var HitAreas = {
 };
 var Debug = {
 
-  context: null,
-
-  init: function(context) {
-    this.context = context;
-  },
-
-  clear: function() {
-    this.context.clearRect(0, 0, WIDTH, HEIGHT);
-  },
-
-  setOpacity: function(opacity) {},
-
   point: function(x, y, color, size) {
     var context = this.context;
     context.fillStyle = color || '#ffcc00';
@@ -2209,14 +2201,14 @@ function onMoveEnd(e) {
 }
 
 function onZoomStart() {
-  isZooming = true;
-// effectively clears because of isZooming flag
+  IS_ZOOMING = true;
+// effectively clears because of IS_ZOOMING flag
 // TODO: introduce explicit clear()
   Layers.render();
 }
 
 function onZoomEnd(e) {
-  isZooming = false;
+  IS_ZOOMING = false;
   setZoom(e.zoom);
   Data.update(); // => fadeIn()
   Layers.render();
@@ -2321,10 +2313,24 @@ proto.onMoveEnd = function(e) {
 
 proto.onZoomStart = function(e) {
   onZoomStart(e);
+  // document.querySelector('.leaflet-proxy').appendChild(Layers.container);
 };
 
 proto.onZoom = function(e) {
-//    var map = this.map,
+  // var
+  //   prop = DomUtil.TRANSFORM,
+  //   transform = this._proxy.style[prop];
+  //
+  // DomUtil.setTransform(this._proxy, this.project(e.center, e.zoom), this.getZoomScale(e.zoom, 1));
+  //
+  // // workaround for case when transform is the same and so transitionend event is not fired
+  // if (transform === this._proxy.style[prop] && this._animatingZoom) {
+  //   this._onZoomTransitionEnd();
+  // }
+
+
+// OLD?
+  //    var map = this.map,
 //        scale = map.getZoomScale(e.zoom),
 //        offset = map._getCenterOffset(e.center).divideBy(1 - 1/scale),
 //        viewportPos = map.containerPointToLayerPoint(map.getSize().multiplyBy(-1)),

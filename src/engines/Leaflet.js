@@ -98,7 +98,17 @@ proto.onMoveEnd = function(e) {
 
 proto.onZoomStart = function(e) {
   onZoomStart(e);
-  // document.querySelector('.leaflet-proxy').appendChild(Layers.container);
+
+  // var proxy = document.querySelector('.leaflet-proxy');
+  // var tx = map._proxy.style.transform;
+
+
+  console.log(this.map.project(this.map.getCenter(), this.map.getZoom()), this.map.getZoomScale(this.map.getZoom(), 1));
+
+  Layers.items.forEach(function(canvas) {
+    // proxy.appendChild(canvas);
+    // canvas.style.transform = tx;
+  });
 };
 
 proto.onZoom = function(e) {
@@ -126,6 +136,10 @@ proto.onZoom = function(e) {
 };
 
 proto.onZoomEnd = function(e) {
+  // Layers.items.forEach(function(canvas) {
+  //   Layers.container.appendChild(canvas);
+  // });
+
   var
     map = this.map,
     off = this.getOffset(),
