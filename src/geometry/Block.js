@@ -1,26 +1,17 @@
 var Block = {
 
   draw: function(context, geometry, height, minHeight, color, altColor, roofColor) {
-    var
-      i,
-      roof = this._extrude(context, geometry[0], height, minHeight, color, altColor),
-      innerRoofs = [];
-
-    if (geometry.length > 1) {
-      for (i = 1; i < geometry.length; i++) {
-        innerRoofs[i-1] = this._extrude(context, geometry[i], height, minHeight, color, altColor);
-      }
-    }
+    var roofs = geometry.map(function(polygon) {
+      return Block._extrude(context, polygon, height, minHeight, color, altColor);
+    });
 
     context.fillStyle = roofColor;
-
     context.beginPath();
-    this._ring(context, roof);
-    if (geometry.length > 1) {
-      for (i = 0; i < innerRoofs.length; i++) {
-        this._ring(context, innerRoofs[i]);
-      }
-    }
+
+    roofs.forEach(function(polygon) {
+      Block._ring(context, polygon);
+    });
+
     context.closePath();
     context.fill();
   },
