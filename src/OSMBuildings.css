@@ -1,0 +1,21 @@
+.osmb-container {
+  transform: translate3d(0, 0, 0);
+  pointerEvents: none;
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+
+.osmb-container.zoom-animation {
+  transition-duration: 250ms;
+  transition-property: transform;
+  transform-origin: 50% 50%;
+}
+
+.osmb-layer {
+  transform: translate3d(0, 0, 0);
+  image-rendering: optimizeSpeed;
+  position: absolute;
+  left: 0;
+  top: 0;
+}

@@ -34,10 +34,7 @@ var Layers = {
   items: [],
 
   init: function() {
-    this.container.style.pointerEvents = 'none';
-    this.container.style.position = 'absolute';
-    this.container.style.left = 0;
-    this.container.style.top  = 0;
+    this.container.className = 'osmb-container';
 
     // TODO: improve this
     Shadows.init(this.createContext(this.container));
@@ -61,9 +58,14 @@ var Layers = {
   },
 
   render: function(quick) {
-    // show on high zoom levels only and avoid rendering during zoom
-    if (ZOOM < MIN_ZOOM || IS_ZOOMING) {
+    // show on high zoom levels only
+    if (ZOOM < MIN_ZOOM) {
       this.clear();
+      return;
+    }
+
+    // don't render during zoom
+    if (IS_ZOOMING) {
       return;
     }
 
@@ -79,11 +81,7 @@ var Layers = {
 
   createContext: function(container) {
     var canvas = document.createElement('CANVAS');
-    canvas.style.transform = 'translate3d(0, 0, 0)'; // turn on hw acceleration
-    canvas.style.imageRendering = 'optimizeSpeed';
-    canvas.style.position = 'absolute';
-    canvas.style.left = 0;
-    canvas.style.top  = 0;
+    canvas.className = 'osmb-layer';
 
     var context = canvas.getContext('2d');
     context.lineCap   = 'round';
@@ -108,10 +106,10 @@ var Layers = {
   },
 
   setSize: function(width, height) {
-    for (var i = 0, il = this.items.length; i < il; i++) {
-      this.items[i].width  = width;
-      this.items[i].height = height;
-    }
+    this.items.forEach(function(canvas) {
+      canvas.width  = width;
+      canvas.height = height;
+    });
   },
 
   // usually called after move: container jumps by move delta, cam is reset

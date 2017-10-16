@@ -2,7 +2,7 @@
   "name": "osmbuildings",
   "private": false,
   "description": "OSM Buildings",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "homepage": "https://osmbuildings.org",
   "author": "@kekscom",
   "contributors": [

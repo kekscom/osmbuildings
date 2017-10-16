@@ -98,47 +98,35 @@ proto.onMoveEnd = function(e) {
 
 proto.onZoomStart = function(e) {
   onZoomStart(e);
-
-  // var proxy = document.querySelector('.leaflet-proxy');
-  // var tx = map._proxy.style.transform;
-
-
-  console.log(this.map.project(this.map.getCenter(), this.map.getZoom()), this.map.getZoomScale(this.map.getZoom(), 1));
-
-  Layers.items.forEach(function(canvas) {
-    // proxy.appendChild(canvas);
-    // canvas.style.transform = tx;
-  });
 };
 
 proto.onZoom = function(e) {
-  // var
-  //   prop = DomUtil.TRANSFORM,
-  //   transform = this._proxy.style[prop];
-  //
-  // DomUtil.setTransform(this._proxy, this.project(e.center, e.zoom), this.getZoomScale(e.zoom, 1));
-  //
-  // // workaround for case when transform is the same and so transitionend event is not fired
-  // if (transform === this._proxy.style[prop] && this._animatingZoom) {
-  //   this._onZoomTransitionEnd();
-  // }
+  var center = this.map.latLngToContainerPoint(e.center);
+  var scale = Math.pow(2, e.zoom-ZOOM);
 
+  var dx = WIDTH /2 - center.x;
+  var dy = HEIGHT/2 - center.y;
 
-// OLD?
-  //    var map = this.map,
-//        scale = map.getZoomScale(e.zoom),
-//        offset = map._getCenterOffset(e.center).divideBy(1 - 1/scale),
-//        viewportPos = map.containerPointToLayerPoint(map.getSize().multiplyBy(-1)),
-//        origin = viewportPos.add(offset).round();
-//
-//    this.container.style[L.DomUtil.TRANSFORM] = L.DomUtil.getTranslateString((origin.multiplyBy(-1).add(this.getOffset().multiplyBy(-1)).multiplyBy(scale).add(origin))) + ' scale(' + scale + ') ';
-//    isZooming = true;
+  var x = WIDTH /2;
+  var y = HEIGHT/2;
+
+  if (e.zoom > ZOOM) {
+    x -= dx * scale;
+    y -= dy * scale;
+  } else {
+    x += dx;
+    y += dy;
+  }
+
+  Layers.container.classList.add('zoom-animation');
+  Layers.container.style.transformOrigin = x + 'px '+ y + 'px';
+  Layers.container.style.transform = 'translate3d(0, 0, 0) scale(' + scale + ')';
 };
 
 proto.onZoomEnd = function(e) {
-  // Layers.items.forEach(function(canvas) {
-  //   Layers.container.appendChild(canvas);
-  // });
+  Layers.clear();
+  Layers.container.classList.remove('zoom-animation');
+  Layers.container.style.transform = 'translate3d(0, 0, 0) scale(1)';
 
   var
     map = this.map,
