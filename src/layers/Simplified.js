@@ -33,7 +33,6 @@ var Simplified = {
 
     var
       item,
-      footprint,
       dataItems = Data.items;
 
     for (var i = 0, il = dataItems.length; i < il; i++) {
@@ -43,9 +42,8 @@ var Simplified = {
         continue;
       }
 
-      footprint = item.footprint;
-
-      if (!isVisible(footprint)) {
+      // TODO: track bboxes
+      if (!isVisible(item.geometry[0])) {
         continue;
       }
 
@@ -57,7 +55,7 @@ var Simplified = {
         case 'cone':
         case 'dome':
         case 'sphere': Cylinder.simplified(context, item.center, item.radius);  break;
-        default: Block.simplified(context, footprint, item.holes);
+        default: Block.simplified(context, item.geometry);
       }
     }
   }

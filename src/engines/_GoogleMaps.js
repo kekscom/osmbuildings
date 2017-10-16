@@ -30,7 +30,7 @@ proto.onAdd = function(map) {
 //  this.setMapState();
 
     setZoom(this.map.zoom);
-    var pxOrigin = geoToPixel(bounds.getNorthEast().lat(), bounds.getSouthWest().lng());
+    var pxOrigin = project(bounds.getNorthEast().lat(), bounds.getSouthWest().lng());
 //    setOrigin(pxOrigin.x, pxOrigin.y);
     moveCam(0, 0);
 
@@ -66,7 +66,7 @@ proto.onMove = function() {
 
 proto.onMoveEnd = function() {
     var bounds = this.map.getBounds();
-    var pxOrigin = geoToPixel(bounds.getNorthEast().lat(), bounds.getSouthWest().lng());
+    var pxOrigin = project(bounds.getNorthEast().lat(), bounds.getSouthWest().lng());
 //    setOrigin(pxOrigin.x, pxOrigin.y);
     moveCam(0, 0);
 //  this.setMapState();
@@ -80,7 +80,7 @@ proto.onZoomStart = function() {
 proto.onZoomEnd = function() {
     onZoomEnd({ zoom: this.map.zoom });
     var bounds = this.map.getBounds();
-    var pxOrigin = geoToPixel(bounds.getNorthEast().lat(), bounds.getSouthWest().lng());
+    var pxOrigin = project(bounds.getNorthEast().lat(), bounds.getSouthWest().lng());
 //    setOrigin(pxOrigin.x, pxOrigin.y);
 //  this.setMapState();
 };

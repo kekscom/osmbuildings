@@ -35,7 +35,7 @@ var Shadows = {
       sun, length, alpha;
 
     // TODO: calculate this just on demand
-    screenCenter = pixelToGeo(CENTER_X+ORIGIN_X, CENTER_Y+ORIGIN_Y);
+    screenCenter = unproject(CENTER_X+ORIGIN_X, CENTER_Y+ORIGIN_Y);
     sun = getSunPosition(this.date, screenCenter.latitude, screenCenter.longitude);
 
     if (sun.altitude <= 0) {
@@ -52,7 +52,6 @@ var Shadows = {
       i, il,
       item,
       h, mh,
-      footprint,
       dataItems = Data.items;
 
     context.canvas.style.opacity = alpha / (this.opacity * 2);
@@ -63,9 +62,8 @@ var Shadows = {
     for (i = 0, il = dataItems.length; i < il; i++) {
       item = dataItems[i];
 
-      footprint = item.footprint;
-
-      if (!isVisible(footprint)) {
+      // TODO: track bboxes
+      if (!isVisible(item.geometry[0])) {
         continue;
       }
 
@@ -82,14 +80,14 @@ var Shadows = {
         case 'cone':     Cylinder.shadow(context, item.center, item.radius, 0, h, mh);             break;
         case 'dome':     Cylinder.shadow(context, item.center, item.radius, item.radius/2, h, mh); break;
         case 'sphere':   Cylinder.shadow(context, item.center, item.radius, item.radius, h, mh);   break;
-        case 'pyramid':  Pyramid.shadow(context, footprint, item.center, h, mh);                   break;
-        default:         Block.shadow(context, footprint, item.holes, h, mh);
+        case 'pyramid':  Pyramid.shadow(context, item.geometry[0], item.center, h, mh);            break;
+        default:         Block.shadow(context, item.geometry, h, mh);
       }
 
       switch (item.roofShape) {
         case 'cone':    Cylinder.shadow(context, item.center, item.radius, 0, h+item.roofHeight, h);             break;
         case 'dome':    Cylinder.shadow(context, item.center, item.radius, item.radius/2, h+item.roofHeight, h); break;
-        case 'pyramid': Pyramid.shadow(context, footprint, item.center, h+item.roofHeight, h);                   break;
+        case 'pyramid': Pyramid.shadow(context, item.geometry[0], item.center, h+item.roofHeight, h);            break;
       }
     }
 

@@ -29,7 +29,6 @@ var Buildings = {
       item,
       h, mh,
       sortCam = { x:CAM_X+ORIGIN_X, y:CAM_Y+ORIGIN_Y },
-      footprint,
       wallColor, altColor, roofColor,
       dataItems = Data.items;
 
@@ -44,9 +43,8 @@ var Buildings = {
         continue;
       }
 
-      footprint = item.footprint;
-
-      if (!isVisible(footprint)) {
+        // TODO: d
+      if (!isVisible(item.geometry[0])) {
         continue;
       }
 
@@ -68,14 +66,14 @@ var Buildings = {
         case 'cone':     Cylinder.draw(context, item.center, item.radius, 0, h, mh, wallColor, altColor);                      break;
         case 'dome':     Cylinder.draw(context, item.center, item.radius, item.radius/2, h, mh, wallColor, altColor);          break;
         case 'sphere':   Cylinder.draw(context, item.center, item.radius, item.radius, h, mh, wallColor, altColor, roofColor); break;
-        case 'pyramid':  Pyramid.draw(context, footprint, item.center, h, mh, wallColor, altColor);                            break;
-        default:         Block.draw(context, footprint, item.holes, h, mh, wallColor, altColor, roofColor);
+        case 'pyramid':  Pyramid.draw(context, item.geometry[0], item.center, h, mh, wallColor, altColor);                     break;
+        default:         Block.draw(context, item.geometry, h, mh, wallColor, altColor, roofColor);
       }
 
       switch (item.roofShape) {
         case 'cone':    Cylinder.draw(context, item.center, item.radius, 0, h+item.roofHeight, h, roofColor, ''+ Color.parse(roofColor).lightness(0.9));             break;
         case 'dome':    Cylinder.draw(context, item.center, item.radius, item.radius/2, h+item.roofHeight, h, roofColor, ''+ Color.parse(roofColor).lightness(0.9)); break;
-        case 'pyramid': Pyramid.draw(context, footprint, item.center, h+item.roofHeight, h, roofColor, Color.parse(roofColor).lightness(0.9));                       break;
+        case 'pyramid': Pyramid.draw(context, item.geometry[0], item.center, h+item.roofHeight, h, roofColor, Color.parse(roofColor).lightness(0.9));                break;
       }
     }
   }

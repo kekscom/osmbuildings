@@ -1,14 +1,14 @@
 var Block = {
 
-  draw: function(context, polygon, innerPolygons, height, minHeight, color, altColor, roofColor) {
+  draw: function(context, geometry, height, minHeight, color, altColor, roofColor) {
     var
       i, il,
-      roof = this._extrude(context, polygon, height, minHeight, color, altColor),
+      roof = this._extrude(context, geometry[0], height, minHeight, color, altColor),
       innerRoofs = [];
 
-    if (innerPolygons) {
-      for (i = 0, il = innerPolygons.length; i < il; i++) {
-        innerRoofs[i] = this._extrude(context, innerPolygons[i], height, minHeight, color, altColor);
+    if (geometry.length > 1) {
+      for (i = 1, il = geometry.length; i < il; i++) {
+        innerRoofs[i] = this._extrude(context, geometry[i], height, minHeight, color, altColor);
       }
     }
 
@@ -16,7 +16,7 @@ var Block = {
 
     context.beginPath();
     this._ring(context, roof);
-    if (innerPolygons) {
+    if (geometry.length > 1) {
       for (i = 0, il = innerRoofs.length; i < il; i++) {
         this._ring(context, innerRoofs[i]);
       }
@@ -82,12 +82,12 @@ var Block = {
     }
   },
 
-  simplified: function(context, polygon, innerPolygons) {
+  simplified: function(context, geometry) {
     context.beginPath();
-    this._ringAbs(context, polygon);
-    if (innerPolygons) {
-      for (var i = 0, il = innerPolygons.length; i < il; i++) {
-        this._ringAbs(context, innerPolygons[i]);
+    this._ringAbs(context, geometry[0]);
+    if (geometry.length > 1) {
+      for (var i = 1, il = geometry.length; i < il; i++) {
+        this._ringAbs(context, geometry[i]);
       }
     }
     context.closePath();
@@ -101,18 +101,19 @@ var Block = {
     }
   },
 
-  shadow: function(context, polygon, innerPolygons, height, minHeight) {
+  shadow: function(context, geometry, height, minHeight) {
     var
       mode = null,
       a = { x:0, y:0 },
       b = { x:0, y:0 },
       _a, _b;
 
-    for (var i = 0, il = polygon.length-3; i < il; i += 2) {
-      a.x = polygon[i  ]-ORIGIN_X;
-      a.y = polygon[i+1]-ORIGIN_Y;
-      b.x = polygon[i+2]-ORIGIN_X;
-      b.y = polygon[i+3]-ORIGIN_Y;
+    for (var i = 0, il = geometry[0].length-1; i < il; i++) {
+
+      a.x = geometry[0][i  ][0]-ORIGIN_X;
+      a.y = geometry[0][i  ][1]-ORIGIN_Y;
+      b.x = geometry[0][i+1][0]-ORIGIN_X;
+      b.y = geometry[0][i+1][1]-ORIGIN_Y;
 
       _a = Shadows.project(a, height);
       _b = Shadows.project(b, height);
@@ -144,14 +145,14 @@ var Block = {
       }
     }
 
-    if (innerPolygons) {
-      for (i = 0, il = innerPolygons.length; i < il; i++) {
-        this._ringAbs(context, innerPolygons[i]);
+    if (geometry.length > 1) {
+      for (i = 1, il = geometry.length; i < il; i++) {
+        this._ringAbs(context, geometry[i]);
       }
     }
   },
 
-  hitArea: function(context, polygon, innerPolygons, height, minHeight, color) {
+  hitArea: function(context, geometry, height, minHeight, color) {
     var
       mode = null,
       a = { x:0, y:0 },
@@ -163,11 +164,11 @@ var Block = {
     context.fillStyle = color;
     context.beginPath();
 
-    for (var i = 0, il = polygon.length-3; i < il; i += 2) {
-      a.x = polygon[i  ]-ORIGIN_X;
-      a.y = polygon[i+1]-ORIGIN_Y;
-      b.x = polygon[i+2]-ORIGIN_X;
-      b.y = polygon[i+3]-ORIGIN_Y;
+    for (var i = 0, il = geometry[0].length-1; i < il; i += 2) {
+      a.x = geometry[0][i  ][0]-ORIGIN_X;
+      a.y = geometry[0][i  ][1]-ORIGIN_Y;
+      b.x = geometry[0][i+1][0]-ORIGIN_X;
+      b.y = geometry[0][i+1][1]-ORIGIN_Y;
 
       _a = Buildings.project(a, scale);
       _b = Buildings.project(b, scale);

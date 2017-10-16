@@ -151,8 +151,7 @@ var GeoJSON = (function() {
 
   function getGeometries(geometry) {
     var
-      i, il, polygon,
-      geometries = [], sub;
+      i, il, geometries = [], sub;
 
     switch (geometry.type) {
       case 'GeometryCollection':
@@ -174,36 +173,13 @@ var GeoJSON = (function() {
         return geometries;
 
       case 'Polygon':
-        polygon = geometry.coordinates;
-      break;
-
-      default: return [];
+        var res = geometry.coordinates.map(function(polygon, i) {
+          return makeWinding(polygon, i ? WINDING_COUNTER_CLOCKWISE : WINDING_CLOCKWISE);
+        });
+        return [res];
     }
 
-    var
-      j, jl,
-      p, lat = 1, lon = 0,
-      outer = [], inner = [];
-
-    p = polygon[0];
-    for (i = 0, il = p.length; i < il; i++) {
-      outer.push(p[i][lat], p[i][lon]);
-    }
-    outer = makeWinding(outer, WINDING_CLOCKWISE);
-
-    for (i = 0, il = polygon.length-1; i < il; i++) {
-      p = polygon[i+1];
-      inner[i] = [];
-      for (j = 0, jl = p.length; j < jl; j++) {
-        inner[i].push(p[j][lat], p[j][lon]);
-      }
-      inner[i] = makeWinding(inner[i], WINDING_COUNTER_CLOCKWISE);
-    }
-
-    return [{
-      outer: outer,
-      inner: inner.length ? inner : null
-    }];
+    return [];
   }
 
   function clone(obj) {
@@ -242,14 +218,13 @@ var GeoJSON = (function() {
 
         for (j = 0, jl = geometries.length; j < jl; j++) {
           item = clone(baseItem);
-          item.footprint = geometries[j].outer;
+
+          item.geometry = geometries[j];
+
           if (item.isRotational) {
-            item.radius = getLonDelta(item.footprint);
+            item.radius = getLonDelta(item.geometry[0]) / 2;
           }
 
-          if (geometries[j].inner) {
-            item.holes = geometries[j].inner;
-          }
           if (feature.id || feature.properties.id) {
             item.id = feature.id || feature.properties.id;
           }

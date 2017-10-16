@@ -579,8 +579,7 @@ var GeoJSON = (function() {
 
   function getGeometries(geometry) {
     var
-      i, il, polygon,
-      geometries = [], sub;
+      i, il, geometries = [], sub;
 
     switch (geometry.type) {
       case 'GeometryCollection':
@@ -602,36 +601,13 @@ var GeoJSON = (function() {
         return geometries;
 
       case 'Polygon':
-        polygon = geometry.coordinates;
-      break;
-
-      default: return [];
+        var res = geometry.coordinates.map(function(polygon, i) {
+          return makeWinding(polygon, i ? WINDING_COUNTER_CLOCKWISE : WINDING_CLOCKWISE);
+        });
+        return [res];
     }
 
-    var
-      j, jl,
-      p, lat = 1, lon = 0,
-      outer = [], inner = [];
-
-    p = polygon[0];
-    for (i = 0, il = p.length; i < il; i++) {
-      outer.push(p[i][lat], p[i][lon]);
-    }
-    outer = makeWinding(outer, WINDING_CLOCKWISE);
-
-    for (i = 0, il = polygon.length-1; i < il; i++) {
-      p = polygon[i+1];
-      inner[i] = [];
-      for (j = 0, jl = p.length; j < jl; j++) {
-        inner[i].push(p[j][lat], p[j][lon]);
-      }
-      inner[i] = makeWinding(inner[i], WINDING_COUNTER_CLOCKWISE);
-    }
-
-    return [{
-      outer: outer,
-      inner: inner.length ? inner : null
-    }];
+    return [];
   }
 
   function clone(obj) {
@@ -670,14 +646,13 @@ var GeoJSON = (function() {
 
         for (j = 0, jl = geometries.length; j < jl; j++) {
           item = clone(baseItem);
-          item.footprint = geometries[j].outer;
+
+          item.geometry = geometries[j];
+
           if (item.isRotational) {
-            item.radius = getLonDelta(item.footprint);
+            item.radius = getLonDelta(item.geometry[0]) / 2;
           }
 
-          if (geometries[j].inner) {
-            item.holes = geometries[j].inner;
-          }
           if (feature.id || feature.properties.id) {
             item.id = feature.id || feature.properties.id;
           }
@@ -733,32 +708,21 @@ var
 
   IS_ZOOMING;
 
-function getDistance(p1, p2) {
-  var
-    dx = p1.x-p2.x,
-    dy = p1.y-p2.y;
+function getDistance(a, b) {
+  var dx = a[0]-b[0], dy = a[1]-b[1];
   return dx*dx + dy*dy;
 }
 
 function isRotational(polygon) {
-  var length = polygon.length;
-  if (length < 16) {
+  var len = polygon.length;
+  if (len < 8) {
     return false;
   }
 
-  var i;
-
-  var minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-  for (i = 0; i < length-1; i+=2) {
-    minX = Math.min(minX, polygon[i]);
-    maxX = Math.max(maxX, polygon[i]);
-    minY = Math.min(minY, polygon[i+1]);
-    maxY = Math.max(maxY, polygon[i+1]);
-  }
-
   var
-    width = maxX-minX,
-    height = (maxY-minY),
+    bbox = getBBox(polygon),
+    width = bbox.max[0]-bbox.min[0],
+    height = bbox.max[1]-bbox.min[1],
     ratio = width/height;
 
   if (ratio < 0.85 || ratio > 1.15) {
@@ -766,13 +730,14 @@ function isRotational(polygon) {
   }
 
   var
-    center = { x:minX+width/2, y:minY+height/2 },
+    center = [bbox.min[0] + width/2, bbox.min[1] + height/2],
     radius = (width+height)/4,
-    sqRadius = radius*radius;
+    sqRadius = radius*radius,
+    d;
 
-  for (i = 0; i < length-1; i+=2) {
-    var dist = getDistance({ x:polygon[i], y:polygon[i+1] }, center);
-    if (dist/sqRadius < 0.8 || dist/sqRadius > 1.2) {
+  for (var i = 0; i < len; i++) {
+    d = getDistance(polygon[i], center);
+    if (d/sqRadius < 0.8 || d/sqRadius > 1.2) {
       return false;
     }
   }
@@ -780,30 +745,30 @@ function isRotational(polygon) {
   return true;
 }
 
-function getSquareSegmentDistance(px, py, p1x, p1y, p2x, p2y) {
+function getSquareSegmentDistance(p, p1, p2) {
   var
-    dx = p2x-p1x,
-    dy = p2y-p1y,
+    dx = p2[0]-p1[0],
+    dy = p2[1]-p1[1],
     t;
   if (dx !== 0 || dy !== 0) {
-    t = ((px-p1x) * dx + (py-p1y) * dy) / (dx*dx + dy*dy);
+    t = ((p[0]-p1[0]) * dx + (p[1]-p1[1]) * dy) / (dx*dx + dy*dy);
     if (t > 1) {
-      p1x = p2x;
-      p1y = p2y;
+      p1[0] = p2[0];
+      p1[1] = p2[1];
     } else if (t > 0) {
-      p1x += dx*t;
-      p1y += dy*t;
+      p1[0] += dx*t;
+      p1[1] += dy*t;
     }
   }
-  dx = px-p1x;
-  dy = py-p1y;
+  dx = p[0]-p1[0];
+  dy = p[1]-p1[1];
   return dx*dx + dy*dy;
 }
 
-function simplifyPolygon(buffer) {
+function simplifyPolygon(polygon) {
   var
     sqTolerance = 2,
-    len = buffer.length/2,
+    len = polygon.length,
     markers = new Uint8Array(len),
 
     first = 0, last = len-1,
@@ -812,19 +777,14 @@ function simplifyPolygon(buffer) {
     maxSqDist,
     sqDist,
     index,
-    firstStack = [], lastStack  = [],
-    newBuffer  = [];
+    firstStack = [], lastStack  = [];
 
   markers[first] = markers[last] = 1;
 
   while (last) {
     maxSqDist = 0;
     for (i = first+1; i < last; i++) {
-      sqDist = getSquareSegmentDistance(
-        buffer[i    *2], buffer[i    *2 + 1],
-        buffer[first*2], buffer[first*2 + 1],
-        buffer[last *2], buffer[last *2 + 1]
-      );
+      sqDist = getSquareSegmentDistance(polygon[i], polygon[first], polygon[last]);
       if (sqDist > maxSqDist) {
         index = i;
         maxSqDist = sqDist;
@@ -845,35 +805,38 @@ function simplifyPolygon(buffer) {
     last = lastStack.pop();
   }
 
-  for (i = 0; i < len; i++) {
-    if (markers[i]) {
-      newBuffer.push(buffer[i*2], buffer[i*2 + 1]);
-    }
-  }
-
-  return newBuffer;
+  return polygon.filter(function(point, i) {
+    return markers[i];
+  });
 }
 
-function getCenter(footprint) {
+function getBBox(polygon) {
   var minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-  for (var i = 0, il = footprint.length-3; i < il; i += 2) {
-    minX = min(minX, footprint[i]);
-    maxX = max(maxX, footprint[i]);
-    minY = min(minY, footprint[i+1]);
-    maxY = max(maxY, footprint[i+1]);
-  }
-  return { x:minX+(maxX-minX)/2 <<0, y:minY+(maxY-minY)/2 <<0 };
+  polygon.forEach(function(point) {
+    minX = Math.min(minX, point[0]);
+    maxX = Math.max(maxX, point[0]);
+    minY = Math.min(minY, point[1]);
+    maxY = Math.max(maxY, point[1]);
+  });
+  return { min: [minX, minY], max: [maxX, maxY] };
 }
 
-var EARTH_RADIUS = 6378137;
+function getCenter(polygon) {
+  var bbox = getBBox(polygon);
+  return [
+    bbox.min[0] + (bbox.max[0]-bbox.min[0]) / 2,
+    bbox.min[1] + (bbox.max[1]-bbox.min[1]) / 2
+  ];
+}
 
-function getLonDelta(footprint) {
+// TODO: combine with getBBox()
+function getLonDelta(polygon) {
   var minLon = 180, maxLon = -180;
-  for (var i = 0, il = footprint.length; i < il; i += 2) {
-    minLon = min(minLon, footprint[i+1]);
-    maxLon = max(maxLon, footprint[i+1]);
-  }
-  return (maxLon-minLon)/2;
+  polygon.forEach(function(point) {
+    minLon = Math.min(minLon, point[0]);
+    maxLon = Math.max(maxLon, point[0]);
+  });
+  return maxLon-minLon;
 }
 
 function rad(deg) {
@@ -884,23 +847,23 @@ function deg(rad) {
   return rad / PI * 180;
 }
 
-function pixelToGeo(x, y) {
-  var res = {};
+function unproject(x, y) {
   x /= MAP_SIZE;
   y /= MAP_SIZE;
-  res[LAT] = y <= 0  ? 90 : y >= 1 ? -90 : deg(2 * atan(exp(PI * (1 - 2*y))) - HALF_PI);
-  res[LON] = (x === 1 ?  1 : (x%1 + 1) % 1) * 360 - 180;
-  return res;
+  return [
+    (x === 1 ?  1 : (x%1 + 1) % 1) * 360 - 180,
+    y <= 0  ? 90 : y >= 1 ? -90 : deg(2 * Math.atan(Math.exp(PI * (1 - 2*y))) - HALF_PI)
+  ];
 }
 
-function geoToPixel(lat, lon) {
+function project(lon, lat) {
   var
-    latitude = min(1, max(0, 0.5 - (log(tan(QUARTER_PI + HALF_PI * lat / 180)) / PI) / 2)),
+    latitude = Math.min(1, Math.max(0, 0.5 - (Math.log(Math.tan(QUARTER_PI + HALF_PI * lat / 180)) / Math.PI) / 2)),
     longitude = lon/360 + 0.5;
-  return {
-    x: longitude*MAP_SIZE <<0,
-    y: latitude *MAP_SIZE <<0
-  };
+  return [
+    longitude*MAP_SIZE <<0,
+    latitude *MAP_SIZE <<0
+  ];
 }
 
 function fromRange(sVal, sMin, sMax, dMin, dMax) {
@@ -910,14 +873,14 @@ function fromRange(sVal, sMin, sMax, dMin, dMax) {
   return min(max(dMin + rel*range, dMin), dMax);
 }
 
-function isVisible(polygon) {
-   var
+function isVisible(geometry) {
+  var
     maxX = WIDTH+ORIGIN_X,
     maxY = HEIGHT+ORIGIN_Y;
 
   // TODO: checking footprint is sufficient for visibility - NOT VALID FOR SHADOWS!
-  for (var i = 0, il = polygon.length-3; i < il; i+=2) {
-    if (polygon[i] > ORIGIN_X && polygon[i] < maxX && polygon[i+1] > ORIGIN_Y && polygon[i+1] < maxY) {
+  for (var i = 0; i < geometry; i++) {
+    if (geometry[i][0] > ORIGIN_X && geometry[i][0] < maxX && geometry[i][1] > ORIGIN_Y && geometry[i][1] < maxY) {
       return true;
     }
   }
@@ -990,22 +953,13 @@ var Data = {
   loadedItems: {}, // maintain a list of cached items in order to avoid duplicates on tile borders
   items: [],
 
-  getPixelFootprint: function(buffer) {
-    var footprint = new Int32Array(buffer.length),
-      px;
-
-    for (var i = 0, il = buffer.length-1; i < il; i+=2) {
-      px = geoToPixel(buffer[i], buffer[i+1]);
-      footprint[i]   = px.x;
-      footprint[i+1] = px.y;
-    }
-
-    footprint = simplifyPolygon(footprint);
-    if (footprint.length < 8) { // 3 points & end==start (*2)
-      return;
-    }
-
-    return footprint;
+  projectGeometry: function(geometry) {
+    return geometry.map(function(polygon) {
+      return polygon.map(function(point) {
+        return project(point[0], point[1]);
+      });
+      return simplifyPolygon(polygon);
+    });
   },
 
   resetItems: function() {
@@ -1019,7 +973,7 @@ var Data = {
     var geojson = GeoJSON.read(data);
     for (var i = 0, il = geojson.length; i < il; i++) {
       item = geojson[i];
-      id = item.id || [item.footprint[0], item.footprint[1], item.height, item.minHeight].join(',');
+      id = item.id || [item.geometry[0][0], item.geometry[0][1], item.height, item.minHeight].join(',');
       if (!this.loadedItems[id]) {
         if ((scaledItem = this.scaleItem(item))) {
           scaledItem.scale = allAreNew ? 0 : 1;
@@ -1031,9 +985,14 @@ var Data = {
     fadeIn();
   },
 
-  scalePolygon: function(buffer, factor) {
-    return buffer.map(function(coord) {
-      return coord*factor;
+  scaleGeometry: function(geometry, factor) {
+    return geometry.map(function(polygon) {
+      return polygon.map(function(point) {
+        return [
+          point[0] * factor,
+          point[1] * factor
+        ];
+      });
     });
   },
 
@@ -1044,18 +1003,12 @@ var Data = {
       item.height *= factor;
       item.minHeight *= factor;
 
-      item.footprint = Data.scalePolygon(item.footprint, factor);
+      item.geometry = Data.scaleGeometry(item.geometry, factor);
       item.center.x *= factor;
       item.center.y *= factor;
 
       if (item.radius) {
         item.radius *= factor;
-      }
-
-      if (item.holes) {
-        for (var i = 0, il = item.holes.length; i < il; i++) {
-          item.holes[i] = Data.scalePolygon(item.holes[i], factor);
-        }
       }
 
       item.roofHeight *= factor;
@@ -1081,11 +1034,11 @@ var Data = {
       return;
     }
 
-    res.footprint = this.getPixelFootprint(item.footprint);
-    if (!res.footprint) {
+    res.geometry = Data.projectGeometry(item.geometry);
+    if (res.geometry[0].length < 4) { // 3 points & end==start (*2)
       return;
     }
-    res.center = getCenter(res.footprint);
+    res.center = getCenter(res.geometry[0]);
 
     if (item.radius) {
       res.radius = item.radius*PIXEL_PER_DEG;
@@ -1096,19 +1049,8 @@ var Data = {
     if (item.roofShape) {
       res.roofShape = item.roofShape;
     }
-    if ((res.roofShape === 'cone' || res.roofShape === 'dome') && !res.shape && isRotational(res.footprint)) {
+    if ((res.roofShape === 'cone' || res.roofShape === 'dome') && !res.shape && isRotational(res.geometry[0])) {
       res.shape = 'cylinder';
-    }
-
-    if (item.holes) {
-      res.holes = [];
-      var innerFootprint;
-      for (var i = 0, il = item.holes.length; i < il; i++) {
-        // TODO: simplify
-        if ((innerFootprint = this.getPixelFootprint(item.holes[i]))) {
-          res.holes.push(innerFootprint);
-        }
-      }
     }
 
     var color;
@@ -1198,15 +1140,15 @@ var Data = {
 };
 var Block = {
 
-  draw: function(context, polygon, innerPolygons, height, minHeight, color, altColor, roofColor) {
+  draw: function(context, geometry, height, minHeight, color, altColor, roofColor) {
     var
       i, il,
-      roof = this._extrude(context, polygon, height, minHeight, color, altColor),
+      roof = this._extrude(context, geometry[0], height, minHeight, color, altColor),
       innerRoofs = [];
 
-    if (innerPolygons) {
-      for (i = 0, il = innerPolygons.length; i < il; i++) {
-        innerRoofs[i] = this._extrude(context, innerPolygons[i], height, minHeight, color, altColor);
+    if (geometry.length > 1) {
+      for (i = 1, il = geometry.length; i < il; i++) {
+        innerRoofs[i] = this._extrude(context, geometry[i], height, minHeight, color, altColor);
       }
     }
 
@@ -1214,7 +1156,7 @@ var Block = {
 
     context.beginPath();
     this._ring(context, roof);
-    if (innerPolygons) {
+    if (geometry.length > 1) {
       for (i = 0, il = innerRoofs.length; i < il; i++) {
         this._ring(context, innerRoofs[i]);
       }
@@ -1280,12 +1222,12 @@ var Block = {
     }
   },
 
-  simplified: function(context, polygon, innerPolygons) {
+  simplified: function(context, geometry) {
     context.beginPath();
-    this._ringAbs(context, polygon);
-    if (innerPolygons) {
-      for (var i = 0, il = innerPolygons.length; i < il; i++) {
-        this._ringAbs(context, innerPolygons[i]);
+    this._ringAbs(context, geometry[0]);
+    if (geometry.length > 1) {
+      for (var i = 1, il = geometry.length; i < il; i++) {
+        this._ringAbs(context, geometry[i]);
       }
     }
     context.closePath();
@@ -1299,18 +1241,19 @@ var Block = {
     }
   },
 
-  shadow: function(context, polygon, innerPolygons, height, minHeight) {
+  shadow: function(context, geometry, height, minHeight) {
     var
       mode = null,
       a = { x:0, y:0 },
       b = { x:0, y:0 },
       _a, _b;
 
-    for (var i = 0, il = polygon.length-3; i < il; i += 2) {
-      a.x = polygon[i  ]-ORIGIN_X;
-      a.y = polygon[i+1]-ORIGIN_Y;
-      b.x = polygon[i+2]-ORIGIN_X;
-      b.y = polygon[i+3]-ORIGIN_Y;
+    for (var i = 0, il = geometry[0].length-1; i < il; i++) {
+
+      a.x = geometry[0][i  ][0]-ORIGIN_X;
+      a.y = geometry[0][i  ][1]-ORIGIN_Y;
+      b.x = geometry[0][i+1][0]-ORIGIN_X;
+      b.y = geometry[0][i+1][1]-ORIGIN_Y;
 
       _a = Shadows.project(a, height);
       _b = Shadows.project(b, height);
@@ -1342,14 +1285,14 @@ var Block = {
       }
     }
 
-    if (innerPolygons) {
-      for (i = 0, il = innerPolygons.length; i < il; i++) {
-        this._ringAbs(context, innerPolygons[i]);
+    if (geometry.length > 1) {
+      for (i = 1, il = geometry.length; i < il; i++) {
+        this._ringAbs(context, geometry[i]);
       }
     }
   },
 
-  hitArea: function(context, polygon, innerPolygons, height, minHeight, color) {
+  hitArea: function(context, geometry, height, minHeight, color) {
     var
       mode = null,
       a = { x:0, y:0 },
@@ -1361,11 +1304,11 @@ var Block = {
     context.fillStyle = color;
     context.beginPath();
 
-    for (var i = 0, il = polygon.length-3; i < il; i += 2) {
-      a.x = polygon[i  ]-ORIGIN_X;
-      a.y = polygon[i+1]-ORIGIN_Y;
-      b.x = polygon[i+2]-ORIGIN_X;
-      b.y = polygon[i+3]-ORIGIN_Y;
+    for (var i = 0, il = geometry[0].length-1; i < il; i += 2) {
+      a.x = geometry[0][i  ][0]-ORIGIN_X;
+      a.y = geometry[0][i  ][1]-ORIGIN_Y;
+      b.x = geometry[0][i+1][0]-ORIGIN_X;
+      b.y = geometry[0][i+1][1]-ORIGIN_Y;
 
       _a = Buildings.project(a, scale);
       _b = Buildings.project(b, scale);
@@ -1834,7 +1777,6 @@ var Buildings = {
       item,
       h, mh,
       sortCam = { x:CAM_X+ORIGIN_X, y:CAM_Y+ORIGIN_Y },
-      footprint,
       wallColor, altColor, roofColor,
       dataItems = Data.items;
 
@@ -1849,9 +1791,8 @@ var Buildings = {
         continue;
       }
 
-      footprint = item.footprint;
-
-      if (!isVisible(footprint)) {
+        // TODO: d
+      if (!isVisible(item.geometry[0])) {
         continue;
       }
 
@@ -1873,14 +1814,14 @@ var Buildings = {
         case 'cone':     Cylinder.draw(context, item.center, item.radius, 0, h, mh, wallColor, altColor);                      break;
         case 'dome':     Cylinder.draw(context, item.center, item.radius, item.radius/2, h, mh, wallColor, altColor);          break;
         case 'sphere':   Cylinder.draw(context, item.center, item.radius, item.radius, h, mh, wallColor, altColor, roofColor); break;
-        case 'pyramid':  Pyramid.draw(context, footprint, item.center, h, mh, wallColor, altColor);                            break;
-        default:         Block.draw(context, footprint, item.holes, h, mh, wallColor, altColor, roofColor);
+        case 'pyramid':  Pyramid.draw(context, item.geometry[0], item.center, h, mh, wallColor, altColor);                     break;
+        default:         Block.draw(context, item.geometry, h, mh, wallColor, altColor, roofColor);
       }
 
       switch (item.roofShape) {
         case 'cone':    Cylinder.draw(context, item.center, item.radius, 0, h+item.roofHeight, h, roofColor, ''+ Color.parse(roofColor).lightness(0.9));             break;
         case 'dome':    Cylinder.draw(context, item.center, item.radius, item.radius/2, h+item.roofHeight, h, roofColor, ''+ Color.parse(roofColor).lightness(0.9)); break;
-        case 'pyramid': Pyramid.draw(context, footprint, item.center, h+item.roofHeight, h, roofColor, Color.parse(roofColor).lightness(0.9));                       break;
+        case 'pyramid': Pyramid.draw(context, item.geometry[0], item.center, h+item.roofHeight, h, roofColor, Color.parse(roofColor).lightness(0.9));                break;
       }
     }
   }
@@ -1920,7 +1861,6 @@ var Simplified = {
 
     var
       item,
-      footprint,
       dataItems = Data.items;
 
     for (var i = 0, il = dataItems.length; i < il; i++) {
@@ -1930,9 +1870,8 @@ var Simplified = {
         continue;
       }
 
-      footprint = item.footprint;
-
-      if (!isVisible(footprint)) {
+      // TODO: track bboxes
+      if (!isVisible(item.geometry[0])) {
         continue;
       }
 
@@ -1944,7 +1883,7 @@ var Simplified = {
         case 'cone':
         case 'dome':
         case 'sphere': Cylinder.simplified(context, item.center, item.radius);  break;
-        default: Block.simplified(context, footprint, item.holes);
+        default: Block.simplified(context, item.geometry);
       }
     }
   }
@@ -2003,7 +1942,6 @@ var Shadows = {
       i, il,
       item,
       h, mh,
-      footprint,
       dataItems = Data.items;
 
     context.canvas.style.opacity = alpha / (this.opacity * 2);
@@ -2014,9 +1952,8 @@ var Shadows = {
     for (i = 0, il = dataItems.length; i < il; i++) {
       item = dataItems[i];
 
-      footprint = item.footprint;
-
-      if (!isVisible(footprint)) {
+      // TODO: track bboxes
+      if (!isVisible(item.geometry[0])) {
         continue;
       }
 
@@ -2033,14 +1970,14 @@ var Shadows = {
         case 'cone':     Cylinder.shadow(context, item.center, item.radius, 0, h, mh);             break;
         case 'dome':     Cylinder.shadow(context, item.center, item.radius, item.radius/2, h, mh); break;
         case 'sphere':   Cylinder.shadow(context, item.center, item.radius, item.radius, h, mh);   break;
-        case 'pyramid':  Pyramid.shadow(context, footprint, item.center, h, mh);                   break;
-        default:         Block.shadow(context, footprint, item.holes, h, mh);
+        case 'pyramid':  Pyramid.shadow(context, item.geometry[0], item.center, h, mh);            break;
+        default:         Block.shadow(context, item.geometry, h, mh);
       }
 
       switch (item.roofShape) {
         case 'cone':    Cylinder.shadow(context, item.center, item.radius, 0, h+item.roofHeight, h);             break;
         case 'dome':    Cylinder.shadow(context, item.center, item.radius, item.radius/2, h+item.roofHeight, h); break;
-        case 'pyramid': Pyramid.shadow(context, footprint, item.center, h+item.roofHeight, h);                   break;
+        case 'pyramid': Pyramid.shadow(context, item.geometry[0], item.center, h+item.roofHeight, h);            break;
       }
     }
 
@@ -2086,7 +2023,6 @@ var HitAreas = {
       item,
       h, mh,
       sortCam = { x:CAM_X+ORIGIN_X, y:CAM_Y+ORIGIN_Y },
-      footprint,
       color,
       dataItems = Data.items;
 
@@ -2101,9 +2037,8 @@ var HitAreas = {
         continue;
       }
 
-      footprint = item.footprint;
-
-      if (!isVisible(footprint)) {
+      // TODO: track bboxes
+      if (!isVisible(item.geometry[0])) {
         continue;
       }
 
@@ -2119,14 +2054,14 @@ var HitAreas = {
         case 'cone':     Cylinder.hitArea(context, item.center, item.radius, 0, h, mh, color);             break;
         case 'dome':     Cylinder.hitArea(context, item.center, item.radius, item.radius/2, h, mh, color); break;
         case 'sphere':   Cylinder.hitArea(context, item.center, item.radius, item.radius, h, mh, color);   break;
-        case 'pyramid':  Pyramid.hitArea(context, footprint, item.center, h, mh, color);                   break;
-        default:         Block.hitArea(context, footprint, item.holes, h, mh, color);
+        case 'pyramid':  Pyramid.hitArea(context, item.geometry[0], item.center, h, mh, color);            break;
+        default:         Block.hitArea(context, item.geometry, h, mh, color);
       }
 
       switch (item.roofShape) {
         case 'cone':    Cylinder.hitArea(context, item.center, item.radius, 0, h+item.roofHeight, h, color);             break;
         case 'dome':    Cylinder.hitArea(context, item.center, item.radius, item.radius/2, h+item.roofHeight, h, color); break;
-        case 'pyramid': Pyramid.hitArea(context, footprint, item.center, h+item.roofHeight, h, color);                   break;
+        case 'pyramid': Pyramid.hitArea(context, item.geometry[0], item.center, h+item.roofHeight, h, color);            break;
       }
     }
 
@@ -2208,10 +2143,10 @@ function setZoom(z) {
   ZOOM = z;
   MAP_SIZE = MAP_TILE_SIZE <<ZOOM;
 
-  var center = pixelToGeo(ORIGIN_X+CENTER_X, ORIGIN_Y+CENTER_Y);
-  var a = geoToPixel(center.latitude, 0);
-  var b = geoToPixel(center.latitude, 1);
-  PIXEL_PER_DEG = b.x-a.x;
+  var center = unproject(ORIGIN_X+CENTER_X, ORIGIN_Y+CENTER_Y);
+  var a = project(0, center[1]);
+  var b = project(1, center[1]);
+  PIXEL_PER_DEG = b[0]-a[0];
 
   Layers.setOpacity(Math.pow(0.95, ZOOM-MIN_ZOOM));
 

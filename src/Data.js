@@ -4,22 +4,13 @@ var Data = {
   loadedItems: {}, // maintain a list of cached items in order to avoid duplicates on tile borders
   items: [],
 
-  getPixelFootprint: function(buffer) {
-    var footprint = new Int32Array(buffer.length),
-      px;
-
-    for (var i = 0, il = buffer.length-1; i < il; i+=2) {
-      px = geoToPixel(buffer[i], buffer[i+1]);
-      footprint[i]   = px.x;
-      footprint[i+1] = px.y;
-    }
-
-    footprint = simplifyPolygon(footprint);
-    if (footprint.length < 8) { // 3 points & end==start (*2)
-      return;
-    }
-
-    return footprint;
+  projectGeometry: function(geometry) {
+    return geometry.map(function(polygon) {
+      return polygon.map(function(point) {
+        return project(point[0], point[1]);
+      });
+      return simplifyPolygon(polygon);
+    });
   },
 
   resetItems: function() {
@@ -33,7 +24,7 @@ var Data = {
     var geojson = GeoJSON.read(data);
     for (var i = 0, il = geojson.length; i < il; i++) {
       item = geojson[i];
-      id = item.id || [item.footprint[0], item.footprint[1], item.height, item.minHeight].join(',');
+      id = item.id || [item.geometry[0][0], item.geometry[0][1], item.height, item.minHeight].join(',');
       if (!this.loadedItems[id]) {
         if ((scaledItem = this.scaleItem(item))) {
           scaledItem.scale = allAreNew ? 0 : 1;
@@ -45,9 +36,14 @@ var Data = {
     fadeIn();
   },
 
-  scalePolygon: function(buffer, factor) {
-    return buffer.map(function(coord) {
-      return coord*factor;
+  scaleGeometry: function(geometry, factor) {
+    return geometry.map(function(polygon) {
+      return polygon.map(function(point) {
+        return [
+          point[0] * factor,
+          point[1] * factor
+        ];
+      });
     });
   },
 
@@ -58,18 +54,12 @@ var Data = {
       item.height *= factor;
       item.minHeight *= factor;
 
-      item.footprint = Data.scalePolygon(item.footprint, factor);
+      item.geometry = Data.scaleGeometry(item.geometry, factor);
       item.center.x *= factor;
       item.center.y *= factor;
 
       if (item.radius) {
         item.radius *= factor;
-      }
-
-      if (item.holes) {
-        for (var i = 0, il = item.holes.length; i < il; i++) {
-          item.holes[i] = Data.scalePolygon(item.holes[i], factor);
-        }
       }
 
       item.roofHeight *= factor;
@@ -95,11 +85,11 @@ var Data = {
       return;
     }
 
-    res.footprint = this.getPixelFootprint(item.footprint);
-    if (!res.footprint) {
+    res.geometry = Data.projectGeometry(item.geometry);
+    if (res.geometry[0].length < 4) { // 3 points & end==start (*2)
       return;
     }
-    res.center = getCenter(res.footprint);
+    res.center = getCenter(res.geometry[0]);
 
     if (item.radius) {
       res.radius = item.radius*PIXEL_PER_DEG;
@@ -110,19 +100,8 @@ var Data = {
     if (item.roofShape) {
       res.roofShape = item.roofShape;
     }
-    if ((res.roofShape === 'cone' || res.roofShape === 'dome') && !res.shape && isRotational(res.footprint)) {
+    if ((res.roofShape === 'cone' || res.roofShape === 'dome') && !res.shape && isRotational(res.geometry[0])) {
       res.shape = 'cylinder';
-    }
-
-    if (item.holes) {
-      res.holes = [];
-      var innerFootprint;
-      for (var i = 0, il = item.holes.length; i < il; i++) {
-        // TODO: simplify
-        if ((innerFootprint = this.getPixelFootprint(item.holes[i]))) {
-          res.holes.push(innerFootprint);
-        }
-      }
     }
 
     var color;
