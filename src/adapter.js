@@ -28,8 +28,8 @@ function setZoom(z) {
   MAP_SIZE = MAP_TILE_SIZE <<ZOOM;
 
   var center = unproject(ORIGIN_X+CENTER_X, ORIGIN_Y+CENTER_Y);
-  var a = project(0, center[1]);
-  var b = project(1, center[1]);
+  var a = project(0, center.lat);
+  var b = project(1, center.lat);
   PIXEL_PER_DEG = b[0]-a[0];
 
   Layers.setOpacity(Math.pow(0.95, ZOOM-MIN_ZOOM));

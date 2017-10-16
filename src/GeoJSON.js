@@ -64,35 +64,10 @@ var GeoJSON = (function() {
     return materialColors[baseMaterials[str] || str] || null;
   }
 
-  var WINDING_CLOCKWISE = 'CW';
-  var WINDING_COUNTER_CLOCKWISE = 'CCW';
-
-  // detect winding direction: clockwise or counter clockwise
-  function getWinding(points) {
-    var x1, y1, x2, y2,
-      a = 0,
-      i, il;
-    for (i = 0, il = points.length-3; i < il; i += 2) {
-      x1 = points[i];
-      y1 = points[i+1];
-      x2 = points[i+2];
-      y2 = points[i+3];
-      a += x1*y2 - x2*y1;
-    }
-    return (a/2) > 0 ? WINDING_CLOCKWISE : WINDING_COUNTER_CLOCKWISE;
-  }
-
-  // enforce a polygon winding direcetion. Needed for proper backface culling.
-  function makeWinding(points, direction) {
-    var winding = getWinding(points);
-    if (winding === direction) {
-      return points;
-    }
-    var revPoints = [];
-    for (var i = points.length-2; i >= 0; i -= 2) {
-      revPoints.push(points[i], points[i+1]);
-    }
-    return revPoints;
+  function isClockWise(polygon) {
+    return 0 < polygon.reduce(function(a, b, c, d) {
+      return a + ((c < d.length - 1) ? (d[c+1][0] - b[0]) * (d[c+1][1] + b[1]) : 0);
+    }, 0);
   }
 
   function alignProperties(prop) {
@@ -174,8 +149,14 @@ var GeoJSON = (function() {
 
       case 'Polygon':
         var res = geometry.coordinates.map(function(polygon, i) {
-          return makeWinding(polygon, i ? WINDING_COUNTER_CLOCKWISE : WINDING_CLOCKWISE);
+          // outer ring (first ring) needs to be clockwise, inner rings
+          // counter-clockwise. If they are not, make them by reverting order.
+          if ((i === 0) !== isClockWise(polygon)) {
+            polygon.reverse();
+          }
+          return polygon;
         });
+
         return [res];
     }
 

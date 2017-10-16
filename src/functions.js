@@ -10,10 +10,10 @@ function deg(rad) {
 function unproject(x, y) {
   x /= MAP_SIZE;
   y /= MAP_SIZE;
-  return [
-    (x === 1 ?  1 : (x%1 + 1) % 1) * 360 - 180,
-    y <= 0  ? 90 : y >= 1 ? -90 : deg(2 * Math.atan(Math.exp(PI * (1 - 2*y))) - HALF_PI)
-  ];
+  return {
+    lon: (x === 1 ? 1 : (x%1 + 1)%1)*360 - 180,
+    lat: y<=0 ? 90 : y>=1 ? -90 : deg(2*Math.atan(Math.exp(PI*(1 - 2*y))) - HALF_PI)
+  };
 }
 
 function project(lon, lat) {

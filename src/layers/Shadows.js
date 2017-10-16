@@ -30,13 +30,13 @@ var Shadows = {
     this.clear();
     
     var
-      context = this.context,
+      context = Shadows.context,
       screenCenter,
       sun, length, alpha;
 
     // TODO: calculate this just on demand
     screenCenter = unproject(CENTER_X+ORIGIN_X, CENTER_Y+ORIGIN_Y);
-    sun = getSunPosition(this.date, screenCenter.latitude, screenCenter.longitude);
+    sun = getSunPosition(Shadows.date, screenCenter.lat, screenCenter.lon);
 
     if (sun.altitude <= 0) {
       return;
@@ -45,23 +45,22 @@ var Shadows = {
     length = 1 / tan(sun.altitude);
     alpha = length < 5 ? 0.75 : 1/length*5;
 
-    this.direction = [
+    Shadows.direction = [
       Math.cos(sun.azimuth) * length,
       Math.sin(sun.azimuth) * length
     ];
 
     var
-      i, il,
       item,
       h, mh,
       dataItems = Data.items;
 
-    context.canvas.style.opacity = alpha / (this.opacity * 2);
-    context.shadowColor = this.blurColor;
-    context.fillStyle = this.color;
+    context.canvas.style.opacity = alpha / (Shadows.opacity * 2);
+    context.shadowColor = Shadows.blurColor;
+    context.fillStyle = Shadows.color;
     context.beginPath();
 
-    for (i = 0, il = dataItems.length; i < il; i++) {
+    for (var i = 0; i < dataItems.length; i++) {
       item = dataItems[i];
 
       // TODO: track bboxes
@@ -82,14 +81,14 @@ var Shadows = {
         case 'cone':     Cylinder.shadow(context, item.center, item.radius, 0, h, mh);             break;
         case 'dome':     Cylinder.shadow(context, item.center, item.radius, item.radius/2, h, mh); break;
         case 'sphere':   Cylinder.shadow(context, item.center, item.radius, item.radius, h, mh);   break;
-        case 'pyramid':  Pyramid.shadow(context, item.geometry[0], item.center, h, mh);            break;
+        case 'pyramid':  Pyramid.shadow(context, item.geometry, item.center, h, mh);               break;
         default:         Block.shadow(context, item.geometry, h, mh);
       }
 
       switch (item.roofShape) {
         case 'cone':    Cylinder.shadow(context, item.center, item.radius, 0, h+item.roofHeight, h);             break;
         case 'dome':    Cylinder.shadow(context, item.center, item.radius, item.radius/2, h+item.roofHeight, h); break;
-        case 'pyramid': Pyramid.shadow(context, item.geometry[0], item.center, h+item.roofHeight, h);            break;
+        case 'pyramid': Pyramid.shadow(context, item.geometry, item.center, h+item.roofHeight, h);               break;
       }
     }
 

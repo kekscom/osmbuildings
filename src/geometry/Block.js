@@ -35,14 +35,10 @@ var Block = {
       roof = [];
 
     for (var i = 0; i < polygon.length-1; i++) {
-      a = [
-        polygon[i][0]-ORIGIN_X,
-        polygon[i][1]-ORIGIN_Y
-      ];
-      b = [
-        polygon[i+1][0]-ORIGIN_X,
-        polygon[i+1][1]-ORIGIN_Y
-      ];
+      a[0] = polygon[i][0]-ORIGIN_X;
+      a[1] = polygon[i][1]-ORIGIN_Y;
+      b[0] = polygon[i+1][0]-ORIGIN_X;
+      b[1] = polygon[i+1][1]-ORIGIN_Y;
 
       _a = Buildings.project(a, scale);
       _b = Buildings.project(b, scale);
@@ -82,12 +78,9 @@ var Block = {
 
   simplified: function(context, geometry) {
     context.beginPath();
-    this._ringAbs(context, geometry[0]);
-    if (geometry.length > 1) {
-      for (var i = 1; i < geometry.length; i++) {
-        this._ringAbs(context, geometry[i]);
-      }
-    }
+    geometry.forEach(function(polygon) {
+      Block._ringAbs(context, polygon);
+    });
     context.closePath();
     context.fill();
   },

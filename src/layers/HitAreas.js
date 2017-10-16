@@ -67,14 +67,14 @@ var HitAreas = {
         case 'cone':     Cylinder.hitArea(context, item.center, item.radius, 0, h, mh, color);             break;
         case 'dome':     Cylinder.hitArea(context, item.center, item.radius, item.radius/2, h, mh, color); break;
         case 'sphere':   Cylinder.hitArea(context, item.center, item.radius, item.radius, h, mh, color);   break;
-        case 'pyramid':  Pyramid.hitArea(context, item.geometry[0], item.center, h, mh, color);            break;
+        case 'pyramid':  Pyramid.hitArea(context, item.geometry, item.center, h, mh, color);            break;
         default:         Block.hitArea(context, item.geometry, h, mh, color);
       }
 
       switch (item.roofShape) {
         case 'cone':    Cylinder.hitArea(context, item.center, item.radius, 0, h+item.roofHeight, h, color);             break;
         case 'dome':    Cylinder.hitArea(context, item.center, item.radius, item.radius/2, h+item.roofHeight, h, color); break;
-        case 'pyramid': Pyramid.hitArea(context, item.geometry[0], item.center, h+item.roofHeight, h, color);            break;
+        case 'pyramid': Pyramid.hitArea(context, item.geometry, item.center, h+item.roofHeight, h, color);            break;
       }
     }
 
