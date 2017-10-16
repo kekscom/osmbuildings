@@ -27,8 +27,8 @@
 <div id="map"></div>
 
 <script>
-  var map = new L.Map('map').setView([52.52179, 13.39503], 18); // Berlin
-// var map = new L.Map('map').setView([40.7484625, -73.9852667], 18); // NYC
+  var map = new L.Map('map', { minZoom: 16 }).setView([52.52179, 13.39503], 18); // Berlin
+// var map = new L.Map('map').setView([40.711516, -74.011695], 16); // NYC
 
   new L.TileLayer('https://{s}.tiles.mapbox.com/v3/osmbuildings.kbpalbpk/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
 
