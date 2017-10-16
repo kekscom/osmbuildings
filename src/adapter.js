@@ -56,7 +56,15 @@ function onZoomStart() {
 
 function onZoomEnd(e) {
   IS_ZOOMING = false;
+  var factor = Math.pow(2, e.zoom-ZOOM);
+
   setZoom(e.zoom);
+  Data.scale(factor);
+  // Layers.render(); // TODO: requestAnimationFrame() causes flickering because layers are already cleared
+
+  Shadows.render();
+  Simplified.render();
+  Buildings.render();
+
   Data.update(); // => fadeIn()
-  Layers.render();
 }

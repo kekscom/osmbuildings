@@ -10,10 +10,8 @@ module.exports = function(grunt) {
 
     copy: {
       dist: {
-        expand: true,
-        cwd: 'src',
-        src: [],
-        dest: 'dist'
+        src: 'src/OSMBuildings.css',
+        dest: 'dist/OSMBuildings.css'
       }
     },
 
@@ -58,7 +56,7 @@ module.exports = function(grunt) {
 
   //*****************************************************************************
 
-  grunt.registerTask('default', 'Development build', function() {
+  grunt.registerTask('default', 'build', function() {
     grunt.log.writeln('\033[1;36m' + grunt.template.date(new Date(), 'yyyy-mm-dd HH:MM:ss') + '\033[0m');
 
     try {
@@ -72,5 +70,7 @@ module.exports = function(grunt) {
     grunt.task.run('concat-js:OpenLayers');
     // grunt.task.run('jshint:OpenLayers');
     grunt.task.run('uglify:OpenLayers');
+
+    grunt.task.run('copy');
   });
 };

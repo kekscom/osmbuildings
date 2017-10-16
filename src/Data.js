@@ -35,7 +35,7 @@ var Data = {
       item = geojson[i];
       id = item.id || [item.footprint[0], item.footprint[1], item.height, item.minHeight].join(',');
       if (!this.loadedItems[id]) {
-        if ((scaledItem = this.scale(item))) {
+        if ((scaledItem = this.scaleItem(item))) {
           scaledItem.scale = allAreNew ? 0 : 1;
           this.items.push(scaledItem);
           this.loadedItems[id] = 1;
@@ -45,7 +45,40 @@ var Data = {
     fadeIn();
   },
 
-  scale: function(item) {
+  scalePolygon: function(buffer, factor) {
+    return buffer.map(function(coord) {
+      return coord*factor;
+    });
+  },
+
+  scale: function(factor) {
+    Data.items = Data.items.map(function(item) {
+      // item.height = Math.min(item.height*factor, MAX_HEIGHT); // TODO: should be filtered by renderer
+
+      item.height *= factor;
+      item.minHeight *= factor;
+
+      item.footprint = Data.scalePolygon(item.footprint, factor);
+      item.center.x *= factor;
+      item.center.y *= factor;
+
+      if (item.radius) {
+        item.radius *= factor;
+      }
+
+      if (item.holes) {
+        for (var i = 0, il = item.holes.length; i < il; i++) {
+          item.holes[i] = Data.scalePolygon(item.holes[i], factor);
+        }
+      }
+
+      item.roofHeight *= factor;
+
+      return item;
+    });
+  },
+
+  scaleItem: function(item) {
     var
       res = {},
       // TODO: calculate this on zoom change only

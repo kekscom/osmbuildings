@@ -1,4 +1,3 @@
-engines/
-node_modules/
-lib/engines/
 .idea/
+_misc/
+node_modules/

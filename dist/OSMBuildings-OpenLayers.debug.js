@@ -1021,7 +1021,7 @@ var Data = {
       item = geojson[i];
       id = item.id || [item.footprint[0], item.footprint[1], item.height, item.minHeight].join(',');
       if (!this.loadedItems[id]) {
-        if ((scaledItem = this.scale(item))) {
+        if ((scaledItem = this.scaleItem(item))) {
           scaledItem.scale = allAreNew ? 0 : 1;
           this.items.push(scaledItem);
           this.loadedItems[id] = 1;
@@ -1031,7 +1031,40 @@ var Data = {
     fadeIn();
   },
 
-  scale: function(item) {
+  scalePolygon: function(buffer, factor) {
+    return buffer.map(function(coord) {
+      return coord*factor;
+    });
+  },
+
+  scale: function(factor) {
+    Data.items = Data.items.map(function(item) {
+      // item.height = Math.min(item.height*factor, MAX_HEIGHT); // TODO: should be filtered by renderer
+
+      item.height *= factor;
+      item.minHeight *= factor;
+
+      item.footprint = Data.scalePolygon(item.footprint, factor);
+      item.center.x *= factor;
+      item.center.y *= factor;
+
+      if (item.radius) {
+        item.radius *= factor;
+      }
+
+      if (item.holes) {
+        for (var i = 0, il = item.holes.length; i < il; i++) {
+          item.holes[i] = Data.scalePolygon(item.holes[i], factor);
+        }
+      }
+
+      item.roofHeight *= factor;
+
+      return item;
+    });
+  },
+
+  scaleItem: function(item) {
     var
       res = {},
       // TODO: calculate this on zoom change only
@@ -1685,10 +1718,7 @@ var Layers = {
   items: [],
 
   init: function() {
-    this.container.style.pointerEvents = 'none';
-    this.container.style.position = 'absolute';
-    this.container.style.left = 0;
-    this.container.style.top  = 0;
+    this.container.className = 'osmb-container';
 
     // TODO: improve this
     Shadows.init(this.createContext(this.container));
@@ -1712,9 +1742,14 @@ var Layers = {
   },
 
   render: function(quick) {
-    // show on high zoom levels only and avoid rendering during zoom
-    if (ZOOM < MIN_ZOOM || IS_ZOOMING) {
+    // show on high zoom levels only
+    if (ZOOM < MIN_ZOOM) {
       this.clear();
+      return;
+    }
+
+    // don't render during zoom
+    if (IS_ZOOMING) {
       return;
     }
 
@@ -1730,11 +1765,7 @@ var Layers = {
 
   createContext: function(container) {
     var canvas = document.createElement('CANVAS');
-    canvas.style.transform = 'translate3d(0, 0, 0)'; // turn on hw acceleration
-    canvas.style.imageRendering = 'optimizeSpeed';
-    canvas.style.position = 'absolute';
-    canvas.style.left = 0;
-    canvas.style.top  = 0;
+    canvas.className = 'osmb-layer';
 
     var context = canvas.getContext('2d');
     context.lineCap   = 'round';
@@ -1759,10 +1790,10 @@ var Layers = {
   },
 
   setSize: function(width, height) {
-    for (var i = 0, il = this.items.length; i < il; i++) {
-      this.items[i].width  = width;
-      this.items[i].height = height;
-    }
+    this.items.forEach(function(canvas) {
+      canvas.width  = width;
+      canvas.height = height;
+    });
   },
 
   // usually called after move: container jumps by move delta, cam is reset
@@ -2202,16 +2233,21 @@ function onMoveEnd(e) {
 
 function onZoomStart() {
   IS_ZOOMING = true;
-// effectively clears because of IS_ZOOMING flag
-// TODO: introduce explicit clear()
-  Layers.render();
 }
 
 function onZoomEnd(e) {
   IS_ZOOMING = false;
+  var factor = Math.pow(2, e.zoom-ZOOM);
+
   setZoom(e.zoom);
+  Data.scale(factor);
+  // Layers.render(); // TODO: requestAnimationFrame() causes flickering because layers are already cleared
+
+  Shadows.render();
+  Simplified.render();
+  Buildings.render();
+
   Data.update(); // => fadeIn()
-  Layers.render();
 }
 // based on a pull request from Jérémy Judéaux (https://github.com/Volune)
 
