@@ -34,13 +34,13 @@ var Layers = {
   items: [],
 
   init: function() {
-    this.container.className = 'osmb-container';
+    Layers.container.className = 'osmb-container';
 
     // TODO: improve this
-    Shadows.init(this.createContext(this.container));
-    Simplified.init(this.createContext(this.container));
-    Buildings.init(this.createContext(this.container));
-    HitAreas.init(this.createContext());
+    Shadows.init(Layers.createContext(Layers.container));
+    Simplified.init(Layers.createContext(Layers.container));
+    Buildings.init(Layers.createContext(Layers.container));
+    HitAreas.init(Layers.createContext());
   },
 
   clear: function() {
@@ -60,7 +60,7 @@ var Layers = {
   render: function(quick) {
     // show on high zoom levels only
     if (ZOOM < MIN_ZOOM) {
-      this.clear();
+      Layers.clear();
       return;
     }
 
@@ -89,7 +89,7 @@ var Layers = {
     context.lineWidth = 1;
     context.imageSmoothingEnabled = false;
 
-    this.items.push(canvas);
+    Layers.items.push(canvas);
     if (container) {
       container.appendChild(canvas);
     }
@@ -98,15 +98,15 @@ var Layers = {
   },
 
   appendTo: function(parentNode) {
-    parentNode.appendChild(this.container);
+    parentNode.appendChild(Layers.container);
   },
 
   remove: function() {
-    this.container.parentNode.removeChild(this.container);
+    Layers.container.parentNode.removeChild(Layers.container);
   },
 
   setSize: function(width, height) {
-    this.items.forEach(function(canvas) {
+    Layers.items.forEach(function(canvas) {
       canvas.width  = width;
       canvas.height = height;
     });
@@ -114,8 +114,8 @@ var Layers = {
 
   // usually called after move: container jumps by move delta, cam is reset
   setPosition: function(x, y) {
-    this.container.style.left = x +'px';
-    this.container.style.top  = y +'px';
+    Layers.container.style.left = x +'px';
+    Layers.container.style.top  = y +'px';
   }
 };
 

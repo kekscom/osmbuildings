@@ -59,8 +59,15 @@ function onZoomEnd(e) {
   var factor = Math.pow(2, e.zoom-ZOOM);
 
   setZoom(e.zoom);
-  Data.scale(factor);
   // Layers.render(); // TODO: requestAnimationFrame() causes flickering because layers are already cleared
+
+  // show on high zoom levels only
+  if (ZOOM <= MIN_ZOOM) {
+    Layers.clear();
+    return;
+  }
+
+  Data.scale(factor);
 
   Shadows.render();
   Simplified.render();
