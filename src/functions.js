@@ -33,14 +33,14 @@ function fromRange(sVal, sMin, sMax, dMin, dMax) {
   return min(max(dMin + rel*range, dMin), dMax);
 }
 
-function isVisible(geometry) {
+function isVisible(polygon) {
   var
     maxX = WIDTH+ORIGIN_X,
     maxY = HEIGHT+ORIGIN_Y;
 
   // TODO: checking footprint is sufficient for visibility - NOT VALID FOR SHADOWS!
-  for (var i = 0; i < geometry; i++) {
-    if (geometry[i][0] > ORIGIN_X && geometry[i][0] < maxX && geometry[i][1] > ORIGIN_Y && geometry[i][1] < maxY) {
+  for (var i = 0; i < polygon.length; i++) {
+    if (polygon[i][0] > ORIGIN_X && polygon[i][0] < maxX && polygon[i][1] > ORIGIN_Y && polygon[i][1] < maxY) {
       return true;
     }
   }

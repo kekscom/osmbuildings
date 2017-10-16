@@ -35,7 +35,7 @@ var HitAreas = {
       context = this.context,
       item,
       h, mh,
-      sortCam = { x:CAM_X+ORIGIN_X, y:CAM_Y+ORIGIN_Y },
+      sortCam = [CAM_X+ORIGIN_X, CAM_Y+ORIGIN_Y],
       color,
       dataItems = Data.items;
 

@@ -15,10 +15,10 @@ var Buildings = {
   },
 
   project: function(p, m) {
-    return {
-      x: (p.x-CAM_X) * m + CAM_X <<0,
-      y: (p.y-CAM_Y) * m + CAM_Y <<0
-    };
+    return [
+      (p[0]-CAM_X) * m + CAM_X <<0,
+      (p[1]-CAM_Y) * m + CAM_Y <<0
+    ];
   },
 
   render: function() {
@@ -28,7 +28,7 @@ var Buildings = {
       context = this.context,
       item,
       h, mh,
-      sortCam = { x:CAM_X+ORIGIN_X, y:CAM_Y+ORIGIN_Y },
+      sortCam = [CAM_X+ORIGIN_X, CAM_Y+ORIGIN_Y],
       wallColor, altColor, roofColor,
       dataItems = Data.items;
 
@@ -43,7 +43,7 @@ var Buildings = {
         continue;
       }
 
-        // TODO: d
+      // TODO: do bbox check
       if (!isVisible(item.geometry[0])) {
         continue;
       }

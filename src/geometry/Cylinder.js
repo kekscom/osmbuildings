@@ -2,7 +2,7 @@ var Cylinder = {
 
   draw: function(context, center, radius, topRadius, height, minHeight, color, altColor, roofColor) {
     var
-      c = { x:center.x-ORIGIN_X, y:center.y-ORIGIN_Y },
+      c = [ center[0]-ORIGIN_X, center[1]-ORIGIN_Y],
       scale = CAM_Z / (CAM_Z-height),
       minScale = CAM_Z / (CAM_Z-minHeight),
       apex = Buildings.project(c, scale),
@@ -23,21 +23,21 @@ var Cylinder = {
       a1 = 1.5*PI;
       a2 = 1.5*PI;
     } else {
-      a1 = atan2(tangents[0].y1-c.y, tangents[0].x1-c.x);
-      a2 = atan2(tangents[1].y1-c.y, tangents[1].x1-c.x);
+      a1 = Math.atan2(tangents[0][0][1] - c[1], tangents[0][0][0] - c[0]);
+      a2 = Math.atan2(tangents[1][0][1] - c[1], tangents[1][0][0] - c[0]);
     }
 
     context.fillStyle = color;
     context.beginPath();
-    context.arc(apex.x, apex.y, topRadius, HALF_PI, a1, true);
-    context.arc(c.x, c.y, radius, a1, HALF_PI);
+    context.arc(apex[0], apex[1], topRadius, HALF_PI, a1, true);
+    context.arc(c[0], c[1], radius, a1, HALF_PI);
     context.closePath();
     context.fill();
 
     context.fillStyle = altColor;
     context.beginPath();
-    context.arc(apex.x, apex.y, topRadius, a2, HALF_PI, true);
-    context.arc(c.x, c.y, radius, HALF_PI, a2);
+    context.arc(apex[0], apex[1], topRadius, a2, HALF_PI, true);
+    context.arc(c[0], c[1], radius, HALF_PI, a2);
     context.closePath();
     context.fill();
 
@@ -46,12 +46,12 @@ var Cylinder = {
   },
 
   simplified: function(context, center, radius) {
-    this._circle(context, { x:center.x-ORIGIN_X, y:center.y-ORIGIN_Y }, radius);
+    this._circle(context, [center[0]-ORIGIN_X, center[1]-ORIGIN_Y], radius);
   },
 
   shadow: function(context, center, radius, topRadius, height, minHeight) {
     var
-      c = { x:center.x-ORIGIN_X, y:center.y-ORIGIN_Y },
+      c = [center[0]-ORIGIN_X, center[1]-ORIGIN_Y],
       apex = Shadows.project(c, height),
       p1, p2;
 
@@ -64,20 +64,20 @@ var Cylinder = {
 
     // TODO: no tangents? roof overlaps everything near cam position
     if (tangents) {
-      p1 = atan2(tangents[0].y1-c.y, tangents[0].x1-c.x);
-      p2 = atan2(tangents[1].y1-c.y, tangents[1].x1-c.x);
-      context.moveTo(tangents[1].x2, tangents[1].y2);
-      context.arc(apex.x, apex.y, topRadius, p2, p1);
-      context.arc(c.x, c.y, radius, p1, p2);
+      p1 = atan2(tangents[0][0][1]-c[1], tangents[0][0][0]-c[0]);
+      p2 = atan2(tangents[1][0][1]-c[1], tangents[1][0][0]-c[0]);
+      context.moveTo(tangents[1][1][0], tangents[1][1][1]);
+      context.arc(apex[0], apex[1], topRadius, p2, p1);
+      context.arc(c[0], c[1], radius, p1, p2);
     } else {
-      context.moveTo(c.x+radius, c.y);
-      context.arc(c.x, c.y, radius, 0, 2*PI);
+      context.moveTo(c[0]+radius, c[1]);
+      context.arc(c[0], c[1], radius, 0, 2*PI);
     }
   },
 
   hitArea: function(context, center, radius, topRadius, height, minHeight, color) {
     var
-      c = { x:center.x-ORIGIN_X, y:center.y-ORIGIN_Y },
+      c = [center[0]-ORIGIN_X, center[1]-ORIGIN_Y],
       scale = CAM_Z / (CAM_Z-height),
       minScale = CAM_Z / (CAM_Z-minHeight),
       apex = Buildings.project(c, scale),
@@ -98,14 +98,14 @@ var Cylinder = {
 
     // TODO: no tangents? roof overlaps everything near cam position
     if (tangents) {
-      p1 = atan2(tangents[0].y1-c.y, tangents[0].x1-c.x);
-      p2 = atan2(tangents[1].y1-c.y, tangents[1].x1-c.x);
-      context.moveTo(tangents[1].x2, tangents[1].y2);
-      context.arc(apex.x, apex.y, topRadius, p2, p1);
-      context.arc(c.x, c.y, radius, p1, p2);
+      p1 = atan2(tangents[0][0][1]-c[1], tangents[0][0][0]-c[0]);
+      p2 = atan2(tangents[1][0][1]-c[1], tangents[1][0][0]-c[0]);
+      context.moveTo(tangents[1][1][0], tangents[1][1][1]);
+      context.arc(apex[0], apex[1], topRadius, p2, p1);
+      context.arc(c[0], c[1], radius, p1, p2);
     } else {
-      context.moveTo(c.x+radius, c.y);
-      context.arc(c.x, c.y, radius, 0, 2*PI);
+      context.moveTo(c[0]+radius, c[1]);
+      context.arc(c[0], c[1], radius, 0, 2*PI);
     }
 
     context.closePath();
@@ -114,15 +114,15 @@ var Cylinder = {
 
   _circle: function(context, center, radius) {
     context.beginPath();
-    context.arc(center.x, center.y, radius, 0, PI*2);
+    context.arc(center[0], center[1], radius, 0, PI*2);
     context.fill();
   },
 
     // http://en.wikibooks.org/wiki/Algorithm_Implementation/Geometry/Tangents_between_two_circles
   _tangents: function(c1, r1, c2, r2) {
     var
-      dx = c1.x-c2.x,
-      dy = c1.y-c2.y,
+      dx = c1[0]-c2[0],
+      dy = c1[1]-c2[1],
       dr = r1-r2,
       sqdist = (dx*dx) + (dy*dy);
 
@@ -156,12 +156,10 @@ var Cylinder = {
     for (var sign = 1; sign >= -1; sign -= 2) {
       nx = vx*c - sign*h*vy;
       ny = vy*c + sign*h*vx;
-      res.push({
-        x1: c1.x + r1*nx <<0,
-        y1: c1.y + r1*ny <<0,
-        x2: c2.x + r2*nx <<0,
-        y2: c2.y + r2*ny <<0
-      });
+      res.push([
+        [c1[0] + r1*nx <<0, c1[1] + r1*ny <<0],
+        [c2[0] + r2*nx <<0, c2[1] + r2*ny <<0]
+      ]);
     }
 
     return res;

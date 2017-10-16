@@ -4,9 +4,9 @@ function setOrigin(origin) {
   ORIGIN_Y = origin.y;
 }
 
-function moveCam(offset) {
-  CAM_X = CENTER_X + offset.x;
-  CAM_Y = HEIGHT   + offset.y;
+function moveCam(x, y) {
+  CAM_X = CENTER_X + x;
+  CAM_Y = HEIGHT   + y;
   Layers.render(true);
 }
 

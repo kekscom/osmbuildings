@@ -85,7 +85,7 @@ proto.moveTo = function(bounds, zoomChanged, isDragging) {
   this.setOrigin();
   this.offset.x = 0;
   this.offset.y = 0;
-  moveCam(this.offset);
+  moveCam(this.offset.x, this.offset.y);
 
   if (zoomChanged) {
     onZoomEnd({ zoom:map.zoom });
@@ -100,6 +100,6 @@ proto.moveByPx = function(dx, dy) {
   this.offset.x += dx;
   this.offset.y += dy;
   var res = parent.moveByPx.call(this, dx, dy);
-  moveCam(this.offset);
+  moveCam(this.offset.x, this.offset.y);
   return res;
 };

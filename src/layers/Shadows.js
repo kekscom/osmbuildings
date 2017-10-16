@@ -4,7 +4,7 @@ var Shadows = {
   color: '#666666',
   blurColor: '#000000',
   date: new Date(),
-  direction: { x:0, y:0 },
+  direction: [0, 0],
   opacity: 1,
 
   init: function(context) {
@@ -20,10 +20,10 @@ var Shadows = {
   },
 
   project: function(p, h) {
-    return {
-      x: p.x + this.direction.x*h,
-      y: p.y + this.direction.y*h
-    };
+    return [
+      p[0] + Shadows.direction[0] * h,
+      p[1] + Shadows.direction[1] * h
+    ];
   },
 
   render: function() {
@@ -45,8 +45,10 @@ var Shadows = {
     length = 1 / tan(sun.altitude);
     alpha = length < 5 ? 0.75 : 1/length*5;
 
-    this.direction.x = cos(sun.azimuth) * length;
-    this.direction.y = sin(sun.azimuth) * length;
+    this.direction = [
+      Math.cos(sun.azimuth) * length,
+      Math.sin(sun.azimuth) * length
+    ];
 
     var
       i, il,

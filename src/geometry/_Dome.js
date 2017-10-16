@@ -1,11 +1,11 @@
 function rotation(p, c, a) {
   var ms = sin(a), mc = cos(a);
-  p.x -= c.x;
-  p.y -= c.y;
-  return {
-    x: p.x* mc + p.y*ms + c.x,
-    y: p.x*-ms + p.y*mc + c.y
-  };
+  p[0] -= c[0];
+  p[1] -= c[1];
+  return [
+    p[0]* mc + p[1]*ms + c[0],
+    p[0]*-ms + p[1]*mc + c[1]
+  ];
 }
 
 var KAPPA = 0.5522847498;
@@ -18,14 +18,14 @@ function dome(c, r, h, minHeight) {
 
   // VERTICAL TANGENT POINTS ON SPHERE:
   // side view at scenario:
-  // sphere at c.x,c.y & radius => circle at c.y,minHeight
+  // sphere at c[0],c[1] & radius => circle at c[1],minHeight
   // cam  at CAM_X/CAM_Y/CAM_Z => point  at CAM_Y/CAM_Z
-  var t = getEllipseTangent(r, h, CAM_Y-c.y, CAM_Z-minHeight);
-    t.x += c.y;
-    t.y += minHeight;
+  var t = getEllipseTangent(r, h, CAM_Y-c[1], CAM_Z-minHeight);
+    t[0] += c[1];
+    t[1] += minHeight;
 
   if (minHeight) {
-    c = project(c.x, c.y, CAM_Z / (CAM_Z-minHeight));
+    c = project(c[0], c[1], CAM_Z / (CAM_Z-minHeight));
     r *= CAM_Z / (CAM_Z-minHeight);
   }
 
@@ -35,44 +35,44 @@ function dome(c, r, h, minHeight) {
   var _h = CAM_Z / (CAM_Z-h),
   hfK = CAM_Z / (CAM_Z-(h*KAPPA));
 
-  var apex = project(c.x, c.y, _h);
+  var apex = project(c[0], c[1], _h);
 debugMarker(apex);
 
-  var angle = atan((CAM_X-c.x)/(CAM_Y-c.y));
+  var angle = atan((CAM_X-c[0])/(CAM_Y-c[1]));
 
   context.beginPath();
 
   // ausgerichteter sichtrand!
-  var _th = CAM_Z / (CAM_Z-t.y);
-  var p = rotation({ x:c.x, y:t.x }, c, angle);
-  var _p = project(p.x, p.y, _th);
+  var _th = CAM_Z / (CAM_Z-t[1]);
+  var p = rotation([c[0], t[0]], c, angle);
+  var _p = project(p[0], p[1], _th);
 //debugMarker(_p);
-  var p1h = rotation({ x:c.x-r, y:t.x }, c, angle);
-  var _p1h = project(p1h.x, p1h.y, _th);
+  var p1h = rotation([c[0]-r, t[0]], c, angle);
+  var _p1h = project(p1h[0], p1h[1], _th);
 //debugMarker(_p1h);
-  var p2h = rotation({ x:c.x+r, y:t.x }, c, angle);
-  var _p2h = project(p2h.x, p2h.y, _th);
+  var p2h = rotation([c[0]+r, t[0]], c, angle);
+  var _p2h = project(p2h[0], p2h[1], _th);
 //debugMarker(_p2h);
-  var p1v = rotation({ x:c.x-r, y:c.y }, c, angle);
+  var p1v = rotation([c[0]-r, c[1]], c, angle);
 //debugMarker(p1v);
-  var p2v = rotation({ x:c.x+r, y:c.y }, c, angle);
+  var p2v = rotation([c[0]+r, c[1]], c, angle);
 //debugMarker(p2v);
 
-  context.moveTo(p1v.x, p1v.y);
+  context.moveTo(p1v[0], p1v[1]);
   context.bezierCurveTo(
-    p1v.x + (_p1h.x-p1v.x) * KAPPA,
-    p1v.y + (_p1h.y-p1v.y) * KAPPA,
-    _p.x + (_p1h.x-_p.x) * KAPPA,
-    _p.y + (_p1h.y-_p.y) * KAPPA,
-    _p.x, _p.y);
+    p1v[0] + (_p1h[0]-p1v[0]) * KAPPA,
+    p1v[1] + (_p1h[1]-p1v[1]) * KAPPA,
+    _p[0] + (_p1h[0]-_p[0]) * KAPPA,
+    _p[1] + (_p1h[1]-_p[1]) * KAPPA,
+    _p[0], _p[1]);
 
-  context.moveTo(p2v.x, p2v.y);
+  context.moveTo(p2v[0], p2v[1]);
   context.bezierCurveTo(
-    p2v.x + (_p1h.x-p1v.x) * KAPPA,
-    p2v.y + (_p1h.y-p1v.y) * KAPPA,
-    _p.x + (_p2h.x-_p.x) * KAPPA,
-    _p.y + (_p2h.y-_p.y) * KAPPA,
-    _p.x, _p.y);
+    p2v[0] + (_p1h[0]-p1v[0]) * KAPPA,
+    p2v[1] + (_p1h[1]-p1v[1]) * KAPPA,
+    _p[0] + (_p2h[0]-_p[0]) * KAPPA,
+    _p[1] + (_p2h[1]-_p[1]) * KAPPA,
+    _p[0], _p[1]);
 
 
 //      drawMeridian(c, r, _h, hfK, apex, rad(45));
@@ -96,12 +96,12 @@ function drawMeridian(c, r, _h, hfK, apex, angle) {
 }
 
 function drawHalfMeridian(c, r, _h, hfK, apex, angle) {
-  var p1 = rotation({ x:c.x, y:c.y-r },     c, angle);
-  var p2 = rotation({ x:c.x, y:c.y-r*KAPPA }, c, angle);
-  var _p1 = project(p1.x, p1.y, hfK);
-  var _p2 = project(p2.x, p2.y, _h);
-  context.moveTo(p1.x, p1.y);
-  context.bezierCurveTo(_p1.x, _p1.y, _p2.x, _p2.y, apex.x, apex.y);
+  var p1 = rotation([c[0], c[1]-r],     c, angle);
+  var p2 = rotation([c[0], c[1]-r*KAPPA], c, angle);
+  var _p1 = project(p1[0], p1[1], hfK);
+  var _p2 = project(p2[0], p2[1], _h);
+  context.moveTo(p1[0], p1[1]);
+  context.bezierCurveTo(_p1[0], _p1[1], _p2[0], _p2[1], apex[0], apex[1]);
 }
 
 function getEllipseTangent(a, b, x, y) {
@@ -110,8 +110,8 @@ function getEllipseTangent(a, b, x, y) {
     R = Math.sqrt(C-1),
     yabR = y*(a/b)*R,
     xbaR = x*(b/a)*R;
-  return {
-    x: (x + (  yabR < 0 ? yabR : -yabR)) / C,
-    y: (y + (y+xbaR > 0 ? xbaR : -xbaR)) / C
-  };
+  return [
+    (x + (  yabR < 0 ? yabR : -yabR)) / C,
+    (y + (y+xbaR > 0 ? xbaR : -xbaR)) / C
+  ];
 }

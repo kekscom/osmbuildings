@@ -73,7 +73,7 @@ proto.onRemove = function() {
 
 proto.onMove = function(e) {
   var off = this.getOffset();
-  moveCam({ x:this.offset.x-off.x, y:this.offset.y-off.y });
+  moveCam(this.offset.x-off.x, this.offset.y-off.y);
 };
 
 proto.onMoveEnd = function(e) {
@@ -89,7 +89,7 @@ proto.onMoveEnd = function(e) {
 
   this.offset = off;
   Layers.setPosition(-off.x, -off.y);
-  moveCam({ x:0, y:0 });
+  moveCam(0, 0);
 
   setSize({ width:map._size.x, height:map._size.y }); // in case this is triggered by resize
   setOrigin({ x:po.x-off.x, y:po.y-off.y });
@@ -145,7 +145,7 @@ proto.onViewReset = function() {
 
   this.offset = off;
   Layers.setPosition(-off.x, -off.y);
-  moveCam({ x:0, y:0 });
+  moveCam(0, 0);
 };
 
 proto.onClick = function(e) {

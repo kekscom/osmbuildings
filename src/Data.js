@@ -55,8 +55,8 @@ var Data = {
       item.minHeight *= factor;
 
       item.geometry = Data.scaleGeometry(item.geometry, factor);
-      item.center.x *= factor;
-      item.center.y *= factor;
+      item.center[0] *= factor;
+      item.center[1] *= factor;
 
       if (item.radius) {
         item.radius *= factor;

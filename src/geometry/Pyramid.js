@@ -2,18 +2,18 @@ var Pyramid = {
 
   draw: function(context, polygon, center, height, minHeight, color, altColor) {
     var
-      c = { x:center.x-ORIGIN_X, y:center.y-ORIGIN_Y },
+      c = [center[0]-ORIGIN_X, center[1]-ORIGIN_Y],
       scale = CAM_Z / (CAM_Z-height),
       minScale = CAM_Z / (CAM_Z-minHeight),
       apex = Buildings.project(c, scale),
-      a = { x:0, y:0 },
-      b = { x:0, y:0 };
+      a = [0, 0],
+      b = [0, 0];
 
-    for (var i = 0, il = polygon.length-3; i < il; i += 2) {
-      a.x = polygon[i  ]-ORIGIN_X;
-      a.y = polygon[i+1]-ORIGIN_Y;
-      b.x = polygon[i+2]-ORIGIN_X;
-      b.y = polygon[i+3]-ORIGIN_Y;
+    for (var i = 0; i < polygon.length-1; i++) {
+      a[0] = polygon[i  ][0]-ORIGIN_X;
+      a[1] = polygon[i  ][1]-ORIGIN_Y;
+      b[0] = polygon[i+1][0]-ORIGIN_X;
+      b[1] = polygon[i+1][1]-ORIGIN_Y;
 
       if (minHeight) {
         a = Buildings.project(a, minScale);
@@ -21,9 +21,9 @@ var Pyramid = {
       }
 
       // backface culling check
-      if ((b.x-a.x) * (apex.y-a.y) > (apex.x-a.x) * (b.y-a.y)) {
+      if ((b[0]-a[0]) * (apex[1]-a[1]) > (apex[0]-a[0]) * (b[1]-a[1])) {
         // depending on direction, set shading
-        if ((a.x < b.x && a.y < b.y) || (a.x > b.x && a.y > b.y)) {
+        if ((a[0] < b[0] && a[1] < b[1]) || (a[0] > b[0] && a[1] > b[1])) {
           context.fillStyle = altColor;
         } else {
           context.fillStyle = color;
@@ -38,30 +38,30 @@ var Pyramid = {
   },
 
   _triangle: function(context, a, b, c) {
-    context.moveTo(a.x, a.y);
-    context.lineTo(b.x, b.y);
-    context.lineTo(c.x, c.y);
+    context.moveTo(a[0], a[1]);
+    context.lineTo(b[0], b[1]);
+    context.lineTo(c[0], c[1]);
   },
 
   _ring: function(context, polygon) {
-    context.moveTo(polygon[0]-ORIGIN_X, polygon[1]-ORIGIN_Y);
-    for (var i = 2, il = polygon.length-1; i < il; i += 2) {
-      context.lineTo(polygon[i]-ORIGIN_X, polygon[i+1]-ORIGIN_Y);
+    context.moveTo(polygon[0][0]-ORIGIN_X, polygon[0][1]-ORIGIN_Y);
+    for (var i = 2; i < polygon.length; i++) {
+      context.lineTo(polygon[i][0]-ORIGIN_X, polygon[i][1]-ORIGIN_Y);
     }
   },
 
   shadow: function(context, polygon, center, height, minHeight) {
     var
-      a = { x:0, y:0 },
-      b = { x:0, y:0 },
-      c = { x:center.x-ORIGIN_X, y:center.y-ORIGIN_Y },
+      a = [0, 0],
+      b = [0, 0],
+      c = [center[0]-ORIGIN_X, center[1]-ORIGIN_Y],
       apex = Shadows.project(c, height);
 
-    for (var i = 0, il = polygon.length-3; i < il; i += 2) {
-      a.x = polygon[i  ]-ORIGIN_X;
-      a.y = polygon[i+1]-ORIGIN_Y;
-      b.x = polygon[i+2]-ORIGIN_X;
-      b.y = polygon[i+3]-ORIGIN_Y;
+    for (var i = 0; i < polygon.length-1; i++) {
+      a[0] = polygon[i  ][0]-ORIGIN_X;
+      a[1] = polygon[i  ][1]-ORIGIN_Y;
+      b[0] = polygon[i+1][0]-ORIGIN_X;
+      b[1] = polygon[i+1][1]-ORIGIN_Y;
 
       if (minHeight) {
         a = Shadows.project(a, minHeight);
@@ -69,7 +69,7 @@ var Pyramid = {
       }
 
       // backface culling check
-      if ((b.x-a.x) * (apex.y-a.y) > (apex.x-a.x) * (b.y-a.y)) {
+      if ((b[0]-a[0]) * (apex[1]-a[1]) > (apex[0]-a[0]) * (b[1]-a[1])) {
         // depending on direction, set shading
         this._triangle(context, a, b, apex);
       }
@@ -78,21 +78,21 @@ var Pyramid = {
 
   hitArea: function(context, polygon, center, height, minHeight, color) {
     var
-      c = { x:center.x-ORIGIN_X, y:center.y-ORIGIN_Y },
+      c = [center[0]-ORIGIN_X, center[1]-ORIGIN_Y],
       scale = CAM_Z / (CAM_Z-height),
       minScale = CAM_Z / (CAM_Z-minHeight),
       apex = Buildings.project(c, scale),
-      a = { x:0, y:0 },
-      b = { x:0, y:0 };
+      a = [0, 0],
+      b = [0, 0];
 
     context.fillStyle = color;
     context.beginPath();
 
-    for (var i = 0, il = polygon.length-3; i < il; i += 2) {
-      a.x = polygon[i  ]-ORIGIN_X;
-      a.y = polygon[i+1]-ORIGIN_Y;
-      b.x = polygon[i+2]-ORIGIN_X;
-      b.y = polygon[i+3]-ORIGIN_Y;
+    for (var i = 0; i < polygon.length-1; i++) {
+      a[0] = polygon[i  ][0]-ORIGIN_X;
+      a[1] = polygon[i  ][1]-ORIGIN_Y;
+      b[0] = polygon[i+1][0]-ORIGIN_X;
+      b[1] = polygon[i+1][1]-ORIGIN_Y;
 
       if (minHeight) {
         a = Buildings.project(a, minScale);
@@ -100,7 +100,7 @@ var Pyramid = {
       }
 
       // backface culling check
-      if ((b.x-a.x) * (apex.y-a.y) > (apex.x-a.x) * (b.y-a.y)) {
+      if ((b[0]-a[0]) * (apex[1]-a[1]) > (apex[0]-a[0]) * (b[1]-a[1])) {
         this._triangle(context, a, b, apex);
       }
     }
