@@ -8,7 +8,6 @@
     "src/variables.js",
     "src/geometry.js",
     "src/functions.js",
-    "src/Request.js",
     "src/Data.js",
     "src/geometry/Block.js",
     "src/geometry/Cylinder.js",

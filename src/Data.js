@@ -1,7 +1,7 @@
 
 var Data = {
 
-  loadedItems: {}, // maintain a list of cached items in order to avoid duplicates on tile borders
+  loadedItems: {}, // maintain a list of cached items in order to avoid duplicates
   items: [],
 
   projectGeometry: function(geometry) {
@@ -186,6 +186,6 @@ var Data = {
   loadTile: function(x, y, zoom, callback) {
     var s = 'abcd'[(x+y) % 4];
     var url = this.src.replace('{s}', s).replace('{x}', x).replace('{y}', y).replace('{z}', zoom);
-    return Request.loadJSON(url, callback);
+    return ajax(url, callback);
   }
 };

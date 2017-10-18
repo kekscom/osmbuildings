@@ -847,13 +847,6 @@ function project(lon, lat) {
   ];
 }
 
-function fromRange(sVal, sMin, sMax, dMin, dMax) {
-  sVal = min(max(sVal, sMin), sMax);
-  var rel = (sVal-sMin) / (sMax-sMin),
-    range = dMax-dMin;
-  return min(max(dMin + rel*range, dMin), dMax);
-}
-
 function isVisible(polygon) {
   var
     maxX = WIDTH+ORIGIN_X,
@@ -868,70 +861,37 @@ function isVisible(polygon) {
   return false;
 }
 
-var Request = (function() {
+function ajax(url, callback) {
+  var req = new XMLHttpRequest();
 
-  var cacheData = {};
-  var cacheIndex = [];
-  var cacheSize = 0;
-  var maxCacheSize = 1024*1024 * 5; // 5MB
-
-  function xhr(url, callback) {
-    if (cacheData[url]) {
-      if (callback) {
-        callback(cacheData[url]);
-      }
+  req.onreadystatechange = function() {
+    if (req.readyState !== 4) {
       return;
     }
 
-    var req = new XMLHttpRequest();
+    if (!req.status || req.status < 200 || req.status > 299) {
+      return;
+    }
 
-    req.onreadystatechange = function() {
-      if (req.readyState !== 4) {
-        return;
-      }
-      if (!req.status || req.status < 200 || req.status > 299) {
-        return;
-      }
-      if (callback && req.responseText) {
-        var responseText = req.responseText;
+    if (callback && req.responseText) {
+      var json;
+      try {
+        json = JSON.parse(req.responseText);
+      } catch(ex) {}
 
-        cacheData[url] = responseText;
-        cacheIndex.push({ url: url, size: responseText.length });
-        cacheSize += responseText.length;
-
-        callback(responseText);
-
-        while (cacheSize > maxCacheSize) {
-          var item = cacheIndex.shift();
-          cacheSize -= item.size;
-          delete cacheData[item.url];
-        }
-      }
-    };
-
-    req.open('GET', url);
-    req.send(null);
-
-    return req;
-  }
-
-  return {
-    loadJSON: function(url, callback) {
-      return xhr(url, function(responseText) {
-        var json;
-        try {
-          json = JSON.parse(responseText);
-        } catch(ex) {}
-        callback(json);
-      });
+      callback(json);
     }
   };
 
-}());
+  req.open('GET', url);
+  req.send(null);
+
+  return req;
+}
 
 var Data = {
 
-  loadedItems: {}, // maintain a list of cached items in order to avoid duplicates on tile borders
+  loadedItems: {}, // maintain a list of cached items in order to avoid duplicates
   items: [],
 
   projectGeometry: function(geometry) {
@@ -1116,7 +1076,7 @@ var Data = {
   loadTile: function(x, y, zoom, callback) {
     var s = 'abcd'[(x+y) % 4];
     var url = this.src.replace('{s}', s).replace('{x}', x).replace('{y}', y).replace('{z}', zoom);
-    return Request.loadJSON(url, callback);
+    return ajax(url, callback);
   }
 };
 var Block = {

@@ -26,13 +26,6 @@ function project(lon, lat) {
   ];
 }
 
-function fromRange(sVal, sMin, sMax, dMin, dMax) {
-  sVal = min(max(sVal, sMin), sMax);
-  var rel = (sVal-sMin) / (sMax-sMin),
-    range = dMax-dMin;
-  return min(max(dMin + rel*range, dMin), dMax);
-}
-
 function isVisible(polygon) {
   var
     maxX = WIDTH+ORIGIN_X,
@@ -45,4 +38,32 @@ function isVisible(polygon) {
     }
   }
   return false;
+}
+
+function ajax(url, callback) {
+  var req = new XMLHttpRequest();
+
+  req.onreadystatechange = function() {
+    if (req.readyState !== 4) {
+      return;
+    }
+
+    if (!req.status || req.status < 200 || req.status > 299) {
+      return;
+    }
+
+    if (callback && req.responseText) {
+      var json;
+      try {
+        json = JSON.parse(req.responseText);
+      } catch(ex) {}
+
+      callback(json);
+    }
+  };
+
+  req.open('GET', url);
+  req.send(null);
+
+  return req;
 }
