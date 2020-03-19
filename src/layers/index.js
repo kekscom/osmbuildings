@@ -66,7 +66,7 @@ class Layers {
       return;
     }
 
-    requestAnimFrame(function() {
+    requestAnimFrame(f => {
       if (!quick) {
         Shadows.render();
         Simplified.render();
@@ -103,7 +103,7 @@ class Layers {
   }
 
   static setSize (width, height) {
-    Layers.items.forEach(function(canvas) {
+    Layers.items.forEach(canvas => {
       canvas.width  = width;
       canvas.height = height;
     });

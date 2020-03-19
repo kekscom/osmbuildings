@@ -18,7 +18,7 @@ class Picking {
       return;
     }
     let self = this;
-    this._timer = setTimeout(function() {
+    this._timer = setTimeout(t => {
       self._timer = null;
       self._render();
     }, 500);
@@ -36,7 +36,7 @@ class Picking {
       color,
       dataItems = Data.items;
 
-    dataItems.sort(function(a, b) {
+    dataItems.sort((a, b) => {
       return (a.minHeight-b.minHeight) || getDistance(b.center, sortCam) - getDistance(a.center, sortCam) || (b.height-a.height);
     });
 

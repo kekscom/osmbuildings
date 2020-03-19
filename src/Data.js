@@ -43,13 +43,11 @@ class Data {
   }
 
   static scalePolygon (buffer, factor) {
-    return buffer.map(function(coord) {
-      return coord*factor;
-    });
+    return buffer.map(coord => coord*factor);
   }
 
   static scale (factor) {
-    Data.items = Data.items.map(function(item) {
+    Data.items = Data.items.map(item => {
       // item.height = Math.min(item.height*factor, MAX_HEIGHT); // TODO: should be filtered by renderer
 
       item.height *= factor;

@@ -6,7 +6,7 @@ function getDistance (p1, p2) {
   return dx*dx + dy*dy;
 }
 
-function isRotational(polygon) {
+function isRotational (polygon) {
   const length = polygon.length;
   if (length < 16) {
     return false;

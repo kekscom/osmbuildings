@@ -41,7 +41,7 @@ proto.set = function (data) {
 
 let onEach = function () {};
 proto.each = function (handler) {
-  onEach = function(payload) {
+  onEach = function (payload) {
     return handler(payload);
   };
   return this;

@@ -1,4 +1,4 @@
-function rotation(p, c, a) {
+function rotation (p, c, a) {
   let ms = sin(a), mc = cos(a);
   p.x -= c.x;
   p.y -= c.y;
@@ -9,7 +9,7 @@ function rotation(p, c, a) {
 }
 
 let KAPPA = 0.5522847498;
-function dome(c, r, h, minHeight) {
+function dome (c, r, h, minHeight) {
   if (!h) {
     h = r;
   }
@@ -90,12 +90,12 @@ debugMarker(apex);
   context.stroke();
 }
 
-function drawMeridian(c, r, _h, hfK, apex, angle) {
+function drawMeridian (c, r, _h, hfK, apex, angle) {
   drawHalfMeridian(c, r, _h, hfK, apex, angle);
   drawHalfMeridian(c, r, _h, hfK, apex, angle + PI);
 }
 
-function drawHalfMeridian(c, r, _h, hfK, apex, angle) {
+function drawHalfMeridian (c, r, _h, hfK, apex, angle) {
   let p1 = rotation({ x:c.x, y:c.y-r },     c, angle);
   let p2 = rotation({ x:c.x, y:c.y-r*KAPPA }, c, angle);
   let _p1 = project(p1.x, p1.y, hfK);
@@ -104,7 +104,7 @@ function drawHalfMeridian(c, r, _h, hfK, apex, angle) {
   context.bezierCurveTo(_p1.x, _p1.y, _p2.x, _p2.y, apex.x, apex.y);
 }
 
-function getEllipseTangent(a, b, x, y) {
+function getEllipseTangent (a, b, x, y) {
   let
   C = (x*x) / (a*a) + (y*y) / (b*b),
     R = Math.sqrt(C-1),

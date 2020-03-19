@@ -2,7 +2,7 @@
 
 let parent = OpenLayers.Layer.prototype;
 
-let osmb = function(map) {
+let osmb = function (map) {
   this.offset = { x:0, y:0 }; // cumulative cam offset during moveBy()
   
   parent.initialize.call(this, this.name, { projection:'EPSG:900913' });
@@ -20,12 +20,12 @@ proto.attribution   = ATTRIBUTION;
 proto.isBaseLayer   = false;
 proto.alwaysInRange = true;
 
-proto.addTo = function(map) {
+proto.addTo = function (map) {
   this.setMap(map);
   return this;
 };
 
-proto.setOrigin = function() {
+proto.setOrigin = function () {
   let map = this.map,
     origin = map.getLonLatFromPixel(new OpenLayers.Pixel(0, 0)),
     res = map.resolution,
@@ -35,7 +35,7 @@ proto.setOrigin = function() {
   setOrigin({ x:x, y:y });
 };
 
-proto.setMap = function(map) {
+proto.setMap = function (map) {
   if (!this.map) {
     parent.setMap.call(this, map);
   }
@@ -45,7 +45,7 @@ proto.setMap = function(map) {
   this.setOrigin();
 
   let layerProjection = this.projection;
-  map.events.register('click', map, function(e) {
+  map.events.register('click', map, e => {
     let id = Picking.getIdFromXY(e.xy.x, e.xy.y);
     if (id) {
       let geo = map.getLonLatFromPixel(e.xy).transform(layerProjection, this.projection);
@@ -56,13 +56,13 @@ proto.setMap = function(map) {
   Data.update();
 };
 
-proto.removeMap = function(map) {
+proto.removeMap = function (map) {
   Layers.remove();
   parent.removeMap.call(this, map);
   this.map = null;
 };
 
-proto.onMapResize = function() {
+proto.onMapResize = function () {
   let map = this.map;
   parent.onMapResize.call(this);
   onResize({ width:map.size.w, height:map.size.h });
@@ -96,7 +96,7 @@ proto.moveTo = function(bounds, zoomChanged, isDragging) {
   return res;
 };
 
-proto.moveByPx = function(dx, dy) {
+proto.moveByPx = function (dx, dy) {
   this.offset.x += dx;
   this.offset.y += dy;
   let res = parent.moveByPx.call(this, dx, dy);

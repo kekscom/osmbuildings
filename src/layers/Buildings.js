@@ -31,7 +31,7 @@ class Buildings {
       wallColor, altColor, roofColor,
       dataItems = Data.items;
 
-    dataItems.sort(function(a, b) {
+    dataItems.sort((a, b) => {
       return (a.minHeight-b.minHeight) || getDistance(b.center, sortCam) - getDistance(a.center, sortCam) || (b.height-a.height);
     });
 

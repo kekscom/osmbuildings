@@ -1,5 +1,5 @@
 
-let osmb = function(map) {
+let osmb = function (map) {
   this.map = map;
   this.maxExtent = [ -20037508.34, -20037508.34, 20037508.34, 20037508.34]; // MaxExtent of layer
   Layers.init();
@@ -15,7 +15,7 @@ ol.inherits(osmb, ol.layer.Vector);
 
 let proto = osmb.prototype = ol.layer.Layer ? new  ol.layer.Vector({source: new ol.source.Vector( { projection: ol.proj.get('EPSG:900913') } )}) : { };
 
-proto.setOrigin = function() {
+proto.setOrigin = function () {
   let map = this.map;
   try {
     let origin = map.getCoordinateFromPixel([0,0]),
@@ -29,13 +29,13 @@ proto.setOrigin = function() {
   }
 };
                                                                             
-proto.setMap = function(map) {
+proto.setMap = function (map) {
   let scope = this;
   Layers.appendTo(document.getElementById(map.get('target').id));
   setSize({ width:map.getSize()[0], height:map.getSize()[1] });
 
   let layerProjection = this.map.getView().getProjection();
-  map.on('click', function(e) {
+  map.on('click', e => {
     let id = Picking.getIdFromXY(e.pixel[0], e.pixel[1]);
     if (id) {
       let geo = ol.proj.transform(map.getCoordinateFromPixel([e.pixel[0], e.pixel[1]]),layerProjection, map.getView().getProjection());
@@ -43,7 +43,7 @@ proto.setMap = function(map) {
     }
   });
 
-  this.on('precompose', function(e) {
+  this.on('precompose', e => {
     setZoom(map.getView().getZoom());
     scope.setOrigin();
     Data.resetItems();

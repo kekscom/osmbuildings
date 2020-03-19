@@ -14,7 +14,7 @@ function xhr (url, callback) {
 
   const req = new XMLHttpRequest();
 
-  req.onreadystatechange = function() {
+  req.onreadystatechange = function () {
     if (req.readyState !== 4) {
       return;
     }
@@ -47,7 +47,7 @@ function xhr (url, callback) {
 class Request {
 
   static loadJSON (url, callback) {
-    return xhr(url, function(responseText) {
+    return xhr(url, responseText => {
       let json;
       try {
         json = JSON.parse(responseText);
