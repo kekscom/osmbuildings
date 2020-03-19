@@ -13,16 +13,11 @@
     "url": "git@github.com:kekscom/osmbuildings.git"
   },
   "scripts": {},
-  "dependencies": {},
+  "dependencies": {
+    "Color": "git+https://github.com/kekscom/Color.js"
+  },
   "devDependencies": {
-    "Color": "git+https://github.com/kekscom/Color.js",
-    "jshint": "~1.1.0",
-    "closure-compiler": "~0.2.0",
-    "grunt": "^0.4.5",
-    "grunt-cli": "^1.2.0",
-    "grunt-contrib-copy": "^0.8.2",
-    "grunt-contrib-jshint": "^0.11.3",
-    "grunt-contrib-uglify": "^0.11.0"
+    "terser": "^4.6.7"
   },
   "optionalDependencies": {}
 }
