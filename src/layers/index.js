@@ -5,7 +5,7 @@ function fadeIn() {
     return;
   }
 
-  animTimer = setInterval(function() {
+  animTimer = setInterval(t => {
     let dataItems = Data.items,
       isNeeded = false;
 
@@ -28,12 +28,9 @@ function fadeIn() {
   }, 33);
 }
 
-let Layers = {
+class Layers {
 
-  container: document.createElement('DIV'),
-  items: [],
-
-  init () {
+  static init () {
     Layers.container.className = 'osmb-container';
 
     // TODO: improve this
@@ -41,23 +38,23 @@ let Layers = {
     Simplified.init(Layers.createContext(Layers.container));
     Buildings.init(Layers.createContext(Layers.container));
     Picking.init(Layers.createContext());
-  },
+  }
 
-  clear () {
+  static clear () {
     Shadows.clear();
     Simplified.clear();
     Buildings.clear();
     Picking.clear();
-  },
+  }
 
-  setOpacity (opacity) {
+  static setOpacity (opacity) {
     Shadows.setOpacity(opacity);
     Simplified.setOpacity(opacity);
     Buildings.setOpacity(opacity);
     Picking.setOpacity(opacity);
-  },
+  }
 
-  render (quick) {
+  static render (quick) {
     // show on high zoom levels only
     if (ZOOM < MIN_ZOOM) {
       Layers.clear();
@@ -77,9 +74,9 @@ let Layers = {
       }
       Buildings.render();
     });
-  },
+  }
 
-  createContext (container) {
+  static createContext (container) {
     let canvas = document.createElement('CANVAS');
     canvas.className = 'osmb-layer';
 
@@ -95,27 +92,29 @@ let Layers = {
     }
 
     return context;
-  },
+  }
 
-  appendTo (parentNode) {
+  static appendTo (parentNode) {
     parentNode.appendChild(Layers.container);
-  },
+  }
 
-  remove () {
+  static remove () {
     Layers.container.parentNode.removeChild(Layers.container);
-  },
+  }
 
-  setSize (width, height) {
+  static setSize (width, height) {
     Layers.items.forEach(function(canvas) {
       canvas.width  = width;
       canvas.height = height;
     });
-  },
+  }
 
   // usually called after move: container jumps by move delta, cam is reset
-  setPosition (x, y) {
+  static setPosition (x, y) {
     Layers.container.style.left = x +'px';
     Layers.container.style.top  = y +'px';
   }
-};
+}
 
+Layers.container = document.createElement('DIV');
+Layers.items = [];

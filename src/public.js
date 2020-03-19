@@ -1,5 +1,5 @@
 
-proto.style = function(style) {
+proto.style = function (style) {
   style = style || {};
   let color;
   if ((color = style.color || style.wallColor)) {
@@ -23,34 +23,34 @@ proto.style = function(style) {
   return this;
 };
 
-proto.date = function(date) {
+proto.date = function (date) {
   Shadows.date = date;
   Shadows.render();
   return this;
 };
 
-proto.load = function(url) {
+proto.load = function (url) {
   Data.load(url);
   return this;
 };
 
-proto.set = function(data) {
+proto.set = function (data) {
   Data.set(data);
   return this;
 };
 
-let onEach = function() {};
-proto.each = function(handler) {
+let onEach = function () {};
+proto.each = function (handler) {
   onEach = function(payload) {
     return handler(payload);
   };
   return this;
 };
 
-let onClick = function() {};
+let onClick = function () {};
 
-proto.click = function(handler) {
-  onClick = function(payload) {
+proto.click = function (handler) {
+  onClick = function (payload) {
     return handler(payload);
   };
   return this;

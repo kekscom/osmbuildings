@@ -1,14 +1,14 @@
 
-function rad(deg) {
+function rad (deg) {
   return deg * PI / 180;
 }
 
-function deg(rad) {
+function deg (rad) {
   return rad / PI * 180;
 }
 
-function pixelToGeo(x, y) {
-  let res = {};
+function pixelToGeo (x, y) {
+  const res = {};
   x /= MAP_SIZE;
   y /= MAP_SIZE;
   res[LAT] = y <= 0  ? 90 : y >= 1 ? -90 : deg(2 * atan(exp(PI * (1 - 2*y))) - HALF_PI);
@@ -16,8 +16,8 @@ function pixelToGeo(x, y) {
   return res;
 }
 
-function geoToPixel(lat, lon) {
-  let
+function geoToPixel (lat, lon) {
+  const
     latitude = min(1, max(0, 0.5 - (log(tan(QUARTER_PI + HALF_PI * lat / 180)) / PI) / 2)),
     longitude = lon/360 + 0.5;
   return {
@@ -26,15 +26,15 @@ function geoToPixel(lat, lon) {
   };
 }
 
-function fromRange(sVal, sMin, sMax, dMin, dMax) {
+function fromRange (sVal, sMin, sMax, dMin, dMax) {
   sVal = min(max(sVal, sMin), sMax);
-  let rel = (sVal-sMin) / (sMax-sMin),
+  const rel = (sVal-sMin) / (sMax-sMin),
     range = dMax-dMin;
   return min(max(dMin + rel*range, dMin), dMax);
 }
 
-function isVisible(polygon) {
-   let
+function isVisible (polygon) {
+  const
     maxX = WIDTH+ORIGIN_X,
     maxY = HEIGHT+ORIGIN_Y;
 

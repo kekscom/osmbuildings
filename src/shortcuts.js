@@ -1,5 +1,5 @@
 // object access shortcuts
-let
+const
   m = Math,
   exp = m.exp,
   log = m.log,
@@ -18,15 +18,14 @@ let
 
 // polyfills
 
-let
+const
   Int32Array = Int32Array || Array,
   Uint8Array = Uint8Array || Array;
 
-let IS_IOS = /iP(ad|hone|od)/g.test(navigator.userAgent);
-let IS_MSIE = !!~navigator.userAgent.indexOf('Trident');
+const IS_IOS = /iP(ad|hone|od)/g.test(navigator.userAgent);
+const IS_MSIE = !!~navigator.userAgent.indexOf('Trident');
 
-let requestAnimFrame = (global.requestAnimationFrame && !IS_IOS && !IS_MSIE) ?
-  global.requestAnimationFrame : function(callback) {
+const requestAnimFrame = (global.requestAnimationFrame && !IS_IOS && !IS_MSIE) ?
+  global.requestAnimationFrame : function (callback) {
     callback();
   };
-

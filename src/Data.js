@@ -1,10 +1,7 @@
 
-let Data = {
+class Data {
 
-  loadedItems: {}, // maintain a list of cached items in order to avoid duplicates on tile borders
-  items: [],
-
-  getPixelFootprint (buffer) {
+  static getPixelFootprint (buffer) {
     let footprint = new Int32Array(buffer.length),
       px;
 
@@ -20,15 +17,15 @@ let Data = {
     }
 
     return footprint;
-  },
+  }
 
-  resetItems () {
+  static resetItems () {
     this.items = [];
     this.loadedItems = {};
     Picking.reset();
-  },
+  }
 
-  addRenderItems (data, allAreNew) {
+  static addRenderItems (data, allAreNew) {
     let item, scaledItem, id;
     let geojson = GeoJSON.read(data);
     for (let i = 0, il = geojson.length; i < il; i++) {
@@ -43,15 +40,15 @@ let Data = {
       }
     }
     fadeIn();
-  },
+  }
 
-  scalePolygon (buffer, factor) {
+  static scalePolygon (buffer, factor) {
     return buffer.map(function(coord) {
       return coord*factor;
     });
-  },
+  }
 
-  scale (factor) {
+  static scale (factor) {
     Data.items = Data.items.map(function(item) {
       // item.height = Math.min(item.height*factor, MAX_HEIGHT); // TODO: should be filtered by renderer
 
@@ -76,9 +73,9 @@ let Data = {
 
       return item;
     });
-  },
+  }
 
-  scaleItem (item) {
+  static scaleItem (item) {
     let
       res = {},
       // TODO: calculate this on zoom change only
@@ -152,21 +149,21 @@ let Data = {
     }
 
     return res;
-  },
+  }
 
-  set (data) {
+  static set (data) {
     this.isStatic = true;
     this.resetItems();
     this._staticData = data;
     this.addRenderItems(this._staticData, true);
-  },
+  }
 
-  load (src, key) {
+  static load (src, key) {
     this.src = src || DATA_SRC.replace('{k}', (key || 'anonymous'));
     this.update();
-  },
+  }
 
-  update () {
+  static update () {
     this.resetItems();
 
     if (ZOOM < MIN_ZOOM) {
@@ -202,11 +199,14 @@ let Data = {
         this.loadTile(x, y, tileZoom, callback);
       }
     }
-  },
-  
-  loadTile (x, y, zoom, callback) {
+  }
+
+  static loadTile (x, y, zoom, callback) {
     let s = 'abcd'[(x+y) % 4];
     let url = this.src.replace('{s}', s).replace('{x}', x).replace('{y}', y).replace('{z}', zoom);
     return Request.loadJSON(url, callback);
   }
-};
+}
+
+Data.loadedItems = {}; // maintain a list of cached items in order to avoid duplicates on tile borders
+Data.items = [];

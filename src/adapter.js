@@ -1,16 +1,16 @@
 
-function setOrigin(origin) {
+function setOrigin (origin) {
   ORIGIN_X = origin.x;
   ORIGIN_Y = origin.y;
 }
 
-function moveCam(offset) {
+function moveCam (offset) {
   CAM_X = CENTER_X + offset.x;
   CAM_Y = HEIGHT   + offset.y;
   Layers.render(true);
 }
 
-function setSize(size) {
+function setSize (size) {
   WIDTH  = size.width;
   HEIGHT = size.height;
   CENTER_X = WIDTH /2 <<0;
@@ -23,13 +23,13 @@ function setSize(size) {
   MAX_HEIGHT = CAM_Z-50;
 }
 
-function setZoom(z) {
+function setZoom (z) {
   ZOOM = z;
   MAP_SIZE = MAP_TILE_SIZE <<ZOOM;
 
-  let center = pixelToGeo(ORIGIN_X+CENTER_X, ORIGIN_Y+CENTER_Y);
-  let a = geoToPixel(center.latitude, 0);
-  let b = geoToPixel(center.latitude, 1);
+  const center = pixelToGeo(ORIGIN_X+CENTER_X, ORIGIN_Y+CENTER_Y);
+  const a = geoToPixel(center.latitude, 0);
+  const b = geoToPixel(center.latitude, 1);
   PIXEL_PER_DEG = b.x-a.x;
 
   Layers.setOpacity(Math.pow(0.95, ZOOM-MIN_ZOOM));
@@ -39,24 +39,24 @@ function setZoom(z) {
   ROOF_COLOR_STR = ''+ ROOF_COLOR;
 }
 
-function onResize(e) {
+function onResize (e) {
   setSize(e);
   Layers.render();
   Data.update();
 }
 
-function onMoveEnd(e) {
+function onMoveEnd (e) {
   Layers.render();
   Data.update(); // => fadeIn() => Layers.render()
 }
 
-function onZoomStart() {
+function onZoomStart () {
   IS_ZOOMING = true;
 }
 
-function onZoomEnd(e) {
+function onZoomEnd (e) {
   IS_ZOOMING = false;
-  let factor = Math.pow(2, e.zoom-ZOOM);
+  const factor = Math.pow(2, e.zoom-ZOOM);
 
   setZoom(e.zoom);
   // Layers.render(); // TODO: requestAnimationFrame() causes flickering because layers are already cleared

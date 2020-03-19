@@ -1,3 +1,3 @@
-(function(global) {
+(function (global) {
 
   'use strict';
