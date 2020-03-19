@@ -91,6 +91,8 @@ new OSMBuildings(map).set(geoJSON);
 
 ### Integration with OpenLayers
 
+* NEW: for Integration with OpenLayers 5 see /tests/openlayers-5.3.0 *
+
 Link OpenLayers and OSM Buildings files in your HTML head section.
 
 ~~~ html
