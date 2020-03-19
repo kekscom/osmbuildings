@@ -1,8 +1,8 @@
 // based on a pull request from Jérémy Judéaux (https://github.com/Volune)
 
-var parent = OpenLayers.Layer.prototype;
+let parent = OpenLayers.Layer.prototype;
 
-var osmb = function(map) {
+let osmb = function(map) {
   this.offset = { x:0, y:0 }; // cumulative cam offset during moveBy()
   
   parent.initialize.call(this, this.name, { projection:'EPSG:900913' });
@@ -13,7 +13,7 @@ var osmb = function(map) {
   }
 };
 
-var proto = osmb.prototype = new OpenLayers.Layer();
+let proto = osmb.prototype = new OpenLayers.Layer();
 
 proto.name          = 'OSM Buildings';
 proto.attribution   = ATTRIBUTION;
@@ -26,7 +26,7 @@ proto.addTo = function(map) {
 };
 
 proto.setOrigin = function() {
-  var map = this.map,
+  let map = this.map,
     origin = map.getLonLatFromPixel(new OpenLayers.Pixel(0, 0)),
     res = map.resolution,
     ext = this.maxExtent,
@@ -44,11 +44,11 @@ proto.setMap = function(map) {
   setZoom(map.zoom);
   this.setOrigin();
 
-  var layerProjection = this.projection;
+  let layerProjection = this.projection;
   map.events.register('click', map, function(e) {
-    var id = HitAreas.getIdFromXY(e.xy.x, e.xy.y);
+    let id = Picking.getIdFromXY(e.xy.x, e.xy.y);
     if (id) {
-      var geo = map.getLonLatFromPixel(e.xy).transform(layerProjection, this.projection);
+      let geo = map.getLonLatFromPixel(e.xy).transform(layerProjection, this.projection);
       onClick({ feature:id, lat:geo.lat, lon:geo.lon });
     }
   });
@@ -63,18 +63,18 @@ proto.removeMap = function(map) {
 };
 
 proto.onMapResize = function() {
-  var map = this.map;
+  let map = this.map;
   parent.onMapResize.call(this);
   onResize({ width:map.size.w, height:map.size.h });
 };
 
 proto.moveTo = function(bounds, zoomChanged, isDragging) {
-  var
+  let
     map = this.map,
     res = parent.moveTo.call(this, bounds, zoomChanged, isDragging);
 
   if (!isDragging) {
-    var
+    let
       offsetLeft = parseInt(map.layerContainerDiv.style.left, 10),
       offsetTop  = parseInt(map.layerContainerDiv.style.top,  10);
 
@@ -99,7 +99,7 @@ proto.moveTo = function(bounds, zoomChanged, isDragging) {
 proto.moveByPx = function(dx, dy) {
   this.offset.x += dx;
   this.offset.y += dy;
-  var res = parent.moveByPx.call(this, dx, dy);
+  let res = parent.moveByPx.call(this, dx, dy);
   moveCam(this.offset);
   return res;
 };

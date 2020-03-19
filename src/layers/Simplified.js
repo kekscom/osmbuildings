@@ -1,42 +1,37 @@
-var Simplified = {
+class Simplified {
 
-  context: null,
-
-  MAX_ZOOM: 16, // max zoom where buildings could render simplified
-  MAX_HEIGHT: 5, // max building height in order to be simple
-
-  init: function(context) {
+  static init (context) {
     this.context = context;
-  },
+  }
 
-  clear: function() {
+  static clear () {
     this.context.clearRect(0, 0, WIDTH, HEIGHT);
-  },
+  }
 
-  setOpacity: function(opacity) {
+  static setOpacity (opacity) {
     this.context.canvas.style.opacity = opacity;
-  },
+  }
 
-  isSimple: function(item) {
+  static isSimple (item) {
     return (ZOOM <= Simplified.MAX_ZOOM && item.height+item.roofHeight < Simplified.MAX_HEIGHT);
-  },
+  }
 
-  render: function() {
+  static render () {
     this.clear();
     
-    var context = this.context;
+    let context = this.context;
 
     // show on high zoom levels only and avoid rendering during zoom
     if (ZOOM > Simplified.MAX_ZOOM) {
       return;
     }
 
-    var
+    let
       item,
       footprint,
       dataItems = Data.items;
 
-    for (var i = 0, il = dataItems.length; i < il; i++) {
+    for (let i = 0, il = dataItems.length; i < il; i++) {
       item = dataItems[i];
 
       if (item.height >= Simplified.MAX_HEIGHT) {
@@ -57,8 +52,11 @@ var Simplified = {
         case 'cone':
         case 'dome':
         case 'sphere': Cylinder.simplified(context, item.center, item.radius);  break;
-        default: Block.simplified(context, footprint, item.holes);
+        default: Extrusion.simplified(context, footprint, item.holes);
       }
     }
   }
-};
+}
+
+Simplified.MAX_ZOOM = 16; // max zoom where buildings could render simplified
+Simplified.MAX_HEIGHT = 5; // max building height in order to be simple

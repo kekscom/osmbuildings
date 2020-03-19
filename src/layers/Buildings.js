@@ -1,30 +1,28 @@
-var Buildings = {
+class Buildings {
 
-  context: null,
-
-  init: function(context) {
+  static init (context) {
     this.context = context;
-  },
+  }
 
-  clear: function() {
+  static clear () {
     this.context.clearRect(0, 0, WIDTH, HEIGHT);
-  },
+  }
 
-  setOpacity: function(opacity) {
+  static setOpacity (opacity) {
     this.context.canvas.style.opacity = opacity;
-  },
+  }
 
-  project: function(p, m) {
+  static project (p, m) {
     return {
       x: (p.x-CAM_X) * m + CAM_X <<0,
       y: (p.y-CAM_Y) * m + CAM_Y <<0
     };
-  },
+  }
 
-  render: function() {
+  static render () {
     this.clear();
     
-    var
+    let
       context = this.context,
       item,
       h, mh,
@@ -37,7 +35,7 @@ var Buildings = {
       return (a.minHeight-b.minHeight) || getDistance(b.center, sortCam) - getDistance(a.center, sortCam) || (b.height-a.height);
     });
 
-    for (var i = 0, il = dataItems.length; i < il; i++) {
+    for (let i = 0, il = dataItems.length; i < il; i++) {
       item = dataItems[i];
 
       if (Simplified.isSimple(item)) {
@@ -69,7 +67,7 @@ var Buildings = {
         case 'dome':     Cylinder.draw(context, item.center, item.radius, item.radius/2, h, mh, wallColor, altColor);          break;
         case 'sphere':   Cylinder.draw(context, item.center, item.radius, item.radius, h, mh, wallColor, altColor, roofColor); break;
         case 'pyramid':  Pyramid.draw(context, footprint, item.center, h, mh, wallColor, altColor);                            break;
-        default:         Block.draw(context, footprint, item.holes, h, mh, wallColor, altColor, roofColor);
+        default:         Extrusion.draw(context, footprint, item.holes, h, mh, wallColor, altColor, roofColor);
       }
 
       switch (item.roofShape) {
@@ -79,4 +77,4 @@ var Buildings = {
       }
     }
   }
-};
+}

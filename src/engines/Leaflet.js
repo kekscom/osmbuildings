@@ -1,160 +1,166 @@
 
-var osmb = function(map) {
-  this.offset = { x:0, y:0 };
-  Layers.init();
-  if (map) {
-	  map.addLayer(this);
-  }
-};
+// TODO: Leaflet 1.x compatibility
+// let proto = osmb.prototype = L.Layer ? new L.Layer() : {};
 
-var proto = osmb.prototype = L.Layer ? new L.Layer() : {};
+class osmb extends L.Layer {
 
-proto.addTo = function(map) {
-  map.addLayer(this);
-  return this;
-};
+  constructor (map) {
+    super(map);
 
-proto.onAdd = function(map) {
-  this.map = map;
-  Layers.appendTo(map._panes.overlayPane);
-
-  var
-    off = this.getOffset(),
-    po = map.getPixelOrigin();
-  setSize({ width:map._size.x, height:map._size.y });
-  setOrigin({ x:po.x-off.x, y:po.y-off.y });
-  setZoom(map._zoom);
-
-  Layers.setPosition(-off.x, -off.y);
-
-  map.on({
-    move:      this.onMove,
-    moveend:   this.onMoveEnd,
-    zoomstart: this.onZoomStart,
-    zoomend:   this.onZoomEnd,
-    resize:    this.onResize,
-    viewreset: this.onViewReset,
-    click:     this.onClick
-  }, this);
-
-  if (map.options.zoomAnimation) {
-    map.on('zoomanim', this.onZoom, this);
+    this.offset = { x:0, y:0 };
+    Layers.init();
+    if (map) {
+      map.addLayer(this);
+    }
   }
 
-  if (map.attributionControl) {
-    map.attributionControl.addAttribution(ATTRIBUTION);
+  addTo (map) {
+    map.addLayer(this);
+    return this;
   }
 
-  Data.update();
-};
+  onAdd (map) {
+    this.map = map;
+    Layers.appendTo(map._panes.overlayPane);
 
-proto.onRemove = function() {
-  var map = this.map;
-  if (map.attributionControl) {
-    map.attributionControl.removeAttribution(ATTRIBUTION);
+    let
+      off = this.getOffset(),
+      po = map.getPixelOrigin();
+    setSize({ width:map._size.x, height:map._size.y });
+    setOrigin({ x:po.x-off.x, y:po.y-off.y });
+    setZoom(map._zoom);
+
+    Layers.setPosition(-off.x, -off.y);
+
+    map.on({
+      move:      this.onMove,
+      moveend:   this.onMoveEnd,
+      zoomstart: this.onZoomStart,
+      zoomend:   this.onZoomEnd,
+      resize:    this.onResize,
+      viewreset: this.onViewReset,
+      click:     this.onClick
+    }, this);
+
+    if (map.options.zoomAnimation) {
+      map.on('zoomanim', this.onZoom, this);
+    }
+
+    if (map.attributionControl) {
+      map.attributionControl.addAttribution(ATTRIBUTION);
+    }
+
+    Data.update();
   }
 
-  map.off({
-    move:      this.onMove,
-    moveend:   this.onMoveEnd,
-    zoomstart: this.onZoomStart,
-    zoomend:   this.onZoomEnd,
-    resize:    this.onResize,
-    viewreset: this.onViewReset,
-    click:     this.onClick
-  }, this);
+  onRemove () {
+    let map = this.map;
+    if (map.attributionControl) {
+      map.attributionControl.removeAttribution(ATTRIBUTION);
+    }
 
-  if (map.options.zoomAnimation) {
-    map.off('zoomanim', this.onZoom, this);
-  }
-  Layers.remove();
-  map = null;
-};
+    map.off({
+      move:      this.onMove,
+      moveend:   this.onMoveEnd,
+      zoomstart: this.onZoomStart,
+      zoomend:   this.onZoomEnd,
+      resize:    this.onResize,
+      viewreset: this.onViewReset,
+      click:     this.onClick
+    }, this);
 
-proto.onMove = function(e) {
-  var off = this.getOffset();
-  moveCam({ x:this.offset.x-off.x, y:this.offset.y-off.y });
-};
-
-proto.onMoveEnd = function(e) {
-  if (this.noMoveEnd) { // moveend is also fired after zoom
-    this.noMoveEnd = false;
-    return;
+    if (map.options.zoomAnimation) {
+      map.off('zoomanim', this.onZoom, this);
+    }
+    Layers.remove();
+    map = null;
   }
 
-  var
-    map = this.map,
-    off = this.getOffset(),
-    po = map.getPixelOrigin();
-
-  this.offset = off;
-  Layers.setPosition(-off.x, -off.y);
-  moveCam({ x:0, y:0 });
-
-  setSize({ width:map._size.x, height:map._size.y }); // in case this is triggered by resize
-  setOrigin({ x:po.x-off.x, y:po.y-off.y });
-  onMoveEnd(e);
-};
-
-proto.onZoomStart = function(e) {
-  onZoomStart(e);
-};
-
-proto.onZoom = function(e) {
-  var center = this.map.latLngToContainerPoint(e.center);
-  var scale = Math.pow(2, e.zoom-ZOOM);
-
-  var dx = WIDTH /2 - center.x;
-  var dy = HEIGHT/2 - center.y;
-
-  var x = WIDTH /2;
-  var y = HEIGHT/2;
-
-  if (e.zoom > ZOOM) {
-    x -= dx * scale;
-    y -= dy * scale;
-  } else {
-    x += dx;
-    y += dy;
+  onMove (e) {
+    let off = this.getOffset();
+    moveCam({ x:this.offset.x-off.x, y:this.offset.y-off.y });
   }
 
-  Layers.container.classList.add('zoom-animation');
-  Layers.container.style.transformOrigin = x + 'px '+ y + 'px';
-  Layers.container.style.transform = 'translate3d(0, 0, 0) scale(' + scale + ')';
-};
+  onMoveEnd (e) {
+    if (this.noMoveEnd) { // moveend is also fired after zoom
+      this.noMoveEnd = false;
+      return;
+    }
 
-proto.onZoomEnd = function(e) {
-  Layers.clear();
-  Layers.container.classList.remove('zoom-animation');
-  Layers.container.style.transform = 'translate3d(0, 0, 0) scale(1)';
+    let
+      map = this.map,
+      off = this.getOffset(),
+      po = map.getPixelOrigin();
 
-  var
-    map = this.map,
-    off = this.getOffset(),
-    po = map.getPixelOrigin();
+    this.offset = off;
+    Layers.setPosition(-off.x, -off.y);
+    moveCam({ x:0, y:0 });
 
-  setOrigin({ x:po.x-off.x, y:po.y-off.y });
-  onZoomEnd({ zoom:map._zoom });
-  this.noMoveEnd = true;
-};
-
-proto.onResize = function() {};
-
-proto.onViewReset = function() {
-  var off = this.getOffset();
-
-  this.offset = off;
-  Layers.setPosition(-off.x, -off.y);
-  moveCam({ x:0, y:0 });
-};
-
-proto.onClick = function(e) {
-  var id = HitAreas.getIdFromXY(e.containerPoint.x, e.containerPoint.y);
-  if (id) {
-    onClick({ feature:id, lat:e.latlng.lat, lon:e.latlng.lng });
+    setSize({ width:map._size.x, height:map._size.y }); // in case this is triggered by resize
+    setOrigin({ x:po.x-off.x, y:po.y-off.y });
+    onMoveEnd(e);
   }
-};
 
-proto.getOffset = function() {
-  return L.DomUtil.getPosition(this.map._mapPane);
-};
+  onZoomStart (e) {
+    onZoomStart(e);
+  }
+
+  onZoom (e) {
+    let center = this.map.latLngToContainerPoint(e.center);
+    let scale = Math.pow(2, e.zoom-ZOOM);
+
+    let dx = WIDTH /2 - center.x;
+    let dy = HEIGHT/2 - center.y;
+
+    let x = WIDTH /2;
+    let y = HEIGHT/2;
+
+    if (e.zoom > ZOOM) {
+      x -= dx * scale;
+      y -= dy * scale;
+    } else {
+      x += dx;
+      y += dy;
+    }
+
+    Layers.container.classList.add('zoom-animation');
+    Layers.container.style.transformOrigin = x + 'px '+ y + 'px';
+    Layers.container.style.transform = 'translate3d(0, 0, 0) scale(' + scale + ')';
+  }
+
+  onZoomEnd (e) {
+    Layers.clear();
+    Layers.container.classList.remove('zoom-animation');
+    Layers.container.style.transform = 'translate3d(0, 0, 0) scale(1)';
+
+    let
+      map = this.map,
+      off = this.getOffset(),
+      po = map.getPixelOrigin();
+
+    setOrigin({ x:po.x-off.x, y:po.y-off.y });
+    onZoomEnd({ zoom:map._zoom });
+    this.noMoveEnd = true;
+  }
+
+  onResize () {}
+
+  onViewReset () {
+    let off = this.getOffset();
+
+    this.offset = off;
+    Layers.setPosition(-off.x, -off.y);
+    moveCam({ x:0, y:0 });
+  }
+
+  onClick (e) {
+    let id = Picking.getIdFromXY(e.containerPoint.x, e.containerPoint.y);
+    if (id) {
+      onClick({ feature:id, lat:e.latlng.lat, lon:e.latlng.lng });
+    }
+  }
+
+  getOffset () {
+    return L.DomUtil.getPosition(this.map._mapPane);
+  }
+}

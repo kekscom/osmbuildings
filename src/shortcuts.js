@@ -1,5 +1,5 @@
 // object access shortcuts
-var
+let
   m = Math,
   exp = m.exp,
   log = m.log,
@@ -18,14 +18,14 @@ var
 
 // polyfills
 
-var
+let
   Int32Array = Int32Array || Array,
   Uint8Array = Uint8Array || Array;
 
-var IS_IOS = /iP(ad|hone|od)/g.test(navigator.userAgent);
-var IS_MSIE = !!~navigator.userAgent.indexOf('Trident');
+let IS_IOS = /iP(ad|hone|od)/g.test(navigator.userAgent);
+let IS_MSIE = !!~navigator.userAgent.indexOf('Trident');
 
-var requestAnimFrame = (global.requestAnimationFrame && !IS_IOS && !IS_MSIE) ?
+let requestAnimFrame = (global.requestAnimationFrame && !IS_IOS && !IS_MSIE) ?
   global.requestAnimationFrame : function(callback) {
     callback();
   };

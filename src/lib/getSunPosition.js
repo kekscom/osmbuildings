@@ -1,9 +1,9 @@
 // calculations are based on http://aa.quae.nl/en/reken/zonpositie.html
 // code credits to Vladimir Agafonkin (@mourner)
 
-var getSunPosition = (function() {
+let getSunPosition = (function() {
 
-    var m = Math,
+    let m = Math,
       PI = m.PI,
       sin = m.sin,
       cos = m.cos,
@@ -11,7 +11,7 @@ var getSunPosition = (function() {
       asin = m.asin,
       atan = m.atan2;
 
-    var rad = PI/180,
+    let rad = PI/180,
       dayMs = 1000*60*60*24,
       J1970 = 2440588,
       J2000 = 2451545,
@@ -45,12 +45,12 @@ var getSunPosition = (function() {
       return rad * (1.9148*sin(M) + 0.0200 * sin(2*M) + 0.0003 * sin(3*M));
     }
     function getEclipticLongitude(M, C) {
-      var P = rad*102.9372; // perihelion of the Earth
+      let P = rad*102.9372; // perihelion of the Earth
       return M+C+P+PI;
     }
 
     return function getSunPosition(date, lat, lon) {
-      var lw = rad*-lon,
+      let lw = rad*-lon,
         phi = rad*lat,
         d = toDays(date),
         M = getSolarMeanAnomaly(d),

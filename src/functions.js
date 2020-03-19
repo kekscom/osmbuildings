@@ -8,7 +8,7 @@ function deg(rad) {
 }
 
 function pixelToGeo(x, y) {
-  var res = {};
+  let res = {};
   x /= MAP_SIZE;
   y /= MAP_SIZE;
   res[LAT] = y <= 0  ? 90 : y >= 1 ? -90 : deg(2 * atan(exp(PI * (1 - 2*y))) - HALF_PI);
@@ -17,7 +17,7 @@ function pixelToGeo(x, y) {
 }
 
 function geoToPixel(lat, lon) {
-  var
+  let
     latitude = min(1, max(0, 0.5 - (log(tan(QUARTER_PI + HALF_PI * lat / 180)) / PI) / 2)),
     longitude = lon/360 + 0.5;
   return {
@@ -28,18 +28,18 @@ function geoToPixel(lat, lon) {
 
 function fromRange(sVal, sMin, sMax, dMin, dMax) {
   sVal = min(max(sVal, sMin), sMax);
-  var rel = (sVal-sMin) / (sMax-sMin),
+  let rel = (sVal-sMin) / (sMax-sMin),
     range = dMax-dMin;
   return min(max(dMin + rel*range, dMin), dMax);
 }
 
 function isVisible(polygon) {
-   var
+   let
     maxX = WIDTH+ORIGIN_X,
     maxY = HEIGHT+ORIGIN_Y;
 
   // TODO: checking footprint is sufficient for visibility - NOT VALID FOR SHADOWS!
-  for (var i = 0, il = polygon.length-3; i < il; i+=2) {
+  for (let i = 0, il = polygon.length-3; i < il; i+=2) {
     if (polygon[i] > ORIGIN_X && polygon[i] < maxX && polygon[i+1] > ORIGIN_Y && polygon[i+1] < maxY) {
       return true;
     }

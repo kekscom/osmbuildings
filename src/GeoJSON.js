@@ -1,9 +1,9 @@
 
-var GeoJSON = (function() {
+let GeoJSON = (function() {
 
-  var METERS_PER_LEVEL = 3;
+  let METERS_PER_LEVEL = 3;
 
-  var materialColors = {
+  let materialColors = {
     brick:'#cc7755',
     bronze:'#ffeecc',
     canvas:'#fff8f0',
@@ -23,7 +23,7 @@ var GeoJSON = (function() {
     wood:'#deb887'
   };
 
-  var baseMaterials = {
+  let baseMaterials = {
     asphalt:'tar_paper',
     bitumen:'tar_paper',
     block:'stone',
@@ -64,12 +64,12 @@ var GeoJSON = (function() {
     return materialColors[baseMaterials[str] || str] || null;
   }
 
-  var WINDING_CLOCKWISE = 'CW';
-  var WINDING_COUNTER_CLOCKWISE = 'CCW';
+  let WINDING_CLOCKWISE = 'CW';
+  let WINDING_COUNTER_CLOCKWISE = 'CCW';
 
   // detect winding direction: clockwise or counter clockwise
   function getWinding(points) {
-    var x1, y1, x2, y2,
+    let x1, y1, x2, y2,
       a = 0,
       i, il;
     for (i = 0, il = points.length-3; i < il; i += 2) {
@@ -84,31 +84,31 @@ var GeoJSON = (function() {
 
   // enforce a polygon winding direcetion. Needed for proper backface culling.
   function makeWinding(points, direction) {
-    var winding = getWinding(points);
+    let winding = getWinding(points);
     if (winding === direction) {
       return points;
     }
-    var revPoints = [];
-    for (var i = points.length-2; i >= 0; i -= 2) {
+    let revPoints = [];
+    for (let i = points.length-2; i >= 0; i -= 2) {
       revPoints.push(points[i], points[i+1]);
     }
     return revPoints;
   }
 
   function alignProperties(prop) {
-    var item = {};
+    let item = {};
 
     prop = prop || {};
 
     item.height    = prop.height    || (prop.levels   ? prop.levels  *METERS_PER_LEVEL : DEFAULT_HEIGHT);
     item.minHeight = prop.minHeight || (prop.minLevel ? prop.minLevel*METERS_PER_LEVEL : 0);
 
-    var wallColor = prop.material ? getMaterialColor(prop.material) : (prop.wallColor || prop.color);
+    let wallColor = prop.material ? getMaterialColor(prop.material) : (prop.wallColor || prop.color);
     if (wallColor) {
       item.wallColor = wallColor;
     }
 
-    var roofColor = prop.roofMaterial ? getMaterialColor(prop.roofMaterial) : prop.roofColor;
+    let roofColor = prop.roofMaterial ? getMaterialColor(prop.roofMaterial) : prop.roofColor;
     if (roofColor) {
       item.roofColor = roofColor;
     }
@@ -150,7 +150,7 @@ var GeoJSON = (function() {
   }
 
   function getGeometries(geometry) {
-    var
+    let
       i, il, polygon,
       geometries = [], sub;
 
@@ -180,7 +180,7 @@ var GeoJSON = (function() {
       default: return [];
     }
 
-    var
+    let
       j, jl,
       p, lat = 1, lon = 0,
       outer = [], inner = [];
@@ -207,8 +207,8 @@ var GeoJSON = (function() {
   }
 
   function clone(obj) {
-    var res = {};
-    for (var p in obj) {
+    let res = {};
+    for (let p in obj) {
       if (obj.hasOwnProperty(p)) {
         res[p] = obj[p];
       }
@@ -222,7 +222,7 @@ var GeoJSON = (function() {
         return [];
       }
 
-      var
+      let
         collection = geojson.features,
         i, il, j, jl,
         res = [],

@@ -25,7 +25,7 @@ html, body {
 
 <script>
 
-var map = new ol.Map({
+let map = new ol.Map({
   layers: [
     new ol.layer.Tile({
       source: new ol.source.OSM()
@@ -44,7 +44,7 @@ var map = new ol.Map({
 });
 
 
-var osm = new OSMBuildings(map);
+let osm = new OSMBuildings(map);
 osm.date(new Date(2017, 5, 15, 17, 30))
 osm.load();
 //  .click(function(e) {

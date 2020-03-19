@@ -1,14 +1,14 @@
 
-var Data = {
+let Data = {
 
   loadedItems: {}, // maintain a list of cached items in order to avoid duplicates on tile borders
   items: [],
 
-  getPixelFootprint: function(buffer) {
-    var footprint = new Int32Array(buffer.length),
+  getPixelFootprint (buffer) {
+    let footprint = new Int32Array(buffer.length),
       px;
 
-    for (var i = 0, il = buffer.length-1; i < il; i+=2) {
+    for (let i = 0, il = buffer.length-1; i < il; i+=2) {
       px = geoToPixel(buffer[i], buffer[i+1]);
       footprint[i]   = px.x;
       footprint[i+1] = px.y;
@@ -22,16 +22,16 @@ var Data = {
     return footprint;
   },
 
-  resetItems: function() {
+  resetItems () {
     this.items = [];
     this.loadedItems = {};
-    HitAreas.reset();
+    Picking.reset();
   },
 
-  addRenderItems: function(data, allAreNew) {
-    var item, scaledItem, id;
-    var geojson = GeoJSON.read(data);
-    for (var i = 0, il = geojson.length; i < il; i++) {
+  addRenderItems (data, allAreNew) {
+    let item, scaledItem, id;
+    let geojson = GeoJSON.read(data);
+    for (let i = 0, il = geojson.length; i < il; i++) {
       item = geojson[i];
       id = item.id || [item.footprint[0], item.footprint[1], item.height, item.minHeight].join(',');
       if (!this.loadedItems[id]) {
@@ -45,13 +45,13 @@ var Data = {
     fadeIn();
   },
 
-  scalePolygon: function(buffer, factor) {
+  scalePolygon (buffer, factor) {
     return buffer.map(function(coord) {
       return coord*factor;
     });
   },
 
-  scale: function(factor) {
+  scale (factor) {
     Data.items = Data.items.map(function(item) {
       // item.height = Math.min(item.height*factor, MAX_HEIGHT); // TODO: should be filtered by renderer
 
@@ -67,7 +67,7 @@ var Data = {
       }
 
       if (item.holes) {
-        for (var i = 0, il = item.holes.length; i < il; i++) {
+        for (let i = 0, il = item.holes.length; i < il; i++) {
           item.holes[i] = Data.scalePolygon(item.holes[i], factor);
         }
       }
@@ -78,8 +78,8 @@ var Data = {
     });
   },
 
-  scaleItem: function(item) {
-    var
+  scaleItem (item) {
+    let
       res = {},
       // TODO: calculate this on zoom change only
       zoomScale = 6 / pow(2, ZOOM-MIN_ZOOM); // TODO: consider using HEIGHT / (global.devicePixelRatio || 1)
@@ -116,8 +116,8 @@ var Data = {
 
     if (item.holes) {
       res.holes = [];
-      var innerFootprint;
-      for (var i = 0, il = item.holes.length; i < il; i++) {
+      let innerFootprint;
+      for (let i = 0, il = item.holes.length; i < il; i++) {
         // TODO: simplify
         if ((innerFootprint = this.getPixelFootprint(item.holes[i]))) {
           res.holes.push(innerFootprint);
@@ -125,7 +125,7 @@ var Data = {
       }
     }
 
-    var color;
+    let color;
 
     if (item.wallColor) {
       if ((color = Color.parse(item.wallColor))) {
@@ -143,7 +143,7 @@ var Data = {
     if (item.relationId) {
       res.relationId = item.relationId;
     }
-    res.hitColor = HitAreas.idToColor(item.relationId || item.id);
+    res.hitColor = Picking.idToColor(item.relationId || item.id);
 
     res.roofHeight = isNaN(item.roofHeight) ? 0 : item.roofHeight/zoomScale;
 
@@ -154,19 +154,19 @@ var Data = {
     return res;
   },
 
-  set: function(data) {
+  set (data) {
     this.isStatic = true;
     this.resetItems();
     this._staticData = data;
     this.addRenderItems(this._staticData, true);
   },
 
-  load: function(src, key) {
+  load (src, key) {
     this.src = src || DATA_SRC.replace('{k}', (key || 'anonymous'));
     this.update();
   },
 
-  update: function() {
+  update () {
     this.resetItems();
 
     if (ZOOM < MIN_ZOOM) {
@@ -182,7 +182,7 @@ var Data = {
       return;
     }
 
-    var
+    let
       tileZoom = 16,
       tileSize = 256,
       zoomedTileSize = ZOOM > tileZoom ? tileSize <<(ZOOM-tileZoom) : tileSize >>(tileZoom-ZOOM),
@@ -192,7 +192,7 @@ var Data = {
       maxY = ceil((ORIGIN_Y+HEIGHT)/zoomedTileSize),
       x, y;
 
-    var scope = this;
+    let scope = this;
     function callback(json) {
       scope.addRenderItems(json);
     }
@@ -204,9 +204,9 @@ var Data = {
     }
   },
   
-  loadTile: function(x, y, zoom, callback) {
-    var s = 'abcd'[(x+y) % 4];
-    var url = this.src.replace('{s}', s).replace('{x}', x).replace('{y}', y).replace('{z}', zoom);
+  loadTile (x, y, zoom, callback) {
+    let s = 'abcd'[(x+y) % 4];
+    let url = this.src.replace('{s}', s).replace('{x}', x).replace('{y}', y).replace('{z}', zoom);
     return Request.loadJSON(url, callback);
   }
 };

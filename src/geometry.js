@@ -1,20 +1,20 @@
 
 function getDistance(p1, p2) {
-  var
+  let
     dx = p1.x-p2.x,
     dy = p1.y-p2.y;
   return dx*dx + dy*dy;
 }
 
 function isRotational(polygon) {
-  var length = polygon.length;
+  let length = polygon.length;
   if (length < 16) {
     return false;
   }
 
-  var i;
+  let i;
 
-  var minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
   for (i = 0; i < length-1; i+=2) {
     minX = Math.min(minX, polygon[i]);
     maxX = Math.max(maxX, polygon[i]);
@@ -22,7 +22,7 @@ function isRotational(polygon) {
     maxY = Math.max(maxY, polygon[i+1]);
   }
 
-  var
+  let
     width = maxX-minX,
     height = (maxY-minY),
     ratio = width/height;
@@ -31,13 +31,13 @@ function isRotational(polygon) {
     return false;
   }
 
-  var
+  let
     center = { x:minX+width/2, y:minY+height/2 },
     radius = (width+height)/4,
     sqRadius = radius*radius;
 
   for (i = 0; i < length-1; i+=2) {
-    var dist = getDistance({ x:polygon[i], y:polygon[i+1] }, center);
+    let dist = getDistance({ x:polygon[i], y:polygon[i+1] }, center);
     if (dist/sqRadius < 0.8 || dist/sqRadius > 1.2) {
       return false;
     }
@@ -47,7 +47,7 @@ function isRotational(polygon) {
 }
 
 function getSquareSegmentDistance(px, py, p1x, p1y, p2x, p2y) {
-  var
+  let
     dx = p2x-p1x,
     dy = p2y-p1y,
     t;
@@ -67,7 +67,7 @@ function getSquareSegmentDistance(px, py, p1x, p1y, p2x, p2y) {
 }
 
 function simplifyPolygon(buffer) {
-  var
+  let
     sqTolerance = 2,
     len = buffer.length/2,
     markers = new Uint8Array(len),
@@ -121,8 +121,8 @@ function simplifyPolygon(buffer) {
 }
 
 function getCenter(footprint) {
-  var minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-  for (var i = 0, il = footprint.length-3; i < il; i += 2) {
+  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+  for (let i = 0, il = footprint.length-3; i < il; i += 2) {
     minX = min(minX, footprint[i]);
     maxX = max(maxX, footprint[i]);
     minY = min(minY, footprint[i+1]);
@@ -131,11 +131,11 @@ function getCenter(footprint) {
   return { x:minX+(maxX-minX)/2 <<0, y:minY+(maxY-minY)/2 <<0 };
 }
 
-var EARTH_RADIUS = 6378137;
+let EARTH_RADIUS = 6378137;
 
 function getLonDelta(footprint) {
-  var minLon = 180, maxLon = -180;
-  for (var i = 0, il = footprint.length; i < il; i += 2) {
+  let minLon = 180, maxLon = -180;
+  for (let i = 0, il = footprint.length; i < il; i += 2) {
     minLon = min(minLon, footprint[i+1]);
     maxLon = max(maxLon, footprint[i+1]);
   }

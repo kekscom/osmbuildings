@@ -1,35 +1,28 @@
-var Shadows = {
+class Shadows {
 
-  context: null,
-  color: '#666666',
-  blurColor: '#000000',
-  date: new Date(),
-  direction: { x:0, y:0 },
-  opacity: 1,
-
-  init: function(context) {
+  static init (context) {
     this.context = context;
-  },
+  }
 
-  clear: function() {
+  static clear () {
     this.context.clearRect(0, 0, WIDTH, HEIGHT);
-  },
+  }
 
-  setOpacity: function(opacity) {
+  static setOpacity (opacity) {
     this.opacity = opacity;
-  },
+  }
 
-  project: function(p, h) {
+  static project (p, h) {
     return {
       x: p.x + this.direction.x*h,
       y: p.y + this.direction.y*h
     };
-  },
+  }
 
-  render: function() {
+  static render () {
     this.clear();
     
-    var
+    let
       context = this.context,
       screenCenter,
       sun, length, alpha;
@@ -48,7 +41,7 @@ var Shadows = {
     this.direction.x = cos(sun.azimuth) * length;
     this.direction.y = sin(sun.azimuth) * length;
 
-    var
+    let
       i, il,
       item,
       h, mh,
@@ -83,7 +76,7 @@ var Shadows = {
         case 'dome':     Cylinder.shadow(context, item.center, item.radius, item.radius/2, h, mh); break;
         case 'sphere':   Cylinder.shadow(context, item.center, item.radius, item.radius, h, mh);   break;
         case 'pyramid':  Pyramid.shadow(context, footprint, item.center, h, mh);                   break;
-        default:         Block.shadow(context, footprint, item.holes, h, mh);
+        default:         Extrusion.shadow(context, footprint, item.holes, h, mh);
       }
 
       switch (item.roofShape) {
@@ -96,4 +89,11 @@ var Shadows = {
     context.closePath();
     context.fill();
   }
-};
+}
+
+Shadows.color = '#666666';
+Shadows.blurColor = '#000000';
+Shadows.date = new Date();
+Shadows.direction = { x:0, y:0 };
+Shadows.opacity = 1;
+

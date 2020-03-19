@@ -1,5 +1,5 @@
 
-var fs = require('fs');
+let fs = require('fs');
 
 //*****************************************************************************
 
@@ -39,8 +39,8 @@ module.exports = function(grunt) {
   //*****************************************************************************
 
   grunt.registerTask('concat-js', 'Concat JS', function(engine) {
-    var js = '';
-    var config = grunt.file.readJSON('files.json');
+    let js = '';
+    let config = grunt.file.readJSON('files.json');
     config.js.map(function(file) {
       js += fs.readFileSync(file.replace('{engine}', engine));
     });

@@ -1,7 +1,7 @@
 
 proto.style = function(style) {
   style = style || {};
-  var color;
+  let color;
   if ((color = style.color || style.wallColor)) {
     WALL_COLOR = Color.parse(color);
     WALL_COLOR_STR = ''+ WALL_COLOR;
@@ -39,7 +39,7 @@ proto.set = function(data) {
   return this;
 };
 
-var onEach = function() {};
+let onEach = function() {};
 proto.each = function(handler) {
   onEach = function(payload) {
     return handler(payload);
@@ -47,7 +47,7 @@ proto.each = function(handler) {
   return this;
 };
 
-var onClick = function() {};
+let onClick = function() {};
 
 proto.click = function(handler) {
   onClick = function(payload) {

@@ -1,7 +1,7 @@
-var Cylinder = {
+class Cylinder {
 
-  draw: function(context, center, radius, topRadius, height, minHeight, color, altColor, roofColor) {
-    var
+  static draw (context, center, radius, topRadius, height, minHeight, color, altColor, roofColor) {
+    let
       c = { x:center.x-ORIGIN_X, y:center.y-ORIGIN_Y },
       scale = CAM_Z / (CAM_Z-height),
       minScale = CAM_Z / (CAM_Z-minHeight),
@@ -16,7 +16,7 @@ var Cylinder = {
     }
 
     // common tangents for ground and roof circle
-    var tangents = this._tangents(c, radius, apex, topRadius);
+    let tangents = this._tangents(c, radius, apex, topRadius);
 
     // no tangents? top circle is inside bottom circle
     if (!tangents) {
@@ -43,14 +43,14 @@ var Cylinder = {
 
     context.fillStyle = roofColor;
     this._circle(context, apex, topRadius);
-  },
+  }
 
-  simplified: function(context, center, radius) {
+  static simplified (context, center, radius) {
     this._circle(context, { x:center.x-ORIGIN_X, y:center.y-ORIGIN_Y }, radius);
-  },
+  }
 
-  shadow: function(context, center, radius, topRadius, height, minHeight) {
-    var
+  static shadow (context, center, radius, topRadius, height, minHeight) {
+    let
       c = { x:center.x-ORIGIN_X, y:center.y-ORIGIN_Y },
       apex = Shadows.project(c, height),
       p1, p2;
@@ -60,7 +60,7 @@ var Cylinder = {
     }
 
     // common tangents for ground and roof circle
-    var tangents = this._tangents(c, radius, apex, topRadius);
+    let tangents = this._tangents(c, radius, apex, topRadius);
 
     // TODO: no tangents? roof overlaps everything near cam position
     if (tangents) {
@@ -73,10 +73,10 @@ var Cylinder = {
       context.moveTo(c.x+radius, c.y);
       context.arc(c.x, c.y, radius, 0, 2*PI);
     }
-  },
+  }
 
-  hitArea: function(context, center, radius, topRadius, height, minHeight, color) {
-    var
+  static hitArea (context, center, radius, topRadius, height, minHeight, color) {
+    let
       c = { x:center.x-ORIGIN_X, y:center.y-ORIGIN_Y },
       scale = CAM_Z / (CAM_Z-height),
       minScale = CAM_Z / (CAM_Z-minHeight),
@@ -91,7 +91,7 @@ var Cylinder = {
     }
 
     // common tangents for ground and roof circle
-    var tangents = this._tangents(c, radius, apex, topRadius);
+    let tangents = this._tangents(c, radius, apex, topRadius);
 
     context.fillStyle = color;
     context.beginPath();
@@ -110,17 +110,17 @@ var Cylinder = {
 
     context.closePath();
     context.fill();
-  },
+  }
 
-  _circle: function(context, center, radius) {
+  static _circle (context, center, radius) {
     context.beginPath();
     context.arc(center.x, center.y, radius, 0, PI*2);
     context.fill();
-  },
+  }
 
     // http://en.wikibooks.org/wiki/Algorithm_Implementation/Geometry/Tangents_between_two_circles
-  _tangents: function(c1, r1, c2, r2) {
-    var
+  static _tangents (c1, r1, c2, r2) {
+    let
       dx = c1.x-c2.x,
       dy = c1.y-c2.y,
       dr = r1-r2,
@@ -130,7 +130,7 @@ var Cylinder = {
       return;
     }
 
-    var dist = sqrt(sqdist),
+    let dist = sqrt(sqdist),
       vx = -dx/dist,
       vy = -dy/dist,
       c  =  dr/dist,
@@ -153,7 +153,7 @@ var Cylinder = {
     // Now we're just intersecting a line with a circle: v*n=c, n*n=1
 
     h = sqrt(max(0, 1 - c*c));
-    for (var sign = 1; sign >= -1; sign -= 2) {
+    for (let sign = 1; sign >= -1; sign -= 2) {
       nx = vx*c - sign*h*vy;
       ny = vy*c + sign*h*vx;
       res.push({
@@ -166,4 +166,4 @@ var Cylinder = {
 
     return res;
   }
-};
+}

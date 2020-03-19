@@ -1,4 +1,4 @@
-var animTimer;
+let animTimer;
 
 function fadeIn() {
   if (animTimer) {
@@ -6,10 +6,10 @@ function fadeIn() {
   }
 
   animTimer = setInterval(function() {
-    var dataItems = Data.items,
+    let dataItems = Data.items,
       isNeeded = false;
 
-    for (var i = 0, il = dataItems.length; i < il; i++) {
+    for (let i = 0, il = dataItems.length; i < il; i++) {
       if (dataItems[i].scale < 1) {
         dataItems[i].scale += 0.5*0.2; // amount*easing
         if (dataItems[i].scale > 1) {
@@ -28,36 +28,36 @@ function fadeIn() {
   }, 33);
 }
 
-var Layers = {
+let Layers = {
 
   container: document.createElement('DIV'),
   items: [],
 
-  init: function() {
+  init () {
     Layers.container.className = 'osmb-container';
 
     // TODO: improve this
     Shadows.init(Layers.createContext(Layers.container));
     Simplified.init(Layers.createContext(Layers.container));
     Buildings.init(Layers.createContext(Layers.container));
-    HitAreas.init(Layers.createContext());
+    Picking.init(Layers.createContext());
   },
 
-  clear: function() {
+  clear () {
     Shadows.clear();
     Simplified.clear();
     Buildings.clear();
-    HitAreas.clear();
+    Picking.clear();
   },
 
-  setOpacity: function(opacity) {
+  setOpacity (opacity) {
     Shadows.setOpacity(opacity);
     Simplified.setOpacity(opacity);
     Buildings.setOpacity(opacity);
-    HitAreas.setOpacity(opacity);
+    Picking.setOpacity(opacity);
   },
 
-  render: function(quick) {
+  render (quick) {
     // show on high zoom levels only
     if (ZOOM < MIN_ZOOM) {
       Layers.clear();
@@ -79,11 +79,11 @@ var Layers = {
     });
   },
 
-  createContext: function(container) {
-    var canvas = document.createElement('CANVAS');
+  createContext (container) {
+    let canvas = document.createElement('CANVAS');
     canvas.className = 'osmb-layer';
 
-    var context = canvas.getContext('2d');
+    let context = canvas.getContext('2d');
     context.lineCap   = 'round';
     context.lineJoin  = 'round';
     context.lineWidth = 1;
@@ -97,15 +97,15 @@ var Layers = {
     return context;
   },
 
-  appendTo: function(parentNode) {
+  appendTo (parentNode) {
     parentNode.appendChild(Layers.container);
   },
 
-  remove: function() {
+  remove () {
     Layers.container.parentNode.removeChild(Layers.container);
   },
 
-  setSize: function(width, height) {
+  setSize (width, height) {
     Layers.items.forEach(function(canvas) {
       canvas.width  = width;
       canvas.height = height;
@@ -113,7 +113,7 @@ var Layers = {
   },
 
   // usually called after move: container jumps by move delta, cam is reset
-  setPosition: function(x, y) {
+  setPosition (x, y) {
     Layers.container.style.left = x +'px';
     Layers.container.style.top  = y +'px';
   }

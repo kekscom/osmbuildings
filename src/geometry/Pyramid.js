@@ -1,7 +1,7 @@
-var Pyramid = {
+class Pyramid {
 
-  draw: function(context, polygon, center, height, minHeight, color, altColor) {
-    var
+  static draw (context, polygon, center, height, minHeight, color, altColor) {
+    let
       c = { x:center.x-ORIGIN_X, y:center.y-ORIGIN_Y },
       scale = CAM_Z / (CAM_Z-height),
       minScale = CAM_Z / (CAM_Z-minHeight),
@@ -9,7 +9,7 @@ var Pyramid = {
       a = { x:0, y:0 },
       b = { x:0, y:0 };
 
-    for (var i = 0, il = polygon.length-3; i < il; i += 2) {
+    for (let i = 0, il = polygon.length-3; i < il; i += 2) {
       a.x = polygon[i  ]-ORIGIN_X;
       a.y = polygon[i+1]-ORIGIN_Y;
       b.x = polygon[i+2]-ORIGIN_X;
@@ -35,29 +35,29 @@ var Pyramid = {
         context.fill();
       }
     }
-  },
+  }
 
-  _triangle: function(context, a, b, c) {
+  static _triangle (context, a, b, c) {
     context.moveTo(a.x, a.y);
     context.lineTo(b.x, b.y);
     context.lineTo(c.x, c.y);
-  },
+  }
 
-  _ring: function(context, polygon) {
+  static _ring (context, polygon) {
     context.moveTo(polygon[0]-ORIGIN_X, polygon[1]-ORIGIN_Y);
-    for (var i = 2, il = polygon.length-1; i < il; i += 2) {
+    for (let i = 2, il = polygon.length-1; i < il; i += 2) {
       context.lineTo(polygon[i]-ORIGIN_X, polygon[i+1]-ORIGIN_Y);
     }
-  },
+  }
 
-  shadow: function(context, polygon, center, height, minHeight) {
-    var
+  static shadow (context, polygon, center, height, minHeight) {
+    let
       a = { x:0, y:0 },
       b = { x:0, y:0 },
       c = { x:center.x-ORIGIN_X, y:center.y-ORIGIN_Y },
       apex = Shadows.project(c, height);
 
-    for (var i = 0, il = polygon.length-3; i < il; i += 2) {
+    for (let i = 0, il = polygon.length-3; i < il; i += 2) {
       a.x = polygon[i  ]-ORIGIN_X;
       a.y = polygon[i+1]-ORIGIN_Y;
       b.x = polygon[i+2]-ORIGIN_X;
@@ -74,10 +74,10 @@ var Pyramid = {
         this._triangle(context, a, b, apex);
       }
     }
-  },
+  }
 
-  hitArea: function(context, polygon, center, height, minHeight, color) {
-    var
+  static hitArea (context, polygon, center, height, minHeight, color) {
+    let
       c = { x:center.x-ORIGIN_X, y:center.y-ORIGIN_Y },
       scale = CAM_Z / (CAM_Z-height),
       minScale = CAM_Z / (CAM_Z-minHeight),
@@ -88,7 +88,7 @@ var Pyramid = {
     context.fillStyle = color;
     context.beginPath();
 
-    for (var i = 0, il = polygon.length-3; i < il; i += 2) {
+    for (let i = 0, il = polygon.length-3; i < il; i += 2) {
       a.x = polygon[i  ]-ORIGIN_X;
       a.y = polygon[i+1]-ORIGIN_Y;
       b.x = polygon[i+2]-ORIGIN_X;
@@ -108,4 +108,4 @@ var Pyramid = {
     context.closePath();
     context.fill();
   }
-};
+}

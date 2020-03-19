@@ -1,12 +1,12 @@
 
 function loadFile(url) {
-  var xhr = new XMLHttpRequest();
+  let xhr = new XMLHttpRequest();
   xhr.open('GET', url, false);
   xhr.send(null);
 
-  var s = xhr.status;
+  let s = xhr.status;
   if (s !== 0 && s !== 200 && s !== 1223) {
-    var err = Error(xhr.status +' failed to load '+ url);
+    let err = Error(xhr.status +' failed to load '+ url);
     err.status = xhr.status;
     err.responseText = xhr.responseText;
     throw err;
@@ -15,10 +15,10 @@ function loadFile(url) {
   return xhr.responseText;
 }
 
-var config = JSON.parse(loadFile('files.json'));
+let config = JSON.parse(loadFile('files.json'));
 
-var exports = {};
-var js = '';
+let exports = {};
+let js = '';
 config.js.map(function(file) {
   file = file.replace('{engine}', 'Leaflet');
   js += '//****** file: ' + file + ' ******\n\n';

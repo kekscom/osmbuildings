@@ -1,5 +1,5 @@
 
-var osmb = function(map) {
+let osmb = function(map) {
   this.map = map;
   this.maxExtent = [ -20037508.34, -20037508.34, 20037508.34, 20037508.34]; // MaxExtent of layer
   Layers.init();
@@ -13,12 +13,12 @@ var osmb = function(map) {
 
 ol.inherits(osmb, ol.layer.Vector);
 
-var proto = osmb.prototype = ol.layer.Layer ? new  ol.layer.Vector({source: new ol.source.Vector( { projection: ol.proj.get('EPSG:900913') } )}) : { };
+let proto = osmb.prototype = ol.layer.Layer ? new  ol.layer.Vector({source: new ol.source.Vector( { projection: ol.proj.get('EPSG:900913') } )}) : { };
 
 proto.setOrigin = function() {
-  var map = this.map;
+  let map = this.map;
   try {
-    var origin = map.getCoordinateFromPixel([0,0]),
+    let origin = map.getCoordinateFromPixel([0,0]),
     res = map.getView().getResolution(),
     ext = this.maxExtent,
     x = (origin[0] - ext[0]) / res <<0,
@@ -30,15 +30,15 @@ proto.setOrigin = function() {
 };
                                                                             
 proto.setMap = function(map) {
-  var scope = this;
+  let scope = this;
   Layers.appendTo(document.getElementById(map.get('target').id));
   setSize({ width:map.getSize()[0], height:map.getSize()[1] });
 
-  var layerProjection = this.map.getView().getProjection();
+  let layerProjection = this.map.getView().getProjection();
   map.on('click', function(e) {
-    var id = HitAreas.getIdFromXY(e.pixel[0], e.pixel[1]);
+    let id = Picking.getIdFromXY(e.pixel[0], e.pixel[1]);
     if (id) {
-      var geo = ol.proj.transform(map.getCoordinateFromPixel([e.pixel[0], e.pixel[1]]),layerProjection, map.getView().getProjection());
+      let geo = ol.proj.transform(map.getCoordinateFromPixel([e.pixel[0], e.pixel[1]]),layerProjection, map.getView().getProjection());
       onClick({ feature:id, lat:geo[0], lon:geo[1] });
     }
   });

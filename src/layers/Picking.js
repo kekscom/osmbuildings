@@ -1,37 +1,33 @@
 
-var HitAreas = {
+class Picking {
 
-  context: null,
-
-  init: function(context) {
+  static init (context) {
     this.context = context;
-  },
+  }
 
-  setOpacity: function(opacity) {},
+  static setOpacity (opacity) {}
 
-  clear: function() {},
+  static clear () {}
 
-  _idMapping: [null],
-
-  reset: function() {
+  static reset () {
     this._idMapping = [null];
-  },
+  }
 
-  render: function() {
+  static render () {
     if (this._timer) {
       return;
     }
-    var self = this;
+    let self = this;
     this._timer = setTimeout(function() {
       self._timer = null;
       self._render();
     }, 500);
-  },
+  }
 
-  _render: function() {
+  static _render () {
     this.clear();
     
-    var
+    let
       context = this.context,
       item,
       h, mh,
@@ -44,7 +40,7 @@ var HitAreas = {
       return (a.minHeight-b.minHeight) || getDistance(b.center, sortCam) - getDistance(a.center, sortCam) || (b.height-a.height);
     });
 
-    for (var i = 0, il = dataItems.length; i < il; i++) {
+    for (let i = 0, il = dataItems.length; i < il; i++) {
       item = dataItems[i];
 
       if (!(color = item.hitColor)) {
@@ -70,7 +66,7 @@ var HitAreas = {
         case 'dome':     Cylinder.hitArea(context, item.center, item.radius, item.radius/2, h, mh, color); break;
         case 'sphere':   Cylinder.hitArea(context, item.center, item.radius, item.radius, h, mh, color);   break;
         case 'pyramid':  Pyramid.hitArea(context, footprint, item.center, h, mh, color);                   break;
-        default:         Block.hitArea(context, footprint, item.holes, h, mh, color);
+        default:         Extrusion.hitArea(context, footprint, item.holes, h, mh, color);
       }
 
       switch (item.roofShape) {
@@ -84,27 +80,29 @@ var HitAreas = {
     if (WIDTH && HEIGHT) {
       this._imageData = this.context.getImageData(0, 0, WIDTH, HEIGHT).data;
     }
-  },
+  }
 
-  getIdFromXY: function(x, y) {
-    var imageData = this._imageData;
+  static getIdFromXY (x, y) {
+    let imageData = this._imageData;
     if (!imageData) {
       return;
     }
-    var pos = 4*((y|0) * WIDTH + (x|0));
-    var index = imageData[pos] | (imageData[pos+1]<<8) | (imageData[pos+2]<<16);
+    let pos = 4*((y|0) * WIDTH + (x|0));
+    let index = imageData[pos] | (imageData[pos+1]<<8) | (imageData[pos+2]<<16);
     return this._idMapping[index];
-  },
+  }
 
-  idToColor: function(id) {
-    var index = this._idMapping.indexOf(id);
+  static idToColor (id) {
+    let index = this._idMapping.indexOf(id);
     if (index === -1) {
       this._idMapping.push(id);
       index = this._idMapping.length-1;
     }
-    var r =  index       & 0xff;
-    var g = (index >>8)  & 0xff;
-    var b = (index >>16) & 0xff;
+    let r =  index       & 0xff;
+    let g = (index >>8)  & 0xff;
+    let b = (index >>16) & 0xff;
     return 'rgb('+ [r, g, b].join(',') +')';
   }
-};
+}
+
+Picking._idMapping = [null];

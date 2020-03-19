@@ -27,9 +27,9 @@ function setZoom(z) {
   ZOOM = z;
   MAP_SIZE = MAP_TILE_SIZE <<ZOOM;
 
-  var center = pixelToGeo(ORIGIN_X+CENTER_X, ORIGIN_Y+CENTER_Y);
-  var a = geoToPixel(center.latitude, 0);
-  var b = geoToPixel(center.latitude, 1);
+  let center = pixelToGeo(ORIGIN_X+CENTER_X, ORIGIN_Y+CENTER_Y);
+  let a = geoToPixel(center.latitude, 0);
+  let b = geoToPixel(center.latitude, 1);
   PIXEL_PER_DEG = b.x-a.x;
 
   Layers.setOpacity(Math.pow(0.95, ZOOM-MIN_ZOOM));
@@ -56,7 +56,7 @@ function onZoomStart() {
 
 function onZoomEnd(e) {
   IS_ZOOMING = false;
-  var factor = Math.pow(2, e.zoom-ZOOM);
+  let factor = Math.pow(2, e.zoom-ZOOM);
 
   setZoom(e.zoom);
   // Layers.render(); // TODO: requestAnimationFrame() causes flickering because layers are already cleared

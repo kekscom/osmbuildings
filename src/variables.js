@@ -1,4 +1,4 @@
-var
+let
   VERSION      = /*<version=*/'0.2.3b'/*>*/,
   ATTRIBUTION  = '&copy; <a href="https://osmbuildings.org">OSM Buildings</a>',
 

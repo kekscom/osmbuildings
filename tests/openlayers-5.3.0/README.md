@@ -17,12 +17,12 @@ npm run-script build
 ```javascript
 import OSMBuildings from './OSMBuildings-OL5.js';
 ...
-var osmBuildings = new OSMBuildings(map);
+let osmBuildings = new OSMBuildings(map);
 osmBuildings.date(new Date(2017, 5, 15, 17, 30))
 osmBuildings.load();
 
 osmBuildings.click(function(e) {
-    var result = osmBuildings.getDataItems().filter(obj => {
+    let result = osmBuildings.getDataItems().filter(obj => {
         return obj.id === e.feature
     })
     alert("Height (m): " + result[0].realHeight);
