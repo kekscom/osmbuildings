@@ -30,7 +30,7 @@ const code = [
   "src/layers/Picking.js",
   "src/Debug.js",
   "src/adapter.js",
-  "src/engines/Leaflet.js" // TODO: engines...
+  "src/Leaflet/Leaflet.js" // TODO: engines...
 ];
 
 
@@ -59,12 +59,13 @@ js = js.replace(/\{\{VERSION\}\}/g, package.version);
 js = `const OSMBuildings = (function() {\n${js}\n return OSMBuildings;\n}());`;
 fs.writeFileSync(`${dist}/OSMBuildings-Leaflet.debug.js`, js);
 fs.writeFileSync(`${dist}/OSMBuildings-Leaflet.js`, Terser.minify(js).code);
+copy(`${src}/Leaflet/index-Leaflet.html`, `${dist}/index-Leaflet.html`);
 
 // let js = joinFiles(code);
 // js = js.replace(/\{\{VERSION\}\}/g, version);
 // js = `(function() {${js}}());`;
 // fs.writeFileSync(`${dist}/OSMBuildings-OpenLayers.debug.js`, js);
 // fs.writeFileSync(`${dist}/OSMBuildings-OpenLayers.js`, Terser.minify(js).code);
+// copy(`${src}/OpenLayers/index-OpenLayers.html`, `${dist}/index-OpenLayers.html`);
 
 copy(`${src}/OSMBuildings.css`, `${dist}/OSMBuildings.css`);
-copy(`${src}/index.html`, `${dist}/index.html`);
