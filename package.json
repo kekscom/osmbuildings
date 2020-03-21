@@ -1,8 +1,7 @@
 {
   "name": "osmbuildings",
-  "private": false,
   "description": "OSM Buildings Classic",
-  "version": "0.3.2",
+  "version": "3.0.0",
   "homepage": "https://osmbuildings.org",
   "author": "@kekscom",
   "contributors": [

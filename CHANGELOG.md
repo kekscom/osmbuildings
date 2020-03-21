@@ -1,9 +1,10 @@
 # Changelog
 
-## 0.3.2b @ 2020-03-18 WIP
+## 3.0.0 @ 2020-03-20 WIP
 
-- refactoring for ES&
+- refactoring for ES6
 - npm package creation
+
 
 ## 0.2.2b @ 2014-11-25
 
