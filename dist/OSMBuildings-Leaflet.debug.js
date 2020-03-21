@@ -1,7 +1,5 @@
-(function (global) {
+const OSMBuildings = (function() {
 
-  'use strict';
-// object access shortcuts
 const
   m = Math,
   exp = m.exp,
@@ -15,25 +13,185 @@ const
   max = m.max,
   sqrt = m.sqrt,
   ceil = m.ceil,
-  floor = m.floor,
-  round = m.round,
   pow = m.pow;
 
-// polyfills
 
-const
-  Int32Array = Int32Array || Array,
-  Uint8Array = Uint8Array || Array;
+/**
+ * @class
+ */
+class Qolor {
 
-const IS_IOS = /iP(ad|hone|od)/g.test(navigator.userAgent);
-const IS_MSIE = !!~navigator.userAgent.indexOf('Trident');
+  /**
+   * @constructor
+   * @param r {Number} 0.0 .. 1.0 red value of a color
+   * @param g {Number} 0.0 .. 1.0 green value of a color
+   * @param b {Number} 0.0 .. 1.0 blue value of a color
+   * @param a {Number} 0.0 .. 1.0 alpha value of a color, default 1
+   */
+  constructor (r, g, b, a = 1) {
+    this.r = this._clamp(r, 1);
+    this.g = this._clamp(g, 1);
+    this.b = this._clamp(b, 1);
+    this.a = this._clamp(a, 1);
+  }
 
-const requestAnimFrame = (global.requestAnimationFrame && !IS_IOS && !IS_MSIE) ?
-  global.requestAnimationFrame : function (callback) {
-    callback();
-  };
-var Color = (function() {
-var w3cColors = {
+  /**
+   * @param str {String} can be any color dfinition like: 'red', '#0099ff', 'rgb(64, 128, 255)', 'rgba(64, 128, 255, 0.5)'
+   */
+  static parse (str) {
+    if (typeof str === 'string') {
+      str = str.toLowerCase();
+      str = Qolor.w3cColors[str] || str;
+
+      let m;
+
+      if ((m = str.match(/^#?(\w{2})(\w{2})(\w{2})$/))) {
+        return new Qolor(parseInt(m[1], 16)/255, parseInt(m[2], 16)/255, parseInt(m[3], 16)/255);
+      }
+
+      if ((m = str.match(/^#?(\w)(\w)(\w)$/))) {
+        return new Qolor(parseInt(m[1]+m[1], 16)/255, parseInt(m[2]+m[2], 16)/255, parseInt(m[3]+m[3], 16)/255);
+      }
+
+      if ((m = str.match(/rgba?\((\d+)\D+(\d+)\D+(\d+)(\D+([\d.]+))?\)/))) {
+        return new Qolor(
+          parseFloat(m[1])/255,
+          parseFloat(m[2])/255,
+          parseFloat(m[3])/255,
+          m[4] ? parseFloat(m[5]) : 1
+        );
+      }
+    }
+
+    return new Qolor();
+  }
+
+  static fromHSL (h, s, l, a) {
+    const qolor = new Qolor().fromHSL(h, s, l);
+    qolor.a = a === undefined ? 1 : a;
+    return qolor;
+  }
+
+  //***************************************************************************
+
+  _hue2rgb(p, q, t) {
+    if (t<0) t += 1;
+    if (t>1) t -= 1;
+    if (t<1/6) return p + (q - p)*6*t;
+    if (t<1/2) return q;
+    if (t<2/3) return p + (q - p)*(2/3 - t)*6;
+    return p;
+  }
+
+  _clamp(v, max) {
+    if (v === undefined) {
+      return;
+    }
+    return Math.min(max, Math.max(0, v || 0));
+  }
+
+  //***************************************************************************
+
+  isValid () {
+    return this.r !== undefined && this.g !== undefined && this.b !== undefined;
+  }
+
+  toHSL () {
+    if (!this.isValid()) {
+      return;
+    }
+
+    const max = Math.max(this.r, this.g, this.b);
+    const min = Math.min(this.r, this.g, this.b);
+    const range = max - min;
+    const l = (max + min)/2;
+
+    // achromatic
+    if (!range) {
+      return { h: 0, s: 0, l: l };
+    }
+
+    const s = l > 0.5 ? range/(2 - max - min) : range/(max + min);
+
+    let h;
+    switch (max) {
+      case this.r:
+        h = (this.g - this.b)/range + (this.g<this.b ? 6 : 0);
+        break;
+      case this.g:
+        h = (this.b - this.r)/range + 2;
+        break;
+      case this.b:
+        h = (this.r - this.g)/range + 4;
+        break;
+    }
+    h *= 60;
+
+    return { h: h, s: s, l: l };
+  }
+
+  fromHSL (h, s, l) {
+    // h = this._clamp(h, 360),
+    // s = this._clamp(s, 1),
+    // l = this._clamp(l, 1),
+
+    // achromatic
+    if (s === 0) {
+      this.r = this.g = this.b = l;
+      return this;
+    }
+
+    const q = l<0.5 ? l*(1 + s) : l + s - l*s;
+    const p = 2*l - q;
+
+    h /= 360;
+
+    this.r = this._hue2rgb(p, q, h + 1/3);
+    this.g = this._hue2rgb(p, q, h);
+    this.b = this._hue2rgb(p, q, h - 1/3);
+
+    return this;
+  }
+
+  toString () {
+    if (!this.isValid()) {
+      return;
+    }
+
+    if (this.a === 1) {
+      return '#' + ((1<<24) + (Math.round(this.r*255)<<16) + (Math.round(this.g*255)<<8) + Math.round(this.b*255)).toString(16).slice(1, 7);
+    }
+    return `rgba(${Math.round(this.r*255)},${Math.round(this.g*255)},${Math.round(this.b*255)},${this.a.toFixed(2)})`;
+  }
+
+  toArray () {
+    if (!this.isValid) {
+      return;
+    }
+    return [this.r, this.g, this.b];
+  }
+
+  hue (h) {
+    const hsl = this.toHSL();
+    return this.fromHSL(hsl.h+h, hsl.s, hsl.l);
+  }
+
+  saturation (s) {
+    const hsl = this.toHSL();
+    return this.fromHSL(hsl.h, hsl.s*s, hsl.l);
+  }
+
+  lightness (l) {
+    const hsl = this.toHSL();
+    return this.fromHSL(hsl.h, hsl.s, hsl.l*l);
+  }
+
+  clone () {
+    return new Qolor(this.r, this.g, this.b, this.a);
+  }
+}
+
+Qolor.w3cColors = {
   aliceblue: '#f0f8ff',
   antiquewhite: '#faebd7',
   aqua: '#00ffff',
@@ -184,177 +342,10 @@ var w3cColors = {
   yellowgreen: '#9acd32'
 };
 
-function hue2rgb(p, q, t) {
-  if (t<0) t += 1;
-  if (t>1) t -= 1;
-  if (t<1/6) return p + (q - p)*6*t;
-  if (t<1/2) return q;
-  if (t<2/3) return p + (q - p)*(2/3 - t)*6;
-  return p;
+if (typeof module !== 'undefined') {
+  module.exports = Qolor;
 }
 
-function clamp(v, max) {
-  if (v === undefined) {
-    return;
-  }
-  return Math.min(max, Math.max(0, v || 0));
-}
-
-/**
- * @param str, object can be in any of these: 'red', '#0099ff', 'rgb(64, 128, 255)', 'rgba(64, 128, 255, 0.5)', { r:0.2, g:0.3, b:0.9, a:1 }
- */
-var Color = function(r, g, b, a) {
-  this.r = clamp(r, 1);
-  this.g = clamp(g, 1);
-  this.b = clamp(b, 1);
-  this.a = clamp(a, 1) || 1;
-};
-
-/**
- * @param str, object can be in any of these: 'red', '#0099ff', 'rgb(64, 128, 255)', 'rgba(64, 128, 255, 0.5)'
- */
-Color.parse = function(str) {
-  if (typeof str === 'string') {
-    str = str.toLowerCase();
-    str = w3cColors[str] || str;
-
-    var m;
-
-    if ((m = str.match(/^#?(\w{2})(\w{2})(\w{2})$/))) {
-      return new Color(parseInt(m[1], 16)/255, parseInt(m[2], 16)/255, parseInt(m[3], 16)/255);
-    }
-
-    if ((m = str.match(/rgba?\((\d+)\D+(\d+)\D+(\d+)(\D+([\d.]+))?\)/))) {
-      return new Color(
-        parseFloat(m[1])/255,
-        parseFloat(m[2])/255,
-        parseFloat(m[3])/255,
-        m[4] ? parseFloat(m[5]) : 1
-      );
-    }
-  }
-
-  return new Color();
-};
-
-Color.fromHSL = function(h, s, l, a) {
-  // h = clamp(h, 360),
-  // s = clamp(s, 1),
-  // l = clamp(l, 1),
-
-  // achromatic
-  if (s === 0) {
-    return new Color(l, l, l, a);
-  }
-
-  var
-    q = l<0.5 ? l*(1 + s) : l + s - l*s,
-    p = 2*l - q;
-
-  h /= 360;
-
-  return new Color(
-    hue2rgb(p, q, h + 1/3),
-    hue2rgb(p, q, h),
-    hue2rgb(p, q, h - 1/3),
-    a
-  );
-};
-
-Color.prototype = {
-
-  toHSL: function() {
-    if (this.r === undefined || this.g === undefined || this.b === undefined) {
-      return;
-    }
-
-    var
-      max = Math.max(this.r, this.g, this.b),
-      min = Math.min(this.r, this.g, this.b),
-      h, s, l = (max + min)/2,
-      d = max - min;
-
-    if (!d) {
-      h = s = 0; // achromatic
-    } else {
-      s = l>0.5 ? d/(2 - max - min) : d/(max + min);
-      switch (max) {
-        case this.r:
-          h = (this.g - this.b)/d + (this.g<this.b ? 6 : 0);
-          break;
-        case this.g:
-          h = (this.b - this.r)/d + 2;
-          break;
-        case this.b:
-          h = (this.r - this.g)/d + 4;
-          break;
-      }
-      h *= 60;
-    }
-
-    return { h: h, s: s, l: l, a: this.a };
-  },
-
-  toString: function() {
-    if (this.r === undefined || this.g === undefined || this.b === undefined) {
-      return;
-    }
-
-    if (this.a === 1) {
-      return '#' + ((1<<24) + (Math.round(this.r*255)<<16) + (Math.round(this.g*255)<<8) + Math.round(this.b*255)).toString(16).slice(1, 7);
-    }
-    return 'rgba(' + [Math.round(this.r*255), Math.round(this.g*255), Math.round(this.b*255), this.a.toFixed(2)].join(',') + ')';
-  },
-
-  toArray: function() {
-    if (this.r === undefined || this.g === undefined || this.b === undefined) {
-      return;
-    }
-    return [this.r, this.g, this.b];
-  },
-
-  hue: function(h) {
-    var hsl = this.toHSL();
-    return Color.fromHSL(hsl.h+h, hsl.s, hsl.l);
-  },
-
-  saturation: function(s) {
-    var hsl = this.toHSL();
-    return Color.fromHSL(hsl.h, hsl.s*s, hsl.l);
-  },
-
-  lightness: function(l) {
-    var hsl = this.toHSL();
-    return Color.fromHSL(hsl.h, hsl.s, hsl.l*l);
-  },
-
-  red: function(r) {
-    return new Color(this.r*r, this.g, this.b, this.a);
-  },
-
-  green: function(g) {
-    return new Color(this.r, this.g*g, this.b, this.a);
-  },
-
-  blue: function(b) {
-    return new Color(this.r, this.g, this.b*b, this.a);
-  },
-
-  alpha: function(a) {
-    return new Color(this.r, this.g, this.b, this.a*a);
-  },
-
-  copy: function() {
-    return new Color(this.r, this.g, this.b, this.a);
-  }
-
-};
-
-return Color;
-
-}());
-
-if (typeof module === 'object') { module.exports = Color; }
 // calculations are based on http://aa.quae.nl/en/reken/zonpositie.html
 // code credits to Vladimir Agafonkin (@mourner)
 
@@ -424,6 +415,7 @@ function getSunPosition () {
     };
   };
 }
+
 
 const METERS_PER_LEVEL = 3;
 
@@ -683,8 +675,9 @@ class GeoJSON {
     return res;
   }
 }
+
 let
-  VERSION      = /*<version=*/'0.2.3b'/*>*/,
+  VERSION      = '0.3.2',
   ATTRIBUTION  = '&copy; <a href="https://osmbuildings.org">OSM Buildings</a>',
 
   DATA_SRC = 'https://{s}.data.osmbuildings.org/0.2/{k}/tile/{z}/{x}/{y}.json',
@@ -694,7 +687,6 @@ let
   QUARTER_PI = PI/4,
 
   MAP_TILE_SIZE  = 256,    // map tile size in pixels
-  DATA_TILE_SIZE = 0.0075, // data tile size in geo coordinates, smaller: less data to load but more requests
   ZOOM, MAP_SIZE,
 
   MIN_ZOOM = 15,
@@ -705,7 +697,7 @@ let
   CENTER_X = 0, CENTER_Y = 0,
   ORIGIN_X = 0, ORIGIN_Y = 0,
 
-  WALL_COLOR = Color.parse('rgba(200, 190, 180)'),
+  WALL_COLOR = Qolor.parse('rgba(200, 190, 180)'),
   ALT_COLOR  = WALL_COLOR.lightness(0.8),
   ROOF_COLOR = WALL_COLOR.lightness(1.2),
 
@@ -721,6 +713,11 @@ let
   CAM_X, CAM_Y, CAM_Z = 450,
 
   IS_ZOOMING;
+
+function onEach () {}
+
+function onClick () {}
+
 
 function getDistance (p1, p2) {
   const
@@ -862,6 +859,7 @@ function getLonDelta (footprint) {
   return (maxLon-minLon)/2;
 }
 
+
 function rad (deg) {
   return deg * PI / 180;
 }
@@ -909,6 +907,7 @@ function isVisible (polygon) {
   }
   return false;
 }
+
 
 let cacheData = {};
 let cacheIndex = [];
@@ -968,6 +967,7 @@ class Request {
     });
   }
 }
+
 
 class Data {
 
@@ -1047,7 +1047,7 @@ class Data {
     let
       res = {},
       // TODO: calculate this on zoom change only
-      zoomScale = 6 / pow(2, ZOOM-MIN_ZOOM); // TODO: consider using HEIGHT / (global.devicePixelRatio || 1)
+      zoomScale = 6 / pow(2, ZOOM-MIN_ZOOM); // TODO: consider using HEIGHT / (devicePixelRatio || 1)
 
     if (item.id) {
       res.id = item.id;
@@ -1093,14 +1093,14 @@ class Data {
     let color;
 
     if (item.wallColor) {
-      if ((color = Color.parse(item.wallColor))) {
+      if ((color = Qolor.parse(item.wallColor))) {
         res.altColor  = ''+ color.lightness(0.8);
         res.wallColor = ''+ color;
       }
     }
 
     if (item.roofColor) {
-      if ((color = Color.parse(item.roofColor))) {
+      if ((color = Qolor.parse(item.roofColor))) {
         res.roofColor = ''+ color;
       }
     }
@@ -1127,7 +1127,7 @@ class Data {
   }
 
   static load (src, key) {
-    this.src = src || DATA_SRC.replace('{k}', (key || 'anonymous'));
+    this.src = src || DATA_SRC.replace('{k}', (key || 'anonymous'));
     this.update();
   }
 
@@ -1178,6 +1178,7 @@ class Data {
 
 Data.loadedItems = {}; // maintain a list of cached items in order to avoid duplicates on tile borders
 Data.items = [];
+
 class Extrusion {
 
   static draw (context, polygon, innerPolygons, height, minHeight, color, altColor, roofColor) {
@@ -1382,6 +1383,7 @@ class Extrusion {
     context.fill();
   }
 }
+
 class Cylinder {
 
   static draw (context, center, radius, topRadius, height, minHeight, color, altColor, roofColor) {
@@ -1551,6 +1553,7 @@ class Cylinder {
     return res;
   }
 }
+
 class Pyramid {
 
   static draw (context, polygon, center, height, minHeight, color, altColor) {
@@ -1662,6 +1665,7 @@ class Pyramid {
     context.fill();
   }
 }
+
 let animTimer;
 
 function fadeIn() {
@@ -1730,7 +1734,7 @@ class Layers {
       return;
     }
 
-    requestAnimFrame(f => {
+    requestAnimationFrame(f => {
       if (!quick) {
         Shadows.render();
         Simplified.render();
@@ -1782,6 +1786,7 @@ class Layers {
 
 Layers.container = document.createElement('DIV');
 Layers.items = [];
+
 class Buildings {
 
   static init (context) {
@@ -1855,13 +1860,14 @@ class Buildings {
       }
 
       switch (item.roofShape) {
-        case 'cone':    Cylinder.draw(context, item.center, item.radius, 0, h+item.roofHeight, h, roofColor, ''+ Color.parse(roofColor).lightness(0.9));             break;
-        case 'dome':    Cylinder.draw(context, item.center, item.radius, item.radius/2, h+item.roofHeight, h, roofColor, ''+ Color.parse(roofColor).lightness(0.9)); break;
-        case 'pyramid': Pyramid.draw(context, footprint, item.center, h+item.roofHeight, h, roofColor, Color.parse(roofColor).lightness(0.9));                       break;
+        case 'cone':    Cylinder.draw(context, item.center, item.radius, 0, h+item.roofHeight, h, roofColor, ''+ Qolor.parse(roofColor).lightness(0.9));             break;
+        case 'dome':    Cylinder.draw(context, item.center, item.radius, item.radius/2, h+item.roofHeight, h, roofColor, ''+ Qolor.parse(roofColor).lightness(0.9)); break;
+        case 'pyramid': Pyramid.draw(context, footprint, item.center, h+item.roofHeight, h, roofColor, Qolor.parse(roofColor).lightness(0.9));                       break;
       }
     }
   }
 }
+
 class Simplified {
 
   static init (context) {
@@ -1924,6 +1930,7 @@ class Simplified {
 
 Simplified.MAX_ZOOM = 16; // max zoom where buildings could render simplified
 Simplified.MAX_HEIGHT = 5; // max building height in order to be simple
+
 class Shadows {
 
   static init (context) {
@@ -2022,6 +2029,7 @@ Shadows.blurColor = '#000000';
 Shadows.date = new Date();
 Shadows.direction = { x:0, y:0 };
 Shadows.opacity = 1;
+
 
 
 class Picking {
@@ -2132,6 +2140,7 @@ class Picking {
 
 Picking._idMapping = [null];
 
+
 class Debug {
 
   static point (x, y, color, size) {
@@ -2153,6 +2162,7 @@ class Debug {
     context.stroke();
   }
 }
+
 
 function setOrigin (origin) {
   ORIGIN_X = origin.x;
@@ -2231,15 +2241,13 @@ function onZoomEnd (e) {
   Data.update(); // => fadeIn()
 }
 
-// TODO: Leaflet 1.x compatibility
-// let proto = osmb.prototype = L.Layer ? new L.Layer() : {};
 
-class osmb extends L.Layer {
+class OSMBuildings extends L.Layer {
 
   constructor (map) {
     super(map);
 
-    this.offset = { x:0, y:0 };
+    this.offset = {x: 0, y: 0};
     Layers.init();
     if (map) {
       map.addLayer(this);
@@ -2258,20 +2266,20 @@ class osmb extends L.Layer {
     let
       off = this.getOffset(),
       po = map.getPixelOrigin();
-    setSize({ width:map._size.x, height:map._size.y });
-    setOrigin({ x:po.x-off.x, y:po.y-off.y });
+    setSize({width: map._size.x, height: map._size.y});
+    setOrigin({x: po.x - off.x, y: po.y - off.y});
     setZoom(map._zoom);
 
     Layers.setPosition(-off.x, -off.y);
 
     map.on({
-      move:      this.onMove,
-      moveend:   this.onMoveEnd,
+      move: this.onMove,
+      moveend: this.onMoveEnd,
       zoomstart: this.onZoomStart,
-      zoomend:   this.onZoomEnd,
-      resize:    this.onResize,
+      zoomend: this.onZoomEnd,
+      resize: this.onResize,
       viewreset: this.onViewReset,
-      click:     this.onClick
+      click: this.onClick
     }, this);
 
     if (map.options.zoomAnimation) {
@@ -2292,13 +2300,13 @@ class osmb extends L.Layer {
     }
 
     map.off({
-      move:      this.onMove,
-      moveend:   this.onMoveEnd,
+      move: this.onMove,
+      moveend: this.onMoveEnd,
       zoomstart: this.onZoomStart,
-      zoomend:   this.onZoomEnd,
-      resize:    this.onResize,
+      zoomend: this.onZoomEnd,
+      resize: this.onResize,
       viewreset: this.onViewReset,
-      click:     this.onClick
+      click: this.onClick
     }, this);
 
     if (map.options.zoomAnimation) {
@@ -2310,7 +2318,7 @@ class osmb extends L.Layer {
 
   onMove (e) {
     let off = this.getOffset();
-    moveCam({ x:this.offset.x-off.x, y:this.offset.y-off.y });
+    moveCam({x: this.offset.x - off.x, y: this.offset.y - off.y});
   }
 
   onMoveEnd (e) {
@@ -2326,10 +2334,10 @@ class osmb extends L.Layer {
 
     this.offset = off;
     Layers.setPosition(-off.x, -off.y);
-    moveCam({ x:0, y:0 });
+    moveCam({x: 0, y: 0});
 
-    setSize({ width:map._size.x, height:map._size.y }); // in case this is triggered by resize
-    setOrigin({ x:po.x-off.x, y:po.y-off.y });
+    setSize({width: map._size.x, height: map._size.y}); // in case this is triggered by resize
+    setOrigin({x: po.x - off.x, y: po.y - off.y});
     onMoveEnd(e);
   }
 
@@ -2339,13 +2347,13 @@ class osmb extends L.Layer {
 
   onZoom (e) {
     let center = this.map.latLngToContainerPoint(e.center);
-    let scale = Math.pow(2, e.zoom-ZOOM);
+    let scale = Math.pow(2, e.zoom - ZOOM);
 
-    let dx = WIDTH /2 - center.x;
-    let dy = HEIGHT/2 - center.y;
+    let dx = WIDTH / 2 - center.x;
+    let dy = HEIGHT / 2 - center.y;
 
-    let x = WIDTH /2;
-    let y = HEIGHT/2;
+    let x = WIDTH / 2;
+    let y = HEIGHT / 2;
 
     if (e.zoom > ZOOM) {
       x -= dx * scale;
@@ -2356,7 +2364,7 @@ class osmb extends L.Layer {
     }
 
     Layers.container.classList.add('zoom-animation');
-    Layers.container.style.transformOrigin = x + 'px '+ y + 'px';
+    Layers.container.style.transformOrigin = x + 'px ' + y + 'px';
     Layers.container.style.transform = 'translate3d(0, 0, 0) scale(' + scale + ')';
   }
 
@@ -2370,93 +2378,92 @@ class osmb extends L.Layer {
       off = this.getOffset(),
       po = map.getPixelOrigin();
 
-    setOrigin({ x:po.x-off.x, y:po.y-off.y });
-    onZoomEnd({ zoom:map._zoom });
+    setOrigin({x: po.x - off.x, y: po.y - off.y});
+    onZoomEnd({zoom: map._zoom});
     this.noMoveEnd = true;
   }
 
-  onResize () {}
+  onResize () {
+  }
 
   onViewReset () {
     let off = this.getOffset();
 
     this.offset = off;
     Layers.setPosition(-off.x, -off.y);
-    moveCam({ x:0, y:0 });
+    moveCam({x: 0, y: 0});
   }
 
   onClick (e) {
     let id = Picking.getIdFromXY(e.containerPoint.x, e.containerPoint.y);
     if (id) {
-      onClick({ feature:id, lat:e.latlng.lat, lon:e.latlng.lng });
+      onClick({feature: id, lat: e.latlng.lat, lon: e.latlng.lng});
     }
   }
 
   getOffset () {
     return L.DomUtil.getPosition(this.map._mapPane);
   }
+
+  //*** COMMON PUBLIC METHODS ***
+
+  style (style) {
+    style = style || {};
+    let color;
+    if ((color = style.color || style.wallColor)) {
+      WALL_COLOR = Qolor.parse(color);
+      WALL_COLOR_STR = '' + WALL_COLOR;
+
+      ALT_COLOR = WALL_COLOR.lightness(0.8);
+      ALT_COLOR_STR = '' + ALT_COLOR;
+
+      ROOF_COLOR = WALL_COLOR.lightness(1.2);
+      ROOF_COLOR_STR = '' + ROOF_COLOR;
+    }
+
+    if (style.roofColor) {
+      ROOF_COLOR = Qolor.parse(style.roofColor);
+      ROOF_COLOR_STR = '' + ROOF_COLOR;
+    }
+
+    Layers.render();
+
+    return this;
+  }
+
+  date (date) {
+    Shadows.date = date;
+    Shadows.render();
+    return this;
+  }
+
+  load (url) {
+    Data.load(url);
+    return this;
+  }
+
+  set (data) {
+    Data.set(data);
+    return this;
+  }
+
+  each (handler) {
+    onEach = function (payload) {
+      return handler(payload);
+    };
+    return this;
+  }
+
+  click (handler) {
+    onClick = function (payload) {
+      return handler(payload);
+    };
+    return this;
+  }
 }
 
-proto.style = function (style) {
-  style = style || {};
-  let color;
-  if ((color = style.color || style.wallColor)) {
-    WALL_COLOR = Color.parse(color);
-    WALL_COLOR_STR = ''+ WALL_COLOR;
+OSMBuildings.VERSION = VERSION;
+OSMBuildings.ATTRIBUTION = ATTRIBUTION;
 
-    ALT_COLOR = WALL_COLOR.lightness(0.8);
-    ALT_COLOR_STR  = ''+ ALT_COLOR;
-
-    ROOF_COLOR = WALL_COLOR.lightness(1.2);
-    ROOF_COLOR_STR = ''+ ROOF_COLOR;
-  }
-
-  if (style.roofColor) {
-    ROOF_COLOR = Color.parse(style.roofColor);
-    ROOF_COLOR_STR = ''+ ROOF_COLOR;
-  }
-
-  Layers.render();
-
-  return this;
-};
-
-proto.date = function (date) {
-  Shadows.date = date;
-  Shadows.render();
-  return this;
-};
-
-proto.load = function (url) {
-  Data.load(url);
-  return this;
-};
-
-proto.set = function (data) {
-  Data.set(data);
-  return this;
-};
-
-let onEach = function () {};
-proto.each = function (handler) {
-  onEach = function (payload) {
-    return handler(payload);
-  };
-  return this;
-};
-
-let onClick = function () {};
-
-proto.click = function (handler) {
-  onClick = function (payload) {
-    return handler(payload);
-  };
-  return this;
-};
-
-osmb.VERSION     = VERSION;
-osmb.ATTRIBUTION = ATTRIBUTION;
-
-  global.OSMBuildings = osmb;
-
-}(this));
+ return OSMBuildings;
+}());

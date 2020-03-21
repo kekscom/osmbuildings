@@ -1,4 +1,0 @@
-
-  global.OSMBuildings = osmb;
-
-}(this));

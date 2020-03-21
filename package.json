@@ -14,7 +14,7 @@
   },
   "scripts": {},
   "dependencies": {
-    "Color": "git+https://github.com/kekscom/Color.js"
+    "qolor": "^2.3.3"
   },
   "devDependencies": {
     "terser": "^4.6.7"

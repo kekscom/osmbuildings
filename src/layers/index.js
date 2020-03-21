@@ -66,7 +66,7 @@ class Layers {
       return;
     }
 
-    requestAnimFrame(f => {
+    requestAnimationFrame(f => {
       if (!quick) {
         Shadows.render();
         Simplified.render();

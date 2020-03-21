@@ -77,7 +77,7 @@ class Data {
     let
       res = {},
       // TODO: calculate this on zoom change only
-      zoomScale = 6 / pow(2, ZOOM-MIN_ZOOM); // TODO: consider using HEIGHT / (global.devicePixelRatio || 1)
+      zoomScale = 6 / pow(2, ZOOM-MIN_ZOOM); // TODO: consider using HEIGHT / (devicePixelRatio || 1)
 
     if (item.id) {
       res.id = item.id;
@@ -123,14 +123,14 @@ class Data {
     let color;
 
     if (item.wallColor) {
-      if ((color = Color.parse(item.wallColor))) {
+      if ((color = Qolor.parse(item.wallColor))) {
         res.altColor  = ''+ color.lightness(0.8);
         res.wallColor = ''+ color;
       }
     }
 
     if (item.roofColor) {
-      if ((color = Color.parse(item.roofColor))) {
+      if ((color = Qolor.parse(item.roofColor))) {
         res.roofColor = ''+ color;
       }
     }
@@ -157,7 +157,7 @@ class Data {
   }
 
   static load (src, key) {
-    this.src = src || DATA_SRC.replace('{k}', (key || 'anonymous'));
+    this.src = src || DATA_SRC.replace('{k}', (key || 'anonymous'));
     this.update();
   }
 

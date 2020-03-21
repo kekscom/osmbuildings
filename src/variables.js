@@ -1,5 +1,5 @@
 let
-  VERSION      = /*<version=*/'0.2.3b'/*>*/,
+  VERSION      = '0.3.2',
   ATTRIBUTION  = '&copy; <a href="https://osmbuildings.org">OSM Buildings</a>',
 
   DATA_SRC = 'https://{s}.data.osmbuildings.org/0.2/{k}/tile/{z}/{x}/{y}.json',
@@ -9,7 +9,6 @@ let
   QUARTER_PI = PI/4,
 
   MAP_TILE_SIZE  = 256,    // map tile size in pixels
-  DATA_TILE_SIZE = 0.0075, // data tile size in geo coordinates, smaller: less data to load but more requests
   ZOOM, MAP_SIZE,
 
   MIN_ZOOM = 15,
@@ -20,7 +19,7 @@ let
   CENTER_X = 0, CENTER_Y = 0,
   ORIGIN_X = 0, ORIGIN_Y = 0,
 
-  WALL_COLOR = Color.parse('rgba(200, 190, 180)'),
+  WALL_COLOR = Qolor.parse('rgba(200, 190, 180)'),
   ALT_COLOR  = WALL_COLOR.lightness(0.8),
   ROOF_COLOR = WALL_COLOR.lightness(1.2),
 
@@ -36,3 +35,7 @@ let
   CAM_X, CAM_Y, CAM_Z = 450,
 
   IS_ZOOMING;
+
+function onEach () {}
+
+function onClick () {}
