@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>OSM Buildings Classic</title>
+  <title>OSM Buildings Classic for Leaflet</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css"/>
   <script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"></script>
   <link rel="stylesheet" href="OSMBuildings.css">
@@ -26,12 +26,13 @@
 <div id="map"></div>
 
 <script>
-  const map = new L.Map('map', { minZoom: 16 }).setView([52.52179, 13.39503], 18); // Berlin
-  // const map = new L.Map('map').setView([40.711516, -74.011695], 16); // NYC
+  // const map = new L.Map('map', { minZoom: 16 }).setView([52.52179, 13.39503], 18); // Berlin
+  const map = new L.Map('map').setView([40.711516, -74.011695], 16); // NYC
 
-  new L.TileLayer('https://{s}.tiles.mapbox.com/v3/osmbuildings.kbpalbpk/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+  // new L.TileLayer('https://{s}.tiles.mapbox.com/v3/osmbuildings.kbpalbpk/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+  new L.TileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
 
-  let osmb = new OSMBuildings();
+  const osmb = new OSMBuildings();
 
   L.control.layers({}, { Buildings: osmb }).addTo(map);
 

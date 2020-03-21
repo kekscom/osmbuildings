@@ -1,6 +1,6 @@
 // based on a pull request from Jérémy Judéaux (https://github.com/Volune)
 
-class OSMBuildings extends OpenLayers.Layer {
+class OSMBuildings extends ol.layer.Layer {
 
   constructor (map) {
     super(OSMBuildings.name, {projection: 'EPSG:900913'});
@@ -18,7 +18,7 @@ class OSMBuildings extends OpenLayers.Layer {
     return this;
   }
 
-  setOrigin = function () {
+  setOrigin () {
     let map = this.map,
       origin = map.getLonLatFromPixel(new OpenLayers.Pixel(0, 0)),
       res = map.resolution,
@@ -30,7 +30,7 @@ class OSMBuildings extends OpenLayers.Layer {
 
   setMap (map) {
     if (!this.map) {
-      parent.setMap.call(this, map);
+      super.setMap.call(this, map);
     }
     Layers.appendTo(this.div);
     setSize({width: map.size.w, height: map.size.h});
@@ -51,20 +51,20 @@ class OSMBuildings extends OpenLayers.Layer {
 
   removeMap (map) {
     Layers.remove();
-    parent.removeMap.call(this, map);
+    super.removeMap.call(this, map);
     this.map = null;
   }
 
   onMapResize () {
     let map = this.map;
-    parent.onMapResize.call(this);
+    super.onMapResize.call(this);
     onResize({width: map.size.w, height: map.size.h});
   }
 
   moveTo (bounds, zoomChanged, isDragging) {
     let
       map = this.map,
-      res = parent.moveTo.call(this, bounds, zoomChanged, isDragging);
+      res = super.moveTo.call(this, bounds, zoomChanged, isDragging);
 
     if (!isDragging) {
       let
@@ -92,7 +92,7 @@ class OSMBuildings extends OpenLayers.Layer {
   moveByPx (dx, dy) {
     this.offset.x += dx;
     this.offset.y += dy;
-    let res = parent.moveByPx.call(this, dx, dy);
+    let res = super.moveByPx.call(this, dx, dy);
     moveCam(this.offset);
     return res;
   }

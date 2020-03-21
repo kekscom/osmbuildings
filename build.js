@@ -29,8 +29,7 @@ const code = [
   "src/layers/Shadows.js",
   "src/layers/Picking.js",
   "src/Debug.js",
-  "src/adapter.js",
-  "src/Leaflet/Leaflet.js" // TODO: engines...
+  "src/adapter.js"
 ];
 
 
@@ -50,22 +49,26 @@ function copy (srcFile, distFile) {
 
 //*****************************************************************************
 
+function buildEngine (name, customJS) {
+  const commonJS = joinFiles(code);
+
+  let js = commonJS + '\n' + customJS;
+  js = js.replace(/\{\{VERSION\}\}/g, package.version);
+  js = `const OSMBuildings = (function() {\n${js}\n return OSMBuildings;\n}());`;
+
+  fs.writeFileSync(`${dist}/OSMBuildings-${name}.debug.js`, js);
+  fs.writeFileSync(`${dist}/OSMBuildings-${name}.js`, Terser.minify(js).code);
+  copy(`${src}/engines/index-${name}.html`, `${dist}/index-${name}.html`);
+}
+
+
+//*****************************************************************************
+
 if (!fs.existsSync(dist)) {
   fs.mkdirSync(dist);
 }
 
-let js = joinFiles(code);
-js = js.replace(/\{\{VERSION\}\}/g, package.version);
-js = `const OSMBuildings = (function() {\n${js}\n return OSMBuildings;\n}());`;
-fs.writeFileSync(`${dist}/OSMBuildings-Leaflet.debug.js`, js);
-fs.writeFileSync(`${dist}/OSMBuildings-Leaflet.js`, Terser.minify(js).code);
-copy(`${src}/Leaflet/index-Leaflet.html`, `${dist}/index-Leaflet.html`);
-
-// let js = joinFiles(code);
-// js = js.replace(/\{\{VERSION\}\}/g, version);
-// js = `(function() {${js}}());`;
-// fs.writeFileSync(`${dist}/OSMBuildings-OpenLayers.debug.js`, js);
-// fs.writeFileSync(`${dist}/OSMBuildings-OpenLayers.js`, Terser.minify(js).code);
-// copy(`${src}/OpenLayers/index-OpenLayers.html`, `${dist}/index-OpenLayers.html`);
+buildEngine('Leaflet', fs.readFileSync(`${src}/engines/Leaflet.js`));
+buildEngine('OpenLayers', fs.readFileSync(`${src}/engines/OpenLayers.js`));
 
 copy(`${src}/OSMBuildings.css`, `${dist}/OSMBuildings.css`);
