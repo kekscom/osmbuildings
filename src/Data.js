@@ -21,7 +21,7 @@ class Data {
 
   static resetItems () {
     this.items = [];
-    this.loadedItems = {};
+    this.cache = {};
     Picking.reset();
   }
 
@@ -31,11 +31,11 @@ class Data {
     for (let i = 0, il = geojson.length; i < il; i++) {
       item = geojson[i];
       id = item.id || [item.footprint[0], item.footprint[1], item.height, item.minHeight].join(',');
-      if (!this.loadedItems[id]) {
+      if (!this.cache[id]) {
         if ((scaledItem = this.scaleItem(item))) {
           scaledItem.scale = allAreNew ? 0 : 1;
           this.items.push(scaledItem);
-          this.loadedItems[id] = 1;
+          this.cache[id] = 1;
         }
       }
     }
@@ -150,7 +150,6 @@ class Data {
   }
 
   static set (data) {
-    this.isStatic = true;
     this.resetItems();
     this._staticData = data;
     this.addRenderItems(this._staticData, true);
@@ -168,33 +167,31 @@ class Data {
       return;
     }
 
-    if (this.isStatic && this._staticData) {
+    if (this._staticData) {
       this.addRenderItems(this._staticData);
-      return;
     }
 
-    if (!this.src) {
-      return;
-    }
+    if (this.src) {
+      let
+        tileZoom = 16,
+        tileSize = 256,
+        zoomedTileSize = ZOOM > tileZoom ? tileSize << (ZOOM - tileZoom) : tileSize >> (tileZoom - ZOOM),
+        minX = ORIGIN_X / zoomedTileSize << 0,
+        minY = ORIGIN_Y / zoomedTileSize << 0,
+        maxX = ceil((ORIGIN_X + WIDTH) / zoomedTileSize),
+        maxY = ceil((ORIGIN_Y + HEIGHT) / zoomedTileSize),
+        x, y;
 
-    let
-      tileZoom = 16,
-      tileSize = 256,
-      zoomedTileSize = ZOOM > tileZoom ? tileSize <<(ZOOM-tileZoom) : tileSize >>(tileZoom-ZOOM),
-      minX = ORIGIN_X/zoomedTileSize <<0,
-      minY = ORIGIN_Y/zoomedTileSize <<0,
-      maxX = ceil((ORIGIN_X+WIDTH) /zoomedTileSize),
-      maxY = ceil((ORIGIN_Y+HEIGHT)/zoomedTileSize),
-      x, y;
+      let scope = this;
 
-    let scope = this;
-    function callback(json) {
-      scope.addRenderItems(json);
-    }
+      function callback (json) {
+        scope.addRenderItems(json);
+      }
 
-    for (y = minY; y <= maxY; y++) {
-      for (x = minX; x <= maxX; x++) {
-        this.loadTile(x, y, tileZoom, callback);
+      for (y = minY; y <= maxY; y++) {
+        for (x = minX; x <= maxX; x++) {
+          this.loadTile(x, y, tileZoom, callback);
+        }
       }
     }
   }
@@ -206,5 +203,5 @@ class Data {
   }
 }
 
-Data.loadedItems = {}; // maintain a list of cached items in order to avoid duplicates on tile borders
+Data.cache = {}; // maintain a list of cached items in order to avoid duplicates on tile borders
 Data.items = [];

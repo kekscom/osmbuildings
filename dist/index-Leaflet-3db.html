@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>OSM Buildings for Leaflet</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"></script>
+  <link rel="stylesheet" href="OSMBuildings.css">
+  <script src="OSMBuildings-Leaflet.debug.js"></script>
+  <style>
+    html, body {
+      border: 0;
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    #map {
+      height: 100%;
+    }
+  </style>
+</head>
+
+<body>
+<div id="map"></div>
+
+<script>
+  const map = new L.Map('map').setView([40.711516, -74.011695], 16); // NYC
+
+  // base map source
+  new L.TileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+
+  const osmb = new OSMBuildings();
+  osmb.addTo(map);
+
+  // osmb.load('https://{s}-data.3dbuildings.com/tile/{z}/{x}/{y}.json?token=xsthpfc');
+  osmb.load();
+
+</script>
+</body>
+</html>
